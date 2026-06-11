@@ -3,7 +3,7 @@ version: '3'
 services:
   # 后端服务
   backend:
-    image: ghcr.io/2977094657/bili-history-fetcher:latest
+    image: ghcr.io/lifearchiveproject/bili-history-fetcher:latest
     container_name: bilibili-history-backend
     restart: unless-stopped
     volumes:
@@ -17,7 +17,7 @@ services:
 
   # 前端服务
   frontend:
-    image: ghcr.io/2977094657/bili-history-frontend:latest
+    image: ghcr.io/lifearchiveproject/bili-history-frontend:latest
     container_name: bili-history-frontend-web
     restart: unless-stopped
     ports:

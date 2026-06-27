@@ -87,12 +87,12 @@
           </router-link>
 
           <!-- 年度总结 -->
-          <router-link
-            to="/analytics"
+          <a
+            href="/analytics"
+            @click.prevent="openAnalytics"
             :title="isCollapsed ? '年度总结' : ''"
-            class="flex items-center py-1.5 text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out text-sm"
+            class="flex items-center py-1.5 text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out text-sm cursor-pointer"
             :class="[
-              { 'bg-[#fb7299]/10 text-[#fb7299] dark:bg-[#fb7299]/20': currentContent === 'analytics' },
               { 'justify-center': isCollapsed },
               isCollapsed ? 'px-2' : 'px-3 rounded-lg'
             ]"
@@ -101,7 +101,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             <span v-show="!isCollapsed" class="truncate">年度总结</span>
-          </router-link>
+          </a>
 
           <!-- 媒体管理（整合图片管理和视频下载） -->
           <router-link
@@ -394,6 +394,12 @@ const changeContent = (content) => {
     emit('update:showRemarks', false)
       router.push('/settings')
   }
+}
+
+// 在新标签页打开年度总结
+const openAnalytics = () => {
+  const resolved = router.resolve({ path: '/analytics' })
+  window.open(resolved.href, '_blank')
 }
 
 // 判断是否在历史记录页面（包括分页）

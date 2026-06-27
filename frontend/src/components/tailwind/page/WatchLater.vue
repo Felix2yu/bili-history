@@ -29,6 +29,56 @@
               <div class="w-px h-4 bg-gray-200 dark:bg-gray-700"></div>
 
               <div class="flex items-center space-x-2 flex-wrap">
+                <span class="text-xs text-gray-500 dark:text-gray-400">分区:</span>
+                <button
+                  @click="selectedCategory = ''"
+                  class="px-2 py-1 text-xs rounded-md transition-colors"
+                  :class="selectedCategory === ''
+                    ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                >
+                  全部
+                </button>
+                <button
+                  v-for="cat in topCategories"
+                  :key="cat.tname"
+                  @click="selectedCategory = cat.tname"
+                  class="px-2 py-1 text-xs rounded-md transition-colors"
+                  :class="selectedCategory === cat.tname
+                    ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                >
+                  {{ cat.tname }} ({{ cat.count }})
+                </button>
+                <div v-if="topCategories.length < allCategories.length" class="relative" ref="catDropdownRef">
+                  <button
+                    @click.stop="showCatDropdown = !showCatDropdown"
+                    class="px-2 py-1 text-xs rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    更多...
+                  </button>
+                  <div
+                    v-if="showCatDropdown"
+                    class="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 p-2 max-h-60 overflow-y-auto min-w-[180px]"
+                  >
+                    <button
+                      v-for="cat in restCategories"
+                      :key="cat.tname"
+                      @click="selectedCategory = cat.tname; showCatDropdown = false"
+                      class="w-full text-left px-2 py-1 text-xs rounded transition-colors"
+                      :class="selectedCategory === cat.tname
+                        ? 'bg-[#fb7299]/10 text-[#fb7299]'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                    >
+                      {{ cat.tname }} ({{ cat.count }})
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="w-px h-4 bg-gray-200 dark:bg-gray-700"></div>
+
+              <div class="flex items-center space-x-2 flex-wrap">
                 <span class="text-xs text-gray-500 dark:text-gray-400">UP主:</span>
                 <button
                   @click="selectedOwner = ''"
@@ -51,9 +101,9 @@
                 >
                   {{ owner.name }} ({{ owner.count }})
                 </button>
-                <div v-if="topOwners.length < allOwners.length" class="relative" ref="dropdownRef">
+                <div v-if="topOwners.length < allOwners.length" class="relative" ref="ownerDropdownRef">
                   <button
-                    @click="showOwnerDropdown = !showOwnerDropdown"
+                    @click.stop="showOwnerDropdown = !showOwnerDropdown"
                     class="px-2 py-1 text-xs rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
                     更多...
@@ -131,7 +181,10 @@
                   <div class="absolute bottom-1 right-1 bg-black/60 px-1 py-0.5 rounded text-white text-[10px]">
                     {{ formatDuration(video.duration) }}
                   </div>
-                  <div class="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div v-if="video.tname" class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]">
+                    {{ video.tname }}
+                  </div>
+                  <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       @click.stop="removeVideo(video)"
                       class="bg-red-500/80 hover:bg-red-500 text-white rounded-full p-1"
@@ -186,8 +239,11 @@ const videos = ref([])
 const sortKey = ref('add_at')
 const sortOrder = ref('desc')
 const selectedOwner = ref('')
+const selectedCategory = ref('')
 const showOwnerDropdown = ref(false)
-const dropdownRef = ref(null)
+const showCatDropdown = ref(false)
+const ownerDropdownRef = ref(null)
+const catDropdownRef = ref(null)
 
 const sortOptions = [
   { key: 'add_at', label: '加入时间' },
@@ -209,10 +265,27 @@ const allOwners = computed(() => {
 const topOwners = computed(() => allOwners.value.slice(0, 10))
 const restOwners = computed(() => allOwners.value.slice(10))
 
+const allCategories = computed(() => {
+  const map = {}
+  for (const v of videos.value) {
+    const name = v.tname || '未知分区'
+    map[name] = (map[name] || 0) + 1
+  }
+  return Object.entries(map)
+    .map(([tname, count]) => ({ tname, count }))
+    .sort((a, b) => b.count - a.count)
+})
+
+const topCategories = computed(() => allCategories.value.slice(0, 10))
+const restCategories = computed(() => allCategories.value.slice(10))
+
 const filteredVideos = computed(() => {
   let list = [...videos.value]
   if (selectedOwner.value) {
     list = list.filter(v => v.owner_name === selectedOwner.value)
+  }
+  if (selectedCategory.value) {
+    list = list.filter(v => (v.tname || '未知分区') === selectedCategory.value)
   }
   list.sort((a, b) => {
     let va = a[sortKey.value]
@@ -239,8 +312,11 @@ function toggleSort(key) {
 }
 
 function handleClickOutside(e) {
-  if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
+  if (ownerDropdownRef.value && !ownerDropdownRef.value.contains(e.target)) {
     showOwnerDropdown.value = false
+  }
+  if (catDropdownRef.value && !catDropdownRef.value.contains(e.target)) {
+    showCatDropdown.value = false
   }
 }
 

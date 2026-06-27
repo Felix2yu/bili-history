@@ -48,8 +48,8 @@ jobs:
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=dev,enable={{is_pull_request}}
-            type=raw,value=pr-${{ github.event.pull_request.number }},enable={{is_pull_request}}
+            type=raw,value=dev,enable=${{ github.event_name == 'pull_request' }}
+            type=raw,value=pr-${{ github.event.pull_request.number }},enable=${{ github.event_name == 'pull_request' }}
 
       - name: Build and push
         uses: docker/build-push-action@v7
@@ -91,8 +91,8 @@ jobs:
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=dev,enable={{is_pull_request}}
-            type=raw,value=pr-${{ github.event.pull_request.number }},enable={{is_pull_request}}
+            type=raw,value=dev,enable=${{ github.event_name == 'pull_request' }}
+            type=raw,value=pr-${{ github.event.pull_request.number }},enable=${{ github.event_name == 'pull_request' }}
 
       - name: Build and push
         uses: docker/build-push-action@v7

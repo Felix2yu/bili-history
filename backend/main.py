@@ -45,7 +45,8 @@ from routers import (
     video_details,
     dynamic,
     interaction_records,
-    watchlater
+    watchlater,
+    like
 )
 from scripts.scheduler_db_enhanced import EnhancedSchedulerDB
 from scripts.scheduler_manager import SchedulerManager
@@ -455,6 +456,7 @@ app.include_router(video_details.router, prefix="/video_details", tags=["视频�
 app.include_router(dynamic.router, prefix="/dynamic", tags=["用户动态"])
 app.include_router(interaction_records.router, prefix="/interactions", tags=["互动记录"])
 app.include_router(watchlater.router, prefix="/watchlater", tags=["稍后再看"])
+app.include_router(like.router, prefix="/like", tags=["我的点赞"])
 
 # 挂载静态目录，提供 output 下资源的访问（/static/ 相对路径）
 try:

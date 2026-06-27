@@ -51,6 +51,10 @@ async def get_like_list(
 
         list_data = data.get("data", {}).get("list", [])
         total = data.get("data", {}).get("page", {}).get("count", 0)
+        if not total:
+            total = data.get("data", {}).get("total", 0)
+        if not total:
+            total = len(list_data)
         result = []
         for item in list_data:
             owner = item.get("owner", {})

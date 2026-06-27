@@ -50,6 +50,8 @@ async def get_watch_later_list():
                 "pic": item.get("pic"),
                 "desc": item.get("desc", ""),
                 "duration": item.get("duration", 0),
+                "tid": item.get("tid", 0),
+                "tname": item.get("tname", ""),
                 "owner_name": owner.get("name", ""),
                 "owner_mid": owner.get("mid", 0),
                 "owner_face": owner.get("face", ""),

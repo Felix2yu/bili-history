@@ -14,8 +14,8 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  FRONTEND_IMAGE: ghcr.io/lifearchiveproject/bili-history-frontend
-  BACKEND_IMAGE: ghcr.io/lifearchiveproject/bili-history-fetcher
+  FRONTEND_IMAGE: ghcr.io/felix2yu/bili-history-frontend
+  BACKEND_IMAGE: ghcr.io/felix2yu/bili-history-fetcher
 
 jobs:
   frontend:

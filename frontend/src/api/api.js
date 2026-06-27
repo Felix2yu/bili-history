@@ -1723,3 +1723,22 @@ export const getLikeList = () => {
 export const getLikeLocal = (params = {}) => {
   return instance.get('/like/local', { params })
 }
+// =============================
+// 历史记录(简化)接口（/history_simple）
+// =============================
+
+/**
+ * 获取观看历史记录并存入数据库
+ * GET /history_simple/list
+ */
+export const getHistorySimpleList = () => {
+  return instance.get('/history_simple/list')
+}
+
+/**
+ * 从本地数据库获取历史记录
+ * GET /history_simple/local
+ */
+export const getHistorySimpleLocal = (params = {}) => {
+  return instance.get('/history_simple/local', { params })
+}

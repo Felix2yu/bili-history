@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:lts
 
 ARG PROXY=""
 ENV all_proxy=${PROXY}

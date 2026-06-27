@@ -230,7 +230,6 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import { getWatchLaterList, removeFromWatchLater } from '@/api/api.js'
-import { openInBrowser } from '@/utils/openUrl.js'
 
 const loading = ref(false)
 const error = ref('')
@@ -363,7 +362,7 @@ async function removeVideo(video) {
 
 function openVideo(video) {
   if (video.link) {
-    openInBrowser(video.link)
+    window.open(video.link, '_blank')
   }
 }
 

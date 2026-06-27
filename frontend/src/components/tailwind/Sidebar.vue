@@ -52,6 +52,23 @@
             <span v-show="!isCollapsed" class="truncate">我的收藏</span>
           </router-link>
 
+          <!-- 稍后再看 -->
+          <router-link
+            to="/watchlater"
+            :title="isCollapsed ? '稍后再看' : ''"
+            class="flex items-center py-1.5 text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out text-sm"
+            :class="[
+              { 'bg-[#fb7299]/10 text-[#fb7299] dark:bg-[#fb7299]/20': currentContent === 'watchlater' },
+              { 'justify-center': isCollapsed },
+              isCollapsed ? 'px-2' : 'px-3 rounded-lg'
+            ]"
+          >
+            <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-3': !isCollapsed }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span v-show="!isCollapsed" class="truncate">稍后再看</span>
+          </router-link>
+
           <!-- 年度总结 -->
           <router-link
             to="/analytics"
@@ -310,6 +327,7 @@ const currentContent = computed(() => {
   if (path.startsWith('/downloads')) return 'downloads'
   if (path.startsWith('/media')) return 'media'
   if (path.startsWith('/favorites')) return 'favorites'
+  if (path.startsWith('/watchlater')) return 'watchlater'
   if (path.startsWith('/bili-tools')) return 'bili-tools'
   return 'history' // 默认返回历史记录
 })

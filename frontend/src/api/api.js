@@ -1676,3 +1676,23 @@ export const stopDynamicAutoFetch = (hostMid) => {
 export const deleteDynamicSpace = (hostMid) => {
   return instance.delete(`/dynamic/space/${hostMid}`)
 }
+// =============================
+// 稍后再看接口（/watchlater）
+// =============================
+
+/**
+ * 获取稍后再看列表
+ * GET /watchlater/list
+ */
+export const getWatchLaterList = () => {
+  return instance.get('/watchlater/list')
+}
+
+/**
+ * 从稍后再看中移除视频
+ * DELETE /watchlater/{bvid}
+ * @param {string} bvid - 视频 BV 号
+ */
+export const removeFromWatchLater = (bvid) => {
+  return instance.delete(`/watchlater/${bvid}`)
+}

@@ -5,10 +5,19 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
           <div class="border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
             <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">我的点赞</h2>
-            <span class="text-sm text-gray-500 dark:text-gray-400">
-              共 {{ totalCount }} 个视频
-              <span v-if="filteredVideos.length !== videos.length">（显示 {{ filteredVideos.length }} 个）</span>
-            </span>
+            <div class="flex items-center space-x-3">
+              <span v-if="syncing" class="text-xs text-[#fb7299] flex items-center">
+                <svg class="animate-spin -ml-1 mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                同步中...
+              </span>
+              <span class="text-sm text-gray-500 dark:text-gray-400">
+                共 {{ totalCount }} 个视频
+                <span v-if="filteredVideos.length !== videos.length">（显示 {{ filteredVideos.length }} 个）</span>
+              </span>
+            </div>
           </div>
 
           <div v-if="!loading && videos.length > 0" class="border-b border-gray-200 dark:border-gray-700 px-4 py-3">
@@ -221,9 +230,10 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
-import { getLikeList } from '@/api/api.js'
+import { getLikeList, getLikeLocal } from '@/api/api.js'
 
 const loading = ref(false)
+const syncing = ref(false)
 const error = ref('')
 const videos = ref([])
 const totalCount = ref(0)
@@ -312,9 +322,10 @@ function handleClickOutside(e) {
   }
 }
 
-onMounted(() => {
-  fetchLikes()
+onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  await fetchLocal()
+  syncFromBilibili()
 })
 
 onUnmounted(() => {
@@ -337,6 +348,39 @@ async function fetchLikes() {
     error.value = '请求失败: ' + (e.message || '未知错误')
   } finally {
     loading.value = false
+  }
+}
+
+async function fetchLocal() {
+  loading.value = true
+  try {
+    const response = await getLikeLocal({ size: 500 })
+    if (response.data.status === 'success') {
+      const list = response.data.data.list || []
+      if (list.length > 0) {
+        videos.value = list
+        totalCount.value = response.data.data.total || list.length
+      }
+    }
+  } catch (e) {
+    console.warn('读取本地数据库失败:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function syncFromBilibili() {
+  syncing.value = true
+  try {
+    const response = await getLikeList()
+    if (response.data.status === 'success') {
+      videos.value = response.data.data.list || []
+      totalCount.value = response.data.data.total || videos.value.length
+    }
+  } catch (e) {
+    console.warn('后台同步失败:', e)
+  } finally {
+    syncing.value = false
   }
 }
 

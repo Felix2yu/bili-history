@@ -5,7 +5,78 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
           <div class="border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
             <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">稍后再看</h2>
-            <span class="text-sm text-gray-500 dark:text-gray-400">共 {{ videos.length }} 个视频</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">共 {{ filteredVideos.length }} / {{ videos.length }} 个视频</span>
+          </div>
+
+          <div v-if="!loading && videos.length > 0" class="border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs text-gray-500 dark:text-gray-400">排序:</span>
+                <button
+                  v-for="opt in sortOptions"
+                  :key="opt.key"
+                  @click="toggleSort(opt.key)"
+                  class="px-2 py-1 text-xs rounded-md transition-colors"
+                  :class="sortKey === opt.key
+                    ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                >
+                  {{ opt.label }}
+                  <span v-if="sortKey === opt.key" class="ml-0.5">{{ sortOrder === 'desc' ? '↓' : '↑' }}</span>
+                </button>
+              </div>
+
+              <div class="w-px h-4 bg-gray-200 dark:bg-gray-700"></div>
+
+              <div class="flex items-center space-x-2 flex-wrap">
+                <span class="text-xs text-gray-500 dark:text-gray-400">UP主:</span>
+                <button
+                  @click="selectedOwner = ''"
+                  class="px-2 py-1 text-xs rounded-md transition-colors"
+                  :class="selectedOwner === ''
+                    ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                >
+                  全部
+                </button>
+                <button
+                  v-for="owner in topOwners"
+                  :key="owner.name"
+                  @click="selectedOwner = owner.name"
+                  class="px-2 py-1 text-xs rounded-md transition-colors max-w-[120px] truncate"
+                  :class="selectedOwner === owner.name
+                    ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                  :title="owner.name"
+                >
+                  {{ owner.name }} ({{ owner.count }})
+                </button>
+                <div v-if="topOwners.length < allOwners.length" class="relative" ref="dropdownRef">
+                  <button
+                    @click="showOwnerDropdown = !showOwnerDropdown"
+                    class="px-2 py-1 text-xs rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    更多...
+                  </button>
+                  <div
+                    v-if="showOwnerDropdown"
+                    class="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 p-2 max-h-60 overflow-y-auto min-w-[180px]"
+                  >
+                    <button
+                      v-for="owner in restOwners"
+                      :key="owner.name"
+                      @click="selectedOwner = owner.name; showOwnerDropdown = false"
+                      class="w-full text-left px-2 py-1 text-xs rounded transition-colors"
+                      :class="selectedOwner === owner.name
+                        ? 'bg-[#fb7299]/10 text-[#fb7299]'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                    >
+                      {{ owner.name }} ({{ owner.count }})
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="p-5">
@@ -39,9 +110,13 @@
               <p class="mt-4 text-gray-500 dark:text-gray-400">稍后再看列表为空</p>
             </div>
 
+            <div v-else-if="filteredVideos.length === 0" class="text-center py-20">
+              <p class="text-gray-500 dark:text-gray-400">没有匹配的视频</p>
+            </div>
+
             <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               <div
-                v-for="video in videos"
+                v-for="video in filteredVideos"
                 :key="video.bvid"
                 class="bg-white/50 dark:bg-gray-800/50 rounded-md overflow-hidden border border-gray-200/50 dark:border-gray-700/50 hover:border-[#fb7299] hover:shadow-sm transition-all duration-200 relative group"
               >
@@ -98,7 +173,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import { getWatchLaterList, removeFromWatchLater } from '@/api/api.js'
@@ -108,8 +183,74 @@ const loading = ref(false)
 const error = ref('')
 const videos = ref([])
 
+const sortKey = ref('add_at')
+const sortOrder = ref('desc')
+const selectedOwner = ref('')
+const showOwnerDropdown = ref(false)
+const dropdownRef = ref(null)
+
+const sortOptions = [
+  { key: 'add_at', label: '加入时间' },
+  { key: 'duration', label: '时长' },
+  { key: 'owner_name', label: '发布者' },
+]
+
+const allOwners = computed(() => {
+  const map = {}
+  for (const v of videos.value) {
+    const name = v.owner_name || '未知'
+    map[name] = (map[name] || 0) + 1
+  }
+  return Object.entries(map)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+})
+
+const topOwners = computed(() => allOwners.value.slice(0, 10))
+const restOwners = computed(() => allOwners.value.slice(10))
+
+const filteredVideos = computed(() => {
+  let list = [...videos.value]
+  if (selectedOwner.value) {
+    list = list.filter(v => v.owner_name === selectedOwner.value)
+  }
+  list.sort((a, b) => {
+    let va = a[sortKey.value]
+    let vb = b[sortKey.value]
+    if (sortKey.value === 'owner_name') {
+      va = (va || '').toLowerCase()
+      vb = (vb || '').toLowerCase()
+      return sortOrder.value === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va)
+    }
+    va = va || 0
+    vb = vb || 0
+    return sortOrder.value === 'asc' ? va - vb : vb - va
+  })
+  return list
+})
+
+function toggleSort(key) {
+  if (sortKey.value === key) {
+    sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    sortKey.value = key
+    sortOrder.value = key === 'owner_name' ? 'asc' : 'desc'
+  }
+}
+
+function handleClickOutside(e) {
+  if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
+    showOwnerDropdown.value = false
+  }
+}
+
 onMounted(() => {
   fetchWatchLater()
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 
 async function fetchWatchLater() {

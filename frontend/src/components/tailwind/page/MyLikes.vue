@@ -210,26 +210,6 @@
                 </div>
               </div>
             </div>
-
-            <div v-if="!loading && videos.length > 0 && totalPages > 1" class="mt-6 flex justify-center">
-              <div class="flex items-center space-x-2">
-                <button
-                  @click="goPage(currentPage - 1)"
-                  :disabled="currentPage <= 1"
-                  class="px-3 py-1 text-sm rounded-md border border-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  上一页
-                </button>
-                <span class="text-sm text-gray-600 dark:text-gray-400">{{ currentPage }} / {{ totalPages }}</span>
-                <button
-                  @click="goPage(currentPage + 1)"
-                  :disabled="currentPage >= totalPages"
-                  class="px-3 py-1 text-sm rounded-md border border-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  下一页
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -247,8 +227,6 @@ const loading = ref(false)
 const error = ref('')
 const videos = ref([])
 const totalCount = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(20)
 
 const sortKey = ref('pubdate')
 const sortOrder = ref('desc')
@@ -264,8 +242,6 @@ const sortOptions = [
   { key: 'duration', label: '时长' },
   { key: 'owner_name', label: '发布者' },
 ]
-
-const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value))
 
 const allOwners = computed(() => {
   const map = {}
@@ -327,12 +303,6 @@ function toggleSort(key) {
   }
 }
 
-function goPage(page) {
-  if (page < 1 || page > totalPages.value) return
-  currentPage.value = page
-  fetchLikes()
-}
-
 function handleClickOutside(e) {
   if (ownerDropdownRef.value && !ownerDropdownRef.value.contains(e.target)) {
     showOwnerDropdown.value = false
@@ -356,10 +326,10 @@ async function fetchLikes() {
   error.value = ''
   videos.value = []
   try {
-    const response = await getLikeList({ pn: currentPage.value, ps: pageSize.value })
+    const response = await getLikeList()
     if (response.data.status === 'success') {
       videos.value = response.data.data.list || []
-      totalCount.value = response.data.data.total || 0
+      totalCount.value = response.data.data.total || videos.value.length
     } else {
       error.value = response.data.message || '获取点赞列表失败'
     }

@@ -1696,6 +1696,14 @@ export const getWatchLaterList = () => {
 export const removeFromWatchLater = (bvid) => {
   return instance.delete(`/watchlater/${bvid}`)
 }
+
+/**
+ * 从本地数据库获取稍后再看列表
+ * GET /watchlater/local
+ */
+export const getWatchLaterLocal = (params = {}) => {
+  return instance.get('/watchlater/local', { params })
+}
 // =============================
 // 我的点赞接口（/like）
 // =============================
@@ -1703,8 +1711,15 @@ export const removeFromWatchLater = (bvid) => {
 /**
  * 获取点赞视频列表
  * GET /like/list
- * @param {object} params - { pn, ps }
  */
-export const getLikeList = (params = {}) => {
-  return instance.get('/like/list', { params })
+export const getLikeList = () => {
+  return instance.get('/like/list')
+}
+
+/**
+ * 从本地数据库获取点赞视频列表
+ * GET /like/local
+ */
+export const getLikeLocal = (params = {}) => {
+  return instance.get('/like/local', { params })
 }

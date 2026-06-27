@@ -1,8 +1,56 @@
+import os
+import sqlite3
+import time
 import requests
 from fastapi import APIRouter, Query
-from scripts.utils import load_config
+from scripts.utils import load_config, get_database_path
 
 router = APIRouter()
+
+DB_PATH = get_database_path("bilibili_watchlater.db")
+
+CREATE_TABLE = """
+CREATE TABLE IF NOT EXISTS watchlater_videos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bvid TEXT NOT NULL UNIQUE,
+    aid INTEGER,
+    title TEXT NOT NULL,
+    pic TEXT,
+    desc TEXT,
+    duration INTEGER DEFAULT 0,
+    tid INTEGER DEFAULT 0,
+    tname TEXT,
+    owner_name TEXT,
+    owner_mid INTEGER DEFAULT 0,
+    owner_face TEXT,
+    add_at INTEGER DEFAULT 0,
+    pubdate INTEGER DEFAULT 0,
+    view INTEGER DEFAULT 0,
+    danmaku INTEGER DEFAULT 0,
+    link TEXT,
+    fetch_time INTEGER NOT NULL
+);
+"""
+
+CREATE_INDEXES = [
+    "CREATE INDEX IF NOT EXISTS idx_wl_bvid ON watchlater_videos(bvid);",
+    "CREATE INDEX IF NOT EXISTS idx_wl_add_at ON watchlater_videos(add_at);",
+    "CREATE INDEX IF NOT EXISTS idx_wl_owner ON watchlater_videos(owner_name);",
+    "CREATE INDEX IF NOT EXISTS idx_wl_tid ON watchlater_videos(tid);",
+    "CREATE INDEX IF NOT EXISTS idx_wl_fetch_time ON watchlater_videos(fetch_time);",
+]
+
+
+def get_db_connection():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute(CREATE_TABLE)
+    for sql in CREATE_INDEXES:
+        cursor.execute(sql)
+    conn.commit()
+    return conn
 
 
 def get_headers():
@@ -26,6 +74,32 @@ def get_headers():
     return headers
 
 
+def save_watchlater_videos(conn, videos):
+    cursor = conn.cursor()
+    now = int(time.time())
+    for v in videos:
+        cursor.execute(
+            """INSERT INTO watchlater_videos
+            (bvid, aid, title, pic, desc, duration, tid, tname,
+             owner_name, owner_mid, owner_face, add_at, pubdate,
+             view, danmaku, link, fetch_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(bvid) DO UPDATE SET
+                title=excluded.title, pic=excluded.pic, desc=excluded.desc,
+                duration=excluded.duration, tid=excluded.tid, tname=excluded.tname,
+                owner_name=excluded.owner_name, owner_mid=excluded.owner_mid,
+                owner_face=excluded.owner_face, add_at=excluded.add_at,
+                pubdate=excluded.pubdate, view=excluded.view,
+                danmaku=excluded.danmaku, link=excluded.link,
+                fetch_time=excluded.fetch_time""",
+            (v["bvid"], v["aid"], v["title"], v["pic"], v["desc"],
+             v["duration"], v["tid"], v["tname"], v["owner_name"],
+             v["owner_mid"], v["owner_face"], v["add_at"], v["pubdate"],
+             v["view"], v["danmaku"], v["link"], now),
+        )
+    conn.commit()
+
+
 @router.get("/list", summary="获取稍后再看列表")
 async def get_watch_later_list():
     try:
@@ -43,6 +117,7 @@ async def get_watch_later_list():
         result = []
         for item in list_data:
             owner = item.get("owner", {})
+            stat = item.get("stat", {})
             result.append({
                 "aid": item.get("aid"),
                 "bvid": item.get("bvid"),
@@ -57,20 +132,48 @@ async def get_watch_later_list():
                 "owner_face": owner.get("face", ""),
                 "add_at": item.get("add_at", 0),
                 "pubdate": item.get("pubdate", 0),
-                "view": item.get("stat", {}).get("view", 0),
-                "danmaku": item.get("stat", {}).get("danmaku", 0),
+                "view": stat.get("view", 0),
+                "danmaku": stat.get("danmaku", 0),
                 "link": f"https://www.bilibili.com/video/{item.get('bvid', '')}",
             })
+
+        if result:
+            conn = get_db_connection()
+            try:
+                save_watchlater_videos(conn, result)
+            finally:
+                conn.close()
+
         return {"status": "success", "data": {"list": result, "total": len(result)}}
     except Exception as e:
         return {"status": "error", "message": f"获取稍后再看列表失败: {str(e)}"}
 
 
+@router.get("/local", summary="从本地数据库获取稍后再看列表")
+async def get_watch_later_local(
+    page: int = Query(1, description="页码"),
+    size: int = Query(50, description="每页数量"),
+):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM watchlater_videos")
+        total = cursor.fetchone()[0]
+        offset = (page - 1) * size
+        cursor.execute(
+            "SELECT * FROM watchlater_videos ORDER BY add_at DESC LIMIT ? OFFSET ?",
+            (size, offset),
+        )
+        rows = [dict(r) for r in cursor.fetchall()]
+        conn.close()
+        return {"status": "success", "data": {"list": rows, "total": total, "page": page, "size": size}}
+    except Exception as e:
+        return {"status": "error", "message": f"获取本地稍后再看数据失败: {str(e)}"}
+
+
 @router.delete("/{bvid}", summary="从稍后再看中移除视频")
 async def remove_from_watch_later(bvid: str):
     try:
-        config = load_config()
-        bili_jct = config.get("bili_jct", "")
         url = "https://api.bilibili.com/x/v2/history/toview/del"
         headers = get_headers()
         data = {"bvid": bvid}
@@ -78,6 +181,14 @@ async def remove_from_watch_later(bvid: str):
         result = response.json()
         if result.get("code") != 0:
             return {"status": "error", "message": result.get("message", "移除失败"), "code": result.get("code")}
+
+        conn = get_db_connection()
+        try:
+            conn.execute("DELETE FROM watchlater_videos WHERE bvid = ?", (bvid,))
+            conn.commit()
+        finally:
+            conn.close()
+
         return {"status": "success", "message": "已从稍后再看中移除"}
     except Exception as e:
         return {"status": "error", "message": f"移除失败: {str(e)}"}

@@ -1,8 +1,56 @@
+import os
+import sqlite3
+import time
 import requests
 from fastapi import APIRouter, Query
-from scripts.utils import load_config
+from scripts.utils import load_config, get_database_path
 
 router = APIRouter()
+
+DB_PATH = get_database_path("bilibili_likes.db")
+
+CREATE_TABLE = """
+CREATE TABLE IF NOT EXISTS liked_videos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bvid TEXT NOT NULL UNIQUE,
+    aid INTEGER,
+    title TEXT NOT NULL,
+    pic TEXT,
+    desc TEXT,
+    duration INTEGER DEFAULT 0,
+    tid INTEGER DEFAULT 0,
+    tname TEXT,
+    owner_name TEXT,
+    owner_mid INTEGER DEFAULT 0,
+    owner_face TEXT,
+    pubdate INTEGER DEFAULT 0,
+    view INTEGER DEFAULT 0,
+    danmaku INTEGER DEFAULT 0,
+    like_count INTEGER DEFAULT 0,
+    link TEXT,
+    fetch_time INTEGER NOT NULL
+);
+"""
+
+CREATE_INDEXES = [
+    "CREATE INDEX IF NOT EXISTS idx_liked_bvid ON liked_videos(bvid);",
+    "CREATE INDEX IF NOT EXISTS idx_liked_pubdate ON liked_videos(pubdate);",
+    "CREATE INDEX IF NOT EXISTS idx_liked_owner ON liked_videos(owner_name);",
+    "CREATE INDEX IF NOT EXISTS idx_liked_tid ON liked_videos(tid);",
+    "CREATE INDEX IF NOT EXISTS idx_liked_fetch_time ON liked_videos(fetch_time);",
+]
+
+
+def get_db_connection():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute(CREATE_TABLE)
+    for sql in CREATE_INDEXES:
+        cursor.execute(sql)
+    conn.commit()
+    return conn
 
 
 def get_headers():
@@ -26,11 +74,34 @@ def get_headers():
     return headers
 
 
+def save_liked_videos(conn, videos):
+    cursor = conn.cursor()
+    now = int(time.time())
+    for v in videos:
+        cursor.execute(
+            """INSERT INTO liked_videos
+            (bvid, aid, title, pic, desc, duration, tid, tname,
+             owner_name, owner_mid, owner_face, pubdate,
+             view, danmaku, like_count, link, fetch_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(bvid) DO UPDATE SET
+                title=excluded.title, pic=excluded.pic, desc=excluded.desc,
+                duration=excluded.duration, tid=excluded.tid, tname=excluded.tname,
+                owner_name=excluded.owner_name, owner_mid=excluded.owner_mid,
+                owner_face=excluded.owner_face, pubdate=excluded.pubdate,
+                view=excluded.view, danmaku=excluded.danmaku,
+                like_count=excluded.like_count, link=excluded.link,
+                fetch_time=excluded.fetch_time""",
+            (v["bvid"], v["aid"], v["title"], v["pic"], v["desc"],
+             v["duration"], v["tid"], v["tname"], v["owner_name"],
+             v["owner_mid"], v["owner_face"], v["pubdate"],
+             v["view"], v["danmaku"], v["like"], v["link"], now),
+        )
+    conn.commit()
+
+
 @router.get("/list", summary="获取点赞视频列表")
-async def get_like_list(
-    pn: int = Query(1, description="页码"),
-    ps: int = Query(50, description="每页数量"),
-):
+async def get_like_list():
     try:
         config = load_config()
         vmid = config.get("DedeUserID", "")
@@ -39,6 +110,7 @@ async def get_like_list(
 
         all_results = []
         current_pn = 1
+        ps = 50
         max_pages = 50
 
         while current_pn <= max_pages:
@@ -86,10 +158,36 @@ async def get_like_list(
                 break
             current_pn += 1
 
-        total = data.get("data", {}).get("page", {}).get("count", 0) if 'data' in dir() else 0
-        if not total or total < len(all_results):
-            total = len(all_results)
+        if all_results:
+            conn = get_db_connection()
+            try:
+                save_liked_videos(conn, all_results)
+            finally:
+                conn.close()
 
-        return {"status": "success", "data": {"list": all_results, "total": total, "pn": 1, "ps": len(all_results)}}
+        total = len(all_results)
+        return {"status": "success", "data": {"list": all_results, "total": total, "pn": 1, "ps": total}}
     except Exception as e:
         return {"status": "error", "message": f"获取点赞列表失败: {str(e)}"}
+
+
+@router.get("/local", summary="从本地数据库获取点赞视频")
+async def get_like_local(
+    page: int = Query(1, description="页码"),
+    size: int = Query(50, description="每页数量"),
+):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM liked_videos")
+        total = cursor.fetchone()[0]
+        offset = (page - 1) * size
+        cursor.execute(
+            "SELECT * FROM liked_videos ORDER BY pubdate DESC LIMIT ? OFFSET ?",
+            (size, offset),
+        )
+        rows = [dict(r) for r in cursor.fetchall()]
+        conn.close()
+        return {"status": "success", "data": {"list": rows, "total": total, "page": page, "size": size}}
+    except Exception as e:
+        return {"status": "error", "message": f"获取本地点赞数据失败: {str(e)}"}

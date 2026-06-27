@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+venv/
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment / Secrets
+.env
+.env.*
+config/config.yaml
+
+# Logs
+*.log
+logs/
+
+# Tauri
+src-tauri/target/
+
+# Docker
+docker-compose.override.yml
+
+# Python
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/

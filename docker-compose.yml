@@ -1,0 +1,24 @@
+services:
+  backend:
+    image: ghcr.io/lifearchiveproject/bili-history-fetcher:latest
+    container_name: bili-history-backend
+    restart: unless-stopped
+    volumes:
+      - ./config:/app/config
+      - ./output:/app/output
+    ports:
+      - "8899:8899"
+    environment:
+      - TZ=Asia/Shanghai
+      - DOCKER_ENV=true
+
+  frontend:
+    image: ghcr.io/lifearchiveproject/bili-history-frontend:latest
+    container_name: bili-history-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    environment:
+      - TZ=Asia/Shanghai

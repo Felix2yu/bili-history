@@ -93,6 +93,7 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
+.output
 dist
 
 # Gatsby files
@@ -214,9 +215,6 @@ dist/
 
 # Flycheck
 flycheck_*.el
-
-# server auth directory
-/server/
 
 # projectiles files
 .projectile

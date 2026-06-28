@@ -1,0 +1,1 @@
+import{_ as t}from"./CLac35yK.js";import{d as o,M as r,A as e}from"./CGTz1YfV.js";import"./BxVAKkzn.js";/* empty css        */import"./CLIORcfF.js";import"./ClIER68w.js";import"./B3gHBS_X.js";const d=o({__name:"settings",setup(m){return(p,s)=>(e(),r(t))}});export{d as default};

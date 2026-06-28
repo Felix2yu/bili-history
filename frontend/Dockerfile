@@ -2,18 +2,27 @@ FROM oven/bun:1 AS base
 WORKDIR /app
 
 FROM base AS install
-COPY package.json bun.lock .
+COPY package.json bun.lock* ./
 RUN bun install
 
 FROM base AS build
-ARG BACKEND_URL_ARG=/api
-ENV VITE_DEFAULT_BACKEND_URL=${BACKEND_URL_ARG}
+COPY --from=install /app/node_modules ./node_modules
 COPY . .
-COPY --from=install /app/node_modules node_modules
+ARG NUXT_BACKEND_URL_ARG=http://backend:8899
+ENV NUXT_BACKEND_URL=${NUXT_BACKEND_URL_ARG}
+ENV NUXT_PUBLIC_DEFAULT_BACKEND_URL=/api
 RUN bun run build
 
-FROM caddy:2-alpine AS release
-COPY --from=build /app/dist /app
-COPY deploy/Caddyfile /etc/caddy
+FROM node:20-alpine AS release
+WORKDIR /app
+COPY --from=build /app/.output ./.output
 
-EXPOSE 80
+ENV HOST=0.0.0.0
+ENV PORT=3000
+ENV NUXT_BACKEND_URL=http://backend:8899
+ENV NUXT_PUBLIC_DEFAULT_BACKEND_URL=/api
+ENV NODE_ENV=production
+
+EXPOSE 3000
+
+CMD ["node", ".output/server/index.mjs"]

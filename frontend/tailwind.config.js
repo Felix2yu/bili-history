@@ -2,12 +2,16 @@ import forms from '@tailwindcss/forms'
 
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: 'class', // 启用 class 模式的深色模式
+  darkMode: 'class',
   content: [
-    './src/components/tailwind/*.vue',
-    './src/components/tailwind/**/*.vue',
-    './src/App.vue',
-    // 其他文件...
+    './components/**/*.{vue,js,ts}',
+    './layouts/**/*.vue',
+    './pages/**/*.vue',
+    './composables/**/*.{js,ts}',
+    './plugins/**/*.{js,ts}',
+    './utils/**/*.{js,ts}',
+    './app.vue',
+    './error.vue',
   ],
   theme: {
     extend: {

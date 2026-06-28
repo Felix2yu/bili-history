@@ -1,4 +1,7 @@
-import { defineEventHandler, createError, getRequestURL, readBody, getHeaders, setResponseHeaders } from 'h3'
+import { defineEventHandler, createError, getRequestURL, getHeaders, setResponseHeader, readBody } from 'h3'
+import http from 'node:http'
+import https from 'node:https'
+import { URL } from 'node:url'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -11,60 +14,116 @@ export default defineEventHandler(async (event) => {
   console.log('[API Proxy]', event.method, event.path, '->', target)
 
   try {
+    const parsedUrl = new URL(target)
+    const isHttps = parsedUrl.protocol === 'https:'
+    const client = isHttps ? https : http
+
     const reqHeaders = getHeaders(event)
     const method = event.method || 'GET'
 
-    let body: any = undefined
-    if (method !== 'GET' && method !== 'HEAD') {
-      try {
-        body = await readBody(event)
-      } catch {
-        body = undefined
-      }
-    }
-
-    const response = await $fetch.raw(target, {
+    const options: http.RequestOptions = {
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port || (isHttps ? 443 : 80),
+      path: parsedUrl.pathname + parsedUrl.search,
       method,
       headers: {
         ...reqHeaders,
-        host: new URL(backendUrl).host,
+        host: parsedUrl.host,
+        connection: 'close',
       },
-      body,
-      credentials: 'include',
-      onResponse({ response }) {
-        const respHeaders: Record<string, string> = {}
-        for (const [key, value] of response.headers.entries()) {
+      family: 4,
+    }
+
+    let reqBody: Buffer | null = null
+    if (method !== 'GET' && method !== 'HEAD') {
+      try {
+        const body = await readBody(event)
+        if (body !== undefined && body !== null) {
+          if (typeof body === 'string') {
+            reqBody = Buffer.from(body)
+          } else if (Buffer.isBuffer(body)) {
+            reqBody = body
+          } else {
+            reqBody = Buffer.from(JSON.stringify(body))
+            if (!options.headers['content-type']) {
+              options.headers['content-type'] = 'application/json'
+            }
+          }
+          options.headers['content-length'] = reqBody.length.toString()
+        }
+      } catch {
+        reqBody = null
+      }
+    }
+
+    return await new Promise((resolve, reject) => {
+      const proxyReq = client.request(options, (proxyRes) => {
+        const respHeaders: Record<string, string | string[]> = {}
+        for (const [key, value] of Object.entries(proxyRes.headers)) {
           if (key.toLowerCase() === 'transfer-encoding') continue
           if (key.toLowerCase() === 'connection') continue
-          respHeaders[key] = value
+          if (value !== undefined) {
+            respHeaders[key] = value
+            setResponseHeader(event, key, value as any)
+          }
         }
-        setResponseHeaders(event, respHeaders)
-      },
-    })
 
-    return response._data
+        const chunks: Buffer[] = []
+        proxyRes.on('data', (chunk) => chunks.push(chunk))
+        proxyRes.on('end', () => {
+          const body = Buffer.concat(chunks)
+          const contentType = proxyRes.headers['content-type'] || ''
+          if (contentType.includes('application/json')) {
+            try {
+              resolve(JSON.parse(body.toString()))
+            } catch {
+              resolve(body.toString())
+            }
+          } else if (contentType.includes('text/')) {
+            resolve(body.toString())
+          } else {
+            resolve(body)
+          }
+        })
+        proxyRes.on('error', (err) => {
+          reject(err)
+        })
+      })
+
+      proxyReq.on('error', (err: any) => {
+        console.error('[API Proxy Request Error]', {
+          target,
+          method,
+          code: err.code,
+          message: err.message,
+          hostname: parsedUrl.hostname,
+          port: parsedUrl.port,
+        })
+        reject(err)
+      })
+
+      proxyReq.setTimeout(30000, () => {
+        proxyReq.destroy(new Error('Request timeout'))
+      })
+
+      if (reqBody) {
+        proxyReq.write(reqBody)
+      }
+      proxyReq.end()
+    })
   } catch (err: any) {
     console.error('[API Proxy Error]', {
       target,
       method: event.method,
       name: err?.name,
       message: err?.message,
-      statusCode: err?.statusCode || err?.status || err?.response?.status,
-      statusText: err?.statusText || err?.response?.statusText,
-      cause: err?.cause?.message || err?.cause,
       code: err?.code,
+      cause: err?.cause?.message || err?.cause,
     })
 
-    const status = err?.statusCode || err?.status || err?.response?.status || 502
-    const statusMessage = err?.statusText || err?.response?.statusText || 'Bad Gateway'
-
-    if (err?.response?._data) {
-      return err.response._data
-    }
-
     throw createError({
-      statusCode: status,
-      statusMessage,
+      statusCode: 502,
+      statusMessage: 'Bad Gateway',
       message: err?.message || 'Proxy error',
     })
   }

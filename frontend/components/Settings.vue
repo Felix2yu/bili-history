@@ -620,7 +620,7 @@ import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
 import { usePrivacyStore } from '~/stores/privacy'
 import { showDialog } from 'vant'
 import { useRoute } from 'vue-router'
-import privacyManager from '../../utils/privacyManager'
+import privacyManager from '~/utils/privacyManager'
 
 // 设置选项卡
 const settingTabs = [

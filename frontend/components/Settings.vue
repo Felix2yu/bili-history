@@ -1094,20 +1094,36 @@ const downloadSqlite = async () => {
 
 // 保存服务器地址
 const saveServerUrl = () => {
-  try {
-    // 简单的URL格式验证
-    const url = new URL(serverUrl.value)
-    setBaseUrl(serverUrl.value)
-    showNotify({
-      type: 'success',
-      message: '服务器地址已更新，页面即将刷新'
-    })
-  } catch (error) {
+  const url = serverUrl.value.trim()
+  if (!url) {
     showNotify({
       type: 'danger',
-      message: '请输入有效的URL地址'
+      message: '服务器地址不能为空'
     })
+    return
   }
+  // 支持相对路径（如 /api）和完整URL
+  const isRelativePath = url.startsWith('/')
+  const isValidUrl = isRelativePath || (() => {
+    try {
+      new URL(url)
+      return true
+    } catch {
+      return false
+    }
+  })()
+  if (!isValidUrl) {
+    showNotify({
+      type: 'danger',
+      message: '请输入有效的URL地址或相对路径（如 /api）'
+    })
+    return
+  }
+  setBaseUrl(url)
+  showNotify({
+    type: 'success',
+    message: '服务器地址已更新，页面即将刷新'
+  })
 }
 
 // 在script setup部分添加重置功能

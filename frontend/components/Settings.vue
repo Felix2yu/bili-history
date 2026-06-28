@@ -1111,14 +1111,14 @@ const saveServerUrl = () => {
 }
 
 // 在script setup部分添加重置功能
-const FALLBACK_DEFAULT_SERVER_URL = 'http://localhost:8899';
-const DEFAULT_SERVER_URL = import.meta.env.VITE_DEFAULT_BACKEND_URL || FALLBACK_DEFAULT_SERVER_URL;
+const runtimeConfig = useRuntimeConfig()
+const DEFAULT_SERVER_URL = runtimeConfig.public.defaultBackendUrl || '/api'
 
 // 重置服务器地址
 const resetServerUrl = () => {
   showDialog({
     title: '重置服务器地址',
-    message: '确定要将服务器地址重置为默认值吗？',
+    message: '确定要将服务器地址重置为默认值吗？默认值：/api（走前端代理）',
     showCancelButton: true,
     confirmButtonText: '确定',
     cancelButtonText: '取消',

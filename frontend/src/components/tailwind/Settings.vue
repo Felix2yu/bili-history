@@ -32,7 +32,7 @@
                 <div class="mb-2.5 flex items-center justify-between md:mb-3">
                   <div>
                     <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">服务器配置</h3>
-                    <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">配置API服务器地址，修改后将自动刷新页面</p>
+                    <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">配置API服务器地址，Docker部署可使用 /api 走反向代理，修改后将自动刷新页面</p>
                   </div>
                 </div>
                 <div class="flex gap-2">
@@ -40,7 +40,7 @@
                     v-model="serverUrl"
                     type="text"
                     class="block min-w-0 flex-1 rounded-md border-gray-300 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-[11px] md:text-sm"
-                    placeholder="例如：http://localhost:8899"
+                    placeholder="例如：/api 或 http://localhost:8899"
                   />
                   <div class="flex shrink-0 gap-1.5 md:gap-2">
                     <button

@@ -6,7 +6,7 @@ COPY package.json bun.lock .
 RUN bun install
 
 FROM base AS build
-ARG BACKEND_URL_ARG=http://localhost:8899
+ARG BACKEND_URL_ARG=/api
 ENV VITE_DEFAULT_BACKEND_URL=${BACKEND_URL_ARG}
 COPY . .
 COPY --from=install /app/node_modules node_modules

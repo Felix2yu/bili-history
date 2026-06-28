@@ -8,6 +8,10 @@ respond /health 200 {
 	body `{"status": "ok"}`
 }
 
+handle_path /api/* {
+	reverse_proxy backend:8899
+}
+
 root * /app
 file_server
 try_files {path} /index.html

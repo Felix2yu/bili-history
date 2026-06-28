@@ -6,8 +6,8 @@ services:
     volumes:
       - ./config:/app/config
       - ./output:/app/output
-    ports:
-      - "8899:8899"
+    expose:
+      - "8899"
     environment:
       - TZ=Asia/Shanghai
       - DOCKER_ENV=true

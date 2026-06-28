@@ -3,7 +3,7 @@ import axios from 'axios'
 import 'vant/es/notify/style'
 
 // 你的服务器地址
-const DEFAULT_FALLBACK_URL = 'http://localhost:8899';
+const DEFAULT_FALLBACK_URL = '/api';
 const VITE_CONFIGURED_DEFAULT_URL = import.meta.env.VITE_DEFAULT_BACKEND_URL || DEFAULT_FALLBACK_URL;
 const getBaseUrl = () => {
   return localStorage.getItem('baseUrl') || VITE_CONFIGURED_DEFAULT_URL
@@ -13,6 +13,7 @@ const BASE_URL = getBaseUrl()
 
 // 服务器地址列表
 const SERVER_URLS = [
+  '/api',
   'http://127.0.0.1:8899',
   'http://localhost:8899',
   'http://0.0.0.0:8899'

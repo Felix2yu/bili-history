@@ -1,17 +1,17 @@
 <template>
   <div class="transition-all duration-300 ease-in-out">
     <!-- 年度总结横幅 -->
-    <div class="mt-1 mb-3 sm:hidden">
+    <div class="mt-2 mb-3 sm:hidden px-3">
       <router-link
         to="/analytics"
-        class="flex h-10 items-center justify-between px-2 bg-gradient-to-r from-[#fb7299] to-[#FF9966] text-white"
+        class="flex h-11 items-center justify-between px-4 bg-gradient-to-r from-accent to-[#FF9966] text-white rounded-2xl shadow-lg shadow-accent/20"
       >
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
-          <span class="text-sm">点击查看年度总结</span>
+          <span class="text-sm font-medium">点击查看年度总结</span>
         </div>
         <svg class="w-4 h-4 animate-bounce-x" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -20,46 +20,45 @@
     </div>
 
     <!-- 加载状态 -->
-    <div v-if="isLoading" class="flex flex-col items-center justify-center py-16 bg-white dark:bg-gray-800 rounded-lg">
-      <div class="w-16 h-16 border-4 border-[#fb7299] border-t-transparent rounded-full animate-spin mb-4"></div>
-      <h3 class="text-xl font-medium text-gray-600 mb-2">加载中</h3>
-      <p class="text-gray-500">正在获取历史记录数据...</p>
+    <div v-if="isLoading" class="flex flex-col items-center justify-center py-16 glass-card mx-3 mt-4">
+      <div class="w-12 h-12 border-3 border-accent border-t-transparent rounded-full animate-spin mb-4"></div>
+      <h3 class="text-lg font-medium text-gray-600 dark:text-gray-300 mb-1">加载中</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">正在获取历史记录数据...</p>
     </div>
 
     <!-- 登录状态空状态 -->
-    <div v-else-if="!isLoggedIn" class="flex flex-col items-center justify-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-      <svg class="w-24 h-24 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-      </svg>
-      <h3 class="text-xl font-medium text-gray-600 dark:text-gray-300 mb-2">请先登录</h3>
-      <p class="text-gray-500 dark:text-gray-400 mb-6">登录B站账号后才能查看您的历史记录</p>
+    <div v-else-if="!isLoggedIn" class="flex flex-col items-center justify-center py-16 glass-card mx-3 mt-4">
+      <div class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+        <svg class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-600 dark:text-gray-300 mb-1">请先登录</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">登录B站账号后才能查看您的历史记录</p>
       <button
-        class="px-4 py-2 bg-[#fb7299] text-white rounded-md hover:bg-[#fb7299]/90 transition-colors duration-200 flex items-center space-x-2"
+        class="px-5 py-2.5 bg-accent text-white rounded-xl hover:bg-accent/90 transition-all duration-200 flex items-center gap-2 text-sm font-medium shadow-lg shadow-accent/20 btn-press"
         @click="openLoginDialog">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
         </svg>
         <span>点击登录</span>
       </button>
     </div>
 
     <!-- 数据为空状态 -->
-    <div v-else-if="isLoggedIn && records.length === 0"
-         class="flex flex-col items-center justify-center py-16 bg-white dark:bg-gray-800 rounded-lg">
-      <svg class="w-24 h-24 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <h3 class="text-xl font-medium text-gray-600 dark:text-gray-300 mb-2">暂无历史记录</h3>
-      <p class="text-gray-500 dark:text-gray-400 mb-6">点击下方按钮从B站获取您的历史记录</p>
+    <div v-else-if="isLoggedIn && records.length === 0" class="flex flex-col items-center justify-center py-16 glass-card mx-3 mt-4">
+      <div class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+        <svg class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-600 dark:text-gray-300 mb-1">暂无历史记录</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">点击下方按钮从B站获取您的历史记录</p>
       <button
-        class="px-4 py-2 bg-[#fb7299] text-white rounded-md hover:bg-[#fb7299]/90 transition-colors duration-200 flex items-center space-x-2"
+        class="px-5 py-2.5 bg-accent text-white rounded-xl hover:bg-accent/90 transition-all duration-200 flex items-center gap-2 text-sm font-medium shadow-lg shadow-accent/20 btn-press"
         @click="refreshData">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
         <span>获取历史记录</span>
       </button>
@@ -74,44 +73,27 @@
              style="max-width: 1152px;" key="grid-layout">
           <template v-for="(record, index) in records" :key="`grid-${record.id}-${record.view_at}`">
             <!-- 日期分割线和视频数量 -->
-            <div v-if="shouldShowDivider(index)" class="col-span-full relative py-1">
-              <div>
-                <div class="relative">
-                  <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                    <div class="w-full border-t border-gray-300 dark:border-gray-600" />
-                  </div>
-                  <div class="relative flex items-center justify-between">
-                    <div class="bg-white dark:bg-gray-900 pr-3 flex items-center space-x-2">
-                      <!-- 添加当天记录的勾选框 -->
-                      <div v-if="isBatchMode"
-                           class="flex items-center justify-center cursor-pointer"
-                           @click.stop="toggleDaySelection(record.view_at)">
-                        <div class="w-5 h-5 rounded border-2 flex items-center justify-center"
-                             :class="isDaySelected(record.view_at) ? 'bg-[#fb7299] border-[#fb7299]' : 'border-gray-300 bg-white'">
-                          <svg v-if="isDaySelected(record.view_at)" class="w-3 h-3 text-white" fill="none"
-                               viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      </div>
-                      <span class="lm:text-xs">
- {{ formatDividerDate(record.view_at) }}
- </span>
-                    </div>
-                    <div class="bg-white dark:bg-gray-900 pl-3">
- <span class="lm:text-xs text-[#FF6699]">
- {{ getDailyStatsForDate(record.view_at) }}条数据 · 总时长 {{ formatDailyWatchTime(record.view_at) }}
- </span>
+            <div v-if="shouldShowDivider(index)" class="col-span-full relative py-2">
+              <div class="relative flex items-center justify-between px-1">
+                <div class="flex items-center gap-2">
+                  <div v-if="isBatchMode" class="flex items-center justify-center cursor-pointer" @click.stop="toggleDaySelection(record.view_at)">
+                    <div class="w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all"
+                         :class="isDaySelected(record.view_at) ? 'bg-accent border-accent' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'">
+                      <svg v-if="isDaySelected(record.view_at)" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                     </div>
                   </div>
+                  <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ formatDividerDate(record.view_at) }}</span>
+                </div>
+                <div>
+                  <span class="text-xs text-accent font-medium">{{ getDailyStatsForDate(record.view_at) }}条数据 · 总时长 {{ formatDailyWatchTime(record.view_at) }}</span>
                 </div>
               </div>
             </div>
 
             <!-- 网格布局的视频卡片 -->
             <div
-              class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg overflow-hidden border border-gray-200/50 dark:border-gray-700/50 hover:border-[#FF6699] hover:shadow-md transition-all duration-200 relative group"
-              :class="{ 'ring-2 ring-[#fb7299]': selectedRecords.has(`${record.bvid}_${record.view_at}`), 'cursor-pointer': isBatchMode }"
+              class="glass-card-hover overflow-hidden relative group"
+              :class="{ 'ring-2 ring-accent': selectedRecords.has(`${record.bvid}_${record.view_at}`), 'cursor-pointer': isBatchMode }"
               @click="isBatchMode ? toggleRecordSelection(record) : null">
               <!-- 多选框 -->
               <div v-if="isBatchMode"
@@ -157,35 +139,28 @@
 
                 <!-- 按钮组 -->
                 <div v-if="!isBatchMode"
-                     class="absolute right-2 top-2 z-20 hidden group-hover:flex flex-row items-center space-x-2">
-                  <!-- 收藏按钮 - 不对直播类型显示 -->
+                     class="absolute right-2 top-2 z-20 hidden group-hover:flex flex-row items-center gap-1.5">
                   <div v-if="record.business !== 'live'"
-                       class="flex items-center justify-center w-7 h-7 bg-[#7d7c75]/60 backdrop-blur-sm hover:bg-[#7d7c75]/80 rounded-md cursor-pointer transition-all duration-200"
+                       class="glass-icon-btn !w-7 !h-7"
                        @click.stop.prevent="handleFavoriteGrid(record)">
-                    <svg class="w-4 h-4"
-                         :class="isVideoFavorited(parseInt(record.aid || record.avid || (record.business === 'archive' ? record.oid : 0), 10)) ? 'text-yellow-400' : 'text-white'"
+                    <svg class="w-3.5 h-3.5"
+                         :class="isVideoFavorited(parseInt(record.aid || record.avid || (record.business === 'archive' ? record.oid : 0), 10)) ? 'text-yellow-400' : ''"
                          :fill="isVideoFavorited(parseInt(record.aid || record.avid || (record.business === 'archive' ? record.oid : 0), 10)) ? 'currentColor' : 'none'"
-                         viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                     </svg>
                   </div>
-                  <!-- 下载按钮 - 只对视频类型显示 -->
                   <div v-if="record.business === 'archive'"
-                       class="flex items-center justify-center w-7 h-7 bg-[#7d7c75]/60 backdrop-blur-sm hover:bg-[#7d7c75]/80 rounded-md cursor-pointer transition-all duration-200"
+                       class="glass-icon-btn !w-7 !h-7"
                        @click.stop.prevent="handleDownloadGrid(record)">
-                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                   </div>
-                  <!-- 删除按钮 -->
-                  <div
-                    class="flex items-center justify-center w-7 h-7 bg-[#7d7c75]/60 backdrop-blur-sm hover:bg-[#7d7c75]/80 rounded-md cursor-pointer transition-all duration-200"
-                    @click.stop="handleDelete(record)">
-                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <div class="glass-icon-btn !w-7 !h-7 hover:!bg-red-500/20 hover:!text-red-500"
+                       @click.stop="handleDelete(record)">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </div>
                 </div>
@@ -274,35 +249,20 @@
              class="transition-all duration-300 ease-in-out transform-gpu" key="list-layout">
           <template v-for="(record, index) in records" :key="`list-${record.id}-${record.view_at}`">
             <!-- 日期分割线和视频数量 -->
-            <div v-if="shouldShowDivider(index)" class="relative py-1 max-w-4xl mx-auto">
-              <div class="px-2">
-                <div class="relative">
-                  <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                    <div class="w-full border-t border-gray-300 dark:border-gray-600" />
-                  </div>
-                  <div class="relative flex items-center justify-between">
-                    <div class="bg-white dark:bg-gray-900 pr-3 flex items-center space-x-2">
-                      <!-- 添加当天记录的勾选框 -->
-                      <div v-if="isBatchMode"
-                           class="flex items-center justify-center cursor-pointer"
-                           @click.stop="toggleDaySelection(record.view_at)">
-                        <div class="w-5 h-5 rounded border-2 flex items-center justify-center"
-                             :class="isDaySelected(record.view_at) ? 'bg-[#fb7299] border-[#fb7299]' : 'border-gray-300 bg-white'">
-                          <svg v-if="isDaySelected(record.view_at)" class="w-3 h-3 text-white" fill="none"
-                               viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
+            <div v-if="shouldShowDivider(index)" class="relative py-2 max-w-4xl mx-auto">
+              <div class="px-3">
+                <div class="relative flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div v-if="isBatchMode" class="flex items-center justify-center cursor-pointer" @click.stop="toggleDaySelection(record.view_at)">
+                      <div class="w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all"
+                           :class="isDaySelected(record.view_at) ? 'bg-accent border-accent' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'">
+                        <svg v-if="isDaySelected(record.view_at)" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                       </div>
-                      <span class="lm:text-xs">
- {{ formatDividerDate(record.view_at) }}
- </span>
                     </div>
-                    <div class="bg-white dark:bg-gray-900 pl-3">
- <span class="lm:text-xs text-[#FF6699]">
- {{ getDailyStatsForDate(record.view_at) }}条数据 · 总时长 {{ formatDailyWatchTime(record.view_at) }}
- </span>
-                    </div>
+                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ formatDividerDate(record.view_at) }}</span>
+                  </div>
+                  <div>
+                    <span class="text-xs text-accent font-medium">{{ getDailyStatsForDate(record.view_at) }}条数据 · 总时长 {{ formatDailyWatchTime(record.view_at) }}</span>
                   </div>
                 </div>
               </div>
@@ -338,72 +298,27 @@
 
     <!-- 批量操作按钮区域 -->
     <div v-if="isBatchMode && selectedRecords.size > 0"
-         class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-[90vw] max-w-[1200px]">
-      <div class="flex flex-col space-y-2 w-full">
-        <!-- 删除模式切换按钮 -->
-        <div class="flex justify-center mb-1">
-          <!-- 已移除本地/远程收藏模式切换 -->
-        </div>
-
-        <div class="flex flex-wrap gap-3 justify-center w-full mt-2">
-          <!-- 批量删除按钮 -->
-          <button
-            @click="handleBatchDelete"
-            class="w-28 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-all duration-200 flex items-center justify-center space-x-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+         class="fixed bottom-20 md:bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-[92vw] max-w-[1200px]">
+      <div class="glass-card px-4 py-3">
+        <div class="flex flex-wrap gap-2 justify-center">
+          <button @click="handleBatchDelete" class="flex items-center gap-1.5 px-3 py-2 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-all btn-press shadow-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             <span>删除({{ selectedRecords.size }})</span>
           </button>
-
-          <!-- 批量下载按钮 - 始终显示 -->
-          <button
-            @click="handleBatchDownload"
-            class="w-28 py-2 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition-all duration-200 flex items-center justify-center space-x-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
+          <button @click="handleBatchDownload" class="flex items-center gap-1.5 px-3 py-2 bg-green-500 text-white rounded-xl text-sm font-medium hover:bg-green-600 transition-all btn-press shadow-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
             <span>下载({{ selectedRecords.size }})</span>
           </button>
-
-          <!-- 批量收藏按钮 - 仅在有未收藏的视频时显示 -->
-          <button
-            v-if="!isAllFavorited && unfavoritedCount > 0"
-            @click="handleBatchFavorite"
-            class="w-28 py-2 bg-[#fb7299] text-white rounded-lg shadow-md hover:bg-[#fb7299]/90 transition-all duration-200 flex items-center justify-center space-x-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-opacity-50"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
+          <button v-if="!isAllFavorited && unfavoritedCount > 0" @click="handleBatchFavorite" class="flex items-center gap-1.5 px-3 py-2 bg-accent text-white rounded-xl text-sm font-medium hover:bg-accent/90 transition-all btn-press shadow-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
             <span>收藏({{ unfavoritedCount }})</span>
           </button>
-
-          <!-- 批量取消收藏按钮 - 仅在有已收藏的视频时显示 -->
-          <button
-            v-if="hasFavoritedVideos"
-            @click="handleBatchUnfavorite"
-            class="w-28 py-2 bg-orange-500 text-white rounded-lg shadow-md hover:bg-orange-600 transition-all duration-200 flex items-center justify-center space-x-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50"
-          >
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button v-if="hasFavoritedVideos" @click="handleBatchUnfavorite" class="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition-all btn-press shadow-sm">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             <span>取消收藏({{ favoritedCount }})</span>
           </button>
-
-          <!-- 复制链接按钮 - 始终显示 -->
-          <button
-            @click="handleCopyLinks"
-            class="w-28 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-all duration-200 flex items-center justify-center space-x-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-            </svg>
+          <button @click="handleCopyLinks" class="flex items-center gap-1.5 px-3 py-2 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition-all btn-press shadow-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
             <span>复制链接({{ selectedRecords.size }})</span>
           </button>
         </div>

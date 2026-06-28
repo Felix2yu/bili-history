@@ -617,7 +617,7 @@ import {
 } from '~/utils/api'
 import ApriseSettings from './ApriseSettings.vue'
 import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
-import { usePrivacyStore } from '../../store/privacy'
+import { usePrivacyStore } from '~/stores/privacy'
 import { showDialog } from 'vant'
 import { useRoute } from 'vue-router'
 import privacyManager from '../../utils/privacyManager'

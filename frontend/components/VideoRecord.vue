@@ -164,7 +164,7 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
-import { usePrivacyStore } from '../../store/privacy'
+import { usePrivacyStore } from '~/stores/privacy'
 import { showDialog, showNotify } from 'vant'
 import { batchDeleteHistory, updateVideoRemark, deleteBilibiliHistory } from '~/utils/api'
 import 'vant/es/dialog/style'

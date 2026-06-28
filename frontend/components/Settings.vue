@@ -1,19 +1,19 @@
 <template>
-  <div class="min-h-screen bg-gray-50/30 dark:bg-gray-900">
+  <div class="min-h-screen bg-gray-50/30 dark:bg-gray-900 pb-20 md:pb-0">
     <div class="py-2 md:py-4">
       <div class="mx-auto max-w-4xl px-0 md:px-4">
         <!-- 设置导航 -->
         <div class="mb-4 px-3 md:mb-6 md:px-0">
-          <div class="border-b border-gray-200 dark:border-gray-700">
-            <nav class="-mb-px flex space-x-3 overflow-x-auto md:space-x-6" aria-label="设置选项卡">
+          <div class="border-b border-glass-border">
+            <nav class="-mb-px flex gap-1 overflow-x-auto py-1" aria-label="设置选项卡">
               <button
                 v-for="(tab, index) in settingTabs"
                 :key="index"
                 @click="activeTab = tab.key"
-                class="flex items-center space-x-1.5 border-b-2 px-1 py-3 text-[13px] font-medium transition-colors md:space-x-2 md:text-sm"
+                class="flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 md:text-sm whitespace-nowrap"
                 :class="activeTab === tab.key
-                  ? 'border-[#fb7299] text-[#fb7299]'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300'"
+                  ? 'bg-accent/10 text-accent'
+                  : 'text-gray-500 hover:bg-white/10 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300'"
               >
                 <div class="h-4 w-4 md:h-5 md:w-5" v-html="tab.icon"></div>
                 <span>{{ tab.label }}</span>
@@ -32,7 +32,7 @@
                 <div class="mb-2.5 flex items-center justify-between md:mb-3">
                   <div>
                     <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">服务器配置</h3>
-                    <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">配置API服务器地址，默认 /api 走前端代理，无需配置后端端口</p>
+                    <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">配置API服务器地址，修改后将自动刷新页面</p>
                   </div>
                 </div>
                 <div class="flex gap-2">
@@ -40,7 +40,7 @@
                     v-model="serverUrl"
                     type="text"
                     class="block min-w-0 flex-1 rounded-md border-gray-300 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-[11px] md:text-sm"
-                    placeholder="默认：/api（走前端代理）"
+                    placeholder="例如：http://localhost:8899"
                   />
                   <div class="flex shrink-0 gap-1.5 md:gap-2">
                     <button
@@ -617,10 +617,10 @@ import {
 } from '~/utils/api'
 import ApriseSettings from './ApriseSettings.vue'
 import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
-import { usePrivacyStore } from '~/stores/privacy'
+import { usePrivacyStore } from '../../store/privacy'
 import { showDialog } from 'vant'
 import { useRoute } from 'vue-router'
-import privacyManager from '~/utils/privacyManager'
+import privacyManager from '../../utils/privacyManager'
 
 // 设置选项卡
 const settingTabs = [
@@ -1094,47 +1094,31 @@ const downloadSqlite = async () => {
 
 // 保存服务器地址
 const saveServerUrl = () => {
-  const url = serverUrl.value.trim()
-  if (!url) {
+  try {
+    // 简单的URL格式验证
+    const url = new URL(serverUrl.value)
+    setBaseUrl(serverUrl.value)
+    showNotify({
+      type: 'success',
+      message: '服务器地址已更新，页面即将刷新'
+    })
+  } catch (error) {
     showNotify({
       type: 'danger',
-      message: '服务器地址不能为空'
+      message: '请输入有效的URL地址'
     })
-    return
   }
-  // 支持相对路径（如 /api）和完整URL
-  const isRelativePath = url.startsWith('/')
-  const isValidUrl = isRelativePath || (() => {
-    try {
-      new URL(url)
-      return true
-    } catch {
-      return false
-    }
-  })()
-  if (!isValidUrl) {
-    showNotify({
-      type: 'danger',
-      message: '请输入有效的URL地址或相对路径（如 /api）'
-    })
-    return
-  }
-  setBaseUrl(url)
-  showNotify({
-    type: 'success',
-    message: '服务器地址已更新，页面即将刷新'
-  })
 }
 
 // 在script setup部分添加重置功能
-const runtimeConfig = useRuntimeConfig()
-const DEFAULT_SERVER_URL = runtimeConfig.public.defaultBackendUrl || '/api'
+const FALLBACK_DEFAULT_SERVER_URL = 'http://localhost:8899';
+const DEFAULT_SERVER_URL = import.meta.env.VITE_DEFAULT_BACKEND_URL || FALLBACK_DEFAULT_SERVER_URL;
 
 // 重置服务器地址
 const resetServerUrl = () => {
   showDialog({
     title: '重置服务器地址',
-    message: '确定要将服务器地址重置为默认值吗？默认值：/api（走前端代理）',
+    message: '确定要将服务器地址重置为默认值吗？',
     showCancelButton: true,
     confirmButtonText: '确定',
     cancelButtonText: '取消',

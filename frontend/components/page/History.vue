@@ -1,6 +1,6 @@
 <template>
   <!-- 主要内容区域 -->
-  <div>
+  <div class="pb-20 md:pb-0">
     <!-- 导航栏 -->
     <Navbar
       v-if="currentContent === 'history' && !showRemarks"

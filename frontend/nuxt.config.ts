@@ -33,12 +33,7 @@ export default defineNuxtConfig({
       '/api': {
         target: process.env.NUXT_BACKEND_URL || 'http://localhost:8899',
         changeOrigin: true,
-        prependPath: true,
-      },
-    },
-    routeRules: {
-      '/api/**': {
-        proxy: process.env.NUXT_BACKEND_URL || 'http://localhost:8899',
+        pathRewrite: { '^/api': '' },
       },
     },
   },

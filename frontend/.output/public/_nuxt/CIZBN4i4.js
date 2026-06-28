@@ -1,1 +1,0 @@
-const i="history-record:",r=(t,e)=>`${i}${t}_${e}`,a=t=>{if(!t?.bvid||!t?.view_at)return null;const e=r(t.bvid,t.view_at);return sessionStorage.setItem(e,JSON.stringify(t)),e},c=(t,e)=>{const o=r(t,e),s=sessionStorage.getItem(o);if(!s)return null;try{return JSON.parse(s)}catch(n){return console.error("解析历史记录缓存失败:",n),null}};export{c as g,a as s};

@@ -2,10 +2,13 @@ import axios from 'axios'
 // 导入通知组件
 import 'vant/es/notify/style'
 
+const isClient = typeof window !== 'undefined' && typeof localStorage !== 'undefined'
+
 // 你的服务器地址
 const DEFAULT_FALLBACK_URL = 'http://localhost:8899';
 const VITE_CONFIGURED_DEFAULT_URL = import.meta.env.VITE_DEFAULT_BACKEND_URL || DEFAULT_FALLBACK_URL;
 const getBaseUrl = () => {
+  if (!isClient) return VITE_CONFIGURED_DEFAULT_URL
   return localStorage.getItem('baseUrl') || VITE_CONFIGURED_DEFAULT_URL
 }
 
@@ -24,18 +27,30 @@ if (!SERVER_URLS.includes(VITE_CONFIGURED_DEFAULT_URL)) {
 
 // 设置服务器地址
 export const setBaseUrl = (url) => {
-  localStorage.setItem('baseUrl', url)
+  if (isClient) {
+    localStorage.setItem('baseUrl', url)
+  }
   // 更新 axios 实例的 baseURL
   updateInstanceBaseUrl(url)
   // 触发API BASE URL更新事件，供其他API模块使用
-  try {
-    const event = new CustomEvent('api-baseurl-updated', { detail: { url } })
-    window.dispatchEvent(event)
-    console.log('已触发API BaseURL更新事件:', url)
-  } catch (error) {
-    console.error('触发API BaseURL更新事件失败:', error)
+  if (isClient) {
+    try {
+      const event = new CustomEvent('api-baseurl-updated', { detail: { url } })
+      window.dispatchEvent(event)
+      console.log('已触发API BaseURL更新事件:', url)
+    } catch (error) {
+      console.error('触发API BaseURL更新事件失败:', error)
+    }
+    window.location.reload() // 刷新页面以应用新的baseUrl
   }
-  window.location.reload() // 刷新页面以应用新的baseUrl
+}
+
+// 重置服务器地址
+export const resetBaseUrl = () => {
+  if (isClient) {
+    localStorage.removeItem('baseUrl')
+    window.location.reload()
+  }
 }
 
 // 获取当前服务器地址
@@ -662,7 +677,7 @@ export const downloadVideo = async (bvid, sessdata = null, onMessage, downloadCo
   }
 
   // 从本地存储获取API密钥
-  const apiKey = localStorage.getItem('apiKey')
+  const apiKey = isClient ? localStorage.getItem('apiKey') : null
 
   // 准备请求头
   const headers = {

@@ -1676,3 +1676,69 @@ export const stopDynamicAutoFetch = (hostMid) => {
 export const deleteDynamicSpace = (hostMid) => {
   return instance.delete(`/dynamic/space/${hostMid}`)
 }
+// =============================
+// 稍后再看接口（/watchlater）
+// =============================
+
+/**
+ * 获取稍后再看列表
+ * GET /watchlater/list
+ */
+export const getWatchLaterList = () => {
+  return instance.get('/watchlater/list')
+}
+
+/**
+ * 从稍后再看中移除视频
+ * DELETE /watchlater/{bvid}
+ * @param {string} bvid - 视频 BV 号
+ */
+export const removeFromWatchLater = (bvid) => {
+  return instance.delete(`/watchlater/${bvid}`)
+}
+
+/**
+ * 从本地数据库获取稍后再看列表
+ * GET /watchlater/local
+ */
+export const getWatchLaterLocal = (params = {}) => {
+  return instance.get('/watchlater/local', { params })
+}
+// =============================
+// 我的点赞接口（/like）
+// =============================
+
+/**
+ * 获取点赞视频列表
+ * GET /like/list
+ */
+export const getLikeList = () => {
+  return instance.get('/like/list')
+}
+
+/**
+ * 从本地数据库获取点赞视频列表
+ * GET /like/local
+ */
+export const getLikeLocal = (params = {}) => {
+  return instance.get('/like/local', { params })
+}
+// =============================
+// 历史记录(简化)接口（/history_simple）
+// =============================
+
+/**
+ * 获取观看历史记录并存入数据库
+ * GET /history_simple/list
+ */
+export const getHistorySimpleList = () => {
+  return instance.get('/history_simple/list')
+}
+
+/**
+ * 从本地数据库获取历史记录
+ * GET /history_simple/local
+ */
+export const getHistorySimpleLocal = (params = {}) => {
+  return instance.get('/history_simple/local', { params })
+}

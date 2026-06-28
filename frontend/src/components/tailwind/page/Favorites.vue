@@ -278,6 +278,11 @@
                         {{ formatDuration(item.duration) }}
                       </div>
 
+                      <!-- 分区标签 -->
+                      <div v-if="item.tname" class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]">
+                        {{ item.tname }}
+                      </div>
+
 
                     </div>
 

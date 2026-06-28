@@ -335,3 +335,71 @@ async def update_integrity_check_config(request: IntegrityCheckConfigRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"更新数据完整性校验配置时出错: {str(e)}")
+
+
+@router.get("/status", summary="获取同步状态")
+async def get_sync_status():
+    """获取所有 JSON 文件的同步状态摘要"""
+    try:
+        from scripts.sync_state import get_sync_summary, get_all_sync_states
+        summary = get_sync_summary()
+        states = get_all_sync_states()
+        return {
+            "status": "success",
+            "data": {
+                "summary": summary,
+                "files": states[:100],
+            }
+        }
+    except Exception as e:
+        return {"status": "error", "message": f"获取同步状态失败: {str(e)}"}
+
+
+@router.post("/incremental", summary="增量同步")
+async def incremental_sync(
+    background_tasks: BackgroundTasks,
+    async_mode: bool = Query(False, description="是否异步执行"),
+):
+    """增量同步：只导入已更改的 JSON 文件"""
+    try:
+        from scripts.incremental_import import incremental_import
+
+        if async_mode:
+            background_tasks.add_task(incremental_import)
+            return {
+                "status": "success",
+                "message": "增量同步任务已在后台启动",
+            }
+
+        result = incremental_import()
+        return {
+            "status": "success",
+            "data": result,
+        }
+    except Exception as e:
+        return {"status": "error", "message": f"增量同步失败: {str(e)}"}
+
+
+@router.post("/force", summary="强制全量同步")
+async def force_sync(
+    background_tasks: BackgroundTasks,
+    async_mode: bool = Query(False, description="是否异步执行"),
+):
+    """强制全量同步：重新导入所有 JSON 文件"""
+    try:
+        from scripts.incremental_import import full_import
+
+        if async_mode:
+            background_tasks.add_task(full_import)
+            return {
+                "status": "success",
+                "message": "全量同步任务已在后台启动",
+            }
+
+        result = full_import()
+        return {
+            "status": "success",
+            "data": result,
+        }
+    except Exception as e:
+        return {"status": "error", "message": f"全量同步失败: {str(e)}"}

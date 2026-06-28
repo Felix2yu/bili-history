@@ -11,6 +11,8 @@ import MediaManager from '../components/tailwind/page/MediaManager.vue'
 import Favorites from '../components/tailwind/page/Favorites.vue'
 import BiliTools from '../components/tailwind/page/BiliTools.vue'
 import VideoActions from '../components/tailwind/page/VideoActions.vue'
+import WatchLater from '../components/tailwind/page/WatchLater.vue'
+import MyLikes from '../components/tailwind/page/MyLikes.vue'
 
 const routes = [
   {
@@ -84,6 +86,16 @@ const routes = [
         path: 'favorites',
         name: 'Favorites',
         component: Favorites
+      },
+      {
+        path: 'watchlater',
+        name: 'WatchLater',
+        component: WatchLater
+      },
+      {
+        path: 'likes',
+        name: 'MyLikes',
+        component: MyLikes
       },
       {
         path: 'video-downloader',

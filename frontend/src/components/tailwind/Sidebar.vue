@@ -52,13 +52,47 @@
             <span v-show="!isCollapsed" class="truncate">我的收藏</span>
           </router-link>
 
-          <!-- 年度总结 -->
+          <!-- 稍后再看 -->
           <router-link
-            to="/analytics"
-            :title="isCollapsed ? '年度总结' : ''"
+            to="/watchlater"
+            :title="isCollapsed ? '稍后再看' : ''"
             class="flex items-center py-1.5 text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out text-sm"
             :class="[
-              { 'bg-[#fb7299]/10 text-[#fb7299] dark:bg-[#fb7299]/20': currentContent === 'analytics' },
+              { 'bg-[#fb7299]/10 text-[#fb7299] dark:bg-[#fb7299]/20': currentContent === 'watchlater' },
+              { 'justify-center': isCollapsed },
+              isCollapsed ? 'px-2' : 'px-3 rounded-lg'
+            ]"
+          >
+            <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-3': !isCollapsed }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span v-show="!isCollapsed" class="truncate">稍后再看</span>
+          </router-link>
+
+          <!-- 我的点赞 -->
+          <router-link
+            to="/likes"
+            :title="isCollapsed ? '我的点赞' : ''"
+            class="flex items-center py-1.5 text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out text-sm"
+            :class="[
+              { 'bg-[#fb7299]/10 text-[#fb7299] dark:bg-[#fb7299]/20': currentContent === 'likes' },
+              { 'justify-center': isCollapsed },
+              isCollapsed ? 'px-2' : 'px-3 rounded-lg'
+            ]"
+          >
+            <svg class="w-5 h-5 flex-shrink-0" :class="{ 'mr-3': !isCollapsed }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+            </svg>
+            <span v-show="!isCollapsed" class="truncate">我的点赞</span>
+          </router-link>
+
+          <!-- 年度总结 -->
+          <a
+            href="/analytics"
+            @click.prevent="openAnalytics"
+            :title="isCollapsed ? '年度总结' : ''"
+            class="flex items-center py-1.5 text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out text-sm cursor-pointer"
+            :class="[
               { 'justify-center': isCollapsed },
               isCollapsed ? 'px-2' : 'px-3 rounded-lg'
             ]"
@@ -67,7 +101,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             <span v-show="!isCollapsed" class="truncate">年度总结</span>
-          </router-link>
+          </a>
 
           <!-- 媒体管理（整合图片管理和视频下载） -->
           <router-link
@@ -310,6 +344,8 @@ const currentContent = computed(() => {
   if (path.startsWith('/downloads')) return 'downloads'
   if (path.startsWith('/media')) return 'media'
   if (path.startsWith('/favorites')) return 'favorites'
+  if (path.startsWith('/watchlater')) return 'watchlater'
+  if (path.startsWith('/likes')) return 'likes'
   if (path.startsWith('/bili-tools')) return 'bili-tools'
   return 'history' // 默认返回历史记录
 })
@@ -358,6 +394,12 @@ const changeContent = (content) => {
     emit('update:showRemarks', false)
       router.push('/settings')
   }
+}
+
+// 在新标签页打开年度总结
+const openAnalytics = () => {
+  const resolved = router.resolve({ path: '/analytics' })
+  window.open(resolved.href, '_blank')
 }
 
 // 判断是否在历史记录页面（包括分页）

@@ -5,3 +5,12 @@ __pycache__
 .dockerignore
 Dockerfile
 cache
+output
+config
+*.egg-info
+dist
+build
+.mypy_cache
+.pytest_cache
+.ruff_cache
+*.pyc

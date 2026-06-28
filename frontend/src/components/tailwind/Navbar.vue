@@ -1,5 +1,5 @@
 <template>
-  <div class="sticky top-0 z-40">
+  <div class="sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
     <nav class="glass border-b border-glass-border">
       <div class="mx-auto transition-all duration-300 ease-in-out" :class="{'max-w-4xl': layout === 'list', 'max-w-6xl': layout === 'grid'}">
         <div class="flex items-center justify-between px-3 py-2.5 gap-3">

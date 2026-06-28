@@ -43,7 +43,7 @@ export default defineNuxtConfig({
       title: 'Bilibili 历史记录管理',
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1.0' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover' },
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/logo.ico' },

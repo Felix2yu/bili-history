@@ -4,25 +4,29 @@ import 'vant/es/notify/style'
 
 const isClient = typeof window !== 'undefined' && typeof localStorage !== 'undefined'
 
-// 你的服务器地址
-const DEFAULT_FALLBACK_URL = 'http://localhost:8899';
-const VITE_CONFIGURED_DEFAULT_URL = import.meta.env.VITE_DEFAULT_BACKEND_URL || DEFAULT_FALLBACK_URL;
+// 客户端默认走 /api 相对路径，通过 Nitro 代理转发到后端
+const CLIENT_DEFAULT_URL = (typeof process !== 'undefined' && process.env?.NUXT_PUBLIC_DEFAULT_BACKEND_URL) || '/api'
+// 服务端直接连后端
+const SERVER_DEFAULT_URL = (typeof process !== 'undefined' && process.env?.NUXT_BACKEND_URL) || 'http://localhost:8899'
+
 const getBaseUrl = () => {
-  if (!isClient) return VITE_CONFIGURED_DEFAULT_URL
-  return localStorage.getItem('baseUrl') || VITE_CONFIGURED_DEFAULT_URL
+  if (!isClient) return SERVER_DEFAULT_URL
+  return localStorage.getItem('baseUrl') || CLIENT_DEFAULT_URL
 }
 
 const BASE_URL = getBaseUrl()
 
 // 服务器地址列表
 const SERVER_URLS = [
+  '/api',
   'http://127.0.0.1:8899',
   'http://localhost:8899',
   'http://0.0.0.0:8899'
 ]
 
-if (!SERVER_URLS.includes(VITE_CONFIGURED_DEFAULT_URL)) {
-  SERVER_URLS.unshift(VITE_CONFIGURED_DEFAULT_URL)
+const clientDefault = isClient ? CLIENT_DEFAULT_URL : SERVER_DEFAULT_URL
+if (!SERVER_URLS.includes(clientDefault)) {
+  SERVER_URLS.unshift(clientDefault)
 }
 
 // 设置服务器地址

@@ -23,7 +23,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      defaultBackendUrl: process.env.NUXT_PUBLIC_DEFAULT_BACKEND_URL || 'http://localhost:8899',
+      defaultBackendUrl: process.env.NUXT_PUBLIC_DEFAULT_BACKEND_URL || '/api',
     },
     backendUrl: process.env.NUXT_BACKEND_URL || 'http://localhost:8899',
   },

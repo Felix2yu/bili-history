@@ -1,4 +1,4 @@
-import { defineEventHandler, proxyRequest, createError, getRequestURL, readBody } from 'h3'
+import { defineEventHandler, createError, getRequestURL, readBody, getHeaders, setResponseHeaders } from 'h3'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -11,20 +11,61 @@ export default defineEventHandler(async (event) => {
   console.log('[API Proxy]', event.method, event.path, '->', target)
 
   try {
-    const result = await proxyRequest(event, target, {
+    const reqHeaders = getHeaders(event)
+    const method = event.method || 'GET'
+
+    let body: any = undefined
+    if (method !== 'GET' && method !== 'HEAD') {
+      try {
+        body = await readBody(event)
+      } catch {
+        body = undefined
+      }
+    }
+
+    const response = await $fetch.raw(target, {
+      method,
       headers: {
+        ...reqHeaders,
         host: new URL(backendUrl).host,
       },
-      fetch: $fetch.native,
-      cookieDomainRewrite: '',
+      body,
+      credentials: 'include',
+      onResponse({ response }) {
+        const respHeaders: Record<string, string> = {}
+        for (const [key, value] of response.headers.entries()) {
+          if (key.toLowerCase() === 'transfer-encoding') continue
+          if (key.toLowerCase() === 'connection') continue
+          respHeaders[key] = value
+        }
+        setResponseHeaders(event, respHeaders)
+      },
     })
-    return result
+
+    return response._data
   } catch (err: any) {
-    console.error('[API Proxy Error]', target, err.statusCode || err.status, err.message)
+    console.error('[API Proxy Error]', {
+      target,
+      method: event.method,
+      name: err?.name,
+      message: err?.message,
+      statusCode: err?.statusCode || err?.status || err?.response?.status,
+      statusText: err?.statusText || err?.response?.statusText,
+      cause: err?.cause?.message || err?.cause,
+      code: err?.code,
+    })
+
+    const status = err?.statusCode || err?.status || err?.response?.status || 502
+    const statusMessage = err?.statusText || err?.response?.statusText || 'Bad Gateway'
+
+    if (err?.response?._data) {
+      return err.response._data
+    }
+
     throw createError({
-      statusCode: err.statusCode || 502,
-      statusMessage: err.statusMessage || 'Bad Gateway',
-      message: err.message || 'Proxy error',
+      statusCode: status,
+      statusMessage,
+      message: err?.message || 'Proxy error',
     })
   }
 })

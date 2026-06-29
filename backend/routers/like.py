@@ -39,7 +39,6 @@ CREATE_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_liked_owner ON liked_videos(owner_name);",
     "CREATE INDEX IF NOT EXISTS idx_liked_tid ON liked_videos(tid);",
     "CREATE INDEX IF NOT EXISTS idx_liked_fetch_time ON liked_videos(fetch_time);",
-    "CREATE INDEX IF NOT EXISTS idx_liked_is_seen ON liked_videos(is_seen);",
 ]
 
 MIGRATE_IS_SEEN = "ALTER TABLE liked_videos ADD COLUMN is_seen INTEGER DEFAULT 0"

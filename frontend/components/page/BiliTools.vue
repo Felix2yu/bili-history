@@ -188,7 +188,7 @@
                 </div>
 
                 <!-- 评论列表 -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="glass-card overflow-hidden">
                   <!-- 评论项 -->
                   <div v-if="!commentLoading && comments.length > 0" class="divide-y divide-gray-100">
                     <div v-for="comment in comments" :key="comment.rpid" class="p-4 md:p-6">

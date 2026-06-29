@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <!-- 输入与操作 -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+    <div class="glass-card p-4">
       <div class="flex items-center space-x-3">
         <div class="flex-1">
           <SimpleSearchBar
@@ -25,7 +25,7 @@
     </div>
 
     <!-- 用户信息卡片 -->
-    <div v-if="hostInfo" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex items-center space-x-4">
+    <div v-if="hostInfo" class="glass-card p-4 flex items-center space-x-4">
       <img :src="hostFaceUrl" alt="face" class="w-14 h-14 rounded-full object-cover border" />
       <div class="flex-1 min-w-0">
         <div class="text-base font-medium truncate">{{ hostInfo.up_name || `UID ${hostInfo.host_mid}` }}</div>
@@ -45,7 +45,7 @@
     </div>
 
     <!-- 已抓取的UP列表 -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+    <div class="glass-card p-4">
       <div class="flex items-center justify-between mb-3">
         <div class="text-sm font-medium">已抓取的UP</div>
         <button class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" @click="loadHosts">刷新</button>
@@ -67,7 +67,7 @@
     </div>
 
     <!-- SSE 实时日志：下载中或有历史日志时显示 -->
-    <div v-if="downloading || logs.length" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+    <div v-if="downloading || logs.length" class="glass-card p-4">
       <div class="flex items-center justify-between">
         <div class="text-sm font-medium">实时日志</div>
         <button class="text-xs text-gray-500 hover:text-gray-700" @click="logs=[]">清空</button>
@@ -81,7 +81,7 @@
     </div>
 
     <!-- 已下载动态（数据库读取） -->
-    <div v-if="hostMid && items.length" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+    <div v-if="hostMid && items.length" class="glass-card p-4">
       <div class="text-sm font-medium mb-3">已下载动态</div>
       <div class="space-y-3">
         <div v-for="it in items" :key="it.id_str">

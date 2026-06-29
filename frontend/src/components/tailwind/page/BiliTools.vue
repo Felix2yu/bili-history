@@ -44,7 +44,7 @@
 
             <!-- 评论查询 -->
             <div v-if="activeTab === 'comment-query'" class="animate-fadeIn">
-              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <div class="glass-card p-6">
                 <!-- 用户ID输入区域 -->
                 <div class="mb-6 bg-transparent">
                   <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">B站评论查询</h2>
@@ -188,7 +188,7 @@
                 </div>
 
                 <!-- 评论列表 -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="glass-card overflow-hidden">
                   <!-- 评论项 -->
                   <div v-if="!commentLoading && comments.length > 0" class="divide-y divide-gray-100">
                     <div v-for="comment in comments" :key="comment.rpid" class="p-4 md:p-6">

@@ -17,7 +17,7 @@
     <div v-if="remarkRecords.length > 0" class="grid grid-cols-1 gap-6">
       <div v-for="record in remarkRecords"
             :key="record.bvid + record.view_at"
-            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 dark:border-gray-700">
+            class="glass-card-hover overflow-hidden">
         <div class="flex p-4 space-x-6">
           <!-- 左侧：视频信息 -->
           <div class="w-64 flex-shrink-0">

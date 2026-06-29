@@ -2,29 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 深色模式全局样式 */
+@import './assets/styles/design-tokens.css';
+@import './assets/styles/glass.css';
+@import './assets/styles/transitions.css';
+
+:root:root {
+  --van-primary-color: #fb7299;
+}
+
 @layer base {
-  /* 确保html和body支持深色模式 */
   html {
     transition: background-color 0.3s, color 0.3s;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  
+
   body {
     @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100;
     transition: background-color 0.3s, color 0.3s;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
+      'Helvetica Neue', Arial, sans-serif;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+  }
+  .dark * {
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
   }
 }
-:root:root {
-  --van-primary-color: #ff6699; /* 修改Vant主颜色 */
-}
 
-
-
-
-
-
-
-/* 计算弹窗管理样式 */
+/* Vant dialog fixes */
 .van-dialog {
   position: fixed !important;
   top: 50% !important;
@@ -34,9 +43,33 @@
   max-height: 95vh !important;
   overflow-y: auto !important;
 }
-
-/* 弹窗内容滚动样式 */
 .van-dialog__content {
   max-height: 85vh;
   overflow-y: auto;
+}
+
+/* Line clamp utility */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

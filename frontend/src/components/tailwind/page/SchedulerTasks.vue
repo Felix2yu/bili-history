@@ -9,7 +9,7 @@
             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#fb7299]"></div>
           </div>
 
-          <div v-else-if="tasks.length === 0" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 text-center">
+          <div v-else-if="tasks.length === 0" class="glass-card p-6 text-center">
             <!-- 在空状态页面添加标题和新建按钮 -->
             <div class="flex justify-between items-center mb-6">
               <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">计划任务</h3>
@@ -28,9 +28,9 @@
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">点击"新建任务"按钮创建您的第一个计划任务</p>
           </div>
 
-          <div v-else class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <div v-else class="glass-card overflow-hidden">
             <!-- 添加表格标题 -->
-            <div class="px-4 py-3 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+            <div class="px-4 py-3 flex justify-between items-center border-b border-glass-border">
               <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">计划任务</h3>
               <button 
                 @click="openCreateTaskModal" 

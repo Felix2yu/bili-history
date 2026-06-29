@@ -1,96 +1,84 @@
 <template>
-  <Sidebar @change-content="currentContent = $event" v-model:showRemarks="showRemarks">
-    <!-- 主要内容区域 -->
-    <div class="h-screen overflow-y-auto">
-      <router-view></router-view>
-    </div>
-  </Sidebar>
+  <div class="flex h-screen overflow-hidden">
+    <!-- Desktop Sidebar (permanent) -->
+    <aside class="hidden md:flex glass-sidebar flex-shrink-0 flex-col h-full w-60 z-40">
+      <Sidebar />
+    </aside>
 
-  <!-- 数据同步管理模态框 - 全局层级 -->
-  <DataSyncManager 
-    v-model:showModal="showDataSyncModal"
-    :initialTab="currentSyncTab"
-    @sync-complete="handleSyncComplete"
-    @check-complete="handleCheckComplete"
-  />
+    <!-- Main content area -->
+    <main class="flex-1 h-full overflow-y-auto overflow-x-hidden pb-16 md:pb-0">
+      <slot />
+    </main>
+
+    <!-- Mobile bottom tab bar -->
+    <MobileTabBar />
+
+    <!-- Mobile drawer sidebar -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="showSidebar"
+          class="fixed inset-0 z-[55] bg-black/30 backdrop-blur-sm md:hidden"
+          @click="showSidebar = false"
+        />
+      </Transition>
+      <Transition name="slide-drawer">
+        <div
+          v-if="showSidebar"
+          class="fixed top-0 left-0 bottom-0 z-[60] glass-sidebar w-64 flex flex-col md:hidden"
+        >
+          <Sidebar @navigate="showSidebar = false" />
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- DataSyncManager modal -->
+    <DataSyncManager
+      v-model:showModal="showDataSyncModal"
+      :initialTab="currentSyncTab"
+      @sync-complete="handleSyncComplete"
+      @check-complete="handleCheckComplete"
+    />
+  </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, onUnmounted, provide } from 'vue'
 import Sidebar from '../Sidebar.vue'
+import MobileTabBar from './MobileTabBar.vue'
 import DataSyncManager from '../DataSyncManager.vue'
 
-const route = useRoute()
+const showSidebar = ref(false)
+provide('toggleSidebar', () => { showSidebar.value = !showSidebar.value })
 
-// 当前显示的内容
-const currentContent = ref('history')
-const showRemarks = ref(false)
-
-// 数据同步弹窗状态
 const showDataSyncModal = ref(false)
 const currentSyncTab = ref('integrity')
 
-// 监听路由变化
-watch(
-  () => route.path,
-  (path) => {
-    if (path === '/settings') {
-      currentContent.value = 'settings'
-      showRemarks.value = false
-    } else if (path === '/media') {
-      currentContent.value = 'media'
-      
-      // 如果是通过备注路由重定向过来的，需要显示备注
-      if (route.query.tab === 'remarks') {
-        showRemarks.value = true
-      } else {
-        showRemarks.value = false
-      }
-    } else if (path === '/' || path.startsWith('/page/')) {
-      currentContent.value = 'history'
-      showRemarks.value = false
-    } else if (path === '/analytics') {
-      currentContent.value = 'analytics'
-      showRemarks.value = false
-    } else if (path === '/images') {
-      currentContent.value = 'images'
-      showRemarks.value = false
-    } else if (path === '/scheduler') {
-      currentContent.value = 'scheduler'
-      showRemarks.value = false
-    } else if (path === '/video-downloader') {
-      currentContent.value = 'video-downloader'
-      showRemarks.value = false
-    }
-  },
-  { immediate: true }
-)
+const handleSyncComplete = (result) => { console.log('同步完成:', result) }
+const handleCheckComplete = (result) => { console.log('完整性检查完成:', result) }
 
-// 处理同步完成事件
-const handleSyncComplete = (result) => {
-  console.log('同步完成:', result)
-}
-
-// 处理检查完成事件
-const handleCheckComplete = (result) => {
-  console.log('完整性检查完成:', result)
-}
-
-// 监听自定义全局事件
 onMounted(() => {
   window.addEventListener('open-data-sync-manager', handleOpenDataSyncManager)
 })
-
 onUnmounted(() => {
   window.removeEventListener('open-data-sync-manager', handleOpenDataSyncManager)
 })
 
-// 处理打开数据同步管理器事件
 const handleOpenDataSyncManager = (event) => {
   if (event.detail && event.detail.tab) {
     currentSyncTab.value = event.detail.tab
   }
   showDataSyncModal.value = true
 }
-</script> 
+</script>
+
+<style scoped>
+.slide-drawer-enter-active,
+.slide-drawer-leave-active {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-drawer-enter-from,
+.slide-drawer-leave-to {
+  transform: translateX(-100%);
+}
+</style>

@@ -3,32 +3,32 @@
     <div class="py-6">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- 主内容卡片 -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div class="glass-card overflow-hidden">
           <!-- 标签导航 -->
-          <div class="border-b border-gray-200 dark:border-gray-700">
-            <nav class="-mb-px flex px-6 overflow-x-auto" aria-label="B站工具选项卡">
+          <div class="px-3 py-2">
+            <nav class="flex gap-1 overflow-x-auto" aria-label="B站工具选项卡">
               <button
                 @click="activeTab = 'video-download'"
-                class="py-4 px-3 border-b-2 font-medium text-sm flex items-center space-x-2"
+                class="py-2 px-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200 whitespace-nowrap"
                 :class="activeTab === 'video-download'
-                  ? 'border-[#fb7299] text-[#fb7299]'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+                  ? 'bg-accent/10 text-accent'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/10 dark:hover:bg-white/5'"
               >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 <span>视频下载</span>
               </button>
 
               <button
                 @click="activeTab = 'comment-query'"
-                class="ml-8 py-4 px-3 border-b-2 font-medium text-sm flex items-center space-x-2"
+                class="py-2 px-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200 whitespace-nowrap"
                 :class="activeTab === 'comment-query'
-                  ? 'border-[#fb7299] text-[#fb7299]'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+                  ? 'bg-accent/10 text-accent'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/10 dark:hover:bg-white/5'"
               >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
                 <span>评论查询</span>
               </button>
@@ -44,7 +44,7 @@
 
             <!-- 评论查询 -->
             <div v-if="activeTab === 'comment-query'" class="animate-fadeIn">
-              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <div class="glass-card p-6">
                 <!-- 用户ID输入区域 -->
                 <div class="mb-6 bg-transparent">
                   <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">B站评论查询</h2>
@@ -188,7 +188,7 @@
                 </div>
 
                 <!-- 评论列表 -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="glass-card overflow-hidden">
                   <!-- 评论项 -->
                   <div v-if="!commentLoading && comments.length > 0" class="divide-y divide-gray-100">
                     <div v-for="comment in comments" :key="comment.rpid" class="p-4 md:p-6">

@@ -1,19 +1,19 @@
 <template>
-  <div class="min-h-screen bg-gray-50/30 dark:bg-gray-900">
+  <div class="min-h-screen bg-gray-50/30 dark:bg-gray-900 pb-20 md:pb-0">
     <div class="py-2 md:py-4">
       <div class="mx-auto max-w-4xl px-0 md:px-4">
         <!-- 设置导航 -->
         <div class="mb-4 px-3 md:mb-6 md:px-0">
-          <div class="border-b border-gray-200 dark:border-gray-700">
-            <nav class="-mb-px flex space-x-3 overflow-x-auto md:space-x-6" aria-label="设置选项卡">
+          <div class="border-b border-glass-border">
+            <nav class="-mb-px flex gap-1 overflow-x-auto py-1" aria-label="设置选项卡">
               <button
                 v-for="(tab, index) in settingTabs"
                 :key="index"
                 @click="activeTab = tab.key"
-                class="flex items-center space-x-1.5 border-b-2 px-1 py-3 text-[13px] font-medium transition-colors md:space-x-2 md:text-sm"
+                class="flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 md:text-sm whitespace-nowrap"
                 :class="activeTab === tab.key
-                  ? 'border-[#fb7299] text-[#fb7299]'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300'"
+                  ? 'bg-accent/10 text-accent'
+                  : 'text-gray-500 hover:bg-white/10 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300'"
               >
                 <div class="h-4 w-4 md:h-5 md:w-5" v-html="tab.icon"></div>
                 <span>{{ tab.label }}</span>
@@ -1095,9 +1095,16 @@ const downloadSqlite = async () => {
 // 保存服务器地址
 const saveServerUrl = () => {
   try {
-    // 简单的URL格式验证
-    const url = new URL(serverUrl.value)
-    setBaseUrl(serverUrl.value)
+    const val = serverUrl.value.trim()
+    if (!val) {
+      showNotify({ type: 'danger', message: '请输入服务器地址' })
+      return
+    }
+    const isRelative = val.startsWith('/')
+    if (!isRelative) {
+      new URL(val)
+    }
+    setBaseUrl(val)
     showNotify({
       type: 'success',
       message: '服务器地址已更新，页面即将刷新'
@@ -1105,7 +1112,7 @@ const saveServerUrl = () => {
   } catch (error) {
     showNotify({
       type: 'danger',
-      message: '请输入有效的URL地址'
+      message: '请输入有效的URL地址（如 http://localhost:8899 或 /api）'
     })
   }
 }

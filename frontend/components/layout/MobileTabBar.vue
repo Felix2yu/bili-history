@@ -93,18 +93,18 @@ const BookmarkIcon = {
   }
 }
 
-const CubeIcon = {
+const ClockIcon = {
   render() {
     return h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.8' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' })
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' })
     ])
   }
 }
 
-const WrenchIcon = {
+const HeartIcon = {
   render() {
     return h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.8' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M13 10V3L4 14h7v7l9-11h-7z' })
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' })
     ])
   }
 }
@@ -120,8 +120,8 @@ const UserIcon = {
 const tabs = [
   { label: '首页', route: '/', icon: HomeIcon },
   { label: '收藏', route: '/favorites', icon: BookmarkIcon },
-  { label: '媒体', route: '/media', icon: CubeIcon },
-  { label: '工具', route: '/bili-tools', icon: WrenchIcon },
+  { label: '稍后再看', route: '/watchlater', icon: ClockIcon },
+  { label: '我的点赞', route: '/likes', icon: HeartIcon },
   { label: '我的', route: '/settings', icon: UserIcon },
 ]
 

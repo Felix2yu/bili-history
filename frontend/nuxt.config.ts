@@ -6,7 +6,7 @@ export default defineNuxtConfig({
   modules: [
     '@pinia/nuxt',
     '@vueuse/nuxt',
-    '@vite-pwa/nuxt',
+    // '@vite-pwa/nuxt',
   ],
 
   css: [

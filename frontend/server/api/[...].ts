@@ -2,6 +2,7 @@ import { defineEventHandler, createError, getRequestURL, getHeaders, setResponse
 import http from 'node:http'
 import https from 'node:https'
 import { URL } from 'node:url'
+import { ServerResponse } from 'node:http'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -10,8 +11,6 @@ export default defineEventHandler(async (event) => {
   const reqUrl = getRequestURL(event)
   const path = reqUrl.pathname.replace(/^\/api/, '') + reqUrl.search
   const target = backendUrl + path
-
-  console.log('[API Proxy]', event.method, event.path, '->', target)
 
   try {
     const parsedUrl = new URL(target)
@@ -58,13 +57,9 @@ export default defineEventHandler(async (event) => {
 
     return await new Promise((resolve, reject) => {
       const proxyReq = client.request(options, (proxyRes) => {
-        const respHeaders: Record<string, string | string[]> = {}
+        const skipHeaders = new Set(['transfer-encoding', 'connection'])
         for (const [key, value] of Object.entries(proxyRes.headers)) {
-          if (key.toLowerCase() === 'transfer-encoding') continue
-          if (key.toLowerCase() === 'connection') continue
-          if (key.toLowerCase() === 'content-length') continue
-          if (value !== undefined) {
-            respHeaders[key] = value
+          if (!skipHeaders.has(key.toLowerCase()) && value !== undefined) {
             setResponseHeader(event, key, value as any)
           }
         }
@@ -73,18 +68,9 @@ export default defineEventHandler(async (event) => {
         proxyRes.on('data', (chunk) => chunks.push(chunk))
         proxyRes.on('end', () => {
           const body = Buffer.concat(chunks)
-          const contentType = proxyRes.headers['content-type'] || ''
-          if (contentType.includes('application/json')) {
-            try {
-              resolve(JSON.parse(body.toString()))
-            } catch {
-              resolve(body.toString())
-            }
-          } else if (contentType.includes('text/')) {
-            resolve(body.toString())
-          } else {
-            resolve(body)
-          }
+          const ct = (proxyRes.headers['content-type'] || 'application/json') as string
+          setResponseHeader(event, 'content-type', ct)
+          resolve(body)
         })
         proxyRes.on('error', (err) => {
           reject(err)
@@ -97,8 +83,6 @@ export default defineEventHandler(async (event) => {
           method,
           code: err.code,
           message: err.message,
-          hostname: parsedUrl.hostname,
-          port: parsedUrl.port,
         })
         reject(err)
       })
@@ -116,10 +100,7 @@ export default defineEventHandler(async (event) => {
     console.error('[API Proxy Error]', {
       target,
       method: event.method,
-      name: err?.name,
       message: err?.message,
-      code: err?.code,
-      cause: err?.cause?.message || err?.cause,
     })
 
     throw createError({

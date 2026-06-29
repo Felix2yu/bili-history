@@ -51,12 +51,12 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute(CREATE_TABLE)
-    for sql in CREATE_INDEXES:
-        cursor.execute(sql)
     try:
         cursor.execute(MIGRATE_IS_SEEN)
     except sqlite3.OperationalError:
         pass
+    for sql in CREATE_INDEXES:
+        cursor.execute(sql)
     conn.commit()
     return conn
 

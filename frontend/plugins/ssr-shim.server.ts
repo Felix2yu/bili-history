@@ -46,6 +46,19 @@ export default defineNuxtPlugin(() => {
           appendChild: () => {},
           removeChild: () => {},
           href: '',
+          style: {},
+          classList: { add: () => {}, remove: () => {}, toggle: () => {} },
+        }),
+        getElementById: () => null,
+        createDocumentFragment: () => ({
+          appendChild: () => {},
+          append: () => {},
+        }),
+        createRange: () => ({
+          selectNodeContents: () => {},
+          deleteContents: () => {},
+          extractContents: () => ({ childNodes: [] }),
+          createContextualFragment: () => ({ nodeType: 11, childNodes: [] }),
         }),
         documentElement: {
           classList: {

@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-50/30 dark:bg-gray-900 pb-20 md:pb-0">
     <div class="py-6">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div class="glass-card overflow-hidden">
           <div class="border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
             <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">稍后再看</h2>
             <div class="flex items-center space-x-3">

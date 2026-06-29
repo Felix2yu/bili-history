@@ -1,7 +1,7 @@
 <template>
-  <div class="h-screen overflow-hidden">
+  <div class="h-screen overflow-hidden overflow-x-hidden">
     <!-- Main content area -->
-    <main class="h-full overflow-y-auto pb-16 md:pb-0">
+    <main class="h-full overflow-y-auto overflow-x-hidden pb-16 md:pb-0">
       <slot />
     </main>
 

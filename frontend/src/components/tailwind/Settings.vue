@@ -1095,9 +1095,16 @@ const downloadSqlite = async () => {
 // 保存服务器地址
 const saveServerUrl = () => {
   try {
-    // 简单的URL格式验证
-    const url = new URL(serverUrl.value)
-    setBaseUrl(serverUrl.value)
+    const val = serverUrl.value.trim()
+    if (!val) {
+      showNotify({ type: 'danger', message: '请输入服务器地址' })
+      return
+    }
+    const isRelative = val.startsWith('/')
+    if (!isRelative) {
+      new URL(val)
+    }
+    setBaseUrl(val)
     showNotify({
       type: 'success',
       message: '服务器地址已更新，页面即将刷新'
@@ -1105,7 +1112,7 @@ const saveServerUrl = () => {
   } catch (error) {
     showNotify({
       type: 'danger',
-      message: '请输入有效的URL地址'
+      message: '请输入有效的URL地址（如 http://localhost:8899 或 /api）'
     })
   }
 }

@@ -13,14 +13,20 @@
                 </svg>
                 同步中...
               </span>
+              <button
+                @click="syncFromBilibili"
+                :disabled="syncing"
+                class="px-3 py-1 text-xs rounded-md bg-[#fb7299]/10 text-[#fb7299] hover:bg-[#fb7299]/20 transition-colors disabled:opacity-50"
+              >
+                同步
+              </button>
               <span class="text-sm text-gray-500 dark:text-gray-400">
                 共 {{ totalCount }} 个视频
-                <span v-if="filteredVideos.length !== videos.length">（显示 {{ filteredVideos.length }} 个）</span>
               </span>
             </div>
           </div>
 
-          <div v-if="!loading && videos.length > 0" class="border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+          <div v-if="videos.length > 0" class="border-b border-gray-200 dark:border-gray-700 px-4 py-3">
             <div class="flex flex-wrap items-center gap-3">
               <div class="flex items-center space-x-2">
                 <span class="text-xs text-gray-500 dark:text-gray-400">排序:</span>
@@ -88,7 +94,7 @@
                 </div>
               </div>
 
-              <div class="w-px h-4 bg-gray-200 dark:bg-gray-700"></div>
+              <div class="w-px h-4 bg-gray-200 dark:border-gray-700"></div>
 
               <div class="flex items-center space-x-2 flex-wrap">
                 <span class="text-xs text-gray-500 dark:text-gray-400">UP主:</span>
@@ -158,7 +164,7 @@
               </svg>
               <p class="mt-4 text-red-500">{{ error }}</p>
               <button
-                @click="fetchLikes"
+                @click="fetchLocal"
                 class="mt-4 px-4 py-2 bg-[#fb7299] text-white rounded-md hover:bg-[#fb7299]/90 transition-colors"
               >
                 重试
@@ -172,13 +178,9 @@
               <p class="mt-4 text-gray-500 dark:text-gray-400">暂无点赞视频</p>
             </div>
 
-            <div v-else-if="filteredVideos.length === 0" class="text-center py-20">
-              <p class="text-gray-500 dark:text-gray-400">没有匹配的视频</p>
-            </div>
-
             <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               <div
-                v-for="video in filteredVideos"
+                v-for="video in videos"
                 :key="video.bvid"
                 class="bg-white/50 dark:bg-gray-800/50 rounded-md overflow-hidden border border-gray-200/50 dark:border-gray-700/50 hover:border-[#fb7299] hover:shadow-sm transition-all duration-200 relative group"
               >
@@ -219,6 +221,15 @@
                 </div>
               </div>
             </div>
+
+            <div v-if="totalPages > 1" class="mt-6 flex justify-center">
+              <Pagination
+                :current-page="currentPage"
+                :total-pages="totalPages"
+                :page-size="pageSize"
+                @page-change="goToPage"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -237,6 +248,8 @@ const syncing = ref(false)
 const error = ref('')
 const videos = ref([])
 const totalCount = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(50)
 
 const sortKey = ref('pubdate')
 const sortOrder = ref('desc')
@@ -247,62 +260,23 @@ const showCatDropdown = ref(false)
 const ownerDropdownRef = ref(null)
 const catDropdownRef = ref(null)
 
+const allOwners = ref([])
+const allCategories = ref([])
+
 const sortOptions = [
   { key: 'pubdate', label: '发布时间' },
+  { key: 'fetch_time', label: '同步时间' },
   { key: 'duration', label: '时长' },
-  { key: 'owner_name', label: '发布者' },
+  { key: 'view', label: '播放量' },
 ]
-
-const allOwners = computed(() => {
-  const map = {}
-  for (const v of videos.value) {
-    const name = v.owner_name || '未知'
-    map[name] = (map[name] || 0) + 1
-  }
-  return Object.entries(map)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-})
 
 const topOwners = computed(() => allOwners.value.slice(0, 10))
 const restOwners = computed(() => allOwners.value.slice(10))
 
-const allCategories = computed(() => {
-  const map = {}
-  for (const v of videos.value) {
-    const name = v.tname || '未知分区'
-    map[name] = (map[name] || 0) + 1
-  }
-  return Object.entries(map)
-    .map(([tname, count]) => ({ tname, count }))
-    .sort((a, b) => b.count - a.count)
-})
-
 const topCategories = computed(() => allCategories.value.slice(0, 10))
 const restCategories = computed(() => allCategories.value.slice(10))
 
-const filteredVideos = computed(() => {
-  let list = [...videos.value]
-  if (selectedOwner.value) {
-    list = list.filter(v => v.owner_name === selectedOwner.value)
-  }
-  if (selectedCategory.value) {
-    list = list.filter(v => (v.tname || '未知分区') === selectedCategory.value)
-  }
-  list.sort((a, b) => {
-    let va = a[sortKey.value]
-    let vb = b[sortKey.value]
-    if (sortKey.value === 'owner_name') {
-      va = (va || '').toLowerCase()
-      vb = (vb || '').toLowerCase()
-      return sortOrder.value === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va)
-    }
-    va = va || 0
-    vb = vb || 0
-    return sortOrder.value === 'asc' ? va - vb : vb - va
-  })
-  return list
-})
+const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value))
 
 function toggleSort(key) {
   if (sortKey.value === key) {
@@ -311,6 +285,14 @@ function toggleSort(key) {
     sortKey.value = key
     sortOrder.value = key === 'owner_name' ? 'asc' : 'desc'
   }
+  currentPage.value = 1
+  fetchLocal()
+}
+
+function goToPage(page) {
+  currentPage.value = page
+  fetchLocal()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function handleClickOutside(e) {
@@ -325,24 +307,28 @@ function handleClickOutside(e) {
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   await fetchLocal()
-  syncFromBilibili()
+  loadFilterOptions()
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-async function fetchLikes() {
+async function fetchLocal() {
   loading.value = true
   error.value = ''
-  videos.value = []
   try {
-    const response = await getLikeList()
+    const response = await getLikeLocal({
+      page: currentPage.value,
+      size: pageSize.value,
+      sort: sortKey.value,
+      order: sortOrder.value,
+    })
     if (response.data.status === 'success') {
       videos.value = response.data.data.list || []
-      totalCount.value = response.data.data.total || videos.value.length
+      totalCount.value = response.data.data.total || 0
     } else {
-      error.value = response.data.message || '获取点赞列表失败'
+      error.value = response.data.message || '获取点赞数据失败'
     }
   } catch (e) {
     error.value = '请求失败: ' + (e.message || '未知错误')
@@ -351,21 +337,28 @@ async function fetchLikes() {
   }
 }
 
-async function fetchLocal() {
-  loading.value = true
+async function loadFilterOptions() {
   try {
-    const response = await getLikeLocal({ size: 500 })
+    const response = await getLikeLocal({ page: 1, size: 500, sort: 'pubdate', order: 'desc' })
     if (response.data.status === 'success') {
       const list = response.data.data.list || []
-      if (list.length > 0) {
-        videos.value = list
-        totalCount.value = response.data.data.total || list.length
+      const ownerMap = {}
+      const catMap = {}
+      for (const v of list) {
+        const owner = v.owner_name || '未知'
+        ownerMap[owner] = (ownerMap[owner] || 0) + 1
+        const cat = v.tname || '未知分区'
+        catMap[cat] = (catMap[cat] || 0) + 1
       }
+      allOwners.value = Object.entries(ownerMap)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+      allCategories.value = Object.entries(catMap)
+        .map(([tname, count]) => ({ tname, count }))
+        .sort((a, b) => b.count - a.count)
     }
   } catch (e) {
-    console.warn('读取本地数据库失败:', e)
-  } finally {
-    loading.value = false
+    console.warn('加载筛选选项失败:', e)
   }
 }
 
@@ -374,11 +367,14 @@ async function syncFromBilibili() {
   try {
     const response = await getLikeList()
     if (response.data.status === 'success') {
-      videos.value = response.data.data.list || []
-      totalCount.value = response.data.data.total || videos.value.length
+      showNotify({ type: 'success', message: `同步完成：新增 ${response.data.data.new}，更新 ${response.data.data.updated}` })
+      await fetchLocal()
+      loadFilterOptions()
+    } else {
+      showNotify({ type: 'warning', message: response.data.message || '同步失败' })
     }
   } catch (e) {
-    console.warn('后台同步失败:', e)
+    showNotify({ type: 'danger', message: '同步失败: ' + (e.message || '未知错误') })
   } finally {
     syncing.value = false
   }

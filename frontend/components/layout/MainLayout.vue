@@ -1,30 +1,31 @@
 <template>
-  <div class="h-screen overflow-hidden overflow-x-hidden">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Desktop Sidebar (permanent) -->
+    <aside class="hidden md:flex glass-sidebar flex-shrink-0 flex-col h-full w-60 z-40">
+      <Sidebar />
+    </aside>
+
     <!-- Main content area -->
-    <main class="h-full overflow-y-auto overflow-x-hidden pb-16 md:pb-0">
+    <main class="flex-1 h-full overflow-y-auto overflow-x-hidden pb-16 md:pb-0">
       <slot />
     </main>
 
     <!-- Mobile bottom tab bar -->
     <MobileTabBar />
 
-    <!-- Floating drawer sidebar (all screen sizes) -->
+    <!-- Mobile drawer sidebar -->
     <Teleport to="body">
-      <!-- Backdrop -->
       <Transition name="fade">
         <div
           v-if="showSidebar"
-          class="fixed inset-0 z-[55] bg-black/30 backdrop-blur-sm md:backdrop-blur"
+          class="fixed inset-0 z-[55] bg-black/30 backdrop-blur-sm md:hidden"
           @click="showSidebar = false"
         />
       </Transition>
-
-      <!-- Drawer -->
       <Transition name="slide-drawer">
         <div
           v-if="showSidebar"
-          class="fixed top-0 left-0 bottom-0 z-[60] glass-sidebar w-64 flex flex-col"
-          :class="{ 'pt-[env(safe-area-inset-top)]': true }"
+          class="fixed top-0 left-0 bottom-0 z-[60] glass-sidebar w-64 flex flex-col md:hidden"
         >
           <Sidebar @navigate="showSidebar = false" />
         </div>
@@ -49,7 +50,6 @@ import DataSyncManager from '../DataSyncManager.vue'
 
 const showSidebar = ref(false)
 provide('toggleSidebar', () => { showSidebar.value = !showSidebar.value })
-provide('showSidebar', showSidebar)
 
 const showDataSyncModal = ref(false)
 const currentSyncTab = ref('integrity')

@@ -251,7 +251,7 @@ const totalCount = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(50)
 
-const sortKey = ref('pubdate')
+const sortKey = ref('fetch_time')
 const sortOrder = ref('desc')
 const selectedOwner = ref('')
 const selectedCategory = ref('')

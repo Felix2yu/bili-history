@@ -62,6 +62,7 @@ export default defineEventHandler(async (event) => {
         for (const [key, value] of Object.entries(proxyRes.headers)) {
           if (key.toLowerCase() === 'transfer-encoding') continue
           if (key.toLowerCase() === 'connection') continue
+          if (key.toLowerCase() === 'content-length') continue
           if (value !== undefined) {
             respHeaders[key] = value
             setResponseHeader(event, key, value as any)

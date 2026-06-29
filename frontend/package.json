@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
+    "@vite-pwa/nuxt": "^1.1.1",
     "@vue/runtime-core": "^3.5.39",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",

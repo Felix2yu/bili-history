@@ -52,6 +52,9 @@ const instance = axios.create({
   baseURL: BASE_URL,
 })
 
+// 导出实例供 SSR 插件注入 cookie 转发
+export const axiosInstance = instance
+
 // 请求拦截器
 instance.interceptors.request.use(
   (config) => {

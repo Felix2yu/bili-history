@@ -181,7 +181,7 @@
               >
                 <div class="relative pb-[56.25%] overflow-hidden cursor-pointer group" @click="openVideo(video)">
                   <img
-                    :src="video.pic"
+                    :src="normalizeImageUrl(video.pic)"
                     :alt="video.title"
                     class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
@@ -212,10 +212,9 @@
                   </div>
                   <div class="flex items-center space-x-1">
                     <img
-                      :src="video.owner_face"
+                      :src="normalizeImageUrl(video.owner_face)"
                       :alt="video.owner_name"
                       class="w-3.5 h-3.5 rounded-full object-cover"
-                      loading="lazy"
                       onerror="this.src='https://i1.hdslb.com/bfs/face/1b6f746be0d0c8324e01e618c5e85e113a8b38be.jpg'"
                     />
                     <span class="text-[10px] text-gray-600 dark:text-gray-400 truncate">{{ video.owner_name }}</span>
@@ -240,6 +239,7 @@ import { useAsyncData } from '#imports'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import { getWatchLaterList, removeFromWatchLater, getWatchLaterLocal } from '~/utils/api'
+import { normalizeImageUrl } from '~/utils/imageUrl.js'
 
 const loading = ref(false)
 const syncing = ref(false)

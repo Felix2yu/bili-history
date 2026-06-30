@@ -183,8 +183,9 @@ async def remove_from_watch_later(bvid: str):
 
         url = "https://api.bilibili.com/x/v2/history/toview/del"
         headers = get_headers()
+        headers["Content-Type"] = "application/x-www-form-urlencoded"
         data = {"bvid": bvid, "csrf": bili_jct}
-        response = requests.post(url, json=data, headers=headers)
+        response = requests.post(url, data=data, headers=headers)
         result = response.json()
         if result.get("code") != 0:
             return {"status": "error", "message": result.get("message", "移除失败"), "code": result.get("code")}

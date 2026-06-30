@@ -1,7 +1,6 @@
 import asyncio
 from typing import Dict, Optional
 from loguru import logger
-import requests as http_requests
 
 try:
     import apprise
@@ -66,47 +65,22 @@ async def send_apprise_notification(
         }
 
     def _notify_one(url: str) -> Dict:
-        # 对 ntfy URL 直接用 HTTP POST，绕过 Apprise 插件
-        if 'ntfy.sh' in url or url.startswith('ntfy://'):
-            try:
-                # 转换 ntfy:// 为 https://
-                http_url = url
-                if url.startswith('ntfy://'):
-                    http_url = 'https://' + url[len('ntfy://'):]
-                elif not url.startswith('http'):
-                    http_url = f'https://{url}'
-
-                resp = http_requests.post(
-                    http_url,
-                    data=title + '\n\n' + body,
-                    headers={'Title': title, 'Priority': 'default'},
-                    timeout=15,
-                )
-                logger.info(f"ntfy HTTP {resp.status_code}: {http_url}")
-                return {
-                    "url": url,
-                    "status": "success" if resp.status_code < 300 else "error",
-                    "message": f"HTTP {resp.status_code}" if resp.status_code >= 300 else "发送成功"
-                }
-            except Exception as e:
-                logger.error(f"ntfy 直接发送失败: {url} - {e}")
-                return {"url": url, "status": "error", "message": f"发送异常: {str(e)}"}
-
-        # 其他 URL 走 Apprise
-        if apprise is None:
-            return {"url": url, "status": "error", "message": "未安装apprise库"}
-
         notifier = apprise.Apprise()
         notifier.add(url)
+        plugins = [p.__class__.__name__ for p in notifier['plugins']] if notifier['plugins'] else []
+        logger.info(f"Apprise URL: {url}, 插件: {plugins}")
         try:
             success = bool(notifier.notify(title=title, body=body))
+            logger.info(f"Apprise notify 结果: {success}")
             return {
                 "url": url,
                 "status": "success" if success else "error",
-                "message": "发送成功" if success else "发送失败"
+                "message": "发送成功" if success else "发送失败，请检查地址格式",
+                "plugins": plugins
             }
         except Exception as e:
-            return {"url": url, "status": "error", "message": f"发送异常: {str(e)}"}
+            logger.error(f"Apprise 异常: {url} - {e}")
+            return {"url": url, "status": "error", "message": f"发送异常: {str(e)}", "plugins": plugins}
 
     try:
         logger.info(f"Apprise 开始发送，共 {len(target_urls)} 个地址")

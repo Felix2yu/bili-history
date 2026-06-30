@@ -181,9 +181,9 @@
               >
                 <div class="relative pb-[56.25%] overflow-hidden cursor-pointer group" @click="openVideo(video)">
                   <img
-                    :src="normalizeImageUrl(video.pic)"
+                    :data-src="normalizeImageUrl(video.pic)"
                     :alt="video.title"
-                    class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 bg-gray-200 dark:bg-gray-700"
                     loading="lazy"
                     onerror="this.src='https://i0.hdslb.com/bfs/archive/c9e72655b7c9c9c68a30d3275313c501e68427d1.jpg'"
                   />
@@ -234,12 +234,41 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useAsyncData } from '#imports'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import { getWatchLaterList, removeFromWatchLater, getWatchLaterLocal } from '~/utils/api'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
+
+// 图片懒加载
+let imageObserver = null
+
+function initImageObserver() {
+  if (imageObserver) return
+  imageObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target
+        const src = img.dataset.src
+        if (src) {
+          img.src = src
+          img.removeAttribute('data-src')
+        }
+        imageObserver.unobserve(img)
+      }
+    })
+  }, { rootMargin: '200px' })
+}
+
+function observeImages() {
+  nextTick(() => {
+    if (!imageObserver) initImageObserver()
+    document.querySelectorAll('img[data-src]').forEach(img => {
+      imageObserver.observe(img)
+    })
+  })
+}
 
 const loading = ref(false)
 const syncing = ref(false)
@@ -351,14 +380,23 @@ if (initialData.value?.videos?.length > 0) {
 
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  initImageObserver()
   if (videos.value.length === 0) {
     await fetchLocal()
   }
+  observeImages()
   syncFromBilibili()
 })
 
+// 监听视频列表变化，重新观察图片
+watch(videos, () => { observeImages() })
+
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  if (imageObserver) {
+    imageObserver.disconnect()
+    imageObserver = null
+  }
 })
 
 async function fetchWatchLater() {

@@ -46,6 +46,13 @@ def test_api(config):
     test_bvid = wl[-1]['bvid']
     sys.stderr.write(f"测试删除 bvid: {test_bvid}\n\n")
 
+    # 额外验证: 检查 nav API 是否返回 wbi_img (确认会话完整)
+    r_nav = requests.get('https://api.bilibili.com/x/web-interface/nav', cookies=cookies, headers=headers)
+    j_nav = r_nav.json()
+    wbi = j_nav.get('data', {}).get('wbi_img', {})
+    sys.stderr.write(f"nav wbi_img: img={bool(wbi.get('img_url'))} sub={bool(wbi.get('sub_url'))}\n")
+    sys.stderr.write(f"nav uid: {j_nav.get('data', {}).get('uid')}\n\n")
+
     # 方式1: form data + cookies参数
     r1 = requests.post('https://api.bilibili.com/x/v2/history/toview/del',
         data={'bvid': test_bvid, 'csrf': bili_jct},

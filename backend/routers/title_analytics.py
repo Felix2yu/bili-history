@@ -4,13 +4,9 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional
 
-import jieba
-import numpy as np
 from fastapi import APIRouter, HTTPException, Query
-from snownlp import SnowNLP
 
 from scripts.utils import load_config, get_output_path
-from .title_pattern_discovery import discover_interaction_patterns
 
 router = APIRouter()
 config = load_config()
@@ -30,6 +26,7 @@ def analyze_keywords(titles_data: List[tuple]) -> List[Tuple[str, int]]:
     Returns:
         List[Tuple[str, int]]: 关键词和频率的列表
     """
+    import jieba
     # 停用词列表（可以根据需要扩展）
     stop_words = {'的', '了', '是', '在', '我', '有', '和', '就', '不', '人', '都', '一', '一个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这'}
     
@@ -140,6 +137,7 @@ def generate_insights(keywords: List[Tuple[str, int]], completion_rates: Dict) -
 
 def analyze_title_length(cursor, table_name: str) -> dict:
     """分析标题长度与观看行为的关系"""
+    import numpy as np
     cursor.execute(f"""
         SELECT title, duration, progress
         FROM {table_name}
@@ -181,6 +179,7 @@ def analyze_title_length(cursor, table_name: str) -> dict:
 
 def analyze_title_sentiment(cursor, table_name: str) -> dict:
     """分析标题情感与观看行为的关系"""
+    from snownlp import SnowNLP
     cursor.execute(f"""
         SELECT title, duration, progress
         FROM {table_name}
@@ -233,7 +232,8 @@ def analyze_title_sentiment(cursor, table_name: str) -> dict:
     }
 
 def analyze_title_trends(cursor, table_name: str) -> dict:
-    """分析标题趋势与观看行为的关系"""
+    """分析标题关键词趋势"""
+    import jieba
     cursor.execute(f"""
         SELECT title, duration, progress, view_at
         FROM {table_name}
@@ -295,6 +295,7 @@ def analyze_title_trends(cursor, table_name: str) -> dict:
 
 def analyze_title_interaction(cursor, table_name: str) -> dict:
     """分析标题与用户互动的关系"""
+    from .title_pattern_discovery import discover_interaction_patterns
     cursor.execute(f"""
         SELECT title, duration, progress, tag_name, view_at
         FROM {table_name}

@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
-from scripts.export_to_excel import export_bilibili_history
 from scripts.utils import get_output_path, load_config
 from typing import Dict, Any
 import os
@@ -46,6 +45,7 @@ def export_history(
         except ValueError:
             raise HTTPException(status_code=400, detail="结束日期格式错误，应为'YYYY-MM-DD'")
 
+    from scripts.export_to_excel import export_bilibili_history
     result = export_bilibili_history(year, month, start_date, end_date)
 
     if result["status"] == "success":

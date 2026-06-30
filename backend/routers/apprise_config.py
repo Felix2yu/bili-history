@@ -124,12 +124,19 @@ async def update_apprise_config(request: AppriseConfigUpdate):
 @router.post("/test-apprise", summary="测试Apprise推送")
 async def send_test_apprise(request: AppriseTestRequest):
     """测试Apprise推送配置"""
+    import sys
+    sys.stderr.write(f"[test-apprise] 收到请求 urls={request.urls}\n")
+    sys.stderr.flush()
     try:
         urls = [line.strip() for line in request.urls.splitlines() if line.strip()]
+        sys.stderr.write(f"[test-apprise] 解析后urls={urls}\n")
+        sys.stderr.flush()
         if not urls:
             raise ValueError("请至少填写一个推送地址")
 
         result = await test_apprise_urls(urls)
+        sys.stderr.write(f"[test-apprise] 结果={result}\n")
+        sys.stderr.flush()
         if result['status'] == 'error':
             raise HTTPException(status_code=400, detail=result['message'])
         return result

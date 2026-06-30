@@ -65,13 +65,16 @@ async def send_apprise_notification(
         }
 
     def _notify_one(url: str) -> Dict:
+        import sys
         notifier = apprise.Apprise()
         notifier.add(url)
         plugins = [p.__class__.__name__ for p in notifier['plugins']] if notifier['plugins'] else []
-        logger.info(f"Apprise URL: {url}, 插件: {plugins}")
+        sys.stderr.write(f"[apprise] URL={url} 插件={plugins}\n")
+        sys.stderr.flush()
         try:
             success = bool(notifier.notify(title=title, body=body))
-            logger.info(f"Apprise notify 结果: {success}")
+            sys.stderr.write(f"[apprise] notify结果={success}\n")
+            sys.stderr.flush()
             return {
                 "url": url,
                 "status": "success" if success else "error",
@@ -79,7 +82,8 @@ async def send_apprise_notification(
                 "plugins": plugins
             }
         except Exception as e:
-            logger.error(f"Apprise 异常: {url} - {e}")
+            sys.stderr.write(f"[apprise] 异常={e}\n")
+            sys.stderr.flush()
             return {"url": url, "status": "error", "message": f"发送异常: {str(e)}", "plugins": plugins}
 
     try:

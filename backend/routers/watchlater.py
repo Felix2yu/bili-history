@@ -178,17 +178,27 @@ async def remove_from_watch_later(bvid: str):
     try:
         config = load_config()
         bili_jct = config.get("bili_jct", "")
-
         if not bili_jct or bili_jct.startswith("你的"):
-            return {"status": "error", "message": "缺少CSRF Token (bili_jct)，请先使用QR码登录并确保已正确获取bili_jct"}
+            return {"status": "error", "message": "缺少CSRF Token (bili_jct)，请先使用QR码登录"}
+
+        cookies = {
+            "SESSDATA": str(config.get("SESSDATA", "")),
+            "bili_jct": str(bili_jct),
+            "DedeUserID": str(config.get("DedeUserID", "")),
+        }
 
         response = requests.post(
             "https://api.bilibili.com/x/v2/history/toview/del",
             data={"bvid": bvid, "csrf": bili_jct},
-            headers=get_headers()
+            cookies=cookies,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Referer": "https://www.bilibili.com/",
+                "Origin": "https://www.bilibili.com",
+            },
         )
         result = response.json()
-        print(f"[watchlater-del] bvid={bvid}, code={result.get('code')}, msg={result.get('message')}")
+        print(f"[watchlater-del] bvid={bvid} code={result.get('code')} msg={result.get('message')}", flush=True)
 
         if result.get("code") != 0:
             return {"status": "error", "message": result.get("message", "移除失败"), "code": result.get("code")}
@@ -202,5 +212,5 @@ async def remove_from_watch_later(bvid: str):
 
         return {"status": "success", "message": "已从稍后再看中移除"}
     except Exception as e:
-        print(f"[watchlater-del] error: {e}")
+        print(f"[watchlater-del] error: {e}", flush=True)
         return {"status": "error", "message": f"移除失败: {str(e)}"}

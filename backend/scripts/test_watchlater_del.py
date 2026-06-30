@@ -15,6 +15,10 @@ def load_real_config():
 
 def load_wbi_sign():
     """动态加载 wbi_sign 模块"""
+    # wbi_sign 内部 import from scripts.utils，需要确保 /app 在 sys.path 中
+    for app_dir in ['/app', os.path.dirname(os.path.dirname(os.path.abspath(__file__)))]:
+        if app_dir not in sys.path:
+            sys.path.insert(0, app_dir)
     for path in ['/app/scripts/wbi_sign.py', 'scripts/wbi_sign.py']:
         if os.path.exists(path):
             spec = importlib.util.spec_from_file_location("wbi_sign", path)

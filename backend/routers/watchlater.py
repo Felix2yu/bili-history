@@ -175,6 +175,7 @@ async def get_watch_later_local(
 
 @router.delete("/{bvid}", summary="从稍后再看中移除视频")
 async def remove_from_watch_later(bvid: str):
+    import sys
     try:
         config = load_config()
         bili_jct = config.get("bili_jct", "")
@@ -187,6 +188,9 @@ async def remove_from_watch_later(bvid: str):
             "DedeUserID": str(config.get("DedeUserID", "")),
         }
 
+        sys.stderr.write(f"[watchlater-del] calling bvid={bvid}\n")
+        sys.stderr.flush()
+
         response = requests.post(
             "https://api.bilibili.com/x/v2/history/toview/del",
             data={"bvid": bvid, "csrf": bili_jct},
@@ -198,7 +202,8 @@ async def remove_from_watch_later(bvid: str):
             },
         )
         result = response.json()
-        print(f"[watchlater-del] bvid={bvid} code={result.get('code')} msg={result.get('message')}", flush=True)
+        sys.stderr.write(f"[watchlater-del] bvid={bvid} code={result.get('code')} msg={result.get('message')}\n")
+        sys.stderr.flush()
 
         if result.get("code") != 0:
             return {"status": "error", "message": result.get("message", "移除失败"), "code": result.get("code")}
@@ -212,5 +217,6 @@ async def remove_from_watch_later(bvid: str):
 
         return {"status": "success", "message": "已从稍后再看中移除"}
     except Exception as e:
-        print(f"[watchlater-del] error: {e}", flush=True)
+        sys.stderr.write(f"[watchlater-del] error: {e}\n")
+        sys.stderr.flush()
         return {"status": "error", "message": f"移除失败: {str(e)}"}

@@ -17,9 +17,16 @@ def test_api(config):
     bili_jct = str(config.get('bili_jct', ''))
     dede = str(config.get('DedeUserID', ''))
 
-    sys.stderr.write(f"SESSDATA: {'有效' if sessdata and not sessdata.startswith('Cookie') else '占位符'} (len={len(sessdata)})\n")
-    sys.stderr.write(f"bili_jct: {'有效' if bili_jct and not bili_jct.startswith('你的') else '占位符'} (len={len(bili_jct)})\n")
-    sys.stderr.write(f"DedeUserID: {'有效' if dede and not dede.startswith('你的') else '占位符'}\n")
+    sys.stderr.write(f"SESSDATA: len={len(sessdata)}, hasPercent={'%' in sessdata}, sample={sessdata[:8]}...{sessdata[-8:]}\n")
+    sys.stderr.write(f"bili_jct: len={len(bili_jct)}, sample={bili_jct[:4]}...{bili_jct[-4:]}\n")
+    sys.stderr.write(f"DedeUserID: {dede}\n")
+
+    # 测试1: 直接用 SESSDATA 调 nav 看返回什么
+    r_nav_test = requests.get('https://api.bilibili.com/x/web-interface/nav',
+        cookies={'SESSDATA': sessdata, 'bili_jct': bili_jct, 'DedeUserID': dede},
+        headers=headers)
+    j_nav_test = r_nav_test.json()
+    sys.stderr.write(f"nav test: code={j_nav_test.get('code')} isLogin={j_nav_test.get('data',{}).get('isLogin')} uid={j_nav_test.get('data',{}).get('uid')}\n\n")
 
     cookies = {'SESSDATA': sessdata, 'bili_jct': bili_jct, 'DedeUserID': dede}
     headers = {

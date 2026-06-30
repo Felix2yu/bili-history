@@ -3,6 +3,7 @@ import sys
 import yaml
 import os
 import requests
+import importlib.util
 
 def load_real_config():
     """加载真实配置"""
@@ -11,6 +12,16 @@ def load_real_config():
             with open(path) as f:
                 return yaml.safe_load(f)
     return {}
+
+def load_wbi_sign():
+    """动态加载 wbi_sign 模块"""
+    for path in ['/app/scripts/wbi_sign.py', 'scripts/wbi_sign.py']:
+        if os.path.exists(path):
+            spec = importlib.util.spec_from_file_location("wbi_sign", path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod
+    return None
 
 def test_api(config):
     sessdata = str(config.get('SESSDATA', ''))
@@ -115,30 +126,33 @@ def test_api(config):
         sys.stderr.write(f"[方式8] json无csrf-body: code={r8.json().get('code')} msg={r8.json().get('message')}\n")
 
         # 方式9: JSON + WBI 签名
-        try:
-            import importlib.util, time, hashlib
-            spec = importlib.util.spec_from_file_location("wbi_sign", "/app/scripts/wbi_sign.py")
-            wbi_mod = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(wbi_mod)
-            params = {'bvid': test_bvid, 'csrf': bili_jct}
-            signed = wbi_mod.get_wbi_sign(params)
-            r9 = requests.post('https://api.bilibili.com/x/v2/history/toview/del',
-                json=signed,
-                cookies=cookies, headers={**headers, 'Content-Type': 'application/json'})
-            sys.stderr.write(f"[方式9] json+wbi: code={r9.json().get('code')} msg={r9.json().get('message')}\n")
-        except Exception as e:
-            sys.stderr.write(f"[方式9] json+wbi: error={e}\n")
+        wbi_mod = load_wbi_sign()
+        if wbi_mod:
+            try:
+                params = {'bvid': test_bvid, 'csrf': bili_jct}
+                signed = wbi_mod.get_wbi_sign(params)
+                r9 = requests.post('https://api.bilibili.com/x/v2/history/toview/del',
+                    json=signed,
+                    cookies=cookies, headers={**headers, 'Content-Type': 'application/json'})
+                sys.stderr.write(f"[方式9] json+wbi: code={r9.json().get('code')} msg={r9.json().get('message')}\n")
+            except Exception as e:
+                sys.stderr.write(f"[方式9] json+wbi: error={e}\n")
+        else:
+            sys.stderr.write("[方式9] json+wbi: wbi_sign模块加载失败\n")
 
         # 方式10: form + WBI 签名
-        try:
-            params2 = {'bvid': test_bvid, 'csrf': bili_jct}
-            signed2 = wbi_mod.get_wbi_sign(params2)
-            r10 = requests.post('https://api.bilibili.com/x/v2/history/toview/del',
-                data=signed2,
-                cookies=cookies, headers=headers)
-            sys.stderr.write(f"[方式10] form+wbi: code={r10.json().get('code')} msg={r10.json().get('message')}\n")
-        except Exception as e:
-            sys.stderr.write(f"[方式10] form+wbi: error={e}\n")
+        if wbi_mod:
+            try:
+                params2 = {'bvid': test_bvid, 'csrf': bili_jct}
+                signed2 = wbi_mod.get_wbi_sign(params2)
+                r10 = requests.post('https://api.bilibili.com/x/v2/history/toview/del',
+                    data=signed2,
+                    cookies=cookies, headers=headers)
+                sys.stderr.write(f"[方式10] form+wbi: code={r10.json().get('code')} msg={r10.json().get('message')}\n")
+            except Exception as e:
+                sys.stderr.write(f"[方式10] form+wbi: error={e}\n")
+        else:
+            sys.stderr.write("[方式10] form+wbi: wbi_sign模块加载失败\n")
 
 if __name__ == '__main__':
     config = load_real_config()

@@ -21,19 +21,18 @@ def test_api(config):
     sys.stderr.write(f"bili_jct: len={len(bili_jct)}, sample={bili_jct[:4]}...{bili_jct[-4:]}\n")
     sys.stderr.write(f"DedeUserID: {dede}\n")
 
-    # 测试1: 直接用 SESSDATA 调 nav 看返回什么
-    r_nav_test = requests.get('https://api.bilibili.com/x/web-interface/nav',
-        cookies={'SESSDATA': sessdata, 'bili_jct': bili_jct, 'DedeUserID': dede},
-        headers=headers)
-    j_nav_test = r_nav_test.json()
-    sys.stderr.write(f"nav test: code={j_nav_test.get('code')} isLogin={j_nav_test.get('data',{}).get('isLogin')} uid={j_nav_test.get('data',{}).get('uid')}\n\n")
-
     cookies = {'SESSDATA': sessdata, 'bili_jct': bili_jct, 'DedeUserID': dede}
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Referer': 'https://www.bilibili.com/',
         'Origin': 'https://www.bilibili.com',
     }
+
+    # 测试: nav API 认证状态
+    r_nav_test = requests.get('https://api.bilibili.com/x/web-interface/nav',
+        cookies=cookies, headers=headers)
+    j_nav_test = r_nav_test.json()
+    sys.stderr.write(f"nav: code={j_nav_test.get('code')} isLogin={j_nav_test.get('data',{}).get('isLogin')} uid={j_nav_test.get('data',{}).get('uid')}\n\n")
 
     # 1. 获取列表确认凭证有效
     r0 = requests.get('https://api.bilibili.com/x/v2/history/toview', cookies=cookies, headers=headers)

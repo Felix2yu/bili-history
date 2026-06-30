@@ -308,20 +308,26 @@ async def lifespan(app: FastAPI):
 
         check_on_startup = current_config.get('server', {}).get('data_integrity', {}).get('check_on_startup', True)
         if check_on_startup:
-            logger.info("正在执行启动时数据完整性校验...")
-            try:
-                from scripts.check_data_integrity import check_data_integrity
-                result = check_data_integrity()
-                if result["success"]:
-                    if result["difference"] == 0:
-                        logger.success("数据完整性校验通过，数据库和JSON文件记录数一致")
+            logger.info("启动时数据完整性校验将在后台执行...")
+            import asyncio
+            loop = asyncio.get_event_loop()
+
+            def _run_check():
+                try:
+                    from scripts.check_data_integrity import check_data_integrity
+                    result = check_data_integrity()
+                    if result["success"]:
+                        if result["difference"] == 0:
+                            logger.success("数据完整性校验通过，数据库和JSON文件记录数一致")
+                        else:
+                            logger.warning(f"数据完整性校验发现差异: {result['difference']} 条记录")
+                            logger.info(f"详细报告已保存到 {result['report_file']}")
                     else:
-                        logger.warning(f"数据完整性校验发现差异: {result['difference']} 条记录")
-                        logger.info(f"详细报告已保存到 {result['report_file']}")
-                else:
-                    logger.error("数据完整性校验失败")
-            except Exception as e:
-                logger.error(f"执行数据完整性校验时出错: {str(e)}")
+                        logger.error("数据完整性校验失败")
+                except Exception as e:
+                    logger.error(f"执行数据完整性校验时出错: {str(e)}")
+
+            loop.run_in_executor(None, _run_check)
         else:
             logger.info("已跳过启动时数据完整性校验")
 

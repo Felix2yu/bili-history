@@ -67,22 +67,32 @@ async def send_apprise_notification(
     def _notify_one(url: str) -> Dict:
         notifier = apprise.Apprise()
         notifier.add(url)
+        # 获取插件信息
+        plugins = notifier['plugins']
+        plugin_names = [p.__class__.__name__ for p in plugins] if plugins else []
+        logger.debug(f"Apprise 插件: {plugin_names}, URL: {url}")
         try:
             success = bool(notifier.notify(title=title, body=body))
+            logger.debug(f"Apprise notify 返回: {success}, URL: {url}")
             return {
                 "url": url,
                 "status": "success" if success else "error",
-                "message": "发送成功" if success else "发送失败，请检查地址是否正确"
+                "message": "发送成功" if success else "发送失败，请检查地址是否正确",
+                "plugins": plugin_names
             }
         except Exception as e:
+            logger.error(f"Apprise 发送异常: {url} - {str(e)}")
             return {
                 "url": url,
                 "status": "error",
-                "message": f"发送异常: {str(e)}"
+                "message": f"发送异常: {str(e)}",
+                "plugins": plugin_names
             }
 
     try:
         logger.info(f"Apprise 开始发送，共 {len(target_urls)} 个地址")
+        for url in target_urls:
+            logger.info(f"Apprise 目标地址: {url[:50]}{'...' if len(url) > 50 else ''}")
         results = []
         success_count = 0
         failed_count = 0

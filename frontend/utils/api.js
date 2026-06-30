@@ -1708,15 +1708,6 @@ export const getWatchLaterList = () => {
 }
 
 /**
- * 从稍后再看中移除视频
- * DELETE /watchlater/{bvid}
- * @param {string} bvid - 视频 BV 号
- */
-export const removeFromWatchLater = (bvid) => {
-  return instance.delete(`/watchlater/${bvid}`)
-}
-
-/**
  * 从本地数据库获取稍后再看列表
  * GET /watchlater/local
  */

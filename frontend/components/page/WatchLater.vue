@@ -193,17 +193,6 @@
                   <div v-if="video.tname" class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]">
                     {{ video.tname }}
                   </div>
-                  <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      @click.stop="removeVideo(video)"
-                      class="bg-red-500/80 hover:bg-red-500 text-white rounded-full p-1"
-                      title="从稍后再看中移除"
-                    >
-                      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
                 </div>
 
                 <div class="p-2 flex flex-col space-y-1">
@@ -238,7 +227,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useAsyncData } from '#imports'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
-import { getWatchLaterList, removeFromWatchLater, getWatchLaterLocal } from '~/utils/api'
+import { getWatchLaterList, getWatchLaterLocal } from '~/utils/api'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
 
 // 图片懒加载
@@ -445,20 +434,6 @@ async function syncFromBilibili() {
     console.warn('后台同步失败:', e)
   } finally {
     syncing.value = false
-  }
-}
-
-async function removeVideo(video) {
-  try {
-    const response = await removeFromWatchLater(video.bvid)
-    if (response.data.status === 'success') {
-      showNotify({ type: 'success', message: '已移除' })
-      videos.value = videos.value.filter(v => v.bvid !== video.bvid)
-    } else {
-      showNotify({ type: 'danger', message: response.data.message || '移除失败' })
-    }
-  } catch (e) {
-    showNotify({ type: 'danger', message: '移除失败: ' + e.message })
   }
 }
 

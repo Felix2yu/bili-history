@@ -191,20 +191,20 @@ async def remove_from_watch_later(bvid: str, viewed: int = 0):
             "Referer": "https://www.bilibili.com/",
             "Origin": "https://www.bilibili.com",
         })
-        # 设置 cookie
+        # 设置 cookie（必须为字符串）
         sessdata = config.get("SESSDATA", "")
         dede_user_id = config.get("DedeUserID", "")
         if sessdata:
-            session.cookies.set("SESSDATA", sessdata, domain=".bilibili.com")
+            session.cookies.set("SESSDATA", str(sessdata), domain=".bilibili.com")
         if bili_jct:
-            session.cookies.set("bili_jct", bili_jct, domain=".bilibili.com")
+            session.cookies.set("bili_jct", str(bili_jct), domain=".bilibili.com")
         if dede_user_id:
-            session.cookies.set("DedeUserID", dede_user_id, domain=".bilibili.com")
+            session.cookies.set("DedeUserID", str(dede_user_id), domain=".bilibili.com")
 
-        # 构造请求体
-        payload = {"bvid": bvid, "csrf": bili_jct}
+        # 构造请求体（所有值必须为字符串）
+        payload = {"bvid": str(bvid), "csrf": str(bili_jct)}
         if viewed:
-            payload["viewed"] = viewed
+            payload["viewed"] = str(viewed)
 
         response = session.post(url, data=payload)
         result = response.json()

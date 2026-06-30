@@ -95,11 +95,37 @@ def test_api(config):
             headers={k: v for k, v in headers.items()} | {'Content-Type': 'application/json'})
         sys.stderr.write(f"[方式7] json+session: code={r7.json().get('code')} msg={r7.json().get('message')}\n")
 
-        # 方式8: form + bvid在query
-        r8 = requests.post(f'https://api.bilibili.com/x/v2/history/toview/del?bvid={test_bvid}',
-            data={'csrf': bili_jct},
-            headers={**headers, 'Cookie': cookie_str})
-        sys.stderr.write(f"[方式8] bvidquery+手动Cookie: code={r8.json().get('code')} msg={r8.json().get('message')}\n")
+        # 方式8: JSON body，csrf 只放 cookie 不放 body
+        r8 = requests.post('https://api.bilibili.com/x/v2/history/toview/del',
+            json={'bvid': test_bvid},
+            cookies=cookies, headers={**headers, 'Content-Type': 'application/json'})
+        sys.stderr.write(f"[方式8] json无csrf-body: code={r8.json().get('code')} msg={r8.json().get('message')}\n")
+
+        # 方式9: JSON + WBI 签名
+        try:
+            import importlib.util, time, hashlib
+            spec = importlib.util.spec_from_file_location("wbi_sign", "/app/scripts/wbi_sign.py")
+            wbi_mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(wbi_mod)
+            params = {'bvid': test_bvid, 'csrf': bili_jct}
+            signed = wbi_mod.get_wbi_sign(params)
+            r9 = requests.post('https://api.bilibili.com/x/v2/history/toview/del',
+                json=signed,
+                cookies=cookies, headers={**headers, 'Content-Type': 'application/json'})
+            sys.stderr.write(f"[方式9] json+wbi: code={r9.json().get('code')} msg={r9.json().get('message')}\n")
+        except Exception as e:
+            sys.stderr.write(f"[方式9] json+wbi: error={e}\n")
+
+        # 方式10: form + WBI 签名
+        try:
+            params2 = {'bvid': test_bvid, 'csrf': bili_jct}
+            signed2 = wbi_mod.get_wbi_sign(params2)
+            r10 = requests.post('https://api.bilibili.com/x/v2/history/toview/del',
+                data=signed2,
+                cookies=cookies, headers=headers)
+            sys.stderr.write(f"[方式10] form+wbi: code={r10.json().get('code')} msg={r10.json().get('message')}\n")
+        except Exception as e:
+            sys.stderr.write(f"[方式10] form+wbi: error={e}\n")
 
 if __name__ == '__main__':
     config = load_real_config()

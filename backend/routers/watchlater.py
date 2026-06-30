@@ -183,12 +183,34 @@ async def remove_from_watch_later(bvid: str, viewed: int = 0):
             return {"status": "error", "message": "缺少CSRF Token (bili_jct)，请先使用QR码登录并确保已正确获取bili_jct"}
 
         url = "https://api.bilibili.com/x/v2/history/toview/del"
-        headers = get_headers()
-        data = {"bvid": bvid, "csrf": bili_jct}
+
+        # 使用 Session 保持 cookie 一致性
+        session = requests.Session()
+        session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "https://www.bilibili.com/",
+            "Origin": "https://www.bilibili.com",
+        })
+        # 设置 cookie
+        sessdata = config.get("SESSDATA", "")
+        dede_user_id = config.get("DedeUserID", "")
+        if sessdata:
+            session.cookies.set("SESSDATA", sessdata, domain=".bilibili.com")
+        if bili_jct:
+            session.cookies.set("bili_jct", bili_jct, domain=".bilibili.com")
+        if dede_user_id:
+            session.cookies.set("DedeUserID", dede_user_id, domain=".bilibili.com")
+
+        # 构造请求体
+        payload = {"bvid": bvid, "csrf": bili_jct}
         if viewed:
-            data["viewed"] = viewed
-        response = requests.post(url, data=data, headers=headers)
+            payload["viewed"] = viewed
+
+        response = session.post(url, data=payload)
         result = response.json()
+
+        from loguru import logger
+        logger.info(f"[watchlater-del] bvid={bvid}, viewed={viewed}, response_code={result.get('code')}, message={result.get('message')}")
 
         if result.get("code") != 0:
             return {"status": "error", "message": result.get("message", "移除失败"), "code": result.get("code")}

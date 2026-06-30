@@ -27,39 +27,6 @@
           <!-- 基础设置 -->
           <section v-if="activeTab === 'basic'">
             <div class="divide-y divide-gray-200 border-y border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 md:rounded-lg md:border md:border-x">
-              <!-- 服务器配置 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="mb-2.5 flex items-center justify-between md:mb-3">
-                  <div>
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">服务器配置</h3>
-                    <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">配置API服务器地址，修改后将自动刷新页面</p>
-                  </div>
-                </div>
-                <div class="flex gap-2">
-                  <input
-                    v-model="serverUrl"
-                    type="text"
-                    class="block min-w-0 flex-1 rounded-md border-gray-300 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-[11px] md:text-sm"
-                    placeholder="例如：http://localhost:8899"
-                  />
-                  <div class="flex shrink-0 gap-1.5 md:gap-2">
-                    <button
-                      @click="resetServerUrl"
-                      class="inline-flex items-center justify-center rounded-lg bg-[#fb7299]/5 px-2.5 py-2 text-[11px] font-medium text-[#fb7299] md:text-sm hover:bg-[#fb7299]/10 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:px-3"
-                    >
-                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </button>
-                    <button
-                      @click="saveServerUrl"
-                      class="inline-flex items-center justify-center rounded-lg bg-[#fb7299] px-3 py-2 text-[11px] font-medium text-white md:text-sm hover:bg-[#fb7299]/90 md:px-4"
-                    >
-                      保存
-                    </button>
-                  </div>
-                </div>
-              </div>
 
               <!-- MCP配置 -->
               <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
@@ -384,6 +351,58 @@
             </div>
           </section>
 
+          <!-- 高级设置（折叠） -->
+          <section v-if="activeTab === 'basic'">
+            <div class="bg-white dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 dark:md:border-gray-700">
+              <button
+                @click="showAdvanced = !showAdvanced"
+                class="flex w-full items-center justify-between p-3 md:p-4 text-left transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                <div>
+                  <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">高级设置</h3>
+                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">服务器地址配置，通常无需修改</p>
+                </div>
+                <svg
+                  class="h-5 w-5 text-gray-400 transition-transform duration-200"
+                  :class="{ 'rotate-180': showAdvanced }"
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div v-if="showAdvanced" class="border-t border-gray-200 dark:border-gray-700 p-3 md:p-4">
+                <div class="mb-2">
+                  <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">API 服务器地址</label>
+                  <p class="text-[10px] text-gray-500 dark:text-gray-400 md:text-xs">修改后将自动刷新页面，仅本地开发时需要修改</p>
+                </div>
+                <div class="flex gap-2">
+                  <input
+                    v-model="serverUrl"
+                    type="text"
+                    class="block min-w-0 flex-1 rounded-md border-gray-300 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-[11px] md:text-sm"
+                    placeholder="例如：http://localhost:8899"
+                  />
+                  <div class="flex shrink-0 gap-1.5 md:gap-2">
+                    <button
+                      @click="resetServerUrl"
+                      class="inline-flex items-center justify-center rounded-lg bg-[#fb7299]/5 px-2.5 py-2 text-[11px] font-medium text-[#fb7299] md:text-sm hover:bg-[#fb7299]/10 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:px-3"
+                    >
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                    <button
+                      @click="saveServerUrl"
+                      class="inline-flex items-center justify-center rounded-lg bg-[#fb7299] px-3 py-2 text-[11px] font-medium text-white md:text-sm hover:bg-[#fb7299]/90 md:px-4"
+                    >
+                      保存
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <!-- 数据管理 -->
           <section v-if="activeTab === 'data'">
             <div class="divide-y divide-gray-200 border-y border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 md:rounded-lg md:border md:border-x">
@@ -643,6 +662,7 @@ const settingTabs = [
 
 const route = useRoute()
 const activeTab = ref('basic')
+const showAdvanced = ref(false)
 
 // 监听路由参数变化，切换标签页
 watch(() => route.query.tab, (newTab) => {

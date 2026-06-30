@@ -215,7 +215,7 @@
                       :src="normalizeImageUrl(video.owner_face)"
                       :alt="video.owner_name"
                       class="w-3.5 h-3.5 rounded-full object-cover"
-                      onerror="this.src='https://i1.hdslb.com/bfs/face/1b6f746be0d0c8324e01e618c5e85e113a8b38be.jpg'"
+                      onerror="this.src='https://static.hdslb.com/images/member/noface.gif'"
                     />
                     <span class="text-[10px] text-gray-600 dark:text-gray-400 truncate">{{ video.owner_name }}</span>
                   </div>

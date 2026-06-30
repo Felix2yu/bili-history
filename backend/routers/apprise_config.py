@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import yaml
 import os
 import re
+import requests as http_requests
 
 from scripts.utils import load_config
 from scripts.apprise_notify import test_apprise_urls
@@ -138,3 +139,45 @@ async def send_test_apprise(request: AppriseTestRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"测试推送失败: {str(e)}")
+
+
+@router.post("/test-ntfy", summary="直接测试ntfy推送")
+async def test_ntfy_direct(request: AppriseTestRequest):
+    """直接用HTTP POST测试ntfy推送，绕过Apprise"""
+    try:
+        urls = [line.strip() for line in request.urls.splitlines() if line.strip()]
+        results = []
+        for url in urls:
+            # 转换 ntfy:// 为 https://
+            http_url = url
+            if url.startswith('ntfy://'):
+                http_url = 'https://' + url[len('ntfy://'):]
+            elif not url.startswith('http'):
+                http_url = f'https://{url}'
+
+            try:
+                resp = http_requests.post(
+                    http_url,
+                    data='Bilibili历史记录 - 测试推送\n\n这是一条来自后端的测试通知。',
+                    headers={'Title': 'Bilibili历史记录', 'Priority': 'default'},
+                    timeout=15,
+                )
+                results.append({
+                    "url": url,
+                    "http_url": http_url,
+                    "status_code": resp.status_code,
+                    "body": resp.text[:200],
+                    "ok": resp.status_code < 300
+                })
+            except Exception as e:
+                results.append({
+                    "url": url,
+                    "http_url": http_url,
+                    "status_code": 0,
+                    "body": str(e),
+                    "ok": False
+                })
+
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

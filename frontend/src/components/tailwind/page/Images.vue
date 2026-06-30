@@ -192,6 +192,7 @@ import { getImagesStatus, startImagesDownload, stopImagesDownload, clearImages }
 import { showNotify, showDialog } from 'vant'
 import 'vant/es/notify/style'
 import 'vant/es/dialog/style'
+import { useAsyncData } from '#imports'
 
 const status = ref(null)
 const isDownloading = ref(false)
@@ -368,9 +369,30 @@ const handleClear = async () => {
   }
 }
 
-// 组件挂载时获取一次状态
+// SSR: 初始数据在服务端获取
+const { data: initialStatus } = await useAsyncData('images-initial', async () => {
+  try {
+    const response = await getImagesStatus()
+    if (response.data.status === 'success') {
+      return { status: response.data.data }
+    }
+  } catch (error) {
+    console.error('SSR 获取图片状态失败:', error)
+  }
+  return { status: null }
+})
+
+if (initialStatus.value && initialStatus.value.status) {
+  status.value = initialStatus.value.status
+  isDownloading.value = status.value.is_downloading
+  isLoading.value = false
+}
+
+// 客户端挂载后开始轮询状态
 onMounted(() => {
-  fetchStatus()
+  if (isDownloading.value && !statusInterval) {
+    statusInterval = setInterval(fetchStatus, 1000)
+  }
 })
 
 // 组件卸载时清除定时器

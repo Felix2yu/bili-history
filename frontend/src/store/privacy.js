@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 
-// 从 localStorage 读取初始状态
-const isPrivacyMode = ref(localStorage.getItem('privacyMode') === 'true')
+// 从 localStorage 读取初始状态（仅客户端）
+const isPrivacyMode = ref(typeof window !== 'undefined' ? localStorage.getItem('privacyMode') === 'true' : false)
 
 export const usePrivacyStore = () => {
   const togglePrivacyMode = () => {

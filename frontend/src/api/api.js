@@ -5,7 +5,11 @@ import 'vant/es/notify/style'
 // 你的服务器地址
 const DEFAULT_FALLBACK_URL = 'http://localhost:8899';
 const VITE_CONFIGURED_DEFAULT_URL = import.meta.env.VITE_DEFAULT_BACKEND_URL || DEFAULT_FALLBACK_URL;
+
 const getBaseUrl = () => {
+  if (typeof window === 'undefined') {
+    return process.env.NUXT_BACKEND_URL || DEFAULT_FALLBACK_URL
+  }
   return localStorage.getItem('baseUrl') || VITE_CONFIGURED_DEFAULT_URL
 }
 

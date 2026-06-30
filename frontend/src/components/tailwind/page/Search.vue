@@ -57,6 +57,7 @@ import SearchBar from '../SearchBar.vue'
 import VideoRecord from '../VideoRecord.vue'
 import Pagination from '../Pagination.vue'
 import { normalizeImageUrl } from '@/utils/imageUrl.js'
+import { useAsyncData } from '#imports'
 
 // 获取路由参数
 const route = useRoute()
@@ -213,24 +214,61 @@ watch(
   }
 )
 
-// 组件挂载时获取数据
-onMounted(async () => {
-  const typeFromQuery = String(route.query.type || '')
-  if (typeFromQuery) {
-    searchType.value = typeFromQuery
+// SSR: 初始搜索数据在服务端获取
+const initialKeyword = Array.isArray(route.params.keyword)
+  ? route.params.keyword[0]
+  : String(route.params.keyword || '')
+const initialPage = Number(route.params.pageNumber || 1)
+const initialType = String(route.query.type || '') || 'all'
+
+keyword.value = initialKeyword
+page.value = initialPage
+searchType.value = initialType
+
+const { data: initialData } = await useAsyncData(
+  `search-${initialKeyword}-${initialPage}-${initialType}`,
+  async () => {
+    if (!initialKeyword) return { records: [], total: 0, remarkData: {} }
+    try {
+      const response = await searchBiliHistory2024(
+        initialKeyword,
+        initialType,
+        initialPage,
+        30,
+        false
+      )
+      if (response.data.status === 'success') {
+        let remarkData = {}
+        const records = response.data.data.records || []
+        if (records.length > 0) {
+          const batchRecords = records.map(record => ({
+            bvid: record.bvid,
+            view_at: record.view_at
+          }))
+          const remarksResponse = await batchGetRemarks(batchRecords)
+          if (remarksResponse.data.status === 'success') {
+            remarkData = remarksResponse.data.data
+          }
+        }
+        return {
+          records,
+          total: response.data.data.total || 0,
+          remarkData
+        }
+      }
+    } catch (error) {
+      console.error('SSR 搜索失败:', error)
+    }
+    return { records: [], total: 0, remarkData: {} }
   }
+)
 
-  // 设置初始关键词
-  const initialKeyword = Array.isArray(route.params.keyword)
-    ? route.params.keyword[0]
-    : String(route.params.keyword || '')
-  keyword.value = initialKeyword
-
-  // 从路由参数获取页码
-  page.value = Number(route.params.pageNumber || 1)
-
-  await fetchSearchResults()
-})
+if (initialData.value) {
+  records.value = initialData.value.records
+  totalResults.value = initialData.value.total
+  totalPages.value = Math.ceil(initialData.value.total / size.value)
+  remarkData.value = initialData.value.remarkData
+}
 </script>
 
 <style scoped>

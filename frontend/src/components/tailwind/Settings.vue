@@ -663,7 +663,7 @@ const exportOptions = ref({
   exportType: 'year' // 默认导出全年数据
 })
 const serverUrl = ref('')
-const useLocalImages = ref(localStorage.getItem('useLocalImages') === 'true')
+const useLocalImages = ref(typeof window !== 'undefined' ? localStorage.getItem('useLocalImages') === 'true' : false)
 const DEFAULT_EMAIL_CONFIG = {
   smtp_server: 'smtp.qq.com',
   smtp_port: 587,
@@ -738,7 +738,7 @@ const { isPrivacyMode, setPrivacyMode } = usePrivacyStore()
 const privacyMode = ref(isPrivacyMode.value)
 
 // 同步已删除记录
-const syncDeleted = ref(localStorage.getItem('syncDeleted') === 'true')
+const syncDeleted = ref(typeof window !== 'undefined' ? localStorage.getItem('syncDeleted') === 'true' : false)
 
 // 监听同步已删除记录变化
 watch(syncDeleted, (newVal) => {
@@ -750,7 +750,7 @@ watch(syncDeleted, (newVal) => {
 })
 
 // 同步删除B站历史记录
-const syncDeleteToBilibili = ref(localStorage.getItem('syncDeleteToBilibili') === 'true')
+const syncDeleteToBilibili = ref(typeof window !== 'undefined' ? localStorage.getItem('syncDeleteToBilibili') === 'true' : false)
 
 // 处理同步删除B站历史记录变更
 const handleSyncDeleteToBilibiliChange = () => {
@@ -788,7 +788,7 @@ const handleIntegrityCheckChange = async () => {
 }
 
 // 首页默认布局设置 - 网格布局或列表布局
-const isGridLayout = ref(localStorage.getItem('defaultLayout') === 'list' ? false : true) // 默认为网格视图
+const isGridLayout = ref(typeof window !== 'undefined' ? localStorage.getItem('defaultLayout') !== 'list' : true) // 默认为网格视图
 
 
 
@@ -832,7 +832,7 @@ watch(privacyMode, (newVal) => {
 })
 
 // 侧边栏显示设置
-const showSidebar = ref(localStorage.getItem('showSidebar') !== 'false') // 默认为true
+const showSidebar = ref(typeof window !== 'undefined' ? localStorage.getItem('showSidebar') !== 'false' : true) // 默认为true
 
 // 处理侧边栏设置变更
 const handleSidebarChange = () => {

@@ -191,6 +191,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { getTitleKeywordAnalysis, getTitleLengthAnalysis, getTitleSentimentAnalysis, getTitleTrendAnalysis, getTitleInteractionAnalysis, getViewingMonthlyStats, getViewingWeeklyStats, getViewingTimeSlots, getViewingContinuity, getViewingWatchCounts, getViewingCompletionRates, getViewingAuthorCompletion, getViewingTagAnalysis, getViewingDurationAnalysis, getPopularHitRate, getPopularPredictionAbility, getAuthorPopularAssociation, getCategoryPopularDistribution, getDurationPopularDistribution } from '../../../api/api.js'
+import { useAsyncData } from '#imports'
 import HeroPage from '../analytics/pages/HeroPage.vue'
 import OverviewPage from '../analytics/pages/OverviewPage.vue'
 import StreakPage from '../analytics/pages/StreakPage.vue'
@@ -676,34 +677,42 @@ watch(selectedYear, async (newYear) => {
   }
 })
 
-// 生命周期钩子
-onMounted(async () => {
-  // 从 URL 读取页码
-  const pageFromUrl = parseInt(Array.isArray(route.query.page) ? route.query.page[0] : route.query.page || '0')
-  if (!isNaN(pageFromUrl) && pageFromUrl >= 0 && pageFromUrl < pages.length) {
-    currentPage.value = pageFromUrl
-  }
+// SSR: 初始数据在服务端获取（可用年份 + 开场页月度统计）
+const pageFromUrl = parseInt(Array.isArray(route.query.page) ? route.query.page[0] : route.query.page || '0')
+if (!isNaN(pageFromUrl) && pageFromUrl >= 0 && pageFromUrl < pages.length) {
+  currentPage.value = pageFromUrl
+}
 
-  // 确保获取可用年份（如果还没有获取）
-  if (!availableYears.value.length) {
-    try {
-      const response = await getViewingMonthlyStats(selectedYear.value, true)
-      if (response.data.status === 'success' && response.data.data.available_years) {
-        availableYears.value = response.data.data.available_years
-        if (!availableYears.value.includes(selectedYear.value)) {
-          selectedYear.value = availableYears.value[0]
-        }
+const { data: initialAnalytics } = await useAsyncData('analytics-initial', async () => {
+  try {
+    const response = await getViewingMonthlyStats(selectedYear.value, true)
+    if (response.data.status === 'success') {
+      return {
+        availableYears: response.data.data.available_years || [],
+        monthlyStats: response.data.data,
       }
-    } catch (error) {
-      console.error('获取可用年份失败:', error)
     }
+  } catch (error) {
+    console.error('SSR 获取分析数据失败:', error)
   }
+  return { availableYears: [], monthlyStats: null }
+})
 
-  // 只加载当前页面的数据
+if (initialAnalytics.value) {
+  availableYears.value = initialAnalytics.value.availableYears
+  if (initialAnalytics.value.monthlyStats) {
+    monthlyStatsData.value = initialAnalytics.value.monthlyStats
+  }
+  if (availableYears.value.length && !availableYears.value.includes(selectedYear.value)) {
+    selectedYear.value = availableYears.value[0]
+  }
+}
+
+// 客户端挂载后加载当前页面数据并添加事件监听
+onMounted(async () => {
   await fetchPageData(currentPage.value)
   window.addEventListener('wheel', handleWheel, { passive: false })
-  
-  // 只在真正的触摸设备上添加触摸事件监听器
+
   if (isTouchDevice()) {
     window.addEventListener('touchstart', handleTouchStart)
     window.addEventListener('touchmove', handleTouchMove, { passive: false })

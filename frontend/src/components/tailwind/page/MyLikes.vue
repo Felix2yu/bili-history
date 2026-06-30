@@ -231,6 +231,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import { getLikeList, getLikeLocal } from '@/api/api.js'
+import { useAsyncData } from '#imports'
 
 const loading = ref(false)
 const syncing = ref(false)
@@ -322,9 +323,30 @@ function handleClickOutside(e) {
   }
 }
 
+// SSR: 初始数据在服务端获取
+const { data: initialLikes } = await useAsyncData('likes-initial', async () => {
+  try {
+    const response = await getLikeLocal({ size: 500 })
+    if (response.data.status === 'success') {
+      return {
+        videos: response.data.data.list || [],
+        totalCount: response.data.data.total || 0,
+      }
+    }
+  } catch (error) {
+    console.error('SSR 获取点赞列表失败:', error)
+  }
+  return { videos: [], totalCount: 0 }
+})
+
+if (initialLikes.value && initialLikes.value.videos.length > 0) {
+  videos.value = initialLikes.value.videos
+  totalCount.value = initialLikes.value.totalCount
+}
+
+// 客户端挂载后同步B站数据并添加事件监听
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
-  await fetchLocal()
   syncFromBilibili()
 })
 

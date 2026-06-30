@@ -27,14 +27,18 @@ const applyDarkMode = () => {
 // 切换深色模式
 const toggleDarkMode = () => {
   isDarkMode.value = !isDarkMode.value
-  localStorage.setItem('darkMode', isDarkMode.value.toString())
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('darkMode', isDarkMode.value.toString())
+  }
   applyDarkMode()
 }
 
-// 监听深色模式变化
-watch(isDarkMode, () => {
-  applyDarkMode()
-})
+// 监听深色模式变化（仅客户端）
+if (typeof window !== 'undefined') {
+  watch(isDarkMode, () => {
+    applyDarkMode()
+  })
+}
 
 export const useDarkMode = () => {
   return {

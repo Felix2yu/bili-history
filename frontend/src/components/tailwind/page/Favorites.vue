@@ -382,6 +382,7 @@ import {
 } from '@/api/api.js'
 import { openInBrowser } from '@/utils/openUrl.js'
 import { normalizeImageUrl } from '@/utils/imageUrl.js'
+import { useAsyncData } from '#imports'
 
 const router = useRouter()
 
@@ -437,12 +438,38 @@ watch(activeTab, () => {
   fetchFavorites()
 })
 
-// 组件挂载时加载数据
-onMounted(() => {
-  checkLoginStatus()
-  fetchFavorites()
+// SSR: 初始数据在服务端获取
+const { data: initialFavorites } = await useAsyncData('favorites-initial', async () => {
+  try {
+    const loginResponse = await getLoginStatus()
+    const loggedIn = loginResponse.data && loginResponse.data.code === 0 && loginResponse.data.data.isLogin
 
-  // 添加全局登录状态变化的监听
+    if (!loggedIn) {
+      return { isLoggedIn: false, favorites: [], totalItems: 0 }
+    }
+
+    const response = await getCreatedFavoriteFolders({})
+    if (response.data.status === 'success') {
+      return {
+        isLoggedIn: true,
+        favorites: response.data.data.list || [],
+        totalItems: response.data.data.count || 0,
+      }
+    }
+  } catch (error) {
+    console.error('SSR 获取收藏夹失败:', error)
+  }
+  return { isLoggedIn: false, favorites: [], totalItems: 0 }
+})
+
+if (initialFavorites.value) {
+  isLoggedIn.value = initialFavorites.value.isLoggedIn
+  favorites.value = initialFavorites.value.favorites
+  totalItems.value = initialFavorites.value.totalItems
+}
+
+// 客户端挂载后添加事件监听
+onMounted(() => {
   window.addEventListener('login-status-changed', handleLoginStatusChange)
 })
 

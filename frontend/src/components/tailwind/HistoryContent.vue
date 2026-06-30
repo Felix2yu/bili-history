@@ -392,6 +392,7 @@ import {
   batchDeleteBilibiliHistory,
   deleteBilibiliHistory,
 } from '@/api/api.js'
+import { useAsyncData } from '#imports'
 import { showNotify, showDialog } from 'vant'
 import 'vant/es/dialog/style'
 import VideoRecord from './VideoRecord.vue'
@@ -1070,19 +1071,77 @@ const refreshData = async () => {
   }
 }
 
-onMounted(async () => {
-  isLoading.value = true
+// SSR: 初始数据在服务端获取
+const { data: initialData } = await useAsyncData('history-initial', async () => {
   try {
-    await checkLoginStatus()
-    await fetchMainCategories()
-    if (isLoggedIn.value) {
-      await fetchHistoryByDateRange()
-    } else {
-      isLoading.value = false
+    const loginResponse = await getLoginStatus()
+    const loggedIn = loginResponse.data && loginResponse.data.code === 0 && loginResponse.data.data.isLogin
+
+    if (!loggedIn) {
+      return { isLoggedIn: false, records: [], total: 0, categories: [], loginUserInfo: null }
     }
+
+    const catResponse = await getMainCategories()
+    const categories = catResponse.data.status === 'success' ? catResponse.data.data.map((cat) => cat.name) : []
+
+    const historyResponse = await getBiliHistory2024(
+      props.page,
+      props.pageSize,
+      0,
+      '',
+      '',
+      '',
+      false,
+      props.business,
+    )
+
+    let records = []
+    let total = 0
+    if (historyResponse.data && historyResponse.data.data) {
+      records = historyResponse.data.data.records || []
+      total = historyResponse.data.data.total || 0
+    }
+
+    return { isLoggedIn: true, records, total, categories, loginUserInfo: loginResponse.data.data }
   } catch (error) {
-    console.error('初始化失败:', error)
-    isLoading.value = false
+    console.error('SSR 初始数据获取失败:', error)
+    return { isLoggedIn: false, records: [], total: 0, categories: [], loginUserInfo: null }
+  }
+})
+
+// 从 SSR 数据初始化组件状态
+if (initialData.value) {
+  isLoggedIn.value = initialData.value.isLoggedIn
+  records.value = initialData.value.records
+  total.value = initialData.value.total
+  mainCategories.value = initialData.value.categories
+  emit('update:total-pages', Math.ceil(initialData.value.total / size.value))
+  emit('update:total', initialData.value.total)
+  isLoading.value = false
+
+  // 客户端挂载后触发登录状态事件
+  if (import.meta.client && initialData.value.loginUserInfo) {
+    window.dispatchEvent(new CustomEvent('login-status-changed', {
+      detail: { isLoggedIn: true, userInfo: initialData.value.loginUserInfo },
+    }))
+  }
+}
+
+// 客户端挂载后获取额外数据（备注、下载状态、收藏状态）
+onMounted(async () => {
+  if (isLoggedIn.value && records.value.length > 0) {
+    const batchRecords = records.value.map(record => ({
+      bvid: record.bvid,
+      view_at: record.view_at,
+    }))
+    try {
+      const remarksResponse = await batchGetRemarks(batchRecords)
+      if (remarksResponse.data.status === 'success') {
+        remarkData.value = remarksResponse.data.data
+      }
+    } catch (e) { /* ignore */ }
+    await batchCheckDownloadStatus()
+    await batchCheckFavorites()
   }
 })
 

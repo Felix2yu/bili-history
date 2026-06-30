@@ -160,14 +160,16 @@ const emit = defineEmits([
 ])
 
 const isUpdating = ref(false)
-const syncDeleted = ref(localStorage.getItem('syncDeleted') === 'true')
+const syncDeleted = ref(typeof window !== 'undefined' ? localStorage.getItem('syncDeleted') === 'true' : false)
 const filterDropdownRef = ref(null)
 
 const isFilterActive = computed(() => Boolean(props.date || props.category || props.business))
 
-watch(() => localStorage.getItem('syncDeleted'), (newVal) => {
-  syncDeleted.value = newVal === 'true'
-})
+if (typeof window !== 'undefined') {
+  watch(() => localStorage.getItem('syncDeleted'), (newVal) => {
+    syncDeleted.value = newVal === 'true'
+  })
+}
 
 const openFilterPanel = () => {
   if (filterDropdownRef.value?.openFilterPopup) {

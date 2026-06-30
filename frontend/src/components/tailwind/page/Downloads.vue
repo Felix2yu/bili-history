@@ -220,6 +220,7 @@ import 'vant/es/notify/style'
 import SimpleSearchBar from '../SimpleSearchBar.vue'
 import { openInBrowser } from '@/utils/openUrl.js'
 import { normalizeImageUrl } from '@/utils/imageUrl.js'
+import { useAsyncData } from '#imports'
 
 // 定义组件选项
 defineOptions({
@@ -398,10 +399,29 @@ const handleAuthorClick = async (video) => {
   }
 }
 
-// 组件挂载时加载数据
-onMounted(() => {
-  loadDownloadedVideos()
+// SSR: 初始数据在服务端获取
+const { data: initialDownloads } = await useAsyncData('downloads-initial', async () => {
+  try {
+    const response = await getDownloadedVideos('', 1, 20)
+    if (response.data && response.data.status === 'success') {
+      return {
+        videos: response.data.videos || [],
+        total: response.data.total || 0,
+        page: response.data.page || 1,
+        limit: response.data.limit || 20,
+        pages: response.data.pages || 1,
+      }
+    }
+  } catch (error) {
+    console.error('SSR 获取下载列表失败:', error)
+  }
+  return { videos: [], total: 0, page: 1, limit: 20, pages: 1 }
 })
+
+if (initialDownloads.value) {
+  downloads.value = initialDownloads.value
+  isLoading.value = false
+}
 </script>
 
 <style scoped>

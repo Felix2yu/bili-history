@@ -328,12 +328,12 @@ import { showNotify, showDialog } from 'vant'
 import 'vant/es/dialog/style'
 import 'vant/es/notify/style'
 import 'vant/es/loading/style'
-import { 
-  getAllSchedulerTasks, 
-  getSchedulerTaskDetail, 
-  createSchedulerTask, 
-  updateSchedulerTask, 
-  deleteSchedulerTask, 
+import {
+  getAllSchedulerTasks,
+  getSchedulerTaskDetail,
+  createSchedulerTask,
+  updateSchedulerTask,
+  deleteSchedulerTask,
   executeSchedulerTask,
   getTaskHistory,
   setTaskEnabled,
@@ -342,6 +342,7 @@ import {
 import TaskForm from '../scheduler/TaskForm.vue'
 import TaskDetail from '../scheduler/TaskDetail.vue'
 import TaskHistory from '../scheduler/TaskHistory.vue'
+import { useAsyncData } from '#imports'
 
 // 防抖函数
 const debounce = (fn, delay) => {
@@ -625,10 +626,30 @@ const deleteTask = async (taskId, parentTaskId = null) => {
   }
 }
 
-// 初始化
-onMounted(() => {
-  fetchTasks()
+// SSR: 初始数据在服务端获取
+const { data: initialTasks } = await useAsyncData('scheduler-initial', async () => {
+  try {
+    const response = await getAllSchedulerTasks({
+      include_subtasks: true,
+      detail_level: 'full'
+    })
+    if (response.data && response.data.status === 'success') {
+      return {
+        tasks: (response.data.tasks || []).map(task => ({
+          ...task,
+          isExpanded: true
+        }))
+      }
+    }
+  } catch (error) {
+    console.error('SSR 获取计划任务失败:', error)
+  }
+  return { tasks: [] }
 })
+
+if (initialTasks.value) {
+  tasks.value = initialTasks.value.tasks
+}
 </script>
 
 <style scoped>

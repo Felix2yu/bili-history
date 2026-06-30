@@ -239,6 +239,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import { getWatchLaterList, removeFromWatchLater, getWatchLaterLocal } from '@/api/api.js'
+import { useAsyncData } from '#imports'
 
 const loading = ref(false)
 const syncing = ref(false)
@@ -329,9 +330,26 @@ function handleClickOutside(e) {
   }
 }
 
+// SSR: 初始数据在服务端获取
+const { data: initialWatchLater } = await useAsyncData('watchlater-initial', async () => {
+  try {
+    const response = await getWatchLaterLocal({ size: 500 })
+    if (response.data.status === 'success') {
+      return { videos: response.data.data.list || [] }
+    }
+  } catch (error) {
+    console.error('SSR 获取稍后再看失败:', error)
+  }
+  return { videos: [] }
+})
+
+if (initialWatchLater.value && initialWatchLater.value.videos.length > 0) {
+  videos.value = initialWatchLater.value.videos
+}
+
+// 客户端挂载后同步B站数据并添加事件监听
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
-  await fetchLocal()
   syncFromBilibili()
 })
 

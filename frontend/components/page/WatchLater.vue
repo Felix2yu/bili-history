@@ -225,8 +225,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useAsyncData } from '#imports'
-import { showNotify } from 'vant'
-import 'vant/es/notify/style'
 import { getWatchLaterList, getWatchLaterLocal } from '~/utils/api'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
 

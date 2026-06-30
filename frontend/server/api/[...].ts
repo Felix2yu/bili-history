@@ -13,8 +13,6 @@ export default defineEventHandler(async (event) => {
   const path = reqUrl.pathname.replace(/^\/api/, '') + reqUrl.search
   const target = backendUrl + path
 
-  console.log(`[API Proxy] ${method} ${reqUrl.pathname} -> ${target}`)
-
   try {
     const parsedUrl = new URL(target)
     const isHttps = parsedUrl.protocol === 'https:'
@@ -72,8 +70,6 @@ export default defineEventHandler(async (event) => {
           const body = Buffer.concat(chunks)
           const ct = (proxyRes.headers['content-type'] || 'application/json') as string
           setResponseHeader(event, 'content-type', ct)
-          const bodyStr = body.toString().substring(0, 200)
-          console.log(`[API Proxy] <- ${proxyRes.statusCode} ${bodyStr}`)
           resolve(body)
         })
         proxyRes.on('error', (err) => {

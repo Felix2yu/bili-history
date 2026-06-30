@@ -52,6 +52,7 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAsyncData } from '#imports'
 import { searchBiliHistory2024, batchGetRemarks } from '~/utils/api'
 import SearchBar from '../SearchBar.vue'
 import VideoRecord from '../VideoRecord.vue'
@@ -123,8 +124,8 @@ const handlePageChange = async (newPage) => {
 // 获取搜索结果
 const fetchSearchResults = async () => {
   try {
-    // 从localStorage获取是否使用本地图片源的设置
-    const useLocalImages = localStorage.getItem('useLocalImages') === 'true'
+    // 从localStorage获取是否使用本地图片源的设置（仅客户端）
+    const useLocalImages = import.meta.client ? localStorage.getItem('useLocalImages') === 'true' : false
 
     const response = await searchBiliHistory2024(
       keyword.value,           // search
@@ -154,6 +155,63 @@ const fetchSearchResults = async () => {
   } catch (error) {
     console.error('搜索失败:', error)
   }
+}
+
+// SSR: 初始搜索数据在服务端获取
+const initialKeyword = Array.isArray(route.params.keyword)
+  ? route.params.keyword[0]
+  : String(route.params.keyword || '')
+const initialPage = Number(route.params.pageNumber || 1)
+
+const { data: initialData } = await useAsyncData('search-initial', async () => {
+  if (!initialKeyword) {
+    return { records: [], totalPages: 0, totalResults: 0, remarkData: {} }
+  }
+
+  try {
+    const response = await searchBiliHistory2024(
+      initialKeyword,
+      'all',
+      initialPage,
+      30,
+      false
+    )
+
+    if (response.data.status === 'success') {
+      let remarkDataResult = {}
+      if (response.data.data.records?.length > 0) {
+        const batchRecords = response.data.data.records.map(record => ({
+          bvid: record.bvid,
+          view_at: record.view_at
+        }))
+        const remarksResponse = await batchGetRemarks(batchRecords)
+        if (remarksResponse.data.status === 'success') {
+          remarkDataResult = remarksResponse.data.data
+        }
+      }
+
+      return {
+        records: response.data.data.records,
+        totalPages: Math.ceil(response.data.data.total / 30),
+        totalResults: response.data.data.total,
+        remarkData: remarkDataResult
+      }
+    }
+    return { records: [], totalPages: 0, totalResults: 0, remarkData: {} }
+  } catch (error) {
+    console.error('SSR 搜索失败:', error)
+    return { records: [], totalPages: 0, totalResults: 0, remarkData: {} }
+  }
+})
+
+// 从 SSR 数据初始化组件状态
+if (initialData.value) {
+  keyword.value = initialKeyword
+  page.value = initialPage
+  records.value = initialData.value.records
+  totalPages.value = initialData.value.totalPages
+  totalResults.value = initialData.value.totalResults
+  remarkData.value = initialData.value.remarkData
 }
 
 // 处理备注更新
@@ -220,16 +278,10 @@ onMounted(async () => {
     searchType.value = typeFromQuery
   }
 
-  // 设置初始关键词
-  const initialKeyword = Array.isArray(route.params.keyword)
-    ? route.params.keyword[0]
-    : String(route.params.keyword || '')
-  keyword.value = initialKeyword
-
-  // 从路由参数获取页码
-  page.value = Number(route.params.pageNumber || 1)
-
-  await fetchSearchResults()
+  // 如果SSR没有加载数据，则在客户端加载
+  if (records.value.length === 0 && keyword.value) {
+    await fetchSearchResults()
+  }
 })
 </script>
 

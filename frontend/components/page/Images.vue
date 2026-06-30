@@ -188,6 +188,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useAsyncData } from '#imports'
 import { getImagesStatus, startImagesDownload, stopImagesDownload, clearImages } from '~/utils/api'
 import { showNotify, showDialog } from 'vant'
 import 'vant/es/notify/style'
@@ -368,9 +369,28 @@ const handleClear = async () => {
   }
 }
 
+// SSR: 初始数据在服务端获取
+const { data: initialData } = await useAsyncData('images-initial', async () => {
+  try {
+    const response = await getImagesStatus()
+    return { status: response.data || null }
+  } catch (error) {
+    console.error('SSR 获取图片状态失败:', error)
+    return { status: null }
+  }
+})
+
+// 从 SSR 数据初始化组件状态
+if (initialData.value?.status) {
+  status.value = initialData.value.status
+  isLoading.value = false
+}
+
 // 组件挂载时获取一次状态
 onMounted(() => {
-  fetchStatus()
+  if (!status.value) {
+    fetchStatus()
+  }
 })
 
 // 组件卸载时清除定时器

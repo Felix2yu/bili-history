@@ -366,6 +366,7 @@
 <script setup>
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAsyncData } from '#imports'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import 'vant/es/dialog/style'
@@ -437,10 +438,42 @@ watch(activeTab, () => {
   fetchFavorites()
 })
 
+// SSR: 初始数据在服务端获取
+const { data: initialData } = await useAsyncData('favorites-initial', async () => {
+  try {
+    const loginResponse = await getLoginStatus()
+    const loggedIn = loginResponse.data && loginResponse.data.code === 0 && loginResponse.data.data.isLogin
+
+    if (!loggedIn) {
+      return { isLoggedIn: false, favorites: [], totalItems: 0 }
+    }
+
+    const response = await getCreatedFavoriteFolders()
+    const favorites = response.data.status === 'success' ? (response.data.data.list || []) : []
+    const totalItems = response.data.status === 'success' ? (response.data.data.count || 0) : 0
+
+    return { isLoggedIn: true, favorites, totalItems }
+  } catch (error) {
+    console.error('SSR 获取收藏夹失败:', error)
+    return { isLoggedIn: false, favorites: [], totalItems: 0 }
+  }
+})
+
+// 从 SSR 数据初始化组件状态
+if (initialData.value) {
+  isLoggedIn.value = initialData.value.isLoggedIn
+  favorites.value = initialData.value.favorites
+  totalItems.value = initialData.value.totalItems
+}
+
 // 组件挂载时加载数据
 onMounted(() => {
-  checkLoginStatus()
-  fetchFavorites()
+  if (!initialData.value?.isLoggedIn) {
+    checkLoginStatus()
+  }
+  if (isLoggedIn.value && favorites.value.length === 0) {
+    fetchFavorites()
+  }
 
   // 添加全局登录状态变化的监听
   window.addEventListener('login-status-changed', handleLoginStatusChange)

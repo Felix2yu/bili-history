@@ -324,16 +324,17 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { useAsyncData } from '#imports'
 import { showNotify, showDialog } from 'vant'
 import 'vant/es/dialog/style'
 import 'vant/es/notify/style'
 import 'vant/es/loading/style'
-import { 
-  getAllSchedulerTasks, 
-  getSchedulerTaskDetail, 
-  createSchedulerTask, 
-  updateSchedulerTask, 
-  deleteSchedulerTask, 
+import {
+  getAllSchedulerTasks,
+  getSchedulerTaskDetail,
+  createSchedulerTask,
+  updateSchedulerTask,
+  deleteSchedulerTask,
   executeSchedulerTask,
   getTaskHistory,
   setTaskEnabled,
@@ -625,9 +626,27 @@ const deleteTask = async (taskId, parentTaskId = null) => {
   }
 }
 
+// SSR: 初始数据在服务端获取
+const { data: initialData } = await useAsyncData('scheduler-initial', async () => {
+  try {
+    const response = await getAllSchedulerTasks()
+    return { tasks: response.data || [] }
+  } catch (error) {
+    console.error('SSR 获取计划任务失败:', error)
+    return { tasks: [] }
+  }
+})
+
+// 从 SSR 数据初始化组件状态
+if (initialData.value?.tasks) {
+  tasks.value = initialData.value.tasks
+}
+
 // 初始化
 onMounted(() => {
-  fetchTasks()
+  if (tasks.value.length === 0) {
+    fetchTasks()
+  }
 })
 </script>
 

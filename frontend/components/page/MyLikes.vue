@@ -239,6 +239,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useAsyncData } from '#imports'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import { getLikeList, getLikeLocal } from '~/utils/api'
@@ -304,9 +305,39 @@ function handleClickOutside(e) {
   }
 }
 
+// SSR: 初始数据在服务端获取
+const { data: initialData } = await useAsyncData('likes-initial', async () => {
+  try {
+    const response = await getLikeLocal({
+      page: 1,
+      size: 50,
+      sort: 'fetch_time',
+      order: 'desc'
+    })
+    if (response.data.status === 'success') {
+      return {
+        videos: response.data.data.list || [],
+        totalCount: response.data.data.total || 0
+      }
+    }
+    return { videos: [], totalCount: 0 }
+  } catch (error) {
+    console.error('SSR 获取点赞列表失败:', error)
+    return { videos: [], totalCount: 0 }
+  }
+})
+
+// 从 SSR 数据初始化组件状态
+if (initialData.value) {
+  videos.value = initialData.value.videos
+  totalCount.value = initialData.value.totalCount
+}
+
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
-  await fetchLocal()
+  if (videos.value.length === 0) {
+    await fetchLocal()
+  }
   loadFilterOptions()
 })
 

@@ -236,6 +236,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useAsyncData } from '#imports'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import { getWatchLaterList, removeFromWatchLater, getWatchLaterLocal } from '~/utils/api'
@@ -329,9 +330,30 @@ function handleClickOutside(e) {
   }
 }
 
+// SSR: 初始数据在服务端获取
+const { data: initialData } = await useAsyncData('watchlater-initial', async () => {
+  try {
+    const response = await getWatchLaterLocal({ size: 500 })
+    if (response.data.status === 'success') {
+      return { videos: response.data.data.list || [] }
+    }
+    return { videos: [] }
+  } catch (error) {
+    console.error('SSR 获取稍后再看失败:', error)
+    return { videos: [] }
+  }
+})
+
+// 从 SSR 数据初始化组件状态
+if (initialData.value?.videos?.length > 0) {
+  videos.value = initialData.value.videos
+}
+
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
-  await fetchLocal()
+  if (videos.value.length === 0) {
+    await fetchLocal()
+  }
   syncFromBilibili()
 })
 

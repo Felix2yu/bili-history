@@ -211,6 +211,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useAsyncData } from '#imports'
 import Pagination from '../Pagination.vue'
 import VideoPlayerDialog from '../VideoPlayerDialog.vue'
 import { getDownloadedVideos, deleteDownloadedVideo } from '~/utils/api'
@@ -398,9 +399,28 @@ const handleAuthorClick = async (video) => {
   }
 }
 
+// SSR: 初始数据在服务端获取
+const { data: initialData } = await useAsyncData('downloads-initial', async () => {
+  try {
+    const response = await getDownloadedVideos('', 1, 20)
+    return { downloads: response.data || { videos: [], total: 0, page: 1, limit: 20, pages: 1 } }
+  } catch (error) {
+    console.error('SSR 获取下载列表失败:', error)
+    return { downloads: { videos: [], total: 0, page: 1, limit: 20, pages: 1 } }
+  }
+})
+
+// 从 SSR 数据初始化组件状态
+if (initialData.value?.downloads) {
+  downloads.value = initialData.value.downloads
+  isLoading.value = false
+}
+
 // 组件挂载时加载数据
 onMounted(() => {
-  loadDownloadedVideos()
+  if (downloads.value.videos.length === 0) {
+    loadDownloadedVideos()
+  }
 })
 </script>
 

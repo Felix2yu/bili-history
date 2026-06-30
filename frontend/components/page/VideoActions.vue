@@ -25,7 +25,7 @@
           <!-- Mobile cover ratio wrapper -->
           <div class="h-0 pb-[56.25%] md:pb-0 md:h-full">
             <img
-              :src="normalizeImageUrl(record.cover || record.covers?.[0])"
+              :src="getProxyImageUrl(record.cover || record.covers?.[0])"
               class="absolute left-0 top-0 h-full w-full object-cover"
               :class="{ 'blur-md': isPrivacyMode }"
               alt=""
@@ -52,7 +52,7 @@
             <div class="flex min-w-0 items-center gap-1.5 md:gap-2">
               <img
                 v-if="record.business !== 'cheese' && record.business !== 'pgc'"
-                :src="normalizeImageUrl(record.author_face)"
+                :src="getProxyImageUrl(record.author_face)"
                 class="h-4 w-4 rounded-full md:h-6 md:w-6"
                 :class="{ 'blur-md': isPrivacyMode }"
                 alt=""
@@ -234,7 +234,7 @@ import {
   localBatchFavoriteResource,
   updateVideoRemark,
 } from '~/utils/api'
-import { normalizeImageUrl } from '~/utils/imageUrl.js'
+import { getProxyImageUrl } from '~/utils/imageUrl.js'
 import { openInBrowser } from '~/utils/openUrl.js'
 import { getHistoryRecord } from '~/utils/historyRecordStore'
 import { usePrivacyStore } from '~/stores/privacy'

@@ -130,7 +130,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 md:p-4 mb-3 md:mb-4 shadow-sm">
               <div class="flex items-start space-x-3 md:space-x-4">
                 <div class="w-24 h-[54px] md:w-32 md:h-20 flex-shrink-0 bg-black overflow-hidden rounded-md md:rounded-lg">
-                  <img :src="normalizeImageUrl(currentVideoCover)" :alt="currentVideoTitle"
+                  <img :src="getProxyImageUrl(currentVideoCover)" :alt="currentVideoTitle"
                        class="w-full h-full object-cover transition-transform hover:scale-105">
                 </div>
                 <div class="flex-1 min-w-0">
@@ -506,7 +506,7 @@ import {
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import CustomDropdown from '~/components/CustomDropdown'
-import { normalizeImageUrl } from '~/utils/imageUrl.js'
+import { getProxyImageUrl } from '~/utils/imageUrl.js'
 
 defineOptions({
   name: 'DownloadDialog',

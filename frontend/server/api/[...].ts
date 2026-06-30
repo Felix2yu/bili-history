@@ -9,8 +9,11 @@ export default defineEventHandler(async (event) => {
   const backendUrl = config.backendUrl || 'http://localhost:8899'
 
   const reqUrl = getRequestURL(event)
+  const method = event.method || 'GET'
   const path = reqUrl.pathname.replace(/^\/api/, '') + reqUrl.search
   const target = backendUrl + path
+
+  console.log(`[API Proxy] ${method} ${reqUrl.pathname} -> ${target}`)
 
   try {
     const parsedUrl = new URL(target)
@@ -18,7 +21,6 @@ export default defineEventHandler(async (event) => {
     const client = isHttps ? https : http
 
     const reqHeaders = getHeaders(event)
-    const method = event.method || 'GET'
 
     const options: http.RequestOptions = {
       hostname: parsedUrl.hostname,
@@ -70,6 +72,8 @@ export default defineEventHandler(async (event) => {
           const body = Buffer.concat(chunks)
           const ct = (proxyRes.headers['content-type'] || 'application/json') as string
           setResponseHeader(event, 'content-type', ct)
+          const bodyStr = body.toString().substring(0, 200)
+          console.log(`[API Proxy] <- ${proxyRes.statusCode} ${bodyStr}`)
           resolve(body)
         })
         proxyRes.on('error', (err) => {

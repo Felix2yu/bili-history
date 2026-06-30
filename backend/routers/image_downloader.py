@@ -1,9 +1,12 @@
 import os
 import sqlite3
+import hashlib
 from typing import Optional
+from urllib.parse import urlparse
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from fastapi.responses import FileResponse
+import requests as http_requests
 
 from scripts.image_downloader import ImageDownloader
 from scripts.utils import get_output_path
@@ -181,3 +184,69 @@ async def get_local_image(image_type: str, file_hash: str):
             status_code=500,
             detail=f"获取图片失败: {str(e)}"
         )
+
+
+@router.get("/proxy", summary="代理获取并缓存图片")
+async def proxy_image(url: str = Query(..., description="图片URL")):
+    """代理获取图片并缓存到本地
+
+    接收任意图片URL，下载并缓存到 output/images/proxy/ 目录。
+    已缓存的图片直接返回，不重复下载。
+    """
+    if not url:
+        raise HTTPException(status_code=400, detail="URL不能为空")
+
+    # 升级 http 为 https
+    if url.startswith("http://"):
+        url = url.replace("http://", "https://", 1)
+
+    # 计算 URL 的 MD5 哈希作为文件名
+    url_hash = hashlib.md5(url.encode()).hexdigest()
+    sub_dir = url_hash[:2]
+
+    # 缓存目录
+    cache_base = get_output_path("images/proxy")
+    cache_dir = os.path.join(cache_base, sub_dir)
+    cache_file_base = os.path.join(cache_dir, url_hash)
+
+    # 检查缓存是否存在
+    for ext in ('.jpg', '.jpeg', '.png', '.webp', '.gif'):
+        cached = cache_file_base + ext
+        if os.path.exists(cached):
+            media_type = "image/jpeg" if ext in ('.jpg', '.jpeg') else f"image/{ext[1:]}"
+            return FileResponse(cached, media_type=media_type)
+
+    # 缓存不存在，下载图片
+    try:
+        resp = http_requests.get(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Referer": "https://www.bilibili.com/",
+            },
+            timeout=15,
+            stream=True,
+        )
+        resp.raise_for_status()
+
+        # 从 Content-Type 推断扩展名
+        content_type = resp.headers.get("Content-Type", "image/jpeg")
+        ext_map = {
+            "image/jpeg": ".jpg",
+            "image/png": ".png",
+            "image/webp": ".webp",
+            "image/gif": ".gif",
+        }
+        ext = ext_map.get(content_type.split(";")[0].strip(), ".jpg")
+
+        # 保存到缓存
+        os.makedirs(cache_dir, exist_ok=True)
+        cache_path = cache_file_base + ext
+        with open(cache_path, "wb") as f:
+            for chunk in resp.iter_content(8192):
+                f.write(chunk)
+
+        return FileResponse(cache_path, media_type=content_type)
+
+    except http_requests.RequestException:
+        raise HTTPException(status_code=502, detail="图片下载失败")

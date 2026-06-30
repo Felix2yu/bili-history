@@ -61,6 +61,25 @@ export const toStaticUrl = (relativePath) => {
 export default {
 	normalizeImageUrl,
 	toStaticUrl,
+	getProxyImageUrl,
+}
+
+/**
+ * 通过后端代理获取图片（自动缓存到本地）
+ * 首次请求时后端下载并缓存，后续直接返回缓存
+ */
+export const getProxyImageUrl = (url) => {
+	if (!url) return ''
+	if (typeof url !== 'string') return url
+
+	// data/blob URL 不需要代理
+	if (url.startsWith('data:') || url.startsWith('blob:')) return url
+
+	const base = getCurrentBaseUrl && getCurrentBaseUrl()
+	if (!base) return normalizeImageUrl(url)
+
+	const baseNormalized = String(base).replace(/\/$/, '')
+	return `${baseNormalized}/images/proxy?url=${encodeURIComponent(url)}`
 }
 
 

@@ -15,8 +15,13 @@ export const normalizeImageUrl = (url) => {
 	// 协议相对 URL
 	if (url.startsWith('//')) return `https:${url}`
 
-	// 已是绝对 URL
-	if (/^https?:\/\//i.test(url)) return url
+	// 已是绝对 URL - 将 HTTP 升级为 HTTPS（避免混合内容警告）
+	if (/^https?:\/\//i.test(url)) {
+		if (url.startsWith('http://')) {
+			return url.replace('http://', 'https://')
+		}
+		return url
+	}
 
 	// 其余按相对路径处理，拼接当前 API BaseURL
 	const base = getCurrentBaseUrl && getCurrentBaseUrl()

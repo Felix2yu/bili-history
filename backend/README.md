@@ -34,15 +34,19 @@
 - [x] 视频和图片下载
   - [x] 一键下载用户所有投稿视频
 - [x] 用户动态下载
-- [x] 自动化任务
+- [x] 自动化任务（计划任务）
 - [x] 获取用户评论
 - [x] 获取收藏夹
   - [x] 批量收藏
   - [x] 一键下载收藏夹所有视频
+- [x] 获取稍后再看列表
+- [x] 获取我的点赞列表
 - [x] 获取互动记录
   - [x] 获取历史记录时自动同步收藏/点赞/投币记录
   - [x] 将互动数据补充到年度总结分析
 - [x] 最多找回14天内b站所有在屏幕上显示过的图片
+- [x] SSR 支持（前端服务端渲染）
+- [x] MCP 局域网只读服务
 
 ## 后续开发计划
 
@@ -162,6 +166,30 @@ python main.py
 基础 URL: `http://localhost:8899`
 
 完整 API 文档访问：`http://localhost:8899/docs`
+
+### 主要接口
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/history` | 获取历史记录列表 |
+| GET | `/history_simple` | 简化版历史记录 |
+| GET | `/watchlater/list` | 获取稍后再看列表 |
+| GET | `/watchlater/local` | 从本地数据库获取稍后再看 |
+| GET | `/favorite/*` | 收藏夹相关接口 |
+| GET | `/like/list` | 点赞列表 |
+| GET | `/download/*` | 下载相关接口 |
+| GET | `/scheduler/*` | 计划任务接口 |
+| POST | `/login/qr` | 扫码登录 |
+| GET | `/login/check` | 检查登录状态 |
+
+### SSR 支持
+
+前端使用 Nuxt 3 SSR，在服务端通过 `useAsyncData` 预取初始数据。后端 API 需要同时支持：
+
+- **服务端调用**：Nuxt 服务端直接请求后端 API
+- **客户端调用**：浏览器通过 Nuxt 代理 `/api/*` 转发到后端
+
+代理层在 `frontend/server/api/[...].ts`，会透传请求头和 cookie。
 
 ## 通知配置
 

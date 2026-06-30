@@ -1709,12 +1709,11 @@ export const getWatchLaterList = () => {
 
 /**
  * 从稍后再看中移除视频
- * DELETE /watchlater/{bvid}?viewed=add_at
+ * DELETE /watchlater/{bvid}
  * @param {string} bvid - 视频 BV 号
- * @param {number} viewed - 视频加入稍后再看的时间戳
  */
-export const removeFromWatchLater = (bvid, viewed = 0) => {
-  return instance.delete(`/watchlater/${bvid}`, { params: { viewed } })
+export const removeFromWatchLater = (bvid) => {
+  return instance.delete(`/watchlater/${bvid}`)
 }
 
 /**

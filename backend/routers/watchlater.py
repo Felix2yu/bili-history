@@ -174,28 +174,20 @@ async def get_watch_later_local(
 
 
 @router.delete("/{bvid}", summary="从稍后再看中移除视频")
-async def remove_from_watch_later(bvid: str, viewed: int = 0):
+async def remove_from_watch_later(bvid: str):
     try:
-        # 获取配置
         config = load_config()
         bili_jct = config.get("bili_jct", "")
 
         if not bili_jct or bili_jct.startswith("你的"):
             return {"status": "error", "message": "缺少CSRF Token (bili_jct)，请先使用QR码登录并确保已正确获取bili_jct"}
 
-        # 与 bilibili_history_delete.py 保持一致的请求方式
-        data = {
-            "bvid": bvid,
-            "csrf": bili_jct
-        }
-
         response = requests.post(
             "https://api.bilibili.com/x/v2/history/toview/del",
-            data=data,
+            data={"bvid": bvid, "csrf": bili_jct},
             headers=get_headers()
         )
         result = response.json()
-
         print(f"[watchlater-del] bvid={bvid}, code={result.get('code')}, msg={result.get('message')}")
 
         if result.get("code") != 0:

@@ -66,12 +66,13 @@ async def send_apprise_notification(
 
     def _notify_one(url: str) -> Dict:
         import sys
-        notifier = apprise.Apprise()
-        notifier.add(url)
-        plugins = [p.__class__.__name__ for p in notifier['plugins']] if notifier['plugins'] else []
-        sys.stderr.write(f"[apprise] URL={url} 插件={plugins}\n")
-        sys.stderr.flush()
+        plugins = []
         try:
+            notifier = apprise.Apprise()
+            notifier.add(url)
+            plugins = [p.__class__.__name__ for p in notifier.servers] if notifier.servers else []
+            sys.stderr.write(f"[apprise] URL={url} 插件={plugins}\n")
+            sys.stderr.flush()
             success = bool(notifier.notify(title=title, body=body))
             sys.stderr.write(f"[apprise] notify结果={success}\n")
             sys.stderr.flush()

@@ -76,6 +76,31 @@ def test_api(config):
             cookies=cookies, headers=headers4)
         sys.stderr.write(f"[方式4] 无Origin: code={r4.json().get('code')} msg={r4.json().get('message')}\n")
 
+        # 方式5: bvid 放 query, csrf 放 body
+        r5 = requests.post(f'https://api.bilibili.com/x/v2/history/toview/del?bvid={test_bvid}',
+            data={'csrf': bili_jct},
+            cookies=cookies, headers=headers)
+        sys.stderr.write(f"[方式5] bvid在query: code={r5.json().get('code')} msg={r5.json().get('message')}\n")
+
+        # 方式6: 全部放 query 参数
+        r6 = requests.post(f'https://api.bilibili.com/x/v2/history/toview/del?bvid={test_bvid}&csrf={bili_jct}',
+            cookies=cookies, headers=headers)
+        sys.stderr.write(f"[方式6] 全query: code={r6.json().get('code')} msg={r6.json().get('message')}\n")
+
+        # 方式7: JSON + Session
+        s = requests.Session()
+        s.cookies.update(cookies)
+        r7 = s.post('https://api.bilibili.com/x/v2/history/toview/del',
+            json={'bvid': test_bvid, 'csrf': bili_jct},
+            headers={k: v for k, v in headers.items()} | {'Content-Type': 'application/json'})
+        sys.stderr.write(f"[方式7] json+session: code={r7.json().get('code')} msg={r7.json().get('message')}\n")
+
+        # 方式8: form + bvid在query
+        r8 = requests.post(f'https://api.bilibili.com/x/v2/history/toview/del?bvid={test_bvid}',
+            data={'csrf': bili_jct},
+            headers={**headers, 'Cookie': cookie_str})
+        sys.stderr.write(f"[方式8] bvidquery+手动Cookie: code={r8.json().get('code')} msg={r8.json().get('message')}\n")
+
 if __name__ == '__main__':
     config = load_real_config()
     test_api(config)

@@ -309,7 +309,6 @@ async def lifespan(app: FastAPI):
         check_on_startup = current_config.get('server', {}).get('data_integrity', {}).get('check_on_startup', True)
         if check_on_startup:
             logger.info("启动时数据完整性校验将在后台执行...")
-            import asyncio
             loop = asyncio.get_event_loop()
 
             def _run_check():

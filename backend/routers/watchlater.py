@@ -179,35 +179,8 @@ async def remove_from_watch_later(bvid: str):
     try:
         config = load_config()
         bili_jct = config.get("bili_jct", "")
-        if not bili_jct or bili_jct.startswith("你的"):
-            return {"status": "error", "message": "缺少CSRF Token (bili_jct)，请先使用QR码登录"}
 
-        cookies = {
-            "SESSDATA": str(config.get("SESSDATA", "")),
-            "bili_jct": str(bili_jct),
-            "DedeUserID": str(config.get("DedeUserID", "")),
-        }
-
-        sys.stderr.write(f"[watchlater-del] calling bvid={bvid}\n")
-        sys.stderr.flush()
-
-        response = requests.post(
-            "https://api.bilibili.com/x/v2/history/toview/del",
-            data={"bvid": bvid, "csrf": bili_jct},
-            cookies=cookies,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                "Referer": "https://www.bilibili.com/",
-                "Origin": "https://www.bilibili.com",
-            },
-        )
-        result = response.json()
-        sys.stderr.write(f"[watchlater-del] bvid={bvid} code={result.get('code')} msg={result.get('message')}\n")
-        sys.stderr.flush()
-
-        if result.get("code") != 0:
-            return {"status": "error", "message": result.get("message", "移除失败"), "code": result.get("code")}
-
+        # 先从本地数据库删除
         conn = get_db_connection()
         try:
             conn.execute("DELETE FROM watchlater_videos WHERE bvid = ?", (bvid,))
@@ -215,7 +188,37 @@ async def remove_from_watch_later(bvid: str):
         finally:
             conn.close()
 
-        return {"status": "success", "message": "已从稍后再看中移除"}
+        # 尝试同步删除 Bilibili 服务器上的记录
+        if not bili_jct or bili_jct.startswith("你的"):
+            return {"status": "success", "message": "已从本地移除（无CSRF Token，未同步到B站）"}
+
+        try:
+            cookies = {
+                "SESSDATA": str(config.get("SESSDATA", "")),
+                "bili_jct": str(bili_jct),
+                "DedeUserID": str(config.get("DedeUserID", "")),
+            }
+            response = requests.post(
+                "https://api.bilibili.com/x/v2/history/toview/del",
+                data={"bvid": bvid, "csrf": bili_jct},
+                cookies=cookies,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                    "Referer": "https://www.bilibili.com/",
+                    "Origin": "https://www.bilibili.com",
+                },
+                timeout=10,
+            )
+            result = response.json()
+            sys.stderr.write(f"[watchlater-del] bvid={bvid} bili_code={result.get('code')} bili_msg={result.get('message')}\n")
+            sys.stderr.flush()
+
+            if result.get("code") == 0:
+                return {"status": "success", "message": "已从稍后再看中移除"}
+        except Exception:
+            pass
+
+        return {"status": "success", "message": "已从本地移除（B站同步失败，稍后刷新可恢复）"}
     except Exception as e:
         sys.stderr.write(f"[watchlater-del] error: {e}\n")
         sys.stderr.flush()

@@ -83,9 +83,7 @@ async def send_apprise_notification(
             }
         except Exception as e:
             import traceback
-            tb = traceback.format_exc()
-            sys.stderr.write(f"[apprise] 异常={e}\n{tb}\n")
-            sys.stderr.flush()
+            traceback.print_exc()
             return {"url": url, "status": "error", "message": f"发送异常: {str(e)}", "plugins": plugins}
 
     try:

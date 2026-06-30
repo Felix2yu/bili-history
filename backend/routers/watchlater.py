@@ -60,7 +60,6 @@ def get_headers():
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Referer": "https://www.bilibili.com/",
         "Origin": "https://www.bilibili.com",
-        "Content-Type": "application/x-www-form-urlencoded",
     }
     cookies = []
     if sessdata:
@@ -174,20 +173,23 @@ async def get_watch_later_local(
 
 
 @router.delete("/{bvid}", summary="从稍后再看中移除视频")
-async def remove_from_watch_later(bvid: str):
+async def remove_from_watch_later(bvid: str, viewed: int = 0):
     try:
         # 获取配置
         config = load_config()
         bili_jct = config.get("bili_jct", "")
 
-        if not bili_jct:
+        if not bili_jct or bili_jct.startswith("你的"):
             return {"status": "error", "message": "缺少CSRF Token (bili_jct)，请先使用QR码登录并确保已正确获取bili_jct"}
 
         url = "https://api.bilibili.com/x/v2/history/toview/del"
         headers = get_headers()
         data = {"bvid": bvid, "csrf": bili_jct}
+        if viewed:
+            data["viewed"] = viewed
         response = requests.post(url, data=data, headers=headers)
         result = response.json()
+
         if result.get("code") != 0:
             return {"status": "error", "message": result.get("message", "移除失败"), "code": result.get("code")}
 

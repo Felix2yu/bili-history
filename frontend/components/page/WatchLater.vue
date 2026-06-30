@@ -412,7 +412,7 @@ async function syncFromBilibili() {
 
 async function removeVideo(video) {
   try {
-    const response = await removeFromWatchLater(video.bvid)
+    const response = await removeFromWatchLater(video.bvid, video.add_at || 0)
     if (response.data.status === 'success') {
       showNotify({ type: 'success', message: '已移除' })
       videos.value = videos.value.filter(v => v.bvid !== video.bvid)

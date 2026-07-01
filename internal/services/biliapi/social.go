@@ -112,7 +112,8 @@ type WatchLater struct {
 
 // FetchWatchLater fetches the watch later list.
 func (c *Client) FetchWatchLater() ([]WatchLater, error) {
-	url := "https://api.bilibili.com/x/v2/history/toview/web"
+	// Use the same endpoint as Python backend
+	url := "https://api.bilibili.com/x/v2/history/toview"
 	data, err := c.doRequest(url)
 	if err != nil {
 		return nil, err
@@ -146,7 +147,11 @@ type LikeVideo struct {
 
 // FetchLikes fetches the user's liked videos.
 func (c *Client) FetchLikes() ([]LikeVideo, error) {
-	url := "https://api.bilibili.com/x/v2/like/web/list?like_av=1"
+	// Use the same endpoint as Python backend
+	url := "https://api.bilibili.com/x/space/like/video?pn=1&ps=50"
+	if c.dedeUserID != "" {
+		url += "&vmid=" + c.dedeUserID
+	}
 	data, err := c.doRequest(url)
 	if err != nil {
 		return nil, err
@@ -163,7 +168,7 @@ func (c *Client) FetchLikes() ([]LikeVideo, error) {
 		return nil, nil
 	}
 
-	listJSON, _ := json.Marshal(respData["item"])
+	listJSON, _ := json.Marshal(respData["list"])
 	var items []LikeVideo
 	if listJSON != nil {
 		json.Unmarshal(listJSON, &items)

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -46,8 +47,19 @@ func (c *Client) newRequest(url string) (*http.Request, error) {
 	}
 	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Referer", referer)
+	// Send all cookies like Python backend
+	var cookies []string
 	if c.sessdata != "" {
-		req.Header.Set("Cookie", "SESSDATA="+c.sessdata)
+		cookies = append(cookies, "SESSDATA="+c.sessdata)
+	}
+	if c.biliJCT != "" {
+		cookies = append(cookies, "bili_jct="+c.biliJCT)
+	}
+	if c.dedeUserID != "" {
+		cookies = append(cookies, "DedeUserID="+c.dedeUserID)
+	}
+	if len(cookies) > 0 {
+		req.Header.Set("Cookie", strings.Join(cookies, "; "))
 	}
 	return req, nil
 }

@@ -157,6 +157,11 @@ func GetConfigPath(configFile string) string {
 		return absPath
 	}
 
+	dockerConfigPath := filepath.Join("/config", configFile)
+	if _, err := os.Stat(dockerConfigPath); err == nil {
+		return dockerConfigPath
+	}
+
 	return filepath.Join(basePath, "config", configFile)
 }
 
@@ -166,24 +171,25 @@ func LoadConfig() (*Config, error) {
 		cfgPath := GetConfigPath("config.yaml")
 		configPath = cfgPath
 
-		if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
-			loadErr = fmt.Errorf("配置文件不存在: %s", cfgPath)
-			return
-		}
-
-		data, err := os.ReadFile(cfgPath)
-		if err != nil {
-			loadErr = fmt.Errorf("读取配置文件失败: %v", err)
-			return
-		}
-
-		rawConfig = make([]byte, len(data))
-		copy(rawConfig, data)
-
 		var cfg Config
-		if err := yaml.Unmarshal(data, &cfg); err != nil {
-			loadErr = fmt.Errorf("解析配置文件失败: %v", err)
-			return
+		fileExists := true
+
+		if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
+			fileExists = false
+		} else {
+			data, err := os.ReadFile(cfgPath)
+			if err != nil {
+				loadErr = fmt.Errorf("读取配置文件失败: %v", err)
+				return
+			}
+
+			rawConfig = make([]byte, len(data))
+			copy(rawConfig, data)
+
+			if err := yaml.Unmarshal(data, &cfg); err != nil {
+				loadErr = fmt.Errorf("解析配置文件失败: %v", err)
+				return
+			}
 		}
 
 		if cfg.Server.Host == "" {
@@ -195,14 +201,18 @@ func LoadConfig() (*Config, error) {
 
 		applyEnvOverrides(&cfg)
 
+		if !fileExists {
+			loadErr = fmt.Errorf("配置文件不存在: %s，使用默认配置", cfgPath)
+		}
+
 		config = &cfg
 	})
 
-	if loadErr != nil {
+	if config == nil {
 		return nil, loadErr
 	}
 
-	return config, nil
+	return config, loadErr
 }
 
 func GetConfig() *Config {

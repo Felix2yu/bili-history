@@ -19,8 +19,13 @@ func main() {
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		utils.LogError("加载配置失败: %v", err)
-		return
+		utils.LogWarning("配置加载警告: %v", err)
+	}
+	utils.LogInfo("配置文件路径: %s", config.GetConfigPathValue())
+	if cfg.SESSDATA != "" {
+		utils.LogInfo("SESSDATA 已配置 (长度: %d)", len(cfg.SESSDATA))
+	} else {
+		utils.LogWarning("SESSDATA 未配置，请通过环境变量或配置文件设置")
 	}
 
 	db := database.GetSQLiteDB()

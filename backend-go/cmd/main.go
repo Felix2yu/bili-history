@@ -7,6 +7,7 @@ import (
 	"bilibili-history-go/config"
 	"bilibili-history-go/database"
 	"bilibili-history-go/routers"
+	"bilibili-history-go/scheduler"
 	"bilibili-history-go/utils"
 
 	"github.com/gin-contrib/cors"
@@ -31,6 +32,10 @@ func main() {
 
 	database.InitCategories()
 	utils.LogSuccess("分类表初始化完成")
+
+	sched := scheduler.GetScheduler()
+	sched.Start()
+	utils.LogSuccess("调度器已启动")
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -66,10 +71,11 @@ func main() {
 	}
 
 	r.GET("/health", func(c *gin.Context) {
+		schedStatus := sched.GetStatus()
 		c.JSON(200, gin.H{
 			"status":           "running",
 			"timestamp":        time.Now().Format(time.RFC3339),
-			"scheduler_status": "stopped",
+			"scheduler_status": schedStatus["running"],
 		})
 	})
 

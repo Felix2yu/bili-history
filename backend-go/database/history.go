@@ -556,6 +556,45 @@ func UpdateRemark(bvid string, viewAt int64, remark string) (map[string]interfac
 	}, nil
 }
 
+func InsertHistoryRecord(conn *sql.DB, tableName string, record *models.HistoryRecord) (bool, error) {
+	existsQuery := fmt.Sprintf("SELECT id FROM %s WHERE bvid = ? AND view_at = ?", tableName)
+	var existingID int64
+	err := conn.QueryRow(existsQuery, record.Bvid, record.ViewAt).Scan(&existingID)
+	if err == nil {
+		return false, nil
+	}
+	if err != sql.ErrNoRows {
+		return false, err
+	}
+
+	insertQuery := fmt.Sprintf(`
+		INSERT INTO %s (
+			title, long_title, cover, covers, uri, oid, epid, bvid, page,
+			cid, part, business, dt, videos, author_name, author_face, author_mid,
+			view_at, progress, badge, show_title, duration, current, total,
+			new_desc, is_finish, is_fav, kid, tag_name, live_status, main_category,
+			remark, remark_time
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, tableName)
+
+	_, err = conn.Exec(insertQuery,
+		record.Title, record.LongTitle, record.Cover, record.Covers, record.URI,
+		record.OID, record.Epid, record.Bvid, record.Page, record.Cid,
+		record.Part, record.Business, record.Dt, record.Videos,
+		record.AuthorName, record.AuthorFace, record.AuthorMid,
+		record.ViewAt, record.Progress, record.Badge, record.ShowTitle,
+		record.Duration, record.Current, record.Total, record.NewDesc,
+		record.IsFinish, record.IsFav, record.Kid, record.TagName,
+		record.LiveStatus, record.MainCategory, record.Remark, record.RemarkTime,
+	)
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func GetVideoByCID(cid int64, useLocalImages, useSessdata bool) (map[string]interface{}, error) {
 	db := GetSQLiteDB()
 	conn := db.GetDB()

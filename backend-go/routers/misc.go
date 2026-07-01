@@ -2,9 +2,13 @@ package routers
 
 import (
 	"net/http"
+	"strconv"
 
+	"bilibili-history-go/biliapi"
 	"bilibili-history-go/config"
 	"bilibili-history-go/models"
+	"bilibili-history-go/scheduler"
+	"bilibili-history-go/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -231,54 +235,112 @@ func saveServerConfig(c *gin.Context) {
 }
 
 func getSchedulerTasks(c *gin.Context) {
+	sched := scheduler.GetScheduler()
+	tasks := sched.GetTasks()
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"tasks":   []interface{}{},
-		"total":   0,
-		"message": "调度器任务功能待实现",
+		"tasks": tasks,
+		"total": len(tasks),
 	}))
 }
 
 func addSchedulerTask(c *gin.Context) {
+	var task scheduler.ScheduleTask
+	if err := c.ShouldBindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	sched := scheduler.GetScheduler()
+	newTask, err := sched.CreateTask(&task)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("创建任务失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "添加调度任务功能待实现",
+		"message": "任务创建成功",
+		"data":    newTask,
 	})
 }
 
 func updateSchedulerTask(c *gin.Context) {
+	taskID := c.Param("id")
+
+	var updates map[string]interface{}
+	if err := c.ShouldBindJSON(&updates); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	sched := scheduler.GetScheduler()
+	updatedTask, err := sched.UpdateTask(taskID, updates)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("更新任务失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "更新调度任务功能待实现",
+		"message": "任务更新成功",
+		"data":    updatedTask,
 	})
 }
 
 func deleteSchedulerTask(c *gin.Context) {
+	taskID := c.Param("id")
+
+	sched := scheduler.GetScheduler()
+	err := sched.DeleteTask(taskID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("删除任务失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "删除调度任务功能待实现",
+		"message": "任务删除成功",
 	})
 }
 
 func runSchedulerTask(c *gin.Context) {
+	taskID := c.Param("id")
+
+	sched := scheduler.GetScheduler()
+	err := sched.RunTask(taskID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("运行任务失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "运行调度任务功能待实现",
+		"message": "任务已启动",
 	})
 }
 
 func getTaskHistory(c *gin.Context) {
+	taskID := c.Param("id")
+	limit := 20
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil {
+			limit = l
+		}
+	}
+
+	sched := scheduler.GetScheduler()
+	executions := sched.GetTaskExecutions(taskID, limit)
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"records": []interface{}{},
-		"total":   0,
-		"message": "任务历史功能待实现",
+		"records": executions,
+		"total":   len(executions),
 	}))
 }
 
 func getSchedulerStatus(c *gin.Context) {
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"running": false,
-		"message": "调度器状态功能待实现",
-	}))
+	sched := scheduler.GetScheduler()
+	status := sched.GetStatus()
+	c.JSON(http.StatusOK, models.SuccessResponse(status))
 }
 
 func getDataSyncStatus(c *gin.Context) {
@@ -323,38 +385,77 @@ func getImportMysqlStatus(c *gin.Context) {
 	}))
 }
 
+var (
+	sqliteImportStatus = map[string]interface{}{
+		"status":  "idle",
+		"message": "",
+	}
+)
+
 func importFromSqlite(c *gin.Context) {
+	syncDeleted := false
+	if syncStr := c.Query("sync_deleted"); syncStr == "true" {
+		syncDeleted = true
+	}
+
+	go func() {
+		sqliteImportStatus["status"] = "running"
+		sqliteImportStatus["message"] = "正在导入数据..."
+
+		result, err := services.ImportHistoryFiles(syncDeleted)
+		if err != nil {
+			sqliteImportStatus["status"] = "error"
+			sqliteImportStatus["message"] = err.Error()
+			return
+		}
+
+		sqliteImportStatus["status"] = "completed"
+		sqliteImportStatus["inserted_count"] = result.InsertedCount
+		sqliteImportStatus["total_files"] = result.TotalFiles
+		sqliteImportStatus["message"] = "导入完成"
+	}()
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "SQLite导入功能待实现",
+		"message": "开始导入SQLite数据",
 	})
 }
 
 func getImportSqliteStatus(c *gin.Context) {
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"status":  "idle",
-		"message": "SQLite导入状态功能待实现",
-	}))
+	c.JSON(http.StatusOK, models.SuccessResponse(sqliteImportStatus))
 }
 
 func cleanData(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "数据清洗功能待实现",
-	})
+	var options services.CleanOptions
+	if err := c.ShouldBindJSON(&options); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	result, err := services.StartClean(options)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("启动数据清洗失败: "+err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 func getCleanStatus(c *gin.Context) {
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"status":  "idle",
-		"message": "数据清洗状态功能待实现",
-	}))
+	status := services.GetCleanStatus()
+	c.JSON(http.StatusOK, models.SuccessResponse(status))
 }
 
 func sendLogEmail(c *gin.Context) {
+	err := services.SendTestEmail()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("发送邮件失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "发送日志邮件功能待实现",
+		"message": "测试邮件已发送",
 	})
 }
 
@@ -366,17 +467,28 @@ func getLogList(c *gin.Context) {
 }
 
 func fetchBiliHistory(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "获取B站历史记录功能待实现",
-	})
+	skipExists := true
+	if skipStr := c.Query("skip_exists"); skipStr == "false" {
+		skipExists = false
+	}
+
+	processVideoDetails := false
+	if processStr := c.Query("process_video_details"); processStr == "true" {
+		processVideoDetails = true
+	}
+
+	result, err := services.FetchHistory(skipExists, processVideoDetails)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("启动历史记录获取失败: "+err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 func getFetchStatus(c *gin.Context) {
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"status":  "idle",
-		"message": "获取历史记录状态功能待实现",
-	}))
+	status := services.GetFetchStatus()
+	c.JSON(http.StatusOK, models.SuccessResponse(status))
 }
 
 func deleteHistoryRecords(c *gin.Context) {
@@ -401,10 +513,28 @@ func getDeleteBiliStatus(c *gin.Context) {
 }
 
 func getPopularVideos(c *gin.Context) {
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"videos":  []interface{}{},
-		"message": "热门视频功能待实现",
-	}))
+	pn := 1
+	if pnStr := c.Query("pn"); pnStr != "" {
+		if p, err := strconv.Atoi(pnStr); err == nil {
+			pn = p
+		}
+	}
+
+	ps := 20
+	if psStr := c.Query("ps"); psStr != "" {
+		if p, err := strconv.Atoi(psStr); err == nil {
+			ps = p
+		}
+	}
+
+	client := biliapi.NewClient("")
+	data, err := client.GetPopular(pn, ps)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("获取热门视频失败: "+err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(data))
 }
 
 func getPopularStats(c *gin.Context) {
@@ -415,10 +545,20 @@ func getPopularStats(c *gin.Context) {
 }
 
 func getVideoDetails(c *gin.Context) {
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"details": map[string]interface{}{},
-		"message": "视频详情功能待实现",
-	}))
+	bvid := c.Param("bvid")
+	if bvid == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("缺少bvid参数"))
+		return
+	}
+
+	client := biliapi.NewClient("")
+	videoInfo, err := client.GetVideoInfo(bvid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("获取视频详情失败: "+err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(videoInfo))
 }
 
 func syncVideoDetails(c *gin.Context) {

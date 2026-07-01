@@ -86,8 +86,100 @@ func GetLikes(c *gin.Context) {
 		return
 	}
 
-	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
-	result, err := client.FetchLikes()
+	client := newBiliClient(cfg)
+
+	currentPn := 1
+	ps := 50
+	maxPages := 50
+	var allItems []biliapi.LikeVideo
+	fetchedCount := 0
+
+	database, err := db.Open(config.GetDatabasePath("bilibili_likes.db"))
+	if err == nil {
+		defer database.Close()
+		ensureLikeTable(database)
+		now := getCurrentTimestamp()
+		database.Exec("UPDATE liked_videos SET is_seen = 0")
+
+		for currentPn <= maxPages {
+			result, err := client.FetchLikes(currentPn, ps)
+			if err != nil {
+				if currentPn == 1 {
+					c.JSON(http.StatusOK, gin.H{"status": "error", "message": err.Error()})
+					return
+				}
+				break
+			}
+
+			if len(result.List) == 0 {
+				break
+			}
+
+			stopEarly := false
+			for _, v := range result.List {
+				if v.BVID == "" {
+					continue
+				}
+
+				var isSeen int
+				database.QueryRow("SELECT is_seen FROM liked_videos WHERE bvid = ?", v.BVID).Scan(&isSeen)
+				if isSeen == 1 {
+					stopEarly = true
+					break
+				}
+
+				var existingID int64
+				database.QueryRow("SELECT id FROM liked_videos WHERE bvid = ?", v.BVID).Scan(&existingID)
+
+				if existingID > 0 {
+					database.Exec(`UPDATE liked_videos SET
+						aid=?, title=?, pic=?, desc=?, duration=?, tid=?, tname=?,
+						owner_name=?, owner_mid=?, owner_face=?, pubdate=?,
+						view=?, danmaku=?, like_count=?, link=?, fetch_time=?, is_seen=1
+						WHERE bvid=?`,
+						v.AID, v.Title, v.Pic, v.Desc, v.Duration, v.TID, v.TName,
+						v.OwnerName, v.OwnerMid, v.OwnerFace, v.PubDate,
+						v.View, v.Danmaku, v.LikeCount, v.Link, now, v.BVID)
+				} else {
+					database.Exec(`INSERT INTO liked_videos
+						(bvid, aid, title, pic, desc, duration, tid, tname,
+						 owner_name, owner_mid, owner_face, pubdate,
+						 view, danmaku, like_count, link, fetch_time, is_seen)
+						VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+						v.BVID, v.AID, v.Title, v.Pic, v.Desc, v.Duration, v.TID, v.TName,
+						v.OwnerName, v.OwnerMid, v.OwnerFace, v.PubDate,
+						v.View, v.Danmaku, v.LikeCount, v.Link, now)
+				}
+
+				allItems = append(allItems, v)
+				fetchedCount++
+			}
+
+			if stopEarly {
+				break
+			}
+			if len(result.List) < ps {
+				break
+			}
+			currentPn++
+		}
+
+		var total int
+		database.QueryRow("SELECT COUNT(*) FROM liked_videos").Scan(&total)
+
+		c.JSON(http.StatusOK, gin.H{
+			"status": "success",
+			"data": gin.H{
+				"list":    allItems,
+				"total":   total,
+				"fetched": fetchedCount,
+				"pages":   currentPn,
+			},
+		})
+		return
+	}
+
+	result, err := client.FetchLikes(1, 50)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"status": "error", "message": err.Error()})
 		return
@@ -255,7 +347,7 @@ func GetWatchLater(c *gin.Context) {
 		return
 	}
 
-	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
+	client := newBiliClient(cfg)
 	result, err := client.FetchWatchLater()
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"status": "error", "message": err.Error()})

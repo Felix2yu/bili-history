@@ -9,7 +9,11 @@ import (
 )
 
 func newBiliClient(cfg *config.Config) *biliapi.Client {
-	return biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
+	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
+	if cfg.DedeUserIDCkMd5 != "" {
+		client.SetDedeUserIDCkMd5(cfg.DedeUserIDCkMd5)
+	}
+	return client
 }
 
 func getCurrentTimestamp() int64 {

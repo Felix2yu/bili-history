@@ -17,10 +17,11 @@ const (
 
 // Client is an HTTP client for Bilibili APIs.
 type Client struct {
-	httpClient *http.Client
-	sessdata   string
-	biliJCT    string
-	dedeUserID string
+	httpClient      *http.Client
+	sessdata        string
+	biliJCT         string
+	dedeUserID      string
+	dedeUserIDCkMd5 string
 }
 
 // NewClient creates a new Bilibili API client.
@@ -40,6 +41,11 @@ func (c *Client) SetCookies(sessdata, biliJCT, dedeUserID string) {
 	c.dedeUserID = dedeUserID
 }
 
+// SetDedeUserIDCkMd5 sets the DedeUserID__ckMd5 cookie.
+func (c *Client) SetDedeUserIDCkMd5(ckMd5 string) {
+	c.dedeUserIDCkMd5 = ckMd5
+}
+
 func (c *Client) newRequest(url string) (*http.Request, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -47,7 +53,6 @@ func (c *Client) newRequest(url string) (*http.Request, error) {
 	}
 	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Referer", referer)
-	// Send all cookies like Python backend
 	var cookies []string
 	if c.sessdata != "" {
 		cookies = append(cookies, "SESSDATA="+c.sessdata)
@@ -57,6 +62,9 @@ func (c *Client) newRequest(url string) (*http.Request, error) {
 	}
 	if c.dedeUserID != "" {
 		cookies = append(cookies, "DedeUserID="+c.dedeUserID)
+	}
+	if c.dedeUserIDCkMd5 != "" {
+		cookies = append(cookies, "DedeUserID__ckMd5="+c.dedeUserIDCkMd5)
 	}
 	if len(cookies) > 0 {
 		req.Header.Set("Cookie", strings.Join(cookies, "; "))

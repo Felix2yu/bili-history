@@ -394,13 +394,19 @@ type LikeListData struct {
 	List []LikeVideo `json:"list"`
 }
 
-// FetchLikes fetches the user's liked videos.
-func (c *Client) FetchLikes() (*LikeListData, error) {
+// FetchLikes fetches the user's liked videos with pagination.
+func (c *Client) FetchLikes(pn, ps int) (*LikeListData, error) {
 	if c.dedeUserID == "" {
 		return nil, fmt.Errorf("user not logged in")
 	}
+	if pn < 1 {
+		pn = 1
+	}
+	if ps < 1 || ps > 50 {
+		ps = 50
+	}
 
-	url := fmt.Sprintf("https://api.bilibili.com/x/space/like/video?vmid=%s&pn=1&ps=50", c.dedeUserID)
+	url := fmt.Sprintf("https://api.bilibili.com/x/space/like/video?vmid=%s&pn=%d&ps=%d", c.dedeUserID, pn, ps)
 	data, err := c.doRequest(url)
 	if err != nil {
 		return nil, err

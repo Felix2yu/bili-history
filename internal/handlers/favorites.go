@@ -16,7 +16,13 @@ func getCurrentUserMid(cfg *config.Config) (int64, error) {
 	if cfg.SESSDATA == "" || cfg.SESSDATA == "Cookie里的SESSDATA字段值" {
 		return 0, fmt.Errorf("not logged in")
 	}
-	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
+	if cfg.DedeUserID != "" {
+		uid, err := strconv.ParseInt(cfg.DedeUserID, 10, 64)
+		if err == nil && uid > 0 {
+			return uid, nil
+		}
+	}
+	client := newBiliClient(cfg)
 	user, err := client.FetchCurrentUser()
 	if err != nil {
 		return 0, err
@@ -56,7 +62,7 @@ func GetFavorites(c *gin.Context) {
 		upMid = uid
 	}
 
-	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
+	client := newBiliClient(cfg)
 
 	path := c.Request.URL.Path
 	isCollected := false
@@ -155,7 +161,7 @@ func GetFavoriteContentAPI(c *gin.Context) {
 	keyword := c.Query("keyword")
 	order := c.DefaultQuery("order", "mtime")
 
-	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
+	client := newBiliClient(cfg)
 	result, err := client.FetchFavoriteContent(mediaID, pn, ps, keyword, order)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"status": "error", "message": err.Error()})
@@ -424,7 +430,7 @@ func CheckFavorite(c *gin.Context) {
 		return
 	}
 
-	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
+	client := newBiliClient(cfg)
 	result, err := client.FetchCreatedFavorites(uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

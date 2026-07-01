@@ -387,7 +387,7 @@ func QueryHistoryAll(page, size int, sortOrder int, tagName, mainCategory, dateR
 		return nil, 0, nil, err
 	}
 	if len(availableYears) == 0 {
-		return []map[string]interface{}{}, 0, availableYears, nil
+		return []map[string]interface{}{}, 0, []int{}, nil
 	}
 
 	var queries []string
@@ -408,6 +408,9 @@ func QueryHistoryAll(page, size int, sortOrder int, tagName, mainCategory, dateR
 
 	for _, year := range availableYears {
 		tableName := db.GetYearTable(year)
+		if !tableExists(database, tableName) {
+			continue
+		}
 		query := fmt.Sprintf(`SELECT * FROM %s WHERE 1=1`, tableName)
 
 		if startTimestamp > 0 && endTimestamp > 0 {
@@ -429,6 +432,10 @@ func QueryHistoryAll(page, size int, sortOrder int, tagName, mainCategory, dateR
 		}
 
 		queries = append(queries, query)
+	}
+
+	if len(queries) == 0 {
+		return []map[string]interface{}{}, 0, availableYears, nil
 	}
 
 	baseQuery := strings.Join(queries, " UNION ALL ")
@@ -479,6 +486,12 @@ func QueryHistoryAll(page, size int, sortOrder int, tagName, mainCategory, dateR
 	}
 
 	return records, total, availableYears, nil
+}
+
+func tableExists(database *sql.DB, tableName string) bool {
+	var name string
+	err := database.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name=?", tableName).Scan(&name)
+	return err == nil && name == tableName
 }
 
 // QueryHistory queries history from a single year table (for backward compatibility).

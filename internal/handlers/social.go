@@ -70,11 +70,6 @@ func GetLikes(c *gin.Context) {
 		return
 	}
 
-	if cfg.SESSDATA == "" || cfg.SESSDATA == "Cookie里的SESSDATA字段值" {
-		c.JSON(http.StatusOK, gin.H{"status": "error", "message": "未登录，无法获取点赞列表"})
-		return
-	}
-
 	path := c.Request.URL.Path
 	isLocal := false
 	if containsPath(path, "local") {
@@ -83,6 +78,11 @@ func GetLikes(c *gin.Context) {
 
 	if isLocal {
 		getLikesLocal(c)
+		return
+	}
+
+	if cfg.SESSDATA == "" || cfg.SESSDATA == "Cookie里的SESSDATA字段值" {
+		c.JSON(http.StatusOK, gin.H{"status": "error", "message": "未登录，无法获取点赞列表"})
 		return
 	}
 
@@ -271,11 +271,11 @@ func getLikesLocal(c *gin.Context) {
 	offset := (page - 1) * size
 	query := `SELECT bvid, aid, title, pic, "desc", duration, tid, tname,
 		owner_name, owner_mid, owner_face, pubdate, view, danmaku, like_count, link, fetch_time
-		FROM liked_videos ORDER BY "` + sort + `" ` + order + ` LIMIT ? OFFSET ?`
+		FROM liked_videos ORDER BY ` + sort + ` ` + order + ` LIMIT ? OFFSET ?`
 
 	rows, err := database.Query(query, size, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Query error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Query error: " + err.Error()})
 		return
 	}
 	defer rows.Close()
@@ -331,11 +331,6 @@ func GetWatchLater(c *gin.Context) {
 		return
 	}
 
-	if cfg.SESSDATA == "" || cfg.SESSDATA == "Cookie里的SESSDATA字段值" {
-		c.JSON(http.StatusOK, gin.H{"status": "error", "message": "未登录，无法获取稍后再看列表"})
-		return
-	}
-
 	path := c.Request.URL.Path
 	isLocal := false
 	if containsPath(path, "local") {
@@ -344,6 +339,11 @@ func GetWatchLater(c *gin.Context) {
 
 	if isLocal {
 		getWatchLaterLocal(c)
+		return
+	}
+
+	if cfg.SESSDATA == "" || cfg.SESSDATA == "Cookie里的SESSDATA字段值" {
+		c.JSON(http.StatusOK, gin.H{"status": "error", "message": "未登录，无法获取稍后再看列表"})
 		return
 	}
 
@@ -429,7 +429,7 @@ func getWatchLaterLocal(c *gin.Context) {
 		owner_name, owner_mid, owner_face, add_at, pubdate, view, danmaku, link, fetch_time
 		FROM watchlater_videos ORDER BY add_at DESC LIMIT ? OFFSET ?`, size, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Query error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Query error: " + err.Error()})
 		return
 	}
 	defer rows.Close()

@@ -42,6 +42,8 @@ func RegisterDataSyncRoutes(r *gin.RouterGroup) {
 	dataSync := r.Group("/data_sync")
 	{
 		dataSync.GET("/status", getDataSyncStatus)
+		dataSync.GET("/config", getDataSyncConfig)
+		dataSync.POST("/config", updateDataSyncConfig)
 		dataSync.POST("/check", checkDataIntegrity)
 		dataSync.POST("/sync", syncData)
 	}
@@ -347,6 +349,21 @@ func getDataSyncStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
 		"status":  "idle",
 		"message": "数据同步状态功能待实现",
+	}))
+}
+
+func getDataSyncConfig(c *gin.Context) {
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"enabled":         false,
+		"check_interval":  3600,
+		"auto_fix":        false,
+		"check_on_start":  false,
+	}))
+}
+
+func updateDataSyncConfig(c *gin.Context) {
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"message": "数据同步配置更新功能待实现",
 	}))
 }
 

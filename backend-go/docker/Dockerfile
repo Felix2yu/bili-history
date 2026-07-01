@@ -24,6 +24,13 @@ ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 ENV TZ=Asia/Shanghai
 
+ENV SESSDATA=""
+ENV BILI_JCT=""
+ENV DEDE_USER_ID=""
+ENV DEDE_USER_ID_CKMD5=""
+ENV SERVER_HOST=0.0.0.0
+ENV SERVER_PORT=8899
+
 RUN apk add --no-cache tzdata ca-certificates tini
 
 WORKDIR /app

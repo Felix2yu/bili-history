@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -192,6 +193,8 @@ func LoadConfig() (*Config, error) {
 			cfg.Server.Port = 8899
 		}
 
+		applyEnvOverrides(&cfg)
+
 		config = &cfg
 	})
 
@@ -369,4 +372,27 @@ func ReloadConfig() (*Config, error) {
 	config = nil
 	rawConfig = nil
 	return LoadConfig()
+}
+
+func applyEnvOverrides(cfg *Config) {
+	if v := os.Getenv("SESSDATA"); v != "" {
+		cfg.SESSDATA = v
+	}
+	if v := os.Getenv("BILI_JCT"); v != "" {
+		cfg.BiliJct = v
+	}
+	if v := os.Getenv("DEDE_USER_ID"); v != "" {
+		cfg.DedeUserID = v
+	}
+	if v := os.Getenv("DEDE_USER_ID_CKMD5"); v != "" {
+		cfg.DedeUserIDCkMd5 = v
+	}
+	if v := os.Getenv("SERVER_HOST"); v != "" {
+		cfg.Server.Host = v
+	}
+	if v := os.Getenv("SERVER_PORT"); v != "" {
+		if port, err := strconv.Atoi(v); err == nil && port > 0 {
+			cfg.Server.Port = port
+		}
+	}
 }

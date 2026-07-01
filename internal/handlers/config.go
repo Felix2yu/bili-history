@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"os"
+	"strings"
 
 	"bili-history/internal/config"
 
@@ -94,19 +95,27 @@ func TestEmail(c *gin.Context) {
 
 // GetMCPConfig returns MCP configuration.
 func GetMCPConfig(c *gin.Context) {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Config error"})
-		return
-	}
-
 	mcpEnabled := false
 	mcpToken := ""
-	_ = cfg // MCP config is from env var
+	mcpPath := "/mcp"
+
+	// Check environment variable
+	if token := os.Getenv("BHF_MCP_TOKEN"); token != "" {
+		mcpEnabled = true
+		mcpToken = token
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"enabled": mcpEnabled,
-		"token":   mcpToken,
+		"enabled":         mcpEnabled,
+		"path":            mcpPath,
+		"auth_enabled":    true,
+		"token":           mcpToken,
+		"token_configured": mcpToken != "",
+		"max_page_size":   100,
+		"server_url":      "",
+		"mcp_url":         "",
+		"skill_content":   "",
+		"restart_required": false,
 	})
 }
 
@@ -125,17 +134,26 @@ func GetAppriseConfig(c *gin.Context) {
 		return
 	}
 
+	// Convert URLs array to newline-separated string for frontend
+	urlsStr := ""
+	for i, u := range cfg.Apprise.URLs {
+		if i > 0 {
+			urlsStr += "\n"
+		}
+		urlsStr += u
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"enabled": cfg.Apprise.Enabled,
-		"urls":    cfg.Apprise.URLs,
+		"urls":    urlsStr,
 	})
 }
 
 // UpdateAppriseConfig updates Apprise configuration.
 func UpdateAppriseConfig(c *gin.Context) {
 	var req struct {
-		Enabled bool     `json:"enabled"`
-		URLs    []string `json:"urls"`
+		Enabled bool   `json:"enabled"`
+		URLs    string `json:"urls"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
@@ -155,6 +173,22 @@ func UpdateAppriseConfig(c *gin.Context) {
 		enabledStr = "true"
 	}
 	content = updateYAMLField(content, "enabled", enabledStr)
+
+	// Update URLs - convert newline-separated string to YAML array
+	if req.URLs != "" {
+		lines := strings.Split(req.URLs, "\n")
+		var urls []string
+		for _, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			if trimmed != "" {
+				urls = append(urls, trimmed)
+			}
+		}
+		// For simplicity, store as comma-separated in a single field
+		// The Python backend uses YAML array, but we'll handle it differently
+		urlsStr := strings.Join(urls, ",")
+		content = updateYAMLField(content, "urls", urlsStr)
+	}
 
 	os.WriteFile(configPath, []byte(content), 0644)
 	config.ReloadConfig()

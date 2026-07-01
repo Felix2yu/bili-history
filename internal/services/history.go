@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"bili-history/internal/config"
@@ -223,7 +224,7 @@ func (f *HistoryFetcher) importToDatabase(entries []models.HistoryRecord) error 
 
 		// Insert/upsert entries using INSERT OR IGNORE to avoid primary key conflicts
 		stmt, err := database.Prepare(fmt.Sprintf(`INSERT OR IGNORE INTO %s 
-			(bvid, aid, title, desc, pic, duration, owner_name, owner_mid, tag_name, tid,
+			(bvid, aid, title, "desc", pic, duration, owner_name, owner_mid, tag_name, tid,
 			 view_at, progress, business, view, danmaku, coin, favorite, like, reply, share)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, tableName))
 		if err != nil {
@@ -302,7 +303,7 @@ func ImportFromJSONFiles() error {
 
 		tableName := db.GetYearTable(year)
 		stmt, err := database.Prepare(fmt.Sprintf(`INSERT OR IGNORE INTO %s 
-			(bvid, aid, title, desc, pic, duration, owner_name, owner_mid, tag_name, tid,
+			(bvid, aid, title, "desc", pic, duration, owner_name, owner_mid, tag_name, tid,
 			 view_at, progress, business, view, danmaku, coin, favorite, like, reply, share)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, tableName))
 		if err != nil {
@@ -374,14 +375,119 @@ func parseGenericRecord(g map[string]interface{}) models.HistoryRecord {
 	return r
 }
 
-// QueryHistory queries history from the database.
+// QueryHistoryAll queries history from the database with cross-year support.
+func QueryHistoryAll(page, size int, sortOrder int, tagName, mainCategory, dateRange, business string) ([]map[string]interface{}, int, []int, error) {
+	database, err := db.OpenHistoryDB()
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	availableYears, err := GetAvailableYears()
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	if len(availableYears) == 0 {
+		return []map[string]interface{}{}, 0, availableYears, nil
+	}
+
+	var queries []string
+	var params []interface{}
+
+	var startTimestamp, endTimestamp int64
+	if dateRange != "" {
+		parts := strings.Split(dateRange, "-")
+		if len(parts) == 2 {
+			startTime, err1 := time.Parse("20060102", parts[0])
+			endTime, err2 := time.Parse("20060102", parts[1])
+			if err1 == nil && err2 == nil {
+				startTimestamp = startTime.Unix()
+				endTimestamp = endTime.Unix() + 86400
+			}
+		}
+	}
+
+	for _, year := range availableYears {
+		tableName := db.GetYearTable(year)
+		query := fmt.Sprintf(`SELECT * FROM %s WHERE 1=1`, tableName)
+
+		if startTimestamp > 0 && endTimestamp > 0 {
+			query += " AND view_at >= ? AND view_at < ?"
+			params = append(params, startTimestamp, endTimestamp)
+		}
+
+		if mainCategory != "" {
+			query += " AND main_category = ?"
+			params = append(params, mainCategory)
+		} else if tagName != "" {
+			query += " AND tag_name = ?"
+			params = append(params, tagName)
+		}
+
+		if business != "" {
+			query += " AND business = ?"
+			params = append(params, business)
+		}
+
+		queries = append(queries, query)
+	}
+
+	baseQuery := strings.Join(queries, " UNION ALL ")
+
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM (%s)", baseQuery)
+	var total int
+	countParams := make([]interface{}, len(params))
+	copy(countParams, params)
+	database.QueryRow(countQuery, countParams...).Scan(&total)
+
+	orderStr := "DESC"
+	if sortOrder == 1 {
+		orderStr = "ASC"
+	}
+	finalQuery := fmt.Sprintf(`SELECT * FROM (%s) ORDER BY view_at %s LIMIT ? OFFSET ?`, baseQuery, orderStr)
+	params = append(params, size, (page-1)*size)
+
+	rows, err := database.Query(finalQuery, params...)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	var records []map[string]interface{}
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range columns {
+			valuePtrs[i] = &values[i]
+		}
+		rows.Scan(valuePtrs...)
+
+		record := make(map[string]interface{})
+		for i, col := range columns {
+			val := values[i]
+			if b, ok := val.([]byte); ok {
+				record[col] = string(b)
+			} else {
+				record[col] = val
+			}
+		}
+		records = append(records, record)
+	}
+
+	return records, total, availableYears, nil
+}
+
+// QueryHistory queries history from a single year table (for backward compatibility).
 func QueryHistory(year int, page, pageSize int, keyword string) ([]models.HistoryRecord, int, error) {
 	database, err := db.OpenHistoryDB()
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// Ensure table exists and is migrated
 	db.EnsureHistoryTable(database, year)
 	db.MigrateIfNeeded(database, year)
 
@@ -389,7 +495,7 @@ func QueryHistory(year int, page, pageSize int, keyword string) ([]models.Histor
 	offset := (page - 1) * pageSize
 
 	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)
-	query := fmt.Sprintf(`SELECT id, bvid, aid, title, desc, pic, duration, owner_name, owner_mid, 
+	query := fmt.Sprintf(`SELECT id, bvid, aid, title, "desc", pic, duration, owner_name, owner_mid, 
 		tag_name, tid, view_at, progress, business, view, danmaku, coin, favorite, like, reply, share 
 		FROM %s`, tableName)
 
@@ -418,7 +524,6 @@ func QueryHistory(year int, page, pageSize int, keyword string) ([]models.Histor
 		rows.Scan(&r.ID, &r.BVID, &r.AID, &r.Title, &r.Desc, &r.Pic, &r.Duration,
 			&r.OwnerName, &r.OwnerMid, &r.TagName, &r.Tid, &r.ViewAt, &r.Progress,
 			&r.Business, &r.View, &r.Danmaku, &r.Coin, &r.Favorite, &r.Like, &r.Reply, &r.Share)
-		// Set backward-compat aliases
 		r.Thumbnail = r.Pic
 		r.OwnerID = r.OwnerMid
 		records = append(records, r)

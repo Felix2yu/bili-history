@@ -40,7 +40,7 @@ func GetVideoInfoFromDB(c *gin.Context) {
 	)
 
 	err = database.QueryRow(`
-		SELECT bvid, title, desc, duration, pubdate, tid, tname,
+		SELECT bvid, title, "desc", duration, pubdate, tid, tname,
 			owner_mid, owner_name, owner_face,
 			stat_view, stat_danmaku, stat_reply, stat_favorite,
 			stat_coin, stat_share, stat_like

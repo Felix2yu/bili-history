@@ -29,32 +29,42 @@ func HealthCheck(c *gin.Context) {
 // GetHistory returns paginated history records from the database.
 func GetHistory(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
-	pageSizeStr := c.DefaultQuery("page_size", "20")
-	keyword := c.Query("keyword")
-	yearStr := c.DefaultQuery("year", strconv.Itoa(time.Now().Year()))
+	sizeStr := c.DefaultQuery("size", "10")
+	sortOrderStr := c.DefaultQuery("sort_order", "0")
+	tagName := c.Query("tag_name")
+	mainCategory := c.Query("main_category")
+	dateRange := c.Query("date_range")
+	business := c.Query("business")
 
 	page, _ := strconv.Atoi(pageStr)
-	pageSize, _ := strconv.Atoi(pageSizeStr)
-	year, _ := strconv.Atoi(yearStr)
+	size, _ := strconv.Atoi(sizeStr)
+	sortOrder, _ := strconv.Atoi(sortOrderStr)
 
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 20
+	if size < 1 || size > 200 {
+		size = 10
 	}
 
-	records, total, err := services.QueryHistory(year, page, pageSize, keyword)
+	records, total, availableYears, err := services.QueryHistoryAll(page, size, sortOrder, tagName, mainCategory, dateRange, business)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Query error: " + err.Error()})
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": "数据库错误: " + err.Error(),
+		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"data":      records,
-		"total":     total,
-		"page":      page,
-		"page_size": pageSize,
+		"status": "success",
+		"data": gin.H{
+			"records":        records,
+			"total":          total,
+			"size":           size,
+			"current":        page,
+			"available_years": availableYears,
+		},
 	})
 }
 

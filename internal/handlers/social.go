@@ -133,7 +133,7 @@ func GetLikes(c *gin.Context) {
 
 				if existingID > 0 {
 					database.Exec(`UPDATE liked_videos SET
-						aid=?, title=?, pic=?, desc=?, duration=?, tid=?, tname=?,
+						aid=?, title=?, pic=?, "desc"=?, duration=?, tid=?, tname=?,
 						owner_name=?, owner_mid=?, owner_face=?, pubdate=?,
 						view=?, danmaku=?, like_count=?, link=?, fetch_time=?, is_seen=1
 						WHERE bvid=?`,
@@ -142,7 +142,7 @@ func GetLikes(c *gin.Context) {
 						v.View, v.Danmaku, v.LikeCount, v.Link, now, v.BVID)
 				} else {
 					database.Exec(`INSERT INTO liked_videos
-						(bvid, aid, title, pic, desc, duration, tid, tname,
+						(bvid, aid, title, pic, "desc", duration, tid, tname,
 						 owner_name, owner_mid, owner_face, pubdate,
 						 view, danmaku, like_count, link, fetch_time, is_seen)
 						VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
@@ -212,7 +212,7 @@ func saveLikesToDB(items []biliapi.LikeVideo) {
 
 		if existingID > 0 {
 			database.Exec(`UPDATE liked_videos SET
-				aid=?, title=?, pic=?, desc=?, duration=?, tid=?, tname=?,
+				aid=?, title=?, pic=?, "desc"=?, duration=?, tid=?, tname=?,
 				owner_name=?, owner_mid=?, owner_face=?, pubdate=?,
 				view=?, danmaku=?, like_count=?, link=?, fetch_time=?, is_seen=1
 				WHERE bvid=?`,
@@ -221,7 +221,7 @@ func saveLikesToDB(items []biliapi.LikeVideo) {
 				v.View, v.Danmaku, v.LikeCount, v.Link, now, v.BVID)
 		} else {
 			database.Exec(`INSERT INTO liked_videos
-				(bvid, aid, title, pic, desc, duration, tid, tname,
+				(bvid, aid, title, pic, "desc", duration, tid, tname,
 				 owner_name, owner_mid, owner_face, pubdate,
 				 view, danmaku, like_count, link, fetch_time, is_seen)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
@@ -269,9 +269,9 @@ func getLikesLocal(c *gin.Context) {
 	database.QueryRow("SELECT COUNT(*) FROM liked_videos").Scan(&total)
 
 	offset := (page - 1) * size
-	query := "SELECT bvid, aid, title, pic, desc, duration, tid, tname, " +
-		"owner_name, owner_mid, owner_face, pubdate, view, danmaku, like_count, link, fetch_time " +
-		"FROM liked_videos ORDER BY " + sort + " " + order + " LIMIT ? OFFSET ?"
+	query := `SELECT bvid, aid, title, pic, "desc", duration, tid, tname,
+		owner_name, owner_mid, owner_face, pubdate, view, danmaku, like_count, link, fetch_time
+		FROM liked_videos ORDER BY "` + sort + `" ` + order + ` LIMIT ? OFFSET ?`
 
 	rows, err := database.Query(query, size, offset)
 	if err != nil {
@@ -381,7 +381,7 @@ func saveWatchLaterToDB(items []biliapi.WatchLater) {
 
 		if existingID > 0 {
 			database.Exec(`UPDATE watchlater_videos SET
-				aid=?, title=?, pic=?, desc=?, duration=?, tid=?, tname=?,
+				aid=?, title=?, pic=?, "desc"=?, duration=?, tid=?, tname=?,
 				owner_name=?, owner_mid=?, owner_face=?, add_at=?, pubdate=?,
 				view=?, danmaku=?, link=?, fetch_time=?
 				WHERE bvid=?`,
@@ -390,7 +390,7 @@ func saveWatchLaterToDB(items []biliapi.WatchLater) {
 				v.View, v.Danmaku, v.Link, now, v.BVID)
 		} else {
 			database.Exec(`INSERT INTO watchlater_videos
-				(bvid, aid, title, pic, desc, duration, tid, tname,
+				(bvid, aid, title, pic, "desc", duration, tid, tname,
 				 owner_name, owner_mid, owner_face, add_at, pubdate,
 				 view, danmaku, link, fetch_time)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -425,7 +425,7 @@ func getWatchLaterLocal(c *gin.Context) {
 	database.QueryRow("SELECT COUNT(*) FROM watchlater_videos").Scan(&total)
 
 	offset := (page - 1) * size
-	rows, err := database.Query(`SELECT bvid, aid, title, pic, desc, duration, tid, tname,
+	rows, err := database.Query(`SELECT bvid, aid, title, pic, "desc", duration, tid, tname,
 		owner_name, owner_mid, owner_face, add_at, pubdate, view, danmaku, link, fetch_time
 		FROM watchlater_videos ORDER BY add_at DESC LIMIT ? OFFSET ?`, size, offset)
 	if err != nil {

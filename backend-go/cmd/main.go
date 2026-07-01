@@ -53,7 +53,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	api := r.Group("/api")
+	api := r.Group("")
 	{
 		routers.RegisterHistoryRoutes(api)
 		routers.RegisterCategoryRoutes(api)

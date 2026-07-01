@@ -12,7 +12,222 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetFavoritesList returns favorites list from the database.
+func getCurrentUserMid(cfg *config.Config) (int64, error) {
+	if cfg.SESSDATA == "" || cfg.SESSDATA == "Cookie里的SESSDATA字段值" {
+		return 0, fmt.Errorf("not logged in")
+	}
+	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
+	user, err := client.FetchCurrentUser()
+	if err != nil {
+		return 0, err
+	}
+	if !user.IsLogin {
+		return 0, fmt.Errorf("not logged in")
+	}
+	return user.UID, nil
+}
+
+// GetFavorites fetches favorite folders from Bilibili API (created and collected).
+func GetFavorites(c *gin.Context) {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Config error"})
+		return
+	}
+
+	upMidStr := c.Query("up_mid")
+	pn, _ := strconv.Atoi(c.DefaultQuery("pn", "1"))
+	ps, _ := strconv.Atoi(c.DefaultQuery("ps", "40"))
+
+	var upMid int64
+	if upMidStr != "" {
+		upMid, _ = strconv.ParseInt(upMidStr, 10, 64)
+	}
+
+	if upMid == 0 {
+		uid, err := getCurrentUserMid(cfg)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  "error",
+				"message": "未提供up_mid且未登录，无法获取收藏夹信息",
+			})
+			return
+		}
+		upMid = uid
+	}
+
+	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
+
+	path := c.Request.URL.Path
+	isCollected := false
+	if containsPath(path, "collected") {
+		isCollected = true
+	}
+
+	var result *biliapi.FavoriteFolderListData
+	if isCollected {
+		result, err = client.FetchCollectedFavorites(upMid, pn, ps)
+	} else {
+		result, err = client.FetchCreatedFavorites(upMid)
+	}
+
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	saveFoldersToDB(result.List)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "获取收藏夹列表成功",
+		"data":    result,
+	})
+}
+
+func saveFoldersToDB(folders []biliapi.FavoriteFolder) {
+	database, err := db.Open(config.GetDatabasePath("bilibili_favorites.db"))
+	if err != nil {
+		return
+	}
+	defer database.Close()
+
+	timestamp := getCurrentTimestamp()
+	for _, f := range folders {
+		var existingID int64
+		database.QueryRow("SELECT id FROM favorites_folder WHERE media_id = ?", f.ID).Scan(&existingID)
+
+		creatorName := ""
+		creatorFace := ""
+		if f.Upper.MID > 0 {
+			creatorName = f.Upper.Name
+			creatorFace = f.Upper.Face
+			database.Exec(`INSERT OR REPLACE INTO favorites_creator
+				(mid, name, face, fetch_time) VALUES (?, ?, ?, ?)`,
+				f.Upper.MID, creatorName, creatorFace, timestamp)
+		}
+
+		if existingID > 0 {
+			database.Exec(`UPDATE favorites_folder SET
+				fid=?, mid=?, title=?, cover=?, attr=?, intro=?, ctime=?, mtime=?,
+				state=?, media_count=?, fav_state=?, like_state=?, fetch_time=?
+				WHERE media_id=?`,
+				f.FID, f.MID, f.Title, f.Cover, f.Attr, f.Intro, f.CTime, f.MTime,
+				f.State, f.MediaCount, f.FavState, f.LikeState, timestamp, f.ID)
+		} else {
+			database.Exec(`INSERT INTO favorites_folder
+				(media_id, fid, mid, title, cover, attr, intro, ctime, mtime,
+				 state, media_count, fav_state, like_state, fetch_time)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				f.ID, f.FID, f.MID, f.Title, f.Cover, f.Attr, f.Intro, f.CTime, f.MTime,
+				f.State, f.MediaCount, f.FavState, f.LikeState, timestamp)
+		}
+	}
+}
+
+// Ensure fmt is used
+var _ = fmt.Sprintf
+
+// GetFavoriteContentAPI fetches favorite folder content from Bilibili API.
+func GetFavoriteContentAPI(c *gin.Context) {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Config error"})
+		return
+	}
+
+	mediaIDStr := c.Query("media_id")
+	if mediaIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "media_id is required"})
+		return
+	}
+	mediaID, _ := strconv.ParseInt(mediaIDStr, 10, 64)
+	if mediaID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "invalid media_id"})
+		return
+	}
+
+	pn, _ := strconv.Atoi(c.DefaultQuery("pn", "1"))
+	ps, _ := strconv.Atoi(c.DefaultQuery("ps", "40"))
+	keyword := c.Query("keyword")
+	order := c.DefaultQuery("order", "mtime")
+
+	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
+	result, err := client.FetchFavoriteContent(mediaID, pn, ps, keyword, order)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	saveFavoriteContentToDB(mediaID, result.Medias)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"message": "获取收藏夹内容成功",
+		"data":   result,
+	})
+}
+
+func saveFavoriteContentToDB(mediaID int64, medias []biliapi.FavoriteContent) {
+	database, err := db.Open(config.GetDatabasePath("bilibili_favorites.db"))
+	if err != nil {
+		return
+	}
+	defer database.Close()
+
+	timestamp := getCurrentTimestamp()
+	for _, m := range medias {
+		upperMid := m.Upper.MID
+		upperName := m.Upper.Name
+		upperFace := m.Upper.Face
+
+		if upperMid > 0 {
+			database.Exec(`INSERT OR REPLACE INTO favorites_creator
+				(mid, name, face, fetch_time) VALUES (?, ?, ?, ?)`,
+				upperMid, upperName, upperFace, timestamp)
+		}
+
+		if m.Play == 0 {
+			m.Play = m.CntInfo.Play
+		}
+		if m.Danmaku == 0 {
+			m.Danmaku = m.CntInfo.Danmaku
+		}
+		if m.Reply == 0 {
+			m.Reply = m.CntInfo.Reply
+		}
+
+		var existingID int64
+		database.QueryRow("SELECT id FROM favorites_content WHERE media_id = ? AND content_id = ?",
+			mediaID, m.ID).Scan(&existingID)
+
+		if existingID > 0 {
+			database.Exec(`UPDATE favorites_content SET
+				type=?, title=?, cover=?, bvid=?, intro=?, page=?, duration=?,
+				upper_mid=?, attr=?, ctime=?, pubtime=?, fav_time=?,
+				play=?, danmaku=?, reply=?, fetch_time=?,
+				creator_name=?, creator_face=?
+				WHERE media_id=? AND content_id=?`,
+				m.Type, m.Title, m.Cover, m.BVID, m.Intro, m.Page, m.Duration,
+				upperMid, m.Attr, m.CTime, m.PubTime, m.FavTime,
+				m.Play, m.Danmaku, m.Reply, timestamp,
+				upperName, upperFace,
+				mediaID, m.ID)
+		} else {
+			database.Exec(`INSERT INTO favorites_content
+				(media_id, content_id, type, title, cover, bvid, intro, page, duration,
+				 upper_mid, attr, ctime, pubtime, fav_time,
+				 play, danmaku, reply, fetch_time, creator_name, creator_face)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				mediaID, m.ID, m.Type, m.Title, m.Cover, m.BVID, m.Intro, m.Page, m.Duration,
+				upperMid, m.Attr, m.CTime, m.PubTime, m.FavTime,
+				m.Play, m.Danmaku, m.Reply, timestamp, upperName, upperFace)
+		}
+	}
+}
 func GetFavoritesListDB(c *gin.Context) {
 	midStr := c.Query("mid")
 	pageStr := c.DefaultQuery("page", "1")
@@ -23,7 +238,7 @@ func GetFavoritesListDB(c *gin.Context) {
 		page = 1
 	}
 
-	database, err := db.Open(config.GetOutputPath("database", "bilibili_favorites.db"))
+	database, err := db.Open(config.GetDatabasePath("bilibili_favorites.db"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
@@ -115,7 +330,7 @@ func GetFavoritesContentList(c *gin.Context) {
 		page = 1
 	}
 
-	database, err := db.Open(config.GetOutputPath("database", "bilibili_favorites.db"))
+	database, err := db.Open(config.GetDatabasePath("bilibili_favorites.db"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
@@ -200,8 +415,17 @@ func CheckFavorite(c *gin.Context) {
 		return
 	}
 
+	uid, err := getCurrentUserMid(cfg)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": "未登录，无法获取收藏状态",
+		})
+		return
+	}
+
 	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
-	folders, err := client.FetchFavorites()
+	result, err := client.FetchCreatedFavorites(uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -209,9 +433,9 @@ func CheckFavorite(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"data": gin.H{
-			"bvid":     bvid,
-			"folders":  folders,
-			"is_favorited": len(folders) > 0,
+			"bvid":         bvid,
+			"folders":      result.List,
+			"is_favorited": len(result.List) > 0,
 		},
 	})
 }

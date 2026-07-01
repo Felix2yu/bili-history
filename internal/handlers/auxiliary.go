@@ -89,60 +89,6 @@ func GetComments(c *gin.Context) {
 	})
 }
 
-// GetFavorites returns user's favorite folders.
-func GetFavorites(c *gin.Context) {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load config"})
-		return
-	}
-
-	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
-	folders, err := client.FetchFavorites()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"data": folders})
-}
-
-// GetWatchLater returns watch later list.
-func GetWatchLater(c *gin.Context) {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load config"})
-		return
-	}
-
-	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
-	items, err := client.FetchWatchLater()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"data": items})
-}
-
-// GetLikes returns liked videos.
-func GetLikes(c *gin.Context) {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load config"})
-		return
-	}
-
-	client := biliapi.NewClient(cfg.SESSDATA, cfg.BiliJCT, cfg.DedeUserID)
-	items, err := client.FetchLikes()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"data": items})
-}
-
 // GetDynamics returns user dynamics.
 func GetDynamics(c *gin.Context) {
 	cfg, err := config.LoadConfig()

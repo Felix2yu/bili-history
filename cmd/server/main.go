@@ -269,6 +269,7 @@ func registerRoutes(r *gin.Engine, cfg *config.Config) {
 		favorite.GET("/list", handlers.GetFavoritesListDB)
 		favorite.GET("/folder/created/list-all", handlers.GetFavorites)
 		favorite.GET("/folder/collected/list", handlers.GetFavorites)
+		favorite.GET("/folder/resource/list", handlers.GetFavoriteContentAPI)
 		favorite.GET("/content/list", handlers.GetFavoritesContentList)
 		favorite.GET("/check", handlers.CheckFavorite)
 		favorite.POST("/check/batch", handlers.BatchCheckFavorite)

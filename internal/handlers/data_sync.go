@@ -155,15 +155,6 @@ func replaceFirst(s, old, new string) string {
 	return s[:idx] + new + s[idx+len(old):]
 }
 
-func indexOf(s, substr string) int {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return i
-		}
-	}
-	return -1
-}
-
 // SyncStatus returns current sync status.
 func SyncStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{

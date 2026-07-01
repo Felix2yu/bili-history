@@ -105,7 +105,11 @@ func PollLogin(c *gin.Context) {
 
 	apiURL := "https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key=" + key
 
-	resp, err := http.Get(apiURL)
+	req, _ := http.NewRequest("GET", apiURL, nil)
+	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("Referer", "https://passport.bilibili.com/")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to poll login status"})
 		return
@@ -125,6 +129,12 @@ func PollLogin(c *gin.Context) {
 			DedeUserID  string `json:"DedeUserID"`
 			DedeUserIDCkMd5 string `json:"DedeUserID__ckMd5"`
 			SecureCookie string `json:"secure_cookie"`
+			CookieInfo  struct {
+				Cookies []struct {
+					Name  string `json:"name"`
+					Value string `json:"value"`
+				} `json:"cookies"`
+			} `json:"cookie_info"`
 		} `json:"data"`
 	}
 
@@ -135,18 +145,18 @@ func PollLogin(c *gin.Context) {
 
 	switch result.Data.Code {
 	case 0: // Success
-		cookies := map[string]string{
-			"SESSDATA":        result.Data.SESSDATA,
-			"bili_jct":        result.Data.BiliJCT,
-			"DedeUserID":      result.Data.DedeUserID,
-			"DedeUserID__ckMd5": result.Data.DedeUserIDCkMd5,
+		cookies := extractCookies(resp, result.Data.URL, result.Data.CookieInfo.Cookies,
+			result.Data.SESSDATA, result.Data.BiliJCT, result.Data.DedeUserID, result.Data.DedeUserIDCkMd5)
+
+		if len(cookies) == 0 || cookies["SESSDATA"] == "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to extract login cookies"})
+			return
 		}
-		// Save to config
+
 		if err := config.SaveCookies(cookies); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save cookies"})
 			return
 		}
-		// Reload config
 		config.ReloadConfig()
 
 		c.JSON(http.StatusOK, gin.H{
@@ -242,3 +252,123 @@ func CheckAndUpdateSESSDATA(c *gin.Context) {
 }
 
 const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+
+type cookieKV struct {
+	Name  string
+	Value string
+}
+
+func extractCookies(resp *http.Response, redirectURL string, cookieInfoCookies []struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}, sessdata, biliJCT, dedeUserID, dedeUserIDCkMd5 string) map[string]string {
+	cookies := make(map[string]string)
+	cookieFields := []string{"SESSDATA", "bili_jct", "DedeUserID", "DedeUserID__ckMd5"}
+
+	for _, c := range resp.Cookies() {
+		for _, field := range cookieFields {
+			if c.Name == field {
+				cookies[field] = c.Value
+				break
+			}
+		}
+	}
+
+	for _, v := range resp.Header.Values("Set-Cookie") {
+		parts := splitCookieHeader(v)
+		for name, value := range parts {
+			for _, field := range cookieFields {
+				if name == field && cookies[field] == "" {
+					cookies[field] = value
+					break
+				}
+			}
+		}
+	}
+
+	for _, c := range cookieInfoCookies {
+		for _, field := range cookieFields {
+			if c.Name == field && cookies[field] == "" {
+				cookies[field] = c.Value
+				break
+			}
+		}
+	}
+
+	if redirectURL != "" && (cookies["SESSDATA"] == "" || cookies["bili_jct"] == "") {
+		if idx := indexOf(redirectURL, "?"); idx >= 0 {
+			query := redirectURL[idx+1:]
+			if hashIdx := indexOf(query, "#"); hashIdx >= 0 {
+				query = query[:hashIdx]
+			}
+			for _, param := range splitBy(query, "&") {
+				eqIdx := indexOf(param, "=")
+				if eqIdx >= 0 {
+					name := param[:eqIdx]
+					value := param[eqIdx+1:]
+					for _, field := range cookieFields {
+						if name == field && cookies[field] == "" {
+							cookies[field] = value
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if sessdata != "" && cookies["SESSDATA"] == "" {
+		cookies["SESSDATA"] = sessdata
+	}
+	if biliJCT != "" && cookies["bili_jct"] == "" {
+		cookies["bili_jct"] = biliJCT
+	}
+	if dedeUserID != "" && cookies["DedeUserID"] == "" {
+		cookies["DedeUserID"] = dedeUserID
+	}
+	if dedeUserIDCkMd5 != "" && cookies["DedeUserID__ckMd5"] == "" {
+		cookies["DedeUserID__ckMd5"] = dedeUserIDCkMd5
+	}
+
+	return cookies
+}
+
+func splitCookieHeader(header string) map[string]string {
+	result := make(map[string]string)
+	firstPart := header
+	if idx := indexOf(firstPart, ";"); idx >= 0 {
+		firstPart = firstPart[:idx]
+	}
+	eqIdx := indexOf(firstPart, "=")
+	if eqIdx >= 0 {
+		name := trimSpaceStr(firstPart[:eqIdx])
+		value := firstPart[eqIdx+1:]
+		result[name] = value
+	}
+	return result
+}
+
+func splitBy(s, sep string) []string {
+	var result []string
+	for len(s) > 0 {
+		idx := indexOf(s, sep)
+		if idx < 0 {
+			result = append(result, s)
+			break
+		}
+		result = append(result, s[:idx])
+		s = s[idx+len(sep):]
+	}
+	return result
+}
+
+func trimSpaceStr(s string) string {
+	start, end := 0, len(s)
+	for start < end && (s[start] == ' ' || s[start] == '\t') {
+		start++
+	}
+	for end > start && (s[end-1] == ' ' || s[end-1] == '\t') {
+		end--
+	}
+	return s[start:end]
+}

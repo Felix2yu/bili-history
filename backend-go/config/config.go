@@ -157,11 +157,6 @@ func GetConfigPath(configFile string) string {
 		return absPath
 	}
 
-	dockerConfigPath := filepath.Join("/config", configFile)
-	if _, err := os.Stat(dockerConfigPath); err == nil {
-		return dockerConfigPath
-	}
-
 	return filepath.Join(basePath, "config", configFile)
 }
 

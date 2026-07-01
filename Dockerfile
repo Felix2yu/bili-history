@@ -27,9 +27,11 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /app/server /app/server
 
-# Copy config and static assets
-COPY config/ /app/config/
-COPY output/ /app/output/ 2>/dev/null || true
+# Copy config directory (from backend/config)
+COPY backend/config/ /app/config/
+
+# Create output directory
+RUN mkdir -p /app/output/database /app/output/logs
 
 # Expose port
 EXPOSE 8899

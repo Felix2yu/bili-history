@@ -29,10 +29,9 @@ RUN apk add --no-cache tzdata ca-certificates tini
 WORKDIR /app
 
 COPY --from=builder /app/bilibili-history-go /app/bilibili-history-go
-COPY config/config.yaml /app/config/config.yaml
-COPY config/categories.json /app/config/categories.json 2>/dev/null || true
+COPY --from=builder /app/config /app/config
 
-RUN mkdir -p /app/output /app/config
+RUN mkdir -p /app/output
 
 EXPOSE 8899
 

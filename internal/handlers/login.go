@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"bili-history/internal/config"
-	"bili-history/internal/models"
 
 	"github.com/gin-gonic/gin"
 	qrcode "github.com/skip2/go-qrcode"
@@ -42,18 +41,13 @@ func GenerateQRCode(c *gin.Context) {
 		return
 	}
 
-	// Generate QR code PNG
-	png, err := qrcode.Encode(result.Data.URL, qrcode.Medium, 256)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encode QR code"})
-		return
-	}
-
+	// Return format matching Python backend
 	c.JSON(http.StatusOK, gin.H{
-		"url":     result.Data.URL,
-		"key":     result.Data.Key,
-		"img_url": result.Data.ImgURL,
-		"qr_png":  png,
+		"status": "success",
+		"data": gin.H{
+			"qrcode_key": result.Data.Key,
+			"url":        result.Data.URL,
+		},
 	})
 }
 
@@ -100,9 +94,12 @@ func GenerateQRCodeImage(c *gin.Context) {
 
 // PollLogin polls the QR code login status.
 func PollLogin(c *gin.Context) {
-	key := c.Query("key")
+	key := c.Query("qrcode_key")
 	if key == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "key is required"})
+		key = c.Query("key") // fallback
+	}
+	if key == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "qrcode_key is required"})
 		return
 	}
 
@@ -152,25 +149,40 @@ func PollLogin(c *gin.Context) {
 		// Reload config
 		config.ReloadConfig()
 
-		c.JSON(http.StatusOK, models.LoginPollResponse{
-			Status:  "success",
-			Message: "Login successful",
-			Cookies: cookies,
+		c.JSON(http.StatusOK, gin.H{
+			"status": "success",
+			"data": gin.H{
+				"code":      0,
+				"message":   "登录成功",
+				"timestamp": time.Now().Unix(),
+			},
 		})
 	case 86090: // Already scanned, waiting for confirmation
-		c.JSON(http.StatusOK, models.LoginPollResponse{
-			Status:  "pending",
-			Message: "Already scanned, waiting for confirmation",
+		c.JSON(http.StatusOK, gin.H{
+			"status": "success",
+			"data": gin.H{
+				"code":      86090,
+				"message":   "已扫码，请在手机上确认",
+				"timestamp": time.Now().Unix(),
+			},
 		})
 	case 86038: // QR code expired
-		c.JSON(http.StatusOK, models.LoginPollResponse{
-			Status:  "expired",
-			Message: "QR code expired",
+		c.JSON(http.StatusOK, gin.H{
+			"status": "success",
+			"data": gin.H{
+				"code":      86038,
+				"message":   "二维码已失效",
+				"timestamp": time.Now().Unix(),
+			},
 		})
 	default:
-		c.JSON(http.StatusOK, models.LoginPollResponse{
-			Status:  "pending",
-			Message: result.Data.Message,
+		c.JSON(http.StatusOK, gin.H{
+			"status": "success",
+			"data": gin.H{
+				"code":      result.Data.Code,
+				"message":   result.Data.Message,
+				"timestamp": time.Now().Unix(),
+			},
 		})
 	}
 }

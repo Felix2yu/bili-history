@@ -224,14 +224,66 @@ func Logout(c *gin.Context) {
 func CheckLogin(c *gin.Context) {
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"logged_in": false})
+		c.JSON(http.StatusOK, gin.H{
+			"code":    -101,
+			"message": "未登录",
+			"ttl":     1,
+			"data":    nil,
+		})
 		return
 	}
 
-	loggedIn := cfg.SESSDATA != "" && cfg.SESSDATA != "Cookie里的SESSDATA字段值"
-	c.JSON(http.StatusOK, gin.H{
-		"logged_in": loggedIn,
-	})
+	// Check if SESSDATA is configured
+	if cfg.SESSDATA == "" || cfg.SESSDATA == "Cookie里的SESSDATA字段值" {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    -101,
+			"message": "未登录",
+			"ttl":     1,
+			"data":    nil,
+		})
+		return
+	}
+
+	// Call Bilibili API to verify login status
+	apiURL := "https://api.bilibili.com/x/web-interface/nav"
+	req, _ := http.NewRequest("GET", apiURL, nil)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+	req.Header.Set("Cookie", "SESSDATA="+cfg.SESSDATA)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    -101,
+			"message": "未登录",
+			"ttl":     1,
+			"data":    nil,
+		})
+		return
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Code    int `json:"code"`
+		Message string `json:"message"`
+		Data    struct {
+			IsLogin bool `json:"isLogin"`
+			UID     int64 `json:"mid"`
+			Uname   string `json:"uname"`
+			Face    string `json:"face"`
+		} `json:"data"`
+	}
+
+	if err := parseJSON(resp.Body, &result); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    -101,
+			"message": "未登录",
+			"ttl":     1,
+			"data":    nil,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 func updateYAMLField(content, field, value string) string {

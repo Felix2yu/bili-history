@@ -142,7 +142,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: backend-go
-          file: docker/Dockerfile
+          file: backend-go/docker/Dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

@@ -104,6 +104,7 @@ func registerRoutes(r *gin.Engine, cfg *config.Config) {
 	login := r.Group("/login")
 	{
 		login.GET("/qrcode/generate", handlers.GenerateQRCode)
+		login.GET("/qrcode/image", handlers.GenerateQRCodeImage)
 		login.GET("/qrcode/poll", handlers.PollLogin)
 		login.GET("/check-and-notify", handlers.CheckAndUpdateSESSDATA)
 		login.GET("/check", handlers.CheckLogin)
@@ -245,6 +246,7 @@ func registerRoutes(r *gin.Engine, cfg *config.Config) {
 	configGroup := r.Group("/config")
 	{
 		configGroup.GET("/email", handlers.GetEmailConfig)
+		configGroup.GET("/email-config", handlers.GetEmailConfig)
 		configGroup.POST("/email-config", handlers.UpdateEmailConfig)
 		configGroup.POST("/test-email", handlers.TestEmail)
 		configGroup.GET("/mcp-config", handlers.GetMCPConfig)

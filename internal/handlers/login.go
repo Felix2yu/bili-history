@@ -57,6 +57,47 @@ func GenerateQRCode(c *gin.Context) {
 	})
 }
 
+// GenerateQRCodeImage returns the QR code as a PNG image.
+func GenerateQRCodeImage(c *gin.Context) {
+	// Call Bilibili API to get QR code URL
+	apiURL := "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
+
+	resp, err := http.Get(apiURL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate QR code"})
+		return
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Code int `json:"code"`
+		Data struct {
+			URL    string `json:"url"`
+			Key    string `json:"qrcode_key"`
+			ImgURL string `json:"img_url"`
+		} `json:"data"`
+	}
+
+	if err := parseJSON(resp.Body, &result); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse response"})
+		return
+	}
+
+	if result.Code != 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Bilibili API error"})
+		return
+	}
+
+	// Generate QR code PNG
+	png, err := qrcode.Encode(result.Data.URL, qrcode.Medium, 256)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encode QR code"})
+		return
+	}
+
+	c.Data(http.StatusOK, "image/png", png)
+}
+
 // PollLogin polls the QR code login status.
 func PollLogin(c *gin.Context) {
 	key := c.Query("key")

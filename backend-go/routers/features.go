@@ -45,8 +45,9 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 
 func getFavoriteList(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"records": []interface{}{},
+		"list":    []interface{}{},
 		"total":   0,
+		"has_more": false,
 		"message": "收藏夹功能待实现",
 	}))
 }
@@ -69,7 +70,7 @@ func syncFavorites(c *gin.Context) {
 
 func getLikeList(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"records": []interface{}{},
+		"list":    []interface{}{},
 		"total":   0,
 		"message": "点赞列表功能待实现",
 	}))
@@ -77,8 +78,10 @@ func getLikeList(c *gin.Context) {
 
 func getLikeLocal(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"records": []interface{}{},
+		"list":    []interface{}{},
 		"total":   0,
+		"page":    1,
+		"size":    50,
 		"message": "本地点赞列表功能待实现",
 	}))
 }
@@ -92,7 +95,7 @@ func syncLikes(c *gin.Context) {
 
 func getWatchLaterList(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"records": []interface{}{},
+		"list":    []interface{}{},
 		"total":   0,
 		"message": "稍后再看功能待实现",
 	}))
@@ -100,8 +103,10 @@ func getWatchLaterList(c *gin.Context) {
 
 func getWatchLaterLocal(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"records": []interface{}{},
+		"list":    []interface{}{},
 		"total":   0,
+		"page":    1,
+		"size":    50,
 		"message": "本地稍后再看功能待实现",
 	}))
 }

@@ -1,0 +1,101 @@
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"bilibili-history-go/config"
+	"bilibili-history-go/database"
+	"bilibili-history-go/routers"
+	"bilibili-history-go/utils"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	utils.LogSuccess("=== 正在启动应用... ===")
+
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		utils.LogError("加载配置失败: %v", err)
+		return
+	}
+
+	db := database.GetSQLiteDB()
+	if db == nil {
+		utils.LogError("数据库初始化失败")
+		return
+	}
+	utils.LogSuccess("数据库初始化完成")
+
+	database.InitCategories()
+	utils.LogSuccess("分类表初始化完成")
+
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"*"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	api := r.Group("/api")
+	{
+		routers.RegisterHistoryRoutes(api)
+		routers.RegisterCategoryRoutes(api)
+		routers.RegisterLoginRoutes(api)
+		routers.RegisterAnalysisRoutes(api)
+		routers.RegisterFavoriteRoutes(api)
+		routers.RegisterConfigRoutes(api)
+		routers.RegisterSchedulerRoutes(api)
+		routers.RegisterDataSyncRoutes(api)
+		routers.RegisterExportRoutes(api)
+		routers.RegisterImportRoutes(api)
+		routers.RegisterCleanRoutes(api)
+		routers.RegisterLogRoutes(api)
+		routers.RegisterFetchRoutes(api)
+		routers.RegisterDeleteRoutes(api)
+		routers.RegisterPopularRoutes(api)
+		routers.RegisterVideoDetailsRoutes(api)
+		routers.RegisterInteractionRoutes(api)
+		routers.RegisterTitleAnalyticsRoutes(api)
+	}
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":           "running",
+			"timestamp":        time.Now().Format(time.RFC3339),
+			"scheduler_status": "stopped",
+		})
+	})
+
+	r.GET("/routes", func(c *gin.Context) {
+		routes := r.Routes()
+		var routeList []map[string]interface{}
+		for _, route := range routes {
+			routeList = append(routeList, map[string]interface{}{
+				"method": route.Method,
+				"path":   route.Path,
+			})
+		}
+		c.JSON(200, gin.H{
+			"total":  len(routeList),
+			"routes": routeList,
+		})
+	})
+
+	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	utils.LogSuccess("服务启动成功，监听地址: %s", addr)
+	utils.LogSuccess("=== 应用启动完成 ===")
+
+	if cfg.Server.SSLEnabled && cfg.Server.SSLCertFile != "" && cfg.Server.SSLKeyFile != "" {
+		utils.LogInfo("使用HTTPS启动服务")
+		r.RunTLS(addr, cfg.Server.SSLCertFile, cfg.Server.SSLKeyFile)
+	} else {
+		r.Run(addr)
+	}
+}

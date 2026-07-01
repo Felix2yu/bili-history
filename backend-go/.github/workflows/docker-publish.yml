@@ -14,7 +14,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: lifearchiveproject/bili-history-fetcher-go
+  IMAGE_NAME: felix2yu/bili-history-fetcher-go
 
 jobs:
   build-and-push:

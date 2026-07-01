@@ -67,6 +67,7 @@ func RegisterImportRoutes(r *gin.RouterGroup) {
 	{
 		importSqlite.POST("/start", importFromSqlite)
 		importSqlite.GET("/status", getImportSqliteStatus)
+		importSqlite.POST("/import_data_sqlite", importFromSqlite)
 	}
 }
 
@@ -91,20 +92,84 @@ func RegisterFetchRoutes(r *gin.RouterGroup) {
 	{
 		fetch.POST("/start", fetchBiliHistory)
 		fetch.GET("/status", getFetchStatus)
+		fetch.GET("/bili-history-realtime", fetchBiliHistoryRealtime)
+		fetch.GET("/bili-history", fetchBiliHistoryFull)
+		fetch.GET("/invalid-videos", getInvalidVideos)
 	}
+}
+
+func fetchBiliHistoryRealtime(c *gin.Context) {
+	syncDeleted := c.DefaultQuery("sync_deleted", "false") == "true"
+
+	result, err := services.FetchHistory(true, false)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	_ = syncDeleted
+	c.JSON(http.StatusOK, result)
+}
+
+func fetchBiliHistoryFull(c *gin.Context) {
+	result, err := services.FetchHistory(false, false)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+func getInvalidVideos(c *gin.Context) {
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"videos": []interface{}{},
+		"total":  0,
+	}))
 }
 
 func RegisterDeleteRoutes(r *gin.RouterGroup) {
 	delete := r.Group("/delete")
 	{
 		delete.POST("/history", deleteHistoryRecords)
+		delete.DELETE("/batch-delete", batchDeleteHistory)
 	}
 
 	biliHistory := r.Group("/bilibili/history")
 	{
 		biliHistory.POST("/delete", deleteBiliHistory)
 		biliHistory.GET("/status", getDeleteBiliStatus)
+		biliHistory.DELETE("/single", deleteSingleBiliHistory)
+		biliHistory.DELETE("/batch", deleteBatchBiliHistory)
 	}
+}
+
+func batchDeleteHistory(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "批量删除功能待实现",
+		"data":    map[string]interface{}{"deleted_count": 0},
+	})
+}
+
+func deleteSingleBiliHistory(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "删除B站历史记录功能待实现",
+	})
+}
+
+func deleteBatchBiliHistory(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "批量删除B站历史记录功能待实现",
+	})
 }
 
 func RegisterPopularRoutes(r *gin.RouterGroup) {
@@ -601,4 +666,73 @@ func getTitleTrend(c *gin.Context) {
 		"trend":   []interface{}{},
 		"message": "标题趋势分析功能待实现",
 	}))
+}
+
+func RegisterDownloadRoutes(r *gin.RouterGroup) {
+	download := r.Group("/download")
+	{
+		download.GET("/check_video_download", checkVideoDownload)
+		download.GET("/list_downloaded_videos", listDownloadedVideos)
+		download.DELETE("/delete_downloaded_video", deleteDownloadedVideo)
+	}
+}
+
+func checkVideoDownload(c *gin.Context) {
+	cidsStr := c.Query("cids")
+	results := make(map[string]interface{})
+
+	if cidsStr != "" {
+		cids := splitAndParseInts(cidsStr)
+		for _, cid := range cids {
+			results[cid] = map[string]interface{}{
+				"downloaded": false,
+				"file_path":  "",
+				"file_size":  0,
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "查询成功",
+		"results": results,
+	})
+}
+
+func listDownloadedVideos(c *gin.Context) {
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"videos": []interface{}{},
+		"total":  0,
+		"page":   1,
+		"limit":  20,
+	}))
+}
+
+func deleteDownloadedVideo(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "删除功能待实现",
+	})
+}
+
+func splitAndParseInts(s string) []string {
+	result := []string{}
+	if s == "" {
+		return result
+	}
+	current := ""
+	for _, c := range s {
+		if c == ',' {
+			if current != "" {
+				result = append(result, current)
+				current = ""
+			}
+		} else {
+			current += string(c)
+		}
+	}
+	if current != "" {
+		result = append(result, current)
+	}
+	return result
 }

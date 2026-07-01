@@ -2,6 +2,8 @@ package routers
 
 import (
 	"net/http"
+	"strconv"
+	"strings"
 
 	"bilibili-history-go/models"
 
@@ -13,7 +15,14 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 	{
 		favorite.GET("/list", getFavoriteList)
 		favorite.GET("/folder/created/list-all", getFavoriteFolderList)
+		favorite.GET("/folder/collected/list", getCollectedFavoriteFolders)
+		favorite.GET("/folder/resource/list", getFavoriteFolderContents)
+		favorite.GET("/content/list", getLocalFavoriteContents)
 		favorite.POST("/sync", syncFavorites)
+		favorite.POST("/resource/deal", favoriteResource)
+		favorite.POST("/resource/batch-deal", batchFavoriteResource)
+		favorite.POST("/resource/local-batch-deal", localBatchFavoriteResource)
+		favorite.POST("/check/batch", batchCheckFavoriteStatus)
 	}
 
 	like := r.Group("/like")
@@ -41,6 +50,108 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 		comment.GET("/list", getCommentList)
 		comment.POST("/sync", syncComments)
 	}
+}
+
+type BatchCheckFavoriteRequest struct {
+	Oids interface{} `json:"oids"`
+}
+
+func batchCheckFavoriteStatus(c *gin.Context) {
+	var req BatchCheckFavoriteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	var oids []int64
+
+	switch v := req.Oids.(type) {
+	case string:
+		oidStrs := strings.Split(v, ",")
+		for _, s := range oidStrs {
+			s = strings.TrimSpace(s)
+			if s == "" {
+				continue
+			}
+			if id, err := strconv.ParseInt(s, 10, 64); err == nil {
+				oids = append(oids, id)
+			}
+		}
+	case []interface{}:
+		for _, item := range v {
+			switch id := item.(type) {
+			case float64:
+				oids = append(oids, int64(id))
+			case int:
+				oids = append(oids, int64(id))
+			case int64:
+				oids = append(oids, id)
+			case string:
+				if parsed, err := strconv.ParseInt(id, 10, 64); err == nil {
+					oids = append(oids, parsed)
+				}
+			}
+		}
+	}
+
+	results := make([]map[string]interface{}, 0, len(oids))
+	for _, oid := range oids {
+		results = append(results, map[string]interface{}{
+			"oid":              oid,
+			"is_favorited":     false,
+			"favorite_folders": []interface{}{},
+		})
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"results": results,
+	}))
+}
+
+func getCollectedFavoriteFolders(c *gin.Context) {
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"list":  []interface{}{},
+		"count": 0,
+		"has_more": false,
+	}))
+}
+
+func getFavoriteFolderContents(c *gin.Context) {
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"list":     []interface{}{},
+		"total":    0,
+		"has_more": false,
+	}))
+}
+
+func getLocalFavoriteContents(c *gin.Context) {
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"list":  []interface{}{},
+		"total": 0,
+		"page":  1,
+		"size":  20,
+	}))
+}
+
+func favoriteResource(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "收藏操作功能待实现",
+	})
+}
+
+func batchFavoriteResource(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "批量收藏功能待实现",
+	})
+}
+
+func localBatchFavoriteResource(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "本地批量收藏功能待实现",
+	})
 }
 
 func getFavoriteList(c *gin.Context) {

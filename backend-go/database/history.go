@@ -656,3 +656,51 @@ func GetVideoByCID(cid int64, useLocalImages, useSessdata bool) (map[string]inte
 
 	return processRecord(record, useLocalImages, useSessdata), nil
 }
+
+func GetDailyStats(date string, year string) (int, int, error) {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return 0, 0, fmt.Errorf("database not initialized")
+	}
+
+	var tableName string
+	if year != "" {
+		tableName = fmt.Sprintf("bilibili_history_%s", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			return 0, 0, nil
+		}
+	} else {
+		availableYears, err := db.GetAvailableYears()
+		if err != nil || len(availableYears) == 0 {
+			return 0, 0, nil
+		}
+		tableName = fmt.Sprintf("bilibili_history_%d", availableYears[0])
+	}
+
+	var dateStr string
+	if len(date) == 4 {
+		dateStr = date
+	} else {
+		dateStr = date
+	}
+
+	var count int
+	var totalSeconds int
+
+	query := fmt.Sprintf(`
+		SELECT 
+			COUNT(*) as cnt,
+			SUM(CASE WHEN progress = -1 THEN duration ELSE progress END) as total_seconds
+		FROM %s
+		WHERE strftime('%%m%%d', datetime(view_at, 'unixepoch', 'localtime')) = ?
+	`, tableName)
+
+	err := conn.QueryRow(query, dateStr).Scan(&count, &totalSeconds)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return count, totalSeconds, nil
+}

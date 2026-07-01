@@ -23,6 +23,34 @@ func RegisterHistoryRoutes(r *gin.RouterGroup) {
 		history.POST("/batch-remarks", getBatchRemarks)
 		history.GET("/by_cid/:cid", getVideoByCID)
 	}
+
+	daily := r.Group("/daily")
+	{
+		daily.GET("/daily-count", getDailyCount)
+	}
+}
+
+func getDailyCount(c *gin.Context) {
+	date := c.Query("date")
+	year := c.Query("year")
+
+	count, totalSeconds, err := database.GetDailyStats(date, year)
+	if err != nil {
+		c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+			"total_count":        0,
+			"total_watch_seconds": 0,
+			"unique_authors":     0,
+			"total_duration":     0,
+		}))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"total_count":        count,
+		"total_watch_seconds": totalSeconds,
+		"unique_authors":     0,
+		"total_duration":     0,
+	}))
 }
 
 func getAvailableYears(c *gin.Context) {

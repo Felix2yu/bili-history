@@ -59,6 +59,7 @@ func main() {
 		routers.RegisterCategoryRoutes(api)
 		routers.RegisterLoginRoutes(api)
 		routers.RegisterAnalysisRoutes(api)
+		routers.RegisterViewingRoutes(api)
 		routers.RegisterFavoriteRoutes(api)
 		routers.RegisterConfigRoutes(api)
 		routers.RegisterSchedulerRoutes(api)
@@ -73,6 +74,7 @@ func main() {
 		routers.RegisterVideoDetailsRoutes(api)
 		routers.RegisterInteractionRoutes(api)
 		routers.RegisterTitleAnalyticsRoutes(api)
+		routers.RegisterImageRoutes(api)
 	}
 
 	r.GET("/health", func(c *gin.Context) {

@@ -119,14 +119,6 @@ func RegisterPopularRoutes(r *gin.RouterGroup) {
 	}
 }
 
-func RegisterVideoDetailsRoutes(r *gin.RouterGroup) {
-	videoDetails := r.Group("/video_details")
-	{
-		videoDetails.GET("/:bvid", getVideoDetails)
-		videoDetails.POST("/sync", syncVideoDetails)
-	}
-}
-
 func RegisterInteractionRoutes(r *gin.RouterGroup) {
 	interactions := r.Group("/interactions")
 	{
@@ -559,30 +551,6 @@ func getPopularStats(c *gin.Context) {
 		"stats":   map[string]interface{}{},
 		"message": "热门视频分析功能待实现",
 	}))
-}
-
-func getVideoDetails(c *gin.Context) {
-	bvid := c.Param("bvid")
-	if bvid == "" {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse("缺少bvid参数"))
-		return
-	}
-
-	client := biliapi.NewClient("")
-	videoInfo, err := client.GetVideoInfo(bvid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("获取视频详情失败: "+err.Error()))
-		return
-	}
-
-	c.JSON(http.StatusOK, models.SuccessResponse(videoInfo))
-}
-
-func syncVideoDetails(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "视频详情同步功能待实现",
-	})
 }
 
 func getInteractionRecords(c *gin.Context) {

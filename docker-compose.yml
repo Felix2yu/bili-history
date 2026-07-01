@@ -1,34 +1,34 @@
+version: '3.8'
+
 services:
   backend:
-    image: ghcr.io/felix2yu/bili-history-fetcher:latest
-    container_name: bili-history-backend
-    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8899:8899"
     volumes:
       - ./config:/app/config
       - ./output:/app/output
-    expose:
-      - "8899"
     environment:
       - TZ=Asia/Shanghai
       - DOCKER_ENV=true
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8899/health', timeout=2)"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8899/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
-    image: ghcr.io/felix2yu/bili-history-frontend:latest
-    container_name: bili-history-frontend
-    restart: unless-stopped
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    environment:
+      - NUXT_BACKEND_URL=http://backend:8899
     depends_on:
       backend:
         condition: service_healthy
-    environment:
-      - TZ=Asia/Shanghai
-      - NUXT_BACKEND_URL=http://backend:8899
-      - NUXT_PUBLIC_DEFAULT_BACKEND_URL=/api
-      - NODE_ENV=production
+    restart: unless-stopped

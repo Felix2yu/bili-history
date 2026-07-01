@@ -66,19 +66,49 @@ async def send_apprise_notification(
 
     def _notify_one(url: str) -> Dict:
         import sys
-        notifier = apprise.Apprise()
-        notifier.add(url)
-        plugins = [p.__class__.__name__ for p in notifier['plugins']] if notifier['plugins'] else []
-        sys.stderr.write(f"[apprise] URL={url} 插件={plugins}\n")
-        sys.stderr.flush()
+        import logging
+        import io
+        plugins = []
         try:
-            success = bool(notifier.notify(title=title, body=body))
-            sys.stderr.write(f"[apprise] notify结果={success}\n")
+            notifier = apprise.Apprise()
+            notifier.add(url)
+            plugins = [p.__class__.__name__ for p in notifier.servers] if notifier.servers else []
+            sys.stderr.write(f"[apprise] URL={url} 插件={plugins}\n")
             sys.stderr.flush()
+
+            log_capture = io.StringIO()
+            handler = logging.StreamHandler(log_capture)
+            handler.setLevel(logging.DEBUG)
+            apprise_logger = logging.getLogger('apprise')
+            original_level = apprise_logger.level
+            apprise_logger.setLevel(logging.DEBUG)
+            apprise_logger.addHandler(handler)
+
+            try:
+                success = bool(notifier.notify(title=title, body=body))
+            finally:
+                apprise_logger.removeHandler(handler)
+                apprise_logger.setLevel(original_level)
+
+            log_output = log_capture.getvalue()
+            sys.stderr.write(f"[apprise] notify结果={success}\n")
+            if log_output:
+                sys.stderr.write(f"[apprise] 详细日志:\n{log_output}\n")
+            sys.stderr.flush()
+
+            error_msg = ""
+            if not success:
+                import re
+                m = re.search(r'Failed to send.*?:\s*(.*?)(?:\n|$)', log_output)
+                if m:
+                    error_msg = m.group(1).strip()
+                else:
+                    error_msg = "发送失败，请检查地址格式"
+
             return {
                 "url": url,
                 "status": "success" if success else "error",
-                "message": "发送成功" if success else "发送失败，请检查地址格式",
+                "message": "发送成功" if success else error_msg,
                 "plugins": plugins
             }
         except Exception as e:

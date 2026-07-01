@@ -264,10 +264,9 @@ func registerRoutes(r *gin.Engine, cfg *config.Config) {
 	// Favorite
 	favorite := r.Group("/favorite")
 	{
-		favorite.GET("/list", handlers.GetFavorites)
+		favorite.GET("/list", handlers.GetFavoritesListDB)
 		favorite.GET("/folder/created/list-all", handlers.GetFavorites)
 		favorite.GET("/folder/collected/list", handlers.GetFavorites)
-		favorite.GET("/list", handlers.GetFavoritesListDB)
 		favorite.GET("/content/list", handlers.GetFavoritesContentList)
 		favorite.GET("/check", handlers.CheckFavorite)
 		favorite.POST("/check/batch", handlers.BatchCheckFavorite)

@@ -1,46 +1,72 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
+	"sync"
 
 	"bili-history/internal/services/scheduler"
 
 	"github.com/gin-gonic/gin"
 )
 
-var schedulerManager *scheduler.Manager
+var (
+	schedulerManager *scheduler.Manager
+	schedulerOnce    sync.Once
+	schedulerInitErr error
+)
 
-func init() {
-	var err error
-	schedulerManager, err = scheduler.NewManager()
-	if err != nil {
-		// Non-fatal: scheduler won't run but app starts
-		return
-	}
-	schedulerManager.Start()
+func getScheduler() *scheduler.Manager {
+	schedulerOnce.Do(func() {
+		var err error
+		schedulerManager, err = scheduler.NewManager()
+		if err != nil {
+			log.Printf("Warning: scheduler init failed: %v", err)
+			schedulerInitErr = err
+			return
+		}
+		schedulerManager.Start()
+	})
+	return schedulerManager
 }
 
 // GetSchedulerTasks returns all scheduler tasks.
 func GetSchedulerTasks(c *gin.Context) {
-	tasks := schedulerManager.GetTasks()
+	mgr := getScheduler()
+	if mgr == nil {
+		c.JSON(http.StatusOK, gin.H{"data": []interface{}{}, "error": "scheduler not initialized"})
+		return
+	}
+	tasks := mgr.GetTasks()
 	c.JSON(http.StatusOK, gin.H{"data": tasks})
 }
 
 // GetSchedulerExecutions returns recent task executions.
 func GetSchedulerExecutions(c *gin.Context) {
-	executions := schedulerManager.GetExecutions()
+	mgr := getScheduler()
+	if mgr == nil {
+		c.JSON(http.StatusOK, gin.H{"data": []interface{}{}})
+		return
+	}
+	executions := mgr.GetExecutions()
 	c.JSON(http.StatusOK, gin.H{"data": executions})
 }
 
 // RunSchedulerTask runs a task immediately.
 func RunSchedulerTask(c *gin.Context) {
+	mgr := getScheduler()
+	if mgr == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "scheduler not initialized"})
+		return
+	}
+
 	taskID := c.Param("id")
 	if taskID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Task ID is required"})
 		return
 	}
 
-	if err := schedulerManager.RunTaskNow(taskID); err != nil {
+	if err := mgr.RunTaskNow(taskID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -53,6 +79,12 @@ func RunSchedulerTask(c *gin.Context) {
 
 // CreateSchedulerTask creates a new scheduler task.
 func CreateSchedulerTask(c *gin.Context) {
+	mgr := getScheduler()
+	if mgr == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "scheduler not initialized"})
+		return
+	}
+
 	var req struct {
 		ID             string `json:"id"`
 		Name           string `json:"name"`
@@ -80,7 +112,7 @@ func CreateSchedulerTask(c *gin.Context) {
 		Enabled:       true,
 	}
 
-	schedulerManager.AddTask(task)
+	mgr.AddTask(task)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "created",
@@ -90,6 +122,12 @@ func CreateSchedulerTask(c *gin.Context) {
 
 // UpdateSchedulerTask updates a scheduler task.
 func UpdateSchedulerTask(c *gin.Context) {
+	mgr := getScheduler()
+	if mgr == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "scheduler not initialized"})
+		return
+	}
+
 	taskID := c.Param("id")
 	if taskID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Task ID is required"})
@@ -111,7 +149,7 @@ func UpdateSchedulerTask(c *gin.Context) {
 		return
 	}
 
-	schedulerManager.UpdateTask(taskID, &scheduler.Task{
+	mgr.UpdateTask(taskID, &scheduler.Task{
 		Name:          req.Name,
 		Endpoint:      req.Endpoint,
 		Method:        req.Method,
@@ -129,13 +167,19 @@ func UpdateSchedulerTask(c *gin.Context) {
 
 // DeleteSchedulerTask deletes a scheduler task.
 func DeleteSchedulerTask(c *gin.Context) {
+	mgr := getScheduler()
+	if mgr == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "scheduler not initialized"})
+		return
+	}
+
 	taskID := c.Param("id")
 	if taskID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Task ID is required"})
 		return
 	}
 
-	schedulerManager.DeleteTask(taskID)
+	mgr.DeleteTask(taskID)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "deleted",
@@ -161,6 +205,11 @@ func GetSchedulerEndpoints(c *gin.Context) {
 
 // GetTaskHistory returns task execution history.
 func GetTaskHistory(c *gin.Context) {
-	executions := schedulerManager.GetExecutions()
+	mgr := getScheduler()
+	if mgr == nil {
+		c.JSON(http.StatusOK, gin.H{"data": []interface{}{}})
+		return
+	}
+	executions := mgr.GetExecutions()
 	c.JSON(http.StatusOK, gin.H{"data": executions})
 }

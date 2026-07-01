@@ -137,7 +137,6 @@ func GetBasePath() string {
 	if exe, err := os.Executable(); err == nil {
 		return filepath.Dir(exe)
 	}
-	// Fallback: use working directory
 	if wd, err := os.Getwd(); err == nil {
 		return wd
 	}
@@ -145,9 +144,19 @@ func GetBasePath() string {
 }
 
 // GetConfigPath returns the path to the config file.
+// NOTE: Does NOT acquire mu to avoid deadlock when called from LoadConfig.
 func GetConfigPath() string {
 	mu.RLock()
-	defer mu.RUnlock()
+	p := configPath
+	mu.RUnlock()
+	if p != "" {
+		return p
+	}
+	return filepath.Join(GetBasePath(), "config", "config.yaml")
+}
+
+// getConfigPathInternal returns config path without locking (for internal use).
+func getConfigPathInternal() string {
 	if configPath != "" {
 		return configPath
 	}
@@ -170,22 +179,25 @@ func GetDatabasePath(parts ...string) string {
 
 // LoadConfig loads the configuration from YAML file.
 func LoadConfig() (*Config, error) {
+	// Fast path: already loaded
 	mu.RLock()
 	if globalConfig != nil {
-		defer mu.RUnlock()
+		mu.RUnlock()
 		return globalConfig, nil
 	}
 	mu.RUnlock()
 
+	// Slow path: acquire write lock
 	mu.Lock()
 	defer mu.Unlock()
 
-	// Double-check
+	// Double-check after acquiring write lock
 	if globalConfig != nil {
 		return globalConfig, nil
 	}
 
-	path := GetConfigPath()
+	// Compute path WITHOUT calling GetConfigPath (which would deadlock)
+	path := getConfigPathInternal()
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file %s: %w", path, err)
@@ -225,7 +237,7 @@ func SaveCookies(cookies map[string]string) error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	path := GetConfigPath()
+	path := getConfigPathInternal()
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("failed to read config: %w", err)
@@ -239,7 +251,6 @@ func SaveCookies(cookies map[string]string) error {
 		if !ok {
 			continue
 		}
-		// Simple replacement: find "field:" line and replace value
 		lines := splitLines(content)
 		found := false
 		for i, line := range lines {

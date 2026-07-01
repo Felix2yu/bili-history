@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"bilibili-history-go/config"
@@ -99,6 +100,40 @@ func main() {
 		c.JSON(200, gin.H{
 			"total":  len(routeList),
 			"routes": routeList,
+		})
+	})
+
+	r.GET("/scheduler/available-endpoints", func(c *gin.Context) {
+		routes := r.Routes()
+		endpoints := make([]map[string]interface{}, 0)
+		
+		skipPaths := map[string]bool{
+			"/health":     true,
+			"/routes":     true,
+		}
+		
+		for _, route := range routes {
+			if skipPaths[route.Path] {
+				continue
+			}
+			if route.Method == "HEAD" || route.Method == "OPTIONS" {
+				continue
+			}
+			
+			endpoints = append(endpoints, map[string]interface{}{
+				"path":        route.Path,
+				"method":      route.Method,
+				"summary":     "",
+				"tags":        []string{},
+				"operationId": "",
+			})
+		}
+		
+		c.JSON(http.StatusOK, gin.H{
+			"status":   "success",
+			"message":  fmt.Sprintf("获取API端点列表成功，共 %d 个端点", len(endpoints)),
+			"total":    len(endpoints),
+			"endpoints": endpoints,
 		})
 	})
 

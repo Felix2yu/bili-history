@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"bilibili-history-go/database"
 	"bilibili-history-go/services"
 	"bilibili-history-go/utils"
 )
@@ -34,6 +35,9 @@ type ScheduleTask struct {
 	ID          string      `json:"id"`
 	Name        string      `json:"name"`
 	Type        TaskType    `json:"type"`
+	Endpoint    string      `json:"endpoint"`
+	Method      string      `json:"method"`
+	Params      string      `json:"params"`
 	CronExpr    string      `json:"cron_expr"`
 	Enabled     bool        `json:"enabled"`
 	Status      TaskStatus  `json:"status"`
@@ -43,6 +47,10 @@ type ScheduleTask struct {
 	LastError   string      `json:"last_error,omitempty"`
 	CreatedAt   int64       `json:"created_at"`
 	UpdatedAt   int64       `json:"updated_at"`
+	TotalRuns   int         `json:"total_runs"`
+	SuccessRuns int         `json:"success_runs"`
+	FailRuns    int         `json:"fail_runs"`
+	SuccessRate float64     `json:"success_rate"`
 }
 
 type TaskExecution struct {
@@ -84,6 +92,144 @@ func GetScheduler() *Scheduler {
 }
 
 func (s *Scheduler) loadTasks() {
+	mainTasks, err := database.GetMainTasks()
+	if err != nil || len(mainTasks) == 0 {
+		s.loadTasksFromJSON()
+		return
+	}
+
+	statusMap, err := database.GetTaskStatusMap()
+	if err != nil {
+		statusMap = make(map[string]database.TaskStatus)
+	}
+
+	for _, mt := range mainTasks {
+		task := &ScheduleTask{
+			ID:        mt.TaskID,
+			Name:      mt.Name,
+			Endpoint:  mt.Endpoint,
+			Method:    mt.Method,
+			Params:    mt.Params,
+			Enabled:   mt.Enabled == 1,
+			Status:    TaskStatusIdle,
+			CreatedAt: parseTimeToUnix(mt.CreatedAt),
+			UpdatedAt: parseTimeToUnix(mt.LastModified),
+		}
+
+		task.CronExpr = buildCronExpr(mt)
+		task.Type = detectTaskType(mt.Endpoint)
+
+		if status, ok := statusMap[mt.TaskID]; ok {
+			task.LastRunTime = parseTimeToUnix(status.LastRunTime)
+			task.LastError = status.LastError
+			task.TotalRuns = status.TotalRuns
+			task.SuccessRuns = status.SuccessRuns
+			task.FailRuns = status.FailRuns
+			task.SuccessRate = status.SuccessRate
+			if status.LastStatus == "running" {
+				task.Status = TaskStatusRunning
+			} else if status.LastStatus == "failed" {
+				task.Status = TaskStatusFailed
+			} else if status.LastStatus == "completed" {
+				task.Status = TaskStatusCompleted
+			}
+		}
+
+		s.tasks[task.ID] = task
+	}
+}
+
+func parseTimeToUnix(timeStr string) int64 {
+	if timeStr == "" {
+		return 0
+	}
+	layouts := []string{
+		"2006-01-02 15:04:05",
+		"2006-01-02T15:04:05",
+		time.RFC3339,
+	}
+	for _, layout := range layouts {
+		t, err := time.ParseInLocation(layout, timeStr, time.Local)
+		if err == nil {
+			return t.Unix()
+		}
+	}
+	return 0
+}
+
+func buildCronExpr(mt database.MainTask) string {
+	switch mt.ScheduleType {
+	case "daily":
+		if mt.ScheduleTime != "" {
+			parts := splitTime(mt.ScheduleTime)
+			if len(parts) == 2 {
+				return fmt.Sprintf("%s %s * * *", parts[1], parts[0])
+			}
+		}
+		return "0 0 * * *"
+	case "interval":
+		switch mt.IntervalUnit {
+		case "minutes":
+			return fmt.Sprintf("*/%d * * * *", mt.IntervalValue)
+		case "hours":
+			return fmt.Sprintf("0 */%d * * *", mt.IntervalValue)
+		case "days":
+			return fmt.Sprintf("0 0 */%d * *", mt.IntervalValue)
+		}
+	case "weekly":
+		return "0 0 * * 0"
+	case "monthly":
+		return "0 0 1 * *"
+	}
+	return "0 0 * * *"
+}
+
+func splitTime(timeStr string) []string {
+	parts := make([]string, 0, 2)
+	current := ""
+	for _, c := range timeStr {
+		if c == ':' {
+			parts = append(parts, current)
+			current = ""
+		} else {
+			current += string(c)
+		}
+	}
+	if current != "" {
+		parts = append(parts, current)
+	}
+	return parts
+}
+
+func detectTaskType(endpoint string) TaskType {
+	switch {
+	case contains(endpoint, "history") && contains(endpoint, "fetch"):
+		return TaskTypeFetchHistory
+	case contains(endpoint, "clean"):
+		return TaskTypeCleanHistory
+	case contains(endpoint, "sync"):
+		return TaskTypeSyncData
+	case contains(endpoint, "report"):
+		return TaskTypeDailyReport
+	default:
+		return TaskTypeFetchHistory
+	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
+}
+
+func containsHelper(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Scheduler) loadTasksFromJSON() {
 	tasksFile := utils.GetOutputPath("scheduler_tasks.json")
 	if _, err := os.Stat(tasksFile); os.IsNotExist(err) {
 		return

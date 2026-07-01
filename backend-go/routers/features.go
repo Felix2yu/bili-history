@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"bilibili-history-go/database"
 	"bilibili-history-go/models"
 
 	"github.com/gin-gonic/gin"
@@ -117,19 +118,41 @@ func getCollectedFavoriteFolders(c *gin.Context) {
 }
 
 func getFavoriteFolderContents(c *gin.Context) {
+	mediaIDStr := c.Query("media_id")
+	mediaID, _ := strconv.ParseInt(mediaIDStr, 10, 64)
+	pn, _ := strconv.Atoi(c.DefaultQuery("pn", "1"))
+	ps, _ := strconv.Atoi(c.DefaultQuery("ps", "20"))
+
+	list, total, err := database.GetFavoriteContents(mediaID, pn, ps)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse("获取收藏夹内容失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":     []interface{}{},
-		"total":    0,
-		"has_more": false,
+		"list":     list,
+		"total":    total,
+		"has_more": total > pn*ps,
 	}))
 }
 
 func getLocalFavoriteContents(c *gin.Context) {
+	mediaIDStr := c.Query("media_id")
+	mediaID, _ := strconv.ParseInt(mediaIDStr, 10, 64)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+
+	list, total, err := database.GetFavoriteContents(mediaID, page, size)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse("获取本地收藏内容失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":  []interface{}{},
-		"total": 0,
-		"page":  1,
-		"size":  20,
+		"list":  list,
+		"total": total,
+		"page":  page,
+		"size":  size,
 	}))
 }
 
@@ -155,20 +178,44 @@ func localBatchFavoriteResource(c *gin.Context) {
 }
 
 func getFavoriteList(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+
+	list, total, err := database.GetFavoriteFolders(true)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse("获取收藏夹列表失败: "+err.Error()))
+		return
+	}
+
+	start := (page - 1) * size
+	end := start + size
+	if start > len(list) {
+		start = len(list)
+	}
+	if end > len(list) {
+		end = len(list)
+	}
+	pagedList := list[start:end]
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":    []interface{}{},
-		"total":   0,
-		"has_more": false,
-		"message": "收藏夹功能待实现",
+		"list":  pagedList,
+		"total": total,
+		"page":  page,
+		"size":  size,
 	}))
 }
 
 func getFavoriteFolderList(c *gin.Context) {
+	list, count, err := database.GetFavoriteFolders(true)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse("获取收藏夹列表失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":     []interface{}{},
-		"count":    0,
-		"season":   []interface{}{},
-		"message":  "收藏夹列表功能待实现",
+		"list":   list,
+		"count":  count,
+		"season": []interface{}{},
 	}))
 }
 
@@ -180,20 +227,43 @@ func syncFavorites(c *gin.Context) {
 }
 
 func getLikeList(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	sort := c.DefaultQuery("sort", "pubdate")
+	order := c.DefaultQuery("order", "desc")
+
+	list, total, err := database.GetLikedVideos(page, size, sort, order)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse("获取点赞列表失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":    []interface{}{},
-		"total":   0,
-		"message": "点赞列表功能待实现",
+		"list":     list,
+		"total":    total,
+		"page":     page,
+		"size":     size,
+		"has_more": total > page*size,
 	}))
 }
 
 func getLikeLocal(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	sort := c.DefaultQuery("sort", "fetch_time")
+	order := c.DefaultQuery("order", "desc")
+
+	list, total, err := database.GetLikedVideos(page, size, sort, order)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse("获取本地点赞列表失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":    []interface{}{},
-		"total":   0,
-		"page":    1,
-		"size":    50,
-		"message": "本地点赞列表功能待实现",
+		"list":  list,
+		"total": total,
+		"page":  page,
+		"size":  size,
 	}))
 }
 
@@ -205,20 +275,43 @@ func syncLikes(c *gin.Context) {
 }
 
 func getWatchLaterList(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	sort := c.DefaultQuery("sort", "add_at")
+	order := c.DefaultQuery("order", "desc")
+
+	list, total, err := database.GetWatchLaterVideos(page, size, sort, order)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse("获取稍后再看列表失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":    []interface{}{},
-		"total":   0,
-		"message": "稍后再看功能待实现",
+		"list":     list,
+		"total":    total,
+		"page":     page,
+		"size":     size,
+		"has_more": total > page*size,
 	}))
 }
 
 func getWatchLaterLocal(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	sort := c.DefaultQuery("sort", "add_at")
+	order := c.DefaultQuery("order", "desc")
+
+	list, total, err := database.GetWatchLaterVideos(page, size, sort, order)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse("获取本地稍后再看列表失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":    []interface{}{},
-		"total":   0,
-		"page":    1,
-		"size":    50,
-		"message": "本地稍后再看功能待实现",
+		"list":  list,
+		"total": total,
+		"page":  page,
+		"size":  size,
 	}))
 }
 

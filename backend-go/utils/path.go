@@ -52,7 +52,7 @@ func GetLogsPath() string {
 func GetDBFilePath() string {
 	cfg := config.GetConfig()
 	if cfg == nil {
-		return GetDatabasePath("bilibili_history.db")
+		return GetOutputPath("bilibili_history.db")
 	}
-	return GetDatabasePath(cfg.DBFile)
+	return GetOutputPath(cfg.DBFile)
 }

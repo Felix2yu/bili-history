@@ -114,12 +114,12 @@ func main() {
 	r.GET("/scheduler/available-endpoints", func(c *gin.Context) {
 		routes := r.Routes()
 		endpoints := make([]map[string]interface{}, 0)
-		
+
 		skipPaths := map[string]bool{
-			"/health":     true,
-			"/routes":     true,
+			"/health": true,
+			"/routes": true,
 		}
-		
+
 		for _, route := range routes {
 			if skipPaths[route.Path] {
 				continue
@@ -127,20 +127,26 @@ func main() {
 			if route.Method == "HEAD" || route.Method == "OPTIONS" {
 				continue
 			}
-			
+
+			meta := routers.GetEndpointMeta(route.Method, route.Path)
+			tags := meta.Tags
+			if tags == nil {
+				tags = []string{}
+			}
+
 			endpoints = append(endpoints, map[string]interface{}{
 				"path":        route.Path,
 				"method":      route.Method,
-				"summary":     "",
-				"tags":        []string{},
-				"operationId": "",
+				"summary":     meta.Summary,
+				"tags":        tags,
+				"operationId": meta.OperationID,
 			})
 		}
-		
+
 		c.JSON(http.StatusOK, gin.H{
-			"status":   "success",
-			"message":  fmt.Sprintf("获取API端点列表成功，共 %d 个端点", len(endpoints)),
-			"total":    len(endpoints),
+			"status":    "success",
+			"message":   fmt.Sprintf("获取API端点列表成功，共 %d 个端点", len(endpoints)),
+			"total":     len(endpoints),
 			"endpoints": endpoints,
 		})
 	})

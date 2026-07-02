@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+	"time"
 
 	"bilibili-history-go/utils"
 
@@ -29,21 +31,51 @@ var (
 
 func getExtraDB(dbFileName string) *sql.DB {
 	dbPath := utils.GetDatabasePath(dbFileName)
-	
+
 	dir := filepath.Dir(dbPath)
 	os.MkdirAll(dir, 0755)
-	
+
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		utils.LogError("Failed to open database %s: %v", dbFileName, err)
 		return nil
 	}
-	
+
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
-	
+
 	return db
 }
+
+// ensureWatchLaterSchema creates the watchlater_videos table if it does not exist.
+// This keeps the Go backend self-sufficient even when the DB file is fresh.
+const watchLaterSchema = `
+CREATE TABLE IF NOT EXISTS watchlater_videos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bvid TEXT NOT NULL UNIQUE,
+    aid INTEGER,
+    title TEXT NOT NULL,
+    pic TEXT,
+    desc TEXT,
+    duration INTEGER DEFAULT 0,
+    tid INTEGER DEFAULT 0,
+    tname TEXT,
+    owner_name TEXT,
+    owner_mid INTEGER DEFAULT 0,
+    owner_face TEXT,
+    add_at INTEGER DEFAULT 0,
+    pubdate INTEGER DEFAULT 0,
+    view INTEGER DEFAULT 0,
+    danmaku INTEGER DEFAULT 0,
+    link TEXT,
+    fetch_time INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_wl_bvid ON watchlater_videos(bvid);
+CREATE INDEX IF NOT EXISTS idx_wl_add_at ON watchlater_videos(add_at);
+CREATE INDEX IF NOT EXISTS idx_wl_owner ON watchlater_videos(owner_name);
+CREATE INDEX IF NOT EXISTS idx_wl_tid ON watchlater_videos(tid);
+CREATE INDEX IF NOT EXISTS idx_wl_fetch_time ON watchlater_videos(fetch_time);
+`
 
 func GetLikesDB() *sql.DB {
 	likesOnce.Do(func() {
@@ -59,8 +91,14 @@ func GetLikesDB() *sql.DB {
 
 func GetWatchLaterDB() *sql.DB {
 	watchlaterOnce.Do(func() {
+		db := getExtraDB("bilibili_watchlater.db")
+		if db != nil {
+			if _, err := db.Exec(watchLaterSchema); err != nil {
+				utils.LogError("Failed to ensure watchlater schema: %v", err)
+			}
+		}
 		watchlaterDB = &ExtraDB{
-			db: getExtraDB("bilibili_watchlater.db"),
+			db: db,
 		}
 	})
 	if watchlaterDB == nil {
@@ -329,6 +367,108 @@ func GetWatchLaterVideos(page, size int, sort, order string) ([]map[string]inter
 	}
 
 	return results, total, nil
+}
+
+// SaveWatchLaterVideos upserts the given watch later videos into the local DB.
+// Videos are matched by bvid (UNIQUE). It also prunes local rows whose bvid is
+// no longer present in the remote list, so the local cache reflects the remote state.
+func SaveWatchLaterVideos(videos []WatchLaterVideo) error {
+	db := GetWatchLaterDB()
+	if db == nil {
+		return fmt.Errorf("watchlater database not available")
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	now := time.Now().Unix()
+
+	stmt, err := tx.Prepare(`INSERT INTO watchlater_videos
+		(bvid, aid, title, pic, desc, duration, tid, tname, owner_name, owner_mid, owner_face, add_at, pubdate, view, danmaku, link, fetch_time)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(bvid) DO UPDATE SET
+			aid=excluded.aid, title=excluded.title, pic=excluded.pic, desc=excluded.desc,
+			duration=excluded.duration, tid=excluded.tid, tname=excluded.tname,
+			owner_name=excluded.owner_name, owner_mid=excluded.owner_mid, owner_face=excluded.owner_face,
+			add_at=excluded.add_at, pubdate=excluded.pubdate, view=excluded.view,
+			danmaku=excluded.danmaku, link=excluded.link, fetch_time=excluded.fetch_time`)
+	if err != nil {
+		return fmt.Errorf("prepare stmt: %w", err)
+	}
+	defer stmt.Close()
+
+	liveBvids := make([]string, 0, len(videos))
+	for _, v := range videos {
+		if v.Bvid == "" {
+			continue
+		}
+		_, err := stmt.Exec(v.Bvid, v.Aid, v.Title, v.Pic, v.Desc, v.Duration, v.Tid, v.Tname,
+			v.OwnerName, v.OwnerMid, v.OwnerFace, v.AddAt, v.Pubdate, v.View, v.Danmaku, v.Link, now)
+		if err != nil {
+			utils.LogError("Failed to upsert watchlater %s: %v", v.Bvid, err)
+			continue
+		}
+		liveBvids = append(liveBvids, v.Bvid)
+	}
+
+	// Prune locally-cached entries that are no longer in the remote list so the
+	// local cache stays consistent with what Bilibili reports.
+	if len(liveBvids) > 0 {
+		// Build placeholders (?, ?, ...)
+		placeholders := make([]string, len(liveBvids))
+		args := make([]interface{}, len(liveBvids))
+		for i, b := range liveBvids {
+			placeholders[i] = "?"
+			args[i] = b
+		}
+		query := "DELETE FROM watchlater_videos WHERE bvid NOT IN (" + strings.Join(placeholders, ",") + ")"
+		if _, err := tx.Exec(query, args...); err != nil {
+			utils.LogError("Failed to prune stale watchlater rows: %v", err)
+		}
+	} else {
+		if _, err := tx.Exec("DELETE FROM watchlater_videos"); err != nil {
+			utils.LogError("Failed to clear watchlater rows: %v", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
+	return nil
+}
+
+// DeleteWatchLaterVideo removes a single watch later row from the local cache by bvid.
+func DeleteWatchLaterVideo(bvid string) error {
+	db := GetWatchLaterDB()
+	if db == nil {
+		return fmt.Errorf("watchlater database not available")
+	}
+	_, err := db.Exec("DELETE FROM watchlater_videos WHERE bvid = ?", bvid)
+	return err
+}
+
+// GetWatchLaterVideoByBvid returns a single watch later row by bvid, or nil if not found.
+func GetWatchLaterVideoByBvid(bvid string) (*WatchLaterVideo, error) {
+	db := GetWatchLaterDB()
+	if db == nil {
+		return nil, nil
+	}
+	row := db.QueryRow(`SELECT bvid, aid, title, pic, desc, duration, tid, tname,
+		owner_name, owner_mid, owner_face, add_at, pubdate, view, danmaku, link, fetch_time
+		FROM watchlater_videos WHERE bvid = ?`, bvid)
+	var v WatchLaterVideo
+	err := row.Scan(&v.Bvid, &v.Aid, &v.Title, &v.Pic, &v.Desc, &v.Duration, &v.Tid, &v.Tname,
+		&v.OwnerName, &v.OwnerMid, &v.OwnerFace, &v.AddAt, &v.Pubdate, &v.View, &v.Danmaku, &v.Link, &v.FetchTime)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &v, nil
 }
 
 func GetFavoriteFolders(created bool) ([]map[string]interface{}, int, error) {

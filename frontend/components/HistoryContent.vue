@@ -147,7 +147,7 @@
                   </div>
                 </div>
                 <img
-                  :src="getProxyImageUrl(record.cover || record.covers?.[0])"
+                  :src="normalizeImageUrl(record.cover || record.covers?.[0])"
                   class="w-full h-full object-cover transition-all duration-300"
                   :class="{ 'blur-md': isPrivacyMode }"
                   alt=""
@@ -190,7 +190,7 @@
                 <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
                   <div class="flex items-center space-x-2 min-w-0 flex-1">
                     <img v-if="record.business !== 'cheese' && record.business !== 'pgc'"
-                         :src="getProxyImageUrl(record.author_face)"
+                         :src="normalizeImageUrl(record.author_face)"
                          :class="{ 'blur-md': isPrivacyMode, 'cursor-pointer': !isBatchMode }"
                          class="w-4 h-4 rounded-full flex-shrink-0"
                          @click="!isBatchMode ? handleAuthorClick(record) : null"
@@ -401,7 +401,7 @@ import LoginDialog from './LoginDialog.vue'
 import DownloadDialog from './DownloadDialog.vue'
 import FavoriteDialog from './FavoriteDialog.vue'
 import { openInBrowser } from '~/utils/openUrl.js'
-import { getProxyImageUrl } from '~/utils/imageUrl.js'
+import { normalizeImageUrl } from '~/utils/imageUrl.js'
 
 const { isPrivacyMode } = usePrivacyStore()
 

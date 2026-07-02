@@ -830,44 +830,17 @@ export const setTaskEnabled = (taskId, enabled) => {
   })
 }
 
-// 邮件配置相关接口
-// 获取邮件配置
-export const getEmailConfig = () => {
-  return instance.get('/config/email-config')
-    .then(response => {
-      console.log('邮件配置API响应成功:', response)
-      return response
-    })
-    .catch(error => {
-      console.error('邮件配置API错误:', error)
-      throw error
-    })
+// Shoutrrr通知配置相关接口
+export const getShoutrrrConfig = () => {
+  return instance.get('/config/shoutrrr')
 }
 
-// 更新邮件配置
-export const updateEmailConfig = (config) => {
-  return instance.post('/config/email-config', config)
-    .then(response => {
-      console.log('更新邮件配置API响应成功:', response)
-      return response
-    })
-    .catch(error => {
-      console.error('更新邮件配置API错误:', error)
-      throw error
-    })
+export const updateShoutrrrConfig = (config) => {
+  return instance.post('/config/shoutrrr', config)
 }
 
-// Apprise推送配置相关接口
-export const getAppriseConfig = () => {
-  return instance.get('/config/apprise-config')
-}
-
-export const updateAppriseConfig = (config) => {
-  return instance.post('/config/apprise-config', config)
-}
-
-export const testApprisePush = (testData) => {
-  return instance.post('/config/test-apprise', testData)
+export const testShoutrrrPush = () => {
+  return instance.post('/config/shoutrrr/test')
 }
 
 // MCP配置相关接口
@@ -891,19 +864,6 @@ export const updateMcpConfig = (config) => {
     })
     .catch(error => {
       console.error('更新MCP配置API错误:', error)
-      throw error
-    })
-}
-
-// 测试邮件配置
-export const testEmailConfig = (testData) => {
-  return instance.post('/config/test-email', testData)
-    .then(response => {
-      console.log('测试邮件API响应成功:', response)
-      return response
-    })
-    .catch(error => {
-      console.error('测试邮件API错误:', error)
       throw error
     })
 }

@@ -394,12 +394,14 @@ const executeTask = async (taskId) => {
       // 刷新任务列表
       fetchTasks()
     } else {
-      const errorMessage = '执行任务失败: ' + (response.data?.message || '未知错误')
-      showNotify({ type: 'danger', message: errorMessage })
+      // 响应格式不符时显示实际内容以便排查
+      const raw = typeof response.data === 'string' ? response.data : (response.data?.message || JSON.stringify(response.data))
+      showNotify({ type: 'danger', message: '执行任务失败: ' + raw })
     }
   } catch (error) {
     console.error('执行任务出错:', error)
-    showNotify({ type: 'danger', message: '执行任务出错: ' + (error.message || '未知错误') })
+    const errDetail = error.response?.data?.message || error.message || '未知错误'
+    showNotify({ type: 'danger', message: '执行任务出错: ' + errDetail })
   }
 }
 
@@ -618,23 +620,35 @@ const deleteTask = async (taskId, parentTaskId = null) => {
       // 重新获取任务列表
       fetchTasks()
     } else {
-      showNotify({ type: 'danger', message: (parentTaskId ? '删除子任务失败: ' : '删除任务失败: ') + (response.data?.message || '未知错误') })
+      const raw = typeof response.data === 'string' ? response.data : (response.data?.message || JSON.stringify(response.data))
+      showNotify({ type: 'danger', message: (parentTaskId ? '删除子任务失败: ' : '删除任务失败: ') + raw })
     }
   } catch (error) {
     console.error('删除任务出错:', error)
-    showNotify({ type: 'danger', message: (parentTaskId ? '删除子任务出错: ' : '删除任务出错: ') + (error.message || '未知错误') })
+    const errDetail = error.response?.data?.message || error.message || '未知错误'
+    showNotify({ type: 'danger', message: (parentTaskId ? '删除子任务出错: ' : '删除任务出错: ') + errDetail })
   }
 }
 
 // SSR: 初始数据在服务端获取
 const { data: initialData } = await useAsyncData('scheduler-initial', async () => {
   try {
-    const response = await getAllSchedulerTasks()
-    return { tasks: response.data || [] }
+    const response = await getAllSchedulerTasks({
+      include_subtasks: true,
+      detail_level: 'full'
+    })
+    if (response.data && response.data.status === 'success') {
+      return {
+        tasks: (response.data.tasks || []).map(task => ({
+          ...task,
+          isExpanded: true
+        }))
+      }
+    }
   } catch (error) {
     console.error('SSR 获取计划任务失败:', error)
-    return { tasks: [] }
   }
+  return { tasks: [] }
 })
 
 // 从 SSR 数据初始化组件状态

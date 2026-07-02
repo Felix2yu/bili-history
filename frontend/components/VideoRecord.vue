@@ -47,11 +47,11 @@
             <span>已收藏</span>
           </div>
         </div>
-        <img :src="getProxyImageUrl(record.cover || record.covers[0])" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
+        <img :src="normalizeImageUrl(record.cover || record.covers[0])" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
       </div>
       <div class="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <div v-if="record.business !== 'cheese' && record.business !== 'pgc'" class="flex items-center gap-2" @click.stop>
-          <img :src="getProxyImageUrl(record.author_face)" class="w-4 h-4 rounded-full" :class="{ 'blur-md': isPrivacyMode }" @click="handleAuthorClick" />
+          <img :src="normalizeImageUrl(record.author_face)" class="w-4 h-4 rounded-full" :class="{ 'blur-md': isPrivacyMode }" @click="handleAuthorClick" />
           <span class="cursor-pointer hover:text-accent transition-colors" @click="handleAuthorClick" v-html="isPrivacyMode ? '******' : highlightedAuthorName"></span>
         </div>
         <div class="flex items-center gap-2">
@@ -84,9 +84,9 @@
             <span>已收藏</span>
           </div>
         </div>
-        <img v-if="record.cover" :src="getProxyImageUrl(record.cover)" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
+        <img v-if="record.cover" :src="normalizeImageUrl(record.cover)" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
         <div v-else v-for="(cover, index) in record.covers" :key="index" class="mb-1">
-          <img :src="getProxyImageUrl(cover)" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
+          <img :src="normalizeImageUrl(cover)" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
         </div>
         <!-- Duration & progress -->
         <div v-if="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live'">
@@ -140,7 +140,7 @@
         <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
           <div v-if="record.business === 'pgc'" class="text-gray-500 dark:text-gray-400 truncate">{{ record.long_title }}</div>
           <div v-else class="flex items-center gap-2 min-w-0" @click.stop>
-            <img :src="getProxyImageUrl(record.author_face)" class="w-4 h-4 rounded-full flex-shrink-0" :class="{ 'blur-md': isPrivacyMode }" @click="handleAuthorClick" />
+            <img :src="normalizeImageUrl(record.author_face)" class="w-4 h-4 rounded-full flex-shrink-0" :class="{ 'blur-md': isPrivacyMode }" @click="handleAuthorClick" />
             <span class="cursor-pointer hover:text-accent transition-colors truncate" @click="handleAuthorClick" v-html="isPrivacyMode ? '******' : highlightedAuthorName"></span>
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">
@@ -172,7 +172,7 @@ import 'vant/es/popup/style'
 import 'vant/es/field/style'
 import DownloadDialog from './DownloadDialog.vue'
 import { openInBrowser } from '~/utils/openUrl.js'
-import { getProxyImageUrl } from '~/utils/imageUrl.js'
+import { normalizeImageUrl } from '~/utils/imageUrl.js'
 import { saveHistoryRecord } from '~/utils/historyRecordStore.js'
 
 const { isPrivacyMode } = usePrivacyStore()

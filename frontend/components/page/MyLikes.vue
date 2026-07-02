@@ -186,7 +186,7 @@
               >
                 <div class="relative pb-[56.25%] overflow-hidden cursor-pointer group" @click="openVideo(video)">
                   <img
-                    :src="getProxyImageUrl(video.pic)"
+                    :src="normalizeImageUrl(video.pic)"
                     :alt="video.title"
                     class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
@@ -206,7 +206,7 @@
                   </div>
                   <div class="flex items-center space-x-1">
                     <img
-                      :src="getProxyImageUrl(video.owner_face)"
+                      :src="normalizeImageUrl(video.owner_face)"
                       :alt="video.owner_name"
                       class="w-3.5 h-3.5 rounded-full object-cover"
                       loading="lazy"
@@ -243,7 +243,7 @@ import { useAsyncData } from '#imports'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import { getLikeList, getLikeLocal } from '~/utils/api'
-import { getProxyImageUrl } from '~/utils/imageUrl.js'
+import { normalizeImageUrl } from '~/utils/imageUrl.js'
 
 const loading = ref(false)
 const syncing = ref(false)

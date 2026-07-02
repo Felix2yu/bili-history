@@ -722,7 +722,7 @@ func (s *Scheduler) UpdateTaskFromConfig(taskID string, payload map[string]inter
 		mt.Enabled = 1
 	}
 
-	if cfg, ok := payload["config"].(map[string]interface{}); ok {
+	extractTaskConfig := func(cfg map[string]interface{}) {
 		if v := getString(cfg, "name"); v != "" {
 			mt.Name = v
 		}
@@ -738,7 +738,7 @@ func (s *Scheduler) UpdateTaskFromConfig(taskID string, payload map[string]inter
 		if v := getString(cfg, "schedule_type"); v != "" {
 			mt.ScheduleType = v
 		}
-		if v, ok := cfg["schedule_time"].(string); ok {
+		if v, ok := cfg["schedule_time"].(string); ok && v != "" {
 			mt.ScheduleTime = v
 		}
 		if v := getInt(cfg, "interval_value", "interval"); v > 0 {
@@ -754,6 +754,12 @@ func (s *Scheduler) UpdateTaskFromConfig(taskID string, payload map[string]inter
 				mt.Enabled = 0
 			}
 		}
+	}
+
+	if cfg, ok := payload["config"].(map[string]interface{}); ok {
+		extractTaskConfig(cfg)
+	} else {
+		extractTaskConfig(payload)
 	}
 	// Top-level enabled override (used by the enable endpoint indirectly).
 	if enabled, ok := payload["enabled"].(bool); ok {

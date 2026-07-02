@@ -148,7 +148,7 @@
                 v-model="form.schedule_type"
                 class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-xs py-1 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-100 disabled:dark:bg-gray-800 disabled:dark:text-gray-500"
                 required
-                :disabled="props.parentTaskId || props.isEditing"
+                :disabled="props.parentTaskId"
               >
                 <option v-if="!props.parentTaskId" value="daily">每日</option>
                 <option v-if="!props.parentTaskId" value="interval">间隔执行</option>
@@ -175,20 +175,17 @@
                   v-model.number="form.interval"
                   type="number"
                   min="1"
-                  class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-xs py-1 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-100 disabled:dark:bg-gray-800 disabled:dark:text-gray-500"
+                  class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-xs py-1 dark:bg-gray-700 dark:text-gray-100"
                   required
-                  :disabled="props.isEditing"
                 />
-                <span v-if="props.isEditing" class="text-xs text-gray-500 mt-0.5 block">间隔任务的时间不可修改</span>
               </div>
               <div>
                 <label for="intervalUnit" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-0.5">时间单位 *</label>
                 <select
                   id="intervalUnit"
                   v-model="form.unit"
-                  class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-xs py-1 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-100 disabled:dark:bg-gray-800 disabled:dark:text-gray-500"
+                  class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-xs py-1 dark:bg-gray-700 dark:text-gray-100"
                   required
-                  :disabled="props.isEditing"
                 >
                   <option value="minutes">分钟</option>
                   <option value="hours">小时</option>
@@ -196,7 +193,6 @@
                   <option value="months">月</option>
                   <option value="years">年</option>
                 </select>
-                <span v-if="props.isEditing" class="text-xs text-gray-500 mt-0.5 block">间隔任务的单位不可修改</span>
               </div>
             </div>
           </div>
@@ -913,32 +909,23 @@ const submitForm = async () => {
       enabled: form.enabled
     }
 
-    // 只有在创建新任务时才设置调度类型和依赖任务
+    taskData.schedule_type = form.schedule_type
+
+    if (form.schedule_type === 'daily') {
+      taskData.schedule_time = form.schedule_time
+    } else if (form.schedule_type === 'interval') {
+      taskData.interval = form.interval
+      taskData.unit = form.unit
+    }
+
+    // 只有在创建新任务时才设置依赖任务
     if (!props.isEditing) {
-      taskData.schedule_type = form.schedule_type
-
-      if (form.schedule_type === 'daily') {
-        taskData.schedule_time = form.schedule_time
-      } else if (form.schedule_type === 'interval') {
-        taskData.interval = form.interval
-        taskData.unit = form.unit
-      }
-
       if (form.depends_on.length > 0) {
         taskData.depends_on = {
           task_id: form.depends_on[0],
           name: getTaskName(form.depends_on[0])
         }
       }
-    } else {
-      // 编辑模式下，保留原有的调度类型
-      taskData.schedule_type = form.schedule_type
-
-      // 如果是每日任务，可以修改执行时间
-      if (form.schedule_type === 'daily') {
-        taskData.schedule_time = form.schedule_time
-      }
-      // 注意：如果是间隔任务，不允许修改间隔时间和单位，所以这里不设置这些字段
     }
 
     console.log('准备提交的任务数据:', taskData)

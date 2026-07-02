@@ -182,7 +182,7 @@
  <span class="inline-flex items-center rounded-md bg-[#f1f2f3] dark:bg-gray-700 px-2 py-1 text-xs text-[#71767d] dark:text-gray-300">
  {{ record.business === 'archive' ? record.tag_name : getBusinessType(record.business) }}
  </span>
-                  <span v-if="record.business === 'archive'" class="text-gray-400">·</span>
+                  <span v-if="record.business === 'archive' && record.name" class="text-gray-400">·</span>
                   <span v-if="record.business === 'archive' && record.name" class="text-[#71767d]">{{ record.name
                     }}</span>
                 </div>

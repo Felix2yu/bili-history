@@ -246,9 +246,9 @@
                     <div>
                       <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-0.5 md:mb-1">画质选择</label>
                       <CustomDropdown
-                        v-model="advancedOptions.stream"
+                        v-model="advancedOptions.stream_id"
                         :options="streamOptions"
-                        :selected-text="getStreamText(advancedOptions.stream)"
+                        :selected-text="getStreamText(advancedOptions.stream_id)"
                         custom-class="w-full text-xs"
                       />
                     </div>
@@ -446,7 +446,7 @@ const advancedOptions = ref({
   // Lux 下载参数
   multi_thread: true,
   thread_number: 10,
-  stream: null,
+  stream_id: null,
 })
 
 // 当前正在下载的视频信息
@@ -740,6 +740,17 @@ watch(() => props.show, async (isVisible) => {
     currentVideoIndex.value = -1
     favoriteVideos.value = []
 
+    // 从视频信息中填充画质选项
+    if (props.videoInfo.streams && props.videoInfo.streams.length > 0) {
+      streamOptions.value = [
+        { label: '自动选择最佳画质', value: null },
+        ...props.videoInfo.streams.map(s => ({
+          label: `${s.quality} (${s.ext}) - ${(s.size / 1024 / 1024).toFixed(1)}MB`,
+          value: s.id,
+        })),
+      ]
+    }
+
     // 如果是收藏夹，预加载收藏夹内容
     if (isFavoriteFolder.value && props.videoInfo.fid) {
       await preloadFavoriteVideos()
@@ -775,7 +786,7 @@ const resetState = () => {
   advancedOptions.value = {
     multi_thread: true,
     thread_number: 10,
-    stream: null,
+    stream_id: null,
   }
 }
 
@@ -1187,14 +1198,14 @@ const getCommandContent = (line) => {
 }
 
 // 下拉菜单选项定义 (Lux 兼容)
-const streamOptions = [
+const streamOptions = ref([
   { label: '自动选择最佳画质', value: null },
-]
+])
 
 // 获取选项文本的方法
 const getStreamText = (value) => {
   if (!value) return '自动选择最佳画质'
-  const option = streamOptions.find(opt => opt.value === value)
+  const option = streamOptions.value.find(opt => opt.value === value)
   return option ? option.label : value
 }
 </script>

@@ -186,6 +186,7 @@ func downloadVideoSSE(c *gin.Context) {
 		DownloadCover bool   `json:"download_cover"`
 		OnlyAudio     bool   `json:"only_audio"`
 		CID           int    `json:"cid"`
+		StreamID      string `json:"stream_id"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
@@ -210,7 +211,7 @@ func downloadVideoSSE(c *gin.Context) {
 	sendEvent("开始下载...")
 
 	outputDir := services.GetDownloadOutputPath()
-	err := services.DownloadVideoWithProgress(req.URL, req.Sessdata, outputDir, req.OnlyAudio, sendEvent)
+	err := services.DownloadVideoWithProgress(req.URL, req.Sessdata, outputDir, req.OnlyAudio, req.StreamID, sendEvent)
 	if err != nil {
 		sendEvent(fmt.Sprintf("下载失败: %v", err))
 	}
@@ -255,7 +256,7 @@ func batchDownloadSSE(c *gin.Context) {
 		url := "https://www.bilibili.com/video/" + bvid
 		sendEvent(fmt.Sprintf("[%d/%d] 开始下载: %s", i+1, total, bvid))
 
-		err := services.DownloadVideoWithProgress(url, req.Sessdata, outputDir, req.OnlyAudio, func(msg string) {
+		err := services.DownloadVideoWithProgress(url, req.Sessdata, outputDir, req.OnlyAudio, "", func(msg string) {
 			sendEvent(fmt.Sprintf("[%d/%d] %s", i+1, total, msg))
 		})
 		if err != nil {
@@ -314,7 +315,7 @@ func downloadUserVideosSSE(c *gin.Context) {
 		title := video["title"]
 		sendEvent(fmt.Sprintf("[%d/%d] 开始下载: %s", i+1, len(videos), title))
 
-		err := services.DownloadVideoWithProgress(url, req.Sessdata, outputDir, req.OnlyAudio, func(msg string) {
+		err := services.DownloadVideoWithProgress(url, req.Sessdata, outputDir, req.OnlyAudio, "", func(msg string) {
 			sendEvent(fmt.Sprintf("[%d/%d] %s", i+1, len(videos), msg))
 		})
 		if err != nil {

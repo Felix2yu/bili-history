@@ -121,7 +121,7 @@ func ExtractVideoInfo(url string) (*VideoInfo, error) {
 	return info, nil
 }
 
-func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, onProgress func(string)) error {
+func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, streamID string, onProgress func(string)) error {
 	cookie := sessdata
 	if cookie == "" {
 		cookie = getCookie()
@@ -149,26 +149,32 @@ func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, 
 
 	onProgress(fmt.Sprintf("标题: %s", data.Title))
 
-	// Find best stream
-	var bestStreamID string
-	var bestSize int64
-	for id, stream := range data.Streams {
-		if stream.Size > bestSize {
-			bestSize = stream.Size
-			bestStreamID = id
+	if streamID != "" {
+		if stream, ok := data.Streams[streamID]; ok {
+			sizeMB := float64(stream.Size) / 1024 / 1024
+			onProgress(fmt.Sprintf("画质: %s, 大小: %.1fMB", stream.Quality, sizeMB))
 		}
-	}
-
-	if bestStreamID != "" {
-		stream := data.Streams[bestStreamID]
-		sizeMB := float64(stream.Size) / 1024 / 1024
-		onProgress(fmt.Sprintf("画质: %s, 大小: %.1fMB", stream.Quality, sizeMB))
+	} else {
+		var bestStreamID string
+		var bestSize int64
+		for id, stream := range data.Streams {
+			if stream.Size > bestSize {
+				bestSize = stream.Size
+				bestStreamID = id
+			}
+		}
+		if bestStreamID != "" {
+			stream := data.Streams[bestStreamID]
+			sizeMB := float64(stream.Size) / 1024 / 1024
+			onProgress(fmt.Sprintf("画质: %s, 大小: %.1fMB", stream.Quality, sizeMB))
+		}
 	}
 
 	os.MkdirAll(outputDir, 0755)
 
 	dl := downloader.New(downloader.Options{
 		Silent:         true,
+		Stream:         streamID,
 		OutputPath:     outputDir,
 		FileNameLength: 255,
 		MultiThread:    true,

@@ -61,7 +61,50 @@ func stopImageDownload(c *gin.Context) {
 
 func getImageDownloadStatus(c *gin.Context) {
 	status := services.GetImageDownloadStatus()
-	c.JSON(http.StatusOK, models.SuccessResponse(status))
+
+	// Count local files for covers and avatars
+	outputPath := utils.GetOutputPath("images")
+	coversTotal, coversDownloaded := countLocalImages(filepath.Join(outputPath, "covers"))
+	avatarsTotal, avatarsDownloaded := countLocalImages(filepath.Join(outputPath, "avatars"))
+
+	c.JSON(http.StatusOK, models.SuccessResponse(gin.H{
+		"is_downloading": status.IsRunning,
+		"covers": gin.H{
+			"total":         coversTotal,
+			"downloaded":    coversDownloaded,
+			"failed":        0,
+			"total_planned": status.TotalImages / 2, // rough split covers vs avatars
+			"failed_urls":   []interface{}{},
+		},
+		"avatars": gin.H{
+			"total":         avatarsTotal,
+			"downloaded":    avatarsDownloaded,
+			"failed":        0,
+			"total_planned": status.TotalImages / 2,
+			"failed_urls":   []interface{}{},
+		},
+	}))
+}
+
+func countLocalImages(dir string) (total int, downloaded int) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return 0, 0
+	}
+
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if !info.IsDir() {
+			total++
+			downloaded++
+		}
+		return nil
+	})
+	if err != nil {
+		return 0, 0
+	}
+	return total, downloaded
 }
 
 func clearImages(c *gin.Context) {

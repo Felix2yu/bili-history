@@ -16,34 +16,6 @@ type ShoutrrrConfig struct {
 	URLs    []string `yaml:"urls"`
 }
 
-type YuttoBasicConfig struct {
-	Dir          string `yaml:"dir"`
-	TmpDir       string `yaml:"tmp_dir"`
-	VipStrict    bool   `yaml:"vip_strict"`
-	LoginStrict  bool   `yaml:"login_strict"`
-}
-
-type YuttoResourceConfig struct {
-	RequireSubtitle bool `yaml:"require_subtitle"`
-	OnlyAudio       bool `yaml:"only_audio"`
-}
-
-type YuttoDanmakuConfig struct {
-	FontSize           int      `yaml:"font_size"`
-	BlockKeywordPatterns []string `yaml:"block_keyword_patterns"`
-}
-
-type YuttoBatchConfig struct {
-	WithSection bool `yaml:"with_section"`
-}
-
-type YuttoConfig struct {
-	Basic    YuttoBasicConfig    `yaml:"basic"`
-	Resource YuttoResourceConfig `yaml:"resource"`
-	Danmaku  YuttoDanmakuConfig  `yaml:"danmaku"`
-	Batch    YuttoBatchConfig    `yaml:"batch"`
-}
-
 type ServerConfig struct {
 	Host           string             `yaml:"host"`
 	Port           int                `yaml:"port"`
@@ -98,7 +70,6 @@ type Config struct {
 	FieldsToRemove   []string       `yaml:"fields_to_remove"`
 	Shoutrrr         ShoutrrrConfig `yaml:"shoutrrr"`
 	LogFolder        string         `yaml:"log_folder"`
-	Yutto            YuttoConfig    `yaml:"yutto"`
 	Server           ServerConfig   `yaml:"server"`
 	Heatmap          HeatmapConfig  `yaml:"heatmap"`
 	Scheduler        SchedulerConfig `yaml:"scheduler"`

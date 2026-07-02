@@ -53,7 +53,6 @@ func init() {
 	tagPopular := []string{"热门视频"}
 	tagVideo := []string{"视频详情"}
 	tagImage := []string{"图片管理"}
-	tagDownload := []string{"下载管理"}
 	tagTitle := []string{"标题分析"}
 	tagInteraction := []string{"互动记录"}
 
@@ -720,23 +719,6 @@ func init() {
 		Summary:     "图片代理（转发B站CDN）",
 		Tags:        tagImage,
 		OperationID: "proxy_image",
-	})
-
-	// ========== 下载管理 ==========
-	RegisterEndpointMeta("GET", "/download/check_video_download", EndpointMeta{
-		Summary:     "检查视频下载状态",
-		Tags:        tagDownload,
-		OperationID: "check_video_download",
-	})
-	RegisterEndpointMeta("GET", "/download/list_downloaded_videos", EndpointMeta{
-		Summary:     "列出已下载视频",
-		Tags:        tagDownload,
-		OperationID: "list_downloaded_videos",
-	})
-	RegisterEndpointMeta("DELETE", "/download/delete_downloaded_video", EndpointMeta{
-		Summary:     "删除已下载视频",
-		Tags:        tagDownload,
-		OperationID: "delete_downloaded_video",
 	})
 
 	// ========== 标题分析 ==========

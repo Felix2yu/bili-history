@@ -41,8 +41,9 @@ email:
   password: "xxxx"  # QQ邮箱授权码
   receiver: "xxxx@qq.com"
 
-# Apprise推送配置
-apprise:
+# Shoutrrr通知配置（支持多种推送渠道：Bark、Telegram、Discord、邮件、Webhook等）
+# URL格式参考：https://containrrr.dev/shoutrrr/services/overview/
+shoutrrr:
   enabled: false
   urls:
 

@@ -373,15 +373,20 @@ func init() {
 		Tags:        tagConfig,
 		OperationID: "save_email_config",
 	})
-	RegisterEndpointMeta("GET", "/config/apprise", EndpointMeta{
-		Summary:     "获取Apprise通知配置",
+	RegisterEndpointMeta("GET", "/config/shoutrrr", EndpointMeta{
+		Summary:     "获取Shoutrrr通知配置",
 		Tags:        tagConfig,
-		OperationID: "get_apprise_config",
+		OperationID: "get_shoutrrr_config",
 	})
-	RegisterEndpointMeta("POST", "/config/apprise", EndpointMeta{
-		Summary:     "保存Apprise通知配置",
+	RegisterEndpointMeta("POST", "/config/shoutrrr", EndpointMeta{
+		Summary:     "保存Shoutrrr通知配置",
 		Tags:        tagConfig,
-		OperationID: "save_apprise_config",
+		OperationID: "save_shoutrrr_config",
+	})
+	RegisterEndpointMeta("POST", "/config/shoutrrr/test", EndpointMeta{
+		Summary:     "测试Shoutrrr通知推送",
+		Tags:        tagConfig,
+		OperationID: "test_shoutrrr_config",
 	})
 	RegisterEndpointMeta("GET", "/config/server", EndpointMeta{
 		Summary:     "获取服务器配置",
@@ -405,14 +410,14 @@ func init() {
 		OperationID: "save_email_config_alias",
 	})
 	RegisterEndpointMeta("GET", "/config/apprise-config", EndpointMeta{
-		Summary:     "获取Apprise配置（Python兼容）",
+		Summary:     "获取Shoutrrr配置（Python兼容别名）",
 		Tags:        tagConfig,
-		OperationID: "get_apprise_config_alias",
+		OperationID: "get_shoutrrr_config_alias",
 	})
 	RegisterEndpointMeta("POST", "/config/apprise-config", EndpointMeta{
-		Summary:     "保存Apprise配置（Python兼容）",
+		Summary:     "保存Shoutrrr配置（Python兼容别名）",
 		Tags:        tagConfig,
-		OperationID: "save_apprise_config_alias",
+		OperationID: "save_shoutrrr_config_alias",
 	})
 
 	// ========== 计划任务 ==========

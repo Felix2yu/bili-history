@@ -869,17 +869,17 @@ export const updateEmailConfig = (config) => {
     })
 }
 
-// Apprise推送配置相关接口
-export const getAppriseConfig = () => {
-  return instance.get('/config/apprise-config')
+// Shoutrrr通知配置相关接口
+export const getShoutrrrConfig = () => {
+  return instance.get('/config/shoutrrr')
 }
 
-export const updateAppriseConfig = (config) => {
-  return instance.post('/config/apprise-config', config)
+export const updateShoutrrrConfig = (config) => {
+  return instance.post('/config/shoutrrr', config)
 }
 
-export const testApprisePush = (testData) => {
-  return instance.post('/config/test-apprise', testData)
+export const testShoutrrrPush = () => {
+  return instance.post('/config/shoutrrr/test')
 }
 
 // MCP配置相关接口

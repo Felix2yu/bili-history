@@ -19,7 +19,7 @@ type EmailConfig struct {
 	Receiver   string `yaml:"receiver"`
 }
 
-type AppriseConfig struct {
+type ShoutrrrConfig struct {
 	Enabled bool     `yaml:"enabled"`
 	URLs    []string `yaml:"urls"`
 }
@@ -105,7 +105,7 @@ type Config struct {
 	HeatmapTemplate  string         `yaml:"heatmap_template"`
 	FieldsToRemove   []string       `yaml:"fields_to_remove"`
 	Email            EmailConfig    `yaml:"email"`
-	Apprise          AppriseConfig  `yaml:"apprise"`
+	Shoutrrr         ShoutrrrConfig `yaml:"shoutrrr"`
 	LogFolder        string         `yaml:"log_folder"`
 	Yutto            YuttoConfig    `yaml:"yutto"`
 	Server           ServerConfig   `yaml:"server"`
@@ -306,8 +306,8 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 			valueNode.Value = cfg.DedeUserIDCkMd5
 		case "email":
 			updateEmailNode(valueNode, &cfg.Email)
-		case "apprise":
-			updateAppriseNode(valueNode, &cfg.Apprise)
+		case "shoutrrr":
+			updateShoutrrrNode(valueNode, &cfg.Shoutrrr)
 		case "server":
 			updateServerNode(valueNode, &cfg.Server)
 		}
@@ -336,7 +336,7 @@ func updateEmailNode(node *yaml.Node, email *EmailConfig) {
 	}
 }
 
-func updateAppriseNode(node *yaml.Node, apprise *AppriseConfig) {
+func updateShoutrrrNode(node *yaml.Node, shoutrrr *ShoutrrrConfig) {
 	if node.Kind != yaml.MappingNode {
 		return
 	}
@@ -345,7 +345,7 @@ func updateAppriseNode(node *yaml.Node, apprise *AppriseConfig) {
 		val := node.Content[i+1]
 		switch key.Value {
 		case "enabled":
-			val.Value = fmt.Sprintf("%t", apprise.Enabled)
+			val.Value = fmt.Sprintf("%t", shoutrrr.Enabled)
 		}
 	}
 }

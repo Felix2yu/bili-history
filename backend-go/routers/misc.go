@@ -19,15 +19,16 @@ func RegisterConfigRoutes(r *gin.RouterGroup) {
 	{
 		configGroup.GET("/email", getEmailConfig)
 		configGroup.POST("/email", saveEmailConfig)
-		configGroup.GET("/apprise", getAppriseConfig)
-		configGroup.POST("/apprise", saveAppriseConfig)
+		configGroup.GET("/shoutrrr", getShoutrrrConfig)
+		configGroup.POST("/shoutrrr", saveShoutrrrConfig)
+		configGroup.POST("/shoutrrr/test", testShoutrrrConfig)
 		configGroup.GET("/server", getServerConfig)
 		configGroup.POST("/server", saveServerConfig)
 		// Python-compatible aliases
 		configGroup.GET("/email-config", getEmailConfig)
 		configGroup.POST("/email-config", saveEmailConfig)
-		configGroup.GET("/apprise-config", getAppriseConfig)
-		configGroup.POST("/apprise-config", saveAppriseConfig)
+		configGroup.GET("/apprise-config", getShoutrrrConfig)
+		configGroup.POST("/apprise-config", saveShoutrrrConfig)
 	}
 }
 
@@ -253,33 +254,61 @@ func saveEmailConfig(c *gin.Context) {
 	})
 }
 
-func getAppriseConfig(c *gin.Context) {
+func getShoutrrrConfig(c *gin.Context) {
 	cfg := config.GetConfig()
 	if cfg == nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("配置加载失败"))
 		return
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse(cfg.Apprise))
+	c.JSON(http.StatusOK, models.SuccessResponse(cfg.Shoutrrr))
 }
 
-func saveAppriseConfig(c *gin.Context) {
-	var appriseCfg config.AppriseConfig
-	if err := c.ShouldBindJSON(&appriseCfg); err != nil {
+func saveShoutrrrConfig(c *gin.Context) {
+	var shoutrrrCfg config.ShoutrrrConfig
+	if err := c.ShouldBindJSON(&shoutrrrCfg); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
 		return
 	}
 
 	cfg, _ := config.LoadConfig()
-	cfg.Apprise = appriseCfg
+	cfg.Shoutrrr = shoutrrrCfg
 	if err := config.SaveConfig(cfg); err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("保存失败: "+err.Error()))
 		return
 	}
 
+	services.ResetShoutrrrRouter()
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "Apprise配置已保存",
+		"message": "Shoutrrr配置已保存",
+	})
+}
+
+func testShoutrrrConfig(c *gin.Context) {
+	cfg := config.GetConfig()
+	if cfg == nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("配置加载失败"))
+		return
+	}
+
+	if !cfg.Shoutrrr.Enabled || len(cfg.Shoutrrr.URLs) == 0 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("Shoutrrr未启用或未配置URL"))
+		return
+	}
+
+	if err := services.SendTestShoutrrr(); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": "测试通知发送失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "测试通知已发送，请检查各推送渠道",
 	})
 }
 

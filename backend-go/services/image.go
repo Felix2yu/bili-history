@@ -368,6 +368,7 @@ func StartFullImageDownload(year *int, useSessdata bool) {
 		sem := make(chan struct{}, concurrency)
 		var wg sync.WaitGroup
 
+		var downloadCount int32
 		for _, task := range allTasks {
 			if isImageDownloadStopped() {
 				break
@@ -389,14 +390,24 @@ func StartFullImageDownload(year *int, useSessdata bool) {
 				s := GetImageDownloadStatus()
 				if err != nil {
 					s.FailedImages++
+					if s.FailedImages <= 5 {
+						utils.LogWarning("[图片下载] 下载失败: %s -> %v", t.URL, err)
+					}
 				} else {
 					s.DownloadedImages++
+				}
+				count := atomic.AddInt32(&downloadCount, 1)
+				if count%500 == 0 {
+					utils.LogWarning("[图片下载] 进度: %d/%d (成功:%d 失败:%d)", downloadCount, totalTasks, s.DownloadedImages, s.FailedImages)
 				}
 				setImageDownloadStatus(s)
 			}(task)
 		}
 
 		wg.Wait()
+
+		finalStatus := GetImageDownloadStatus()
+		utils.LogWarning("[图片下载] 下载完成: 成功=%d 失败=%d 总计=%d", finalStatus.DownloadedImages, finalStatus.FailedImages, totalTasks)
 	}()
 }
 

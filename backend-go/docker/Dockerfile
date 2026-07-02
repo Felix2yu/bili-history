@@ -16,9 +16,7 @@ COPY . .
 
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o bilibili-history-go ./cmd/main.go
 
-FROM alpine:3.24 AS ffmpeg
-
-RUN apk add --no-cache ffmpeg
+FROM jrottenberg/ffmpeg:8-alpine AS ffmpeg
 
 FROM alpine:3.24
 

@@ -64,16 +64,22 @@ func getImageDownloadStatus(c *gin.Context) {
 
 	// Count local files for covers and avatars
 	outputPath := utils.GetOutputPath("images")
-	coversTotal, coversDownloaded := countLocalImages(filepath.Join(outputPath, "covers"))
-	avatarsTotal, avatarsDownloaded := countLocalImages(filepath.Join(outputPath, "avatars"))
+	coversDir := filepath.Join(outputPath, "covers")
+	avatarsDir := filepath.Join(outputPath, "avatars")
+	coversTotal, coversDownloaded := countLocalImages(coversDir)
+	avatarsTotal, avatarsDownloaded := countLocalImages(avatarsDir)
+
+	utils.LogWarning("[图片状态] outputPath=%s covers=%d avatars=%d is_running=%d total_planned=%d",
+		outputPath, coversTotal, avatarsTotal, boolToInt(status.IsRunning), status.TotalImages)
 
 	c.JSON(http.StatusOK, models.SuccessResponse(gin.H{
 		"is_downloading": status.IsRunning,
+		"last_update":    status.StartTime,
 		"covers": gin.H{
 			"total":         coversTotal,
 			"downloaded":    coversDownloaded,
 			"failed":        0,
-			"total_planned": status.TotalImages / 2, // rough split covers vs avatars
+			"total_planned": status.TotalImages / 2,
 			"failed_urls":   []interface{}{},
 		},
 		"avatars": gin.H{
@@ -86,8 +92,16 @@ func getImageDownloadStatus(c *gin.Context) {
 	}))
 }
 
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
 func countLocalImages(dir string) (total int, downloaded int) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		utils.LogWarning("[图片计数] 目录不存在: %s", dir)
 		return 0, 0
 	}
 
@@ -102,6 +116,7 @@ func countLocalImages(dir string) (total int, downloaded int) {
 		return nil
 	})
 	if err != nil {
+		utils.LogWarning("[图片计数] Walk 失败 %s: %v", dir, err)
 		return 0, 0
 	}
 	return total, downloaded

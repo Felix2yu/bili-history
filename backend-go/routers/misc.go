@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"bilibili-history-go/biliapi"
 	"bilibili-history-go/config"
 	"bilibili-history-go/models"
 	"bilibili-history-go/scheduler"

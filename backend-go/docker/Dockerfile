@@ -4,6 +4,7 @@ ARG PROXY=""
 ENV all_proxy=${PROXY}
 ENV http_proxy=${PROXY}
 ENV https_proxy=${PROXY}
+ENV GOPROXY=https://goproxy.cn,https://proxy.golang.org,direct
 
 RUN apk add --no-cache gcc musl-dev git
 

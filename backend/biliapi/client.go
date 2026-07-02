@@ -37,19 +37,22 @@ type BiliResponse struct {
 }
 
 type HistoryEntry struct {
-	Title    string `json:"title"`
-	LongTitle string `json:"long_title"`
-	Cover    string `json:"cover"`
-	URI      string `json:"uri"`
-	History  HistoryInfo `json:"history"`
-	ViewAt   int64  `json:"view_at"`
-	Progress int    `json:"progress"`
-	Badge    string `json:"badge"`
-	ShowTitle string `json:"show_title"`
-	Icon    string `json:"icon"`
-	Business string `json:"business"`
-	Bvid     string `json:"bvid"`
-	DTotal   int    `json:"duration"`
+	Title      string `json:"title"`
+	LongTitle  string `json:"long_title"`
+	Cover      string `json:"cover"`
+	URI        string `json:"uri"`
+	History    HistoryInfo `json:"history"`
+	ViewAt     int64  `json:"view_at"`
+	Progress   int    `json:"progress"`
+	Badge      string `json:"badge"`
+	ShowTitle  string `json:"show_title"`
+	Icon       string `json:"icon"`
+	Business   string `json:"business"`
+	Bvid       string `json:"bvid"`
+	DTotal     int    `json:"duration"`
+	AuthorName string `json:"author_name"`
+	AuthorFace string `json:"author_face"`
+	AuthorMid  int64  `json:"author_mid"`
 }
 
 type HistoryInfo struct {

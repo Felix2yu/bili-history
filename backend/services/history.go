@@ -49,19 +49,22 @@ func setFetchStatus(status FetchStatus) {
 }
 
 type HistoryFileEntry struct {
-	Title    string          `json:"title"`
-	LongTitle string         `json:"long_title"`
-	Cover    string          `json:"cover"`
-	URI      string          `json:"uri"`
-	History  HistoryInfoData `json:"history"`
-	ViewAt   int64           `json:"view_at"`
-	Progress int             `json:"progress"`
-	Badge    string          `json:"badge"`
-	ShowTitle string         `json:"show_title"`
-	Icon     string          `json:"icon"`
-	Business string          `json:"business"`
-	Bvid     string          `json:"bvid"`
-	Duration int             `json:"duration"`
+	Title      string          `json:"title"`
+	LongTitle  string          `json:"long_title"`
+	Cover      string          `json:"cover"`
+	URI        string          `json:"uri"`
+	History    HistoryInfoData `json:"history"`
+	ViewAt     int64           `json:"view_at"`
+	Progress   int             `json:"progress"`
+	Badge      string          `json:"badge"`
+	ShowTitle  string          `json:"show_title"`
+	Icon       string          `json:"icon"`
+	Business   string          `json:"business"`
+	Bvid       string          `json:"bvid"`
+	Duration   int             `json:"duration"`
+	AuthorName string          `json:"author_name"`
+	AuthorFace string          `json:"author_face"`
+	AuthorMid  int64           `json:"author_mid"`
 }
 
 type HistoryInfoData struct {
@@ -160,14 +163,17 @@ func SaveHistoryToFile(entries []biliapi.HistoryEntry) (int, error) {
 				Business: entry.History.Business,
 				Dt:       entry.History.Dt,
 			},
-			ViewAt:   entry.ViewAt,
-			Progress: entry.Progress,
-			Badge:    entry.Badge,
-			ShowTitle: entry.ShowTitle,
-			Icon:     entry.Icon,
-			Business: entry.Business,
-			Bvid:     entry.Bvid,
-			Duration: entry.DTotal,
+			ViewAt:     entry.ViewAt,
+			Progress:   entry.Progress,
+			Badge:      entry.Badge,
+			ShowTitle:  entry.ShowTitle,
+			Icon:       entry.Icon,
+			Business:   entry.Business,
+			Bvid:       entry.Bvid,
+			Duration:   entry.DTotal,
+			AuthorName: entry.AuthorName,
+			AuthorFace: entry.AuthorFace,
+			AuthorMid:  entry.AuthorMid,
 		}
 
 		existingRecords := make(map[string]bool)
@@ -451,6 +457,9 @@ func ImportHistoryFiles(syncDeleted bool) (*ImportResult, error) {
 						Badge:      entry.Badge,
 						ShowTitle:  entry.ShowTitle,
 						Duration:   entry.Duration,
+						AuthorName: entry.AuthorName,
+						AuthorFace: entry.AuthorFace,
+						AuthorMid:  entry.AuthorMid,
 					}
 
 					inserted, err := database.InsertHistoryRecord(conn, tableName, &history)

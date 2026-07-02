@@ -177,8 +177,8 @@
                      :class="{ 'blur-sm': isPrivacyMode, 'cursor-pointer': !isBatchMode }"
                      @click="!isBatchMode ? handleVideoClick(record) : null">
                 </div>
-                <!-- 分区标签 - 单行显示 -->
-                <div class="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center space-x-1">
+                 <!-- 分区标签 - 单行显示 -->
+                <div v-if="record.tag_name || record.business !== 'archive'" class="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center space-x-1">
  <span class="inline-flex items-center rounded-md bg-[#f1f2f3] dark:bg-gray-700 px-2 py-1 text-xs text-[#71767d] dark:text-gray-300">
  {{ record.business === 'archive' ? record.tag_name : getBusinessType(record.business) }}
  </span>

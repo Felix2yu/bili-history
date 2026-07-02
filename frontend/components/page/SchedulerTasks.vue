@@ -629,12 +629,22 @@ const deleteTask = async (taskId, parentTaskId = null) => {
 // SSR: 初始数据在服务端获取
 const { data: initialData } = await useAsyncData('scheduler-initial', async () => {
   try {
-    const response = await getAllSchedulerTasks()
-    return { tasks: response.data || [] }
+    const response = await getAllSchedulerTasks({
+      include_subtasks: true,
+      detail_level: 'full'
+    })
+    if (response.data && response.data.status === 'success') {
+      return {
+        tasks: (response.data.tasks || []).map(task => ({
+          ...task,
+          isExpanded: true
+        }))
+      }
+    }
   } catch (error) {
     console.error('SSR 获取计划任务失败:', error)
-    return { tasks: [] }
   }
+  return { tasks: [] }
 })
 
 // 从 SSR 数据初始化组件状态

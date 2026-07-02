@@ -238,7 +238,7 @@
 
                 <div class="relative pb-[56.25%] overflow-hidden cursor-pointer group" @click="selectMode ? toggleSelect(video.bvid) : openVideo(video)">
                   <img
-                    :data-src="getProxyImageUrl(video.pic)"
+                    :data-src="normalizeImageUrl(video.pic)"
                     :alt="video.title"
                     class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 bg-gray-200 dark:bg-gray-700"
                     loading="lazy"
@@ -258,7 +258,7 @@
                   </div>
                   <div class="flex items-center space-x-1">
                     <img
-                      :src="getProxyImageUrl(video.owner_face)"
+                      :src="normalizeImageUrl(video.owner_face)"
                       :alt="video.owner_name"
                       class="w-3.5 h-3.5 rounded-full object-cover"
                       onerror="this.src='https://static.hdslb.com/images/member/noface.gif'"
@@ -338,7 +338,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useAsyncData } from '#imports'
 import { getWatchLaterList, getWatchLaterLocal, removeFromWatchLater, batchRemoveFromWatchLater } from '~/utils/api'
-import { getProxyImageUrl } from '~/utils/imageUrl.js'
+import { normalizeImageUrl } from '~/utils/imageUrl.js'
 
 // 图片懒加载
 let imageObserver = null

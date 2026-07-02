@@ -15,7 +15,7 @@
         <div class="md:w-[30%] flex-shrink-0">
           <div class="relative w-full h-28 md:h-32 rounded-lg overflow-hidden">
             <img
-              :src="getProxyImageUrl(video.cover || video.covers?.[0])"
+              :src="normalizeImageUrl(video.cover || video.covers?.[0])"
               class="w-full h-full object-cover"
               :class="{ 'blur-md': isPrivacyMode }"
               alt="视频封面"
@@ -64,7 +64,7 @@
                  @click.stop>
               <div class="flex-shrink-0">
                 <img
-                  :src="getProxyImageUrl(video.author_face)"
+                  :src="normalizeImageUrl(video.author_face)"
                   alt="author"
                   class="h-7 w-7 cursor-pointer rounded-full transition-all duration-300 hover:scale-110"
                   :class="{ 'blur-md': isPrivacyMode }"
@@ -126,7 +126,7 @@ import {
   checkVideoDownload,
 } from '~/utils/api'
 import { openInBrowser } from '~/utils/openUrl.js'
-import { getProxyImageUrl } from '~/utils/imageUrl.js'
+import { normalizeImageUrl } from '~/utils/imageUrl.js'
 
 const props = defineProps({
   modelValue: {

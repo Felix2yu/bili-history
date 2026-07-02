@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -238,7 +239,81 @@ func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, 
 		return fmt.Errorf("下载失败: %w", err)
 	}
 
+	// Remux to target container based on codec:
+	// av1(13) → mkv, hevc(12) → mov, avc(7) → mp4
+	codecid := extractCodecid(streamID)
+	targetExt := containerForCodec(codecid)
+	if targetExt != "" {
+		downloadedFile := findDownloadedFile(outputDir, data.Title, targetExt)
+		if downloadedFile != "" {
+			onProgress(fmt.Sprintf("正在转封装为 %s ...", targetExt))
+			if err := remuxFile(downloadedFile, targetExt); err != nil {
+				onProgress(fmt.Sprintf("转封装失败: %v，保留原文件", err))
+			}
+		}
+	}
+
 	onProgress("下载完成")
+	return nil
+}
+
+func extractCodecid(streamID string) int {
+	parts := strings.Split(streamID, "-")
+	if len(parts) == 2 {
+		c, _ := strconv.Atoi(parts[1])
+		return c
+	}
+	return 0
+}
+
+// containerForCodec returns the target container extension for a codec.
+// Empty string means no remux needed (already correct).
+func containerForCodec(codecid int) string {
+	switch codecid {
+	case 13: // AV1 → mkv
+		return "mkv"
+	case 12: // HEVC → mov
+		return "mov"
+	case 7: // AVC → mp4 (lux already outputs mp4)
+		return ""
+	default:
+		return ""
+	}
+}
+
+func findDownloadedFile(outputDir, title, targetExt string) string {
+	entries, err := os.ReadDir(outputDir)
+	if err != nil {
+		return ""
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		ext := filepath.Ext(name)
+		base := strings.TrimSuffix(name, ext)
+		if strings.Contains(base, title) || strings.Contains(title, base) {
+			// Skip if already target format
+			if ext == "."+targetExt {
+				return ""
+			}
+			if ext == ".mp4" || ext == ".webm" || ext == ".flv" {
+				return filepath.Join(outputDir, name)
+			}
+		}
+	}
+	return ""
+}
+
+func remuxFile(inputPath, targetExt string) error {
+	outputPath := strings.TrimSuffix(inputPath, filepath.Ext(inputPath)) + "." + targetExt
+	cmd := exec.Command("ffmpeg", "-i", inputPath, "-c", "copy", "-y", outputPath)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("ffmpeg remux failed: %s: %w", string(output), err)
+	}
+	os.Remove(inputPath)
 	return nil
 }
 

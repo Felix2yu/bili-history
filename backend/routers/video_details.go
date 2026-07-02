@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -28,6 +29,7 @@ func RegisterVideoDetailsRoutes(r *gin.RouterGroup) {
 		videoDetails.POST("/stop", stopVideoDetailFetch)
 		videoDetails.POST("/reset", resetVideoDetailProgress)
 		videoDetails.GET("/progress", getVideoDetailProgress)
+		videoDetails.POST("/sync_tag_names", syncHistoryTagNames)
 	}
 }
 
@@ -309,4 +311,16 @@ func resetVideoDetailProgress(c *gin.Context) {
 func getVideoDetailProgress(c *gin.Context) {
 	progress := services.GetVideoDetailProgress()
 	c.JSON(http.StatusOK, models.SuccessResponse(progress))
+}
+
+func syncHistoryTagNames(c *gin.Context) {
+	updated, err := services.SyncHistoryTagNames()
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, models.SuccessResponse(gin.H{
+		"updated": updated,
+		"message": fmt.Sprintf("已更新 %d 条历史记录的分区标签", updated),
+	}))
 }

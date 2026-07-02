@@ -88,6 +88,12 @@
         <div v-else v-for="(cover, index) in record.covers" :key="index" class="mb-1">
           <img :src="normalizeImageUrl(cover)" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
         </div>
+        <!-- Tag badge on cover -->
+        <div v-if="record.tag_name"
+             class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]"
+             :class="isBatchMode ? 'ml-6' : ''">
+          {{ record.tag_name }}
+        </div>
         <!-- Duration & progress -->
         <div v-if="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live'">
           <div class="absolute bottom-1 right-1 rounded-lg bg-black/60 backdrop-blur-sm px-1.5 py-0.5 text-[10px] font-medium text-white">
@@ -123,7 +129,6 @@
         </div>
 
         <div class="flex items-center gap-2 mt-1">
-          <span v-if="record.business !== 'pgc'" class="glass-tag text-[10px]">{{ record.tag_name }}</span>
           <!-- Remark -->
           <div class="flex-1 relative" @click.stop>
             <div class="flex items-center gap-1">

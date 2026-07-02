@@ -119,6 +119,13 @@
                   </div>
                 </div>
 
+                <!-- 分区标签 - 封面左上角 -->
+                <div v-if="record.tag_name && record.business === 'archive'"
+                     class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]"
+                     :class="isBatchMode ? 'ml-6' : ''">
+                  {{ record.tag_name }}
+                </div>
+
                 <!-- 按钮组 -->
                 <div v-if="!isBatchMode"
                      class="absolute right-2 top-2 z-20 hidden group-hover:flex flex-row items-center gap-1.5">
@@ -177,14 +184,11 @@
                      :class="{ 'blur-sm': isPrivacyMode, 'cursor-pointer': !isBatchMode }"
                      @click="!isBatchMode ? handleVideoClick(record) : null">
                 </div>
-                 <!-- 分区标签 - 单行显示 -->
-                <div v-if="record.tag_name || record.business !== 'archive'" class="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center space-x-1">
+                 <!-- 业务类型标签 - 非视频类型显示 -->
+                <div v-if="record.business !== 'archive'" class="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center space-x-1">
  <span class="inline-flex items-center rounded-md bg-[#f1f2f3] dark:bg-gray-700 px-2 py-1 text-xs text-[#71767d] dark:text-gray-300">
- {{ record.business === 'archive' ? record.tag_name : getBusinessType(record.business) }}
+ {{ getBusinessType(record.business) }}
  </span>
-                  <span v-if="record.business === 'archive' && record.name" class="text-gray-400">·</span>
-                  <span v-if="record.business === 'archive' && record.name" class="text-[#71767d]">{{ record.name
-                    }}</span>
                 </div>
                 <!-- UP主和时间信息 - 单行显示 -->
                 <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">

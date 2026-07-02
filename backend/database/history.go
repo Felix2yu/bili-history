@@ -663,6 +663,46 @@ func GetVideoByCID(cid int64, useLocalImages, useSessdata bool) (map[string]inte
 	return processRecord(record, useLocalImages, useSessdata), nil
 }
 
+// UpdateHistoryTagNames 从 video_base_info.tname 回填历史记录的 tag_name
+func UpdateHistoryTagNames() (int64, error) {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == 0 {
+		return 0, fmt.Errorf("database not initialized")
+	}
+
+	years, err := db.GetAvailableYears()
+	if err != nil {
+		return 0, err
+	}
+
+	var totalUpdated int64
+	for _, year := range years {
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			continue
+		}
+
+		query := fmt.Sprintf(`
+			UPDATE %s SET tag_name = (
+				SELECT tname FROM video_base_info WHERE video_base_info.bvid = %s.bvid
+			)
+			WHERE (tag_name IS NULL OR tag_name = '')
+			AND bvid IN (SELECT bvid FROM video_base_info WHERE tname != '' AND tname IS NOT NULL)
+		`, tableName, tableName)
+
+		result, err := conn.Exec(query)
+		if err != nil {
+			continue
+		}
+		affected, _ := result.RowsAffected()
+		totalUpdated += affected
+	}
+
+	return totalUpdated, nil
+}
+
 func GetDailyStats(date string, year string) (int, int, error) {
 	db := GetSQLiteDB()
 	conn := db.GetDB()

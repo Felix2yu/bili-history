@@ -154,6 +154,11 @@ func BatchFetchVideoDetails(bvids []string) (map[string]interface{}, error) {
 	}, nil
 }
 
+// SyncHistoryTagNames 从 video_base_info.tname 回填历史记录的 tag_name
+func SyncHistoryTagNames() (int64, error) {
+	return database.UpdateHistoryTagNames()
+}
+
 // BatchFetchFromHistory 从历史记录批量获取视频详情
 func BatchFetchFromHistory(skipExisting bool) (map[string]interface{}, error) {
 	status := GetVideoDetailProgress()
@@ -235,6 +240,12 @@ func processBatchFetch(bvids []string, sessdata string) {
 			progress.IsComplete = true
 			progress.Status = "completed"
 		}
+		// Sync tag_name in history records from video_base_info.tname
+		updated, _ := SyncHistoryTagNames()
+		if updated > 0 {
+			utils.LogInfo("已更新 %d 条历史记录的分区标签", updated)
+		}
+
 		setVideoDetailProgress(progress)
 	}()
 

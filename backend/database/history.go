@@ -557,10 +557,16 @@ func UpdateRemark(bvid string, viewAt int64, remark string) (map[string]interfac
 }
 
 func InsertHistoryRecord(conn *sql.DB, tableName string, record *models.HistoryRecord) (bool, error) {
-	existsQuery := fmt.Sprintf("SELECT id FROM %s WHERE bvid = ? AND view_at = ?", tableName)
+	existsQuery := fmt.Sprintf("SELECT id, author_name FROM %s WHERE bvid = ? AND view_at = ?", tableName)
 	var existingID int64
-	err := conn.QueryRow(existsQuery, record.Bvid, record.ViewAt).Scan(&existingID)
+	var existingAuthor string
+	err := conn.QueryRow(existsQuery, record.Bvid, record.ViewAt).Scan(&existingID, &existingAuthor)
 	if err == nil {
+		// Record exists — update author info if it was empty
+		if existingAuthor == "" && record.AuthorName != "" {
+			updateQuery := fmt.Sprintf("UPDATE %s SET author_name = ?, author_face = ?, author_mid = ? WHERE id = ?", tableName)
+			_, _ = conn.Exec(updateQuery, record.AuthorName, record.AuthorFace, record.AuthorMid, existingID)
+		}
 		return false, nil
 	}
 	if err != sql.ErrNoRows {

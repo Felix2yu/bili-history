@@ -83,6 +83,26 @@ func SendTestShoutrrr() error {
 	return SendShoutrrrNotification(title, message)
 }
 
+func SendDailyReport(stats map[string]interface{}) error {
+	title := "📊 Bilibili历史记录每日报告"
+
+	var message string
+	if totalRecords, ok := stats["total_records"]; ok {
+		message += fmt.Sprintf("总记录数：%v\n", totalRecords)
+	}
+	if todayRecords, ok := stats["today_records"]; ok {
+		message += fmt.Sprintf("今日观看：%v 条\n", todayRecords)
+	}
+	if totalWatchingTime, ok := stats["total_watching_time"]; ok {
+		message += fmt.Sprintf("总观看时长：%v\n", totalWatchingTime)
+	}
+	if mostActiveDay, ok := stats["most_active_day"]; ok {
+		message += fmt.Sprintf("最活跃日期：%v\n", mostActiveDay)
+	}
+
+	return SendShoutrrrNotification(title, message)
+}
+
 func ResetShoutrrrRouter() {
 	shoutrrrRouter = nil
 }

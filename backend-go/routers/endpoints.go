@@ -363,16 +363,6 @@ func init() {
 	})
 
 	// ========== 系统配置 ==========
-	RegisterEndpointMeta("GET", "/config/email", EndpointMeta{
-		Summary:     "获取邮件配置",
-		Tags:        tagConfig,
-		OperationID: "get_email_config",
-	})
-	RegisterEndpointMeta("POST", "/config/email", EndpointMeta{
-		Summary:     "保存邮件配置",
-		Tags:        tagConfig,
-		OperationID: "save_email_config",
-	})
 	RegisterEndpointMeta("GET", "/config/shoutrrr", EndpointMeta{
 		Summary:     "获取Shoutrrr通知配置",
 		Tags:        tagConfig,
@@ -399,16 +389,6 @@ func init() {
 		OperationID: "save_server_config",
 	})
 	// Python 兼容别名
-	RegisterEndpointMeta("GET", "/config/email-config", EndpointMeta{
-		Summary:     "获取邮件配置（Python兼容）",
-		Tags:        tagConfig,
-		OperationID: "get_email_config_alias",
-	})
-	RegisterEndpointMeta("POST", "/config/email-config", EndpointMeta{
-		Summary:     "保存邮件配置（Python兼容）",
-		Tags:        tagConfig,
-		OperationID: "save_email_config_alias",
-	})
 	RegisterEndpointMeta("GET", "/config/apprise-config", EndpointMeta{
 		Summary:     "获取Shoutrrr配置（Python兼容别名）",
 		Tags:        tagConfig,
@@ -552,9 +532,9 @@ func init() {
 
 	// ========== 日志管理 ==========
 	RegisterEndpointMeta("POST", "/log/send", EndpointMeta{
-		Summary:     "发送日志邮件",
+		Summary:     "发送每日报告（Shoutrrr）",
 		Tags:        tagLog,
-		OperationID: "send_log_email",
+		OperationID: "send_daily_report",
 	})
 	RegisterEndpointMeta("GET", "/log/list", EndpointMeta{
 		Summary:     "获取日志列表",
@@ -562,9 +542,9 @@ func init() {
 		OperationID: "get_log_list",
 	})
 	RegisterEndpointMeta("POST", "/log/send-email", EndpointMeta{
-		Summary:     "发送日志邮件（Python兼容）",
+		Summary:     "发送每日报告（Python兼容）",
 		Tags:        tagLog,
-		OperationID: "send_log_email_alias",
+		OperationID: "send_daily_report_alias",
 	})
 
 	// ========== 数据抓取 ==========

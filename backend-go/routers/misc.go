@@ -17,16 +17,12 @@ import (
 func RegisterConfigRoutes(r *gin.RouterGroup) {
 	configGroup := r.Group("/config")
 	{
-		configGroup.GET("/email", getEmailConfig)
-		configGroup.POST("/email", saveEmailConfig)
 		configGroup.GET("/shoutrrr", getShoutrrrConfig)
 		configGroup.POST("/shoutrrr", saveShoutrrrConfig)
 		configGroup.POST("/shoutrrr/test", testShoutrrrConfig)
 		configGroup.GET("/server", getServerConfig)
 		configGroup.POST("/server", saveServerConfig)
 		// Python-compatible aliases
-		configGroup.GET("/email-config", getEmailConfig)
-		configGroup.POST("/email-config", saveEmailConfig)
 		configGroup.GET("/apprise-config", getShoutrrrConfig)
 		configGroup.POST("/apprise-config", saveShoutrrrConfig)
 	}
@@ -100,10 +96,10 @@ func RegisterCleanRoutes(r *gin.RouterGroup) {
 func RegisterLogRoutes(r *gin.RouterGroup) {
 	log := r.Group("/log")
 	{
-		log.POST("/send", sendLogEmail)
+		log.POST("/send", sendDailyReport)
 		log.GET("/list", getLogList)
 		// Python-compatible alias
-		log.POST("/send-email", sendLogEmail)
+		log.POST("/send-email", sendDailyReport)
 	}
 }
 
@@ -222,36 +218,6 @@ func RegisterTitleAnalyticsRoutes(r *gin.RouterGroup) {
 		title.GET("/length", getTitleLengthAnalysis)
 		title.GET("/trend", getTitleTrend)
 	}
-}
-
-func getEmailConfig(c *gin.Context) {
-	cfg := config.GetConfig()
-	if cfg == nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("配置加载失败"))
-		return
-	}
-
-	c.JSON(http.StatusOK, models.SuccessResponse(cfg.Email))
-}
-
-func saveEmailConfig(c *gin.Context) {
-	var emailCfg config.EmailConfig
-	if err := c.ShouldBindJSON(&emailCfg); err != nil {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
-		return
-	}
-
-	cfg, _ := config.LoadConfig()
-	cfg.Email = emailCfg
-	if err := config.SaveConfig(cfg); err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("保存失败: "+err.Error()))
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "邮件配置已保存",
-	})
 }
 
 func getShoutrrrConfig(c *gin.Context) {
@@ -673,16 +639,21 @@ func getCleanStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(status))
 }
 
-func sendLogEmail(c *gin.Context) {
-	err := services.SendTestEmail()
+func sendDailyReport(c *gin.Context) {
+	stats := make(map[string]interface{})
+	if err := c.ShouldBindJSON(&stats); err != nil {
+		stats = make(map[string]interface{})
+	}
+
+	err := services.SendDailyReport(stats)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("发送邮件失败: "+err.Error()))
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("发送每日报告失败: "+err.Error()))
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "测试邮件已发送",
+		"message": "每日报告已发送",
 	})
 }
 

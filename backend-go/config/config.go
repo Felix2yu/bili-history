@@ -11,14 +11,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type EmailConfig struct {
-	SMTPServer string `yaml:"smtp_server"`
-	SMTPPort   int    `yaml:"smtp_port"`
-	Sender     string `yaml:"sender"`
-	Password   string `yaml:"password"`
-	Receiver   string `yaml:"receiver"`
-}
-
 type ShoutrrrConfig struct {
 	Enabled bool     `yaml:"enabled"`
 	URLs    []string `yaml:"urls"`
@@ -104,7 +96,6 @@ type Config struct {
 	DailyCountFolder string         `yaml:"daily_count_folder"`
 	HeatmapTemplate  string         `yaml:"heatmap_template"`
 	FieldsToRemove   []string       `yaml:"fields_to_remove"`
-	Email            EmailConfig    `yaml:"email"`
 	Shoutrrr         ShoutrrrConfig `yaml:"shoutrrr"`
 	LogFolder        string         `yaml:"log_folder"`
 	Yutto            YuttoConfig    `yaml:"yutto"`
@@ -304,34 +295,10 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 			valueNode.Value = cfg.DedeUserID
 		case "DedeUserID__ckMd5":
 			valueNode.Value = cfg.DedeUserIDCkMd5
-		case "email":
-			updateEmailNode(valueNode, &cfg.Email)
 		case "shoutrrr":
 			updateShoutrrrNode(valueNode, &cfg.Shoutrrr)
 		case "server":
 			updateServerNode(valueNode, &cfg.Server)
-		}
-	}
-}
-
-func updateEmailNode(node *yaml.Node, email *EmailConfig) {
-	if node.Kind != yaml.MappingNode {
-		return
-	}
-	for i := 0; i < len(node.Content); i += 2 {
-		key := node.Content[i]
-		val := node.Content[i+1]
-		switch key.Value {
-		case "smtp_server":
-			val.Value = email.SMTPServer
-		case "smtp_port":
-			val.Value = fmt.Sprintf("%d", email.SMTPPort)
-		case "sender":
-			val.Value = email.Sender
-		case "password":
-			val.Value = email.Password
-		case "receiver":
-			val.Value = email.Receiver
 		}
 	}
 }

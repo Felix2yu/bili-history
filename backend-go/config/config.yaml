@@ -33,14 +33,6 @@ fields_to_remove:
   - is_finish     # 是否完成
   - live_status   # 直播状态
 
-# 邮件配置
-email:
-  smtp_server: smtp.qq.com
-  smtp_port: 587
-  sender: "xxxx@qq.com"
-  password: "xxxx"  # QQ邮箱授权码
-  receiver: "xxxx@qq.com"
-
 # Shoutrrr通知配置（支持多种推送渠道：Bark、Telegram、Discord、邮件、Webhook等）
 # URL格式参考：https://containrrr.dev/shoutrrr/services/overview/
 shoutrrr:

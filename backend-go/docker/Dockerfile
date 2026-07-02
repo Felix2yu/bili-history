@@ -32,11 +32,13 @@ ENV DEDE_USER_ID=""
 ENV DEDE_USER_ID_CKMD5=""
 ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=8899
+ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64
 
 RUN apk add --no-cache tzdata ca-certificates tini
 
-COPY --from=ffmpeg /usr/bin/ffmpeg /usr/bin/ffmpeg
-COPY --from=ffmpeg /usr/bin/ffprobe /usr/bin/ffprobe
+COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
+COPY --from=ffmpeg /usr/local/bin/ffprobe /usr/local/bin/ffprobe
+COPY --from=ffmpeg /usr/local/lib/ /usr/local/lib/
 
 WORKDIR /app
 

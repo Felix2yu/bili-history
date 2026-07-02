@@ -93,6 +93,7 @@ func (s *SQLiteDB) GetAvailableYears() ([]int, error) {
 	defer rows.Close()
 
 	var years []int
+	seen := map[int]bool{}
 	for rows.Next() {
 		var tableName string
 		if err := rows.Scan(&tableName); err != nil {
@@ -104,7 +105,10 @@ func (s *SQLiteDB) GetAvailableYears() ([]int, error) {
 		if err != nil {
 			continue
 		}
-		years = append(years, year)
+		if !seen[year] {
+			seen[year] = true
+			years = append(years, year)
+		}
 	}
 
 	if len(years) == 0 {

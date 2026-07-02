@@ -667,7 +667,7 @@ func GetVideoByCID(cid int64, useLocalImages, useSessdata bool) (map[string]inte
 func UpdateHistoryTagNames() (int64, error) {
 	db := GetSQLiteDB()
 	conn := db.GetDB()
-	if conn == 0 {
+	if conn == nil {
 		return 0, fmt.Errorf("database not initialized")
 	}
 

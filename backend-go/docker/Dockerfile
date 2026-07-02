@@ -36,7 +36,8 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64
 
 RUN apk add --no-cache tzdata ca-certificates tini
 
-COPY --from=ffmpeg /usr/local/ /usr/local/
+COPY --from=ffmpeg /bin/ffmpeg /bin/ffmpeg
+COPY --from=ffmpeg /bin/ffprobe /bin/ffprobe
 
 WORKDIR /app
 

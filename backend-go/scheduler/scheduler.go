@@ -254,28 +254,29 @@ func buildCronExpr(t ScheduleTask) string {
 
 func (s *Scheduler) initDefaultTasks() {
 	s.mu.Lock()
-	// Only seed if there are no tasks at all (fresh DB / first run).
-	if len(s.tasks) > 0 {
-		s.mu.Unlock()
-		return
-	}
+	taskCount := len(s.tasks)
 	s.mu.Unlock()
 
-	// Seed the 8 default tasks from the Python scheduler_config.yaml.
-	// These mirror the Python defaults so users upgrading see the same tasks.
 	defaults := []database.MainTask{
 		{TaskID: "fetch_popular_videos", Name: "获取热门视频", Endpoint: "/bilibili/popular", Method: "GET", ScheduleType: "interval", IntervalValue: 10, IntervalUnit: "minutes", Enabled: 0, TaskType: "main"},
 		{TaskID: "sessdata_health_check", Name: "SESSDATA 健康检查", Endpoint: "/login/check-and-notify", Method: "GET", ScheduleType: "interval", IntervalValue: 10, IntervalUnit: "minutes", Enabled: 0, TaskType: "main"},
 		{TaskID: "sync_likes", Name: "同步点赞列表", Endpoint: "/like/list", Method: "GET", ScheduleType: "interval", IntervalValue: 1, IntervalUnit: "hours", Enabled: 0, TaskType: "main"},
 		{TaskID: "fetch_history", Name: "获取B站历史记录", Endpoint: "/fetch/bili-history", Method: "GET", ScheduleType: "daily", ScheduleTime: "00:00", Enabled: 0, TaskType: "main"},
-		// The four chain tasks below depend on fetch_history and form the daily pipeline.
 		{TaskID: "import_data", Name: "导入数据", Endpoint: "/importSqlite/import_data_sqlite", Method: "POST", ScheduleType: "chain", DependsOn: "fetch_history", Enabled: 0, TaskType: "main"},
 		{TaskID: "analyze_data", Name: "分析数据", Endpoint: "/analysis/analyze", Method: "POST", ScheduleType: "chain", DependsOn: "import_data", Enabled: 0, TaskType: "main"},
 		{TaskID: "generate_heatmap", Name: "生成热力图", Endpoint: "/heatmap/generate_heatmap", Method: "POST", ScheduleType: "chain", DependsOn: "analyze_data", Enabled: 0, TaskType: "main"},
 		{TaskID: "send_daily_report", Name: "发送每日报告", Endpoint: "/log/send", Method: "POST", ScheduleType: "chain", DependsOn: "generate_heatmap", Enabled: 0, TaskType: "main"},
 	}
 
+	addedCount := 0
 	for _, d := range defaults {
+		s.mu.Lock()
+		if _, exists := s.tasks[d.TaskID]; exists {
+			s.mu.Unlock()
+			continue
+		}
+		s.mu.Unlock()
+
 		if err := database.UpsertMainTask(d); err != nil {
 			utils.LogError("Failed to seed default task %s: %v", d.TaskID, err)
 			continue
@@ -283,8 +284,14 @@ func (s *Scheduler) initDefaultTasks() {
 		s.mu.Lock()
 		s.tasks[d.TaskID] = convertTask(d)
 		s.mu.Unlock()
+		addedCount++
 	}
-	utils.LogSuccess("调度器已种子化 %d 个默认任务", len(defaults))
+
+	if addedCount > 0 {
+		utils.LogSuccess("调度器已添加 %d 个默认任务（数据库原有 %d 个任务）", addedCount, taskCount)
+	} else {
+		utils.LogInfo("调度器默认任务已全部存在，无需添加（数据库共 %d 个任务）", taskCount)
+	}
 }
 
 func (s *Scheduler) Start() {

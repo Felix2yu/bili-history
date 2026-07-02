@@ -1,6 +1,6 @@
 module bilibili-history-go
 
-go 1.25.1
+go 1.26.0
 
 require (
 	github.com/containrrr/shoutrrr v0.8.0

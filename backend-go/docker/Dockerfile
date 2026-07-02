@@ -1,4 +1,4 @@
-FROM golang:1.25-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 ARG PROXY=""
 ENV all_proxy=${PROXY}
@@ -16,9 +16,11 @@ COPY . .
 
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o bilibili-history-go ./cmd/main.go
 
-FROM jrottenberg/ffmpeg:7-alpine AS ffmpeg
+FROM alpine:3.24 AS ffmpeg
 
-FROM alpine:3.20
+RUN apk add --no-cache ffmpeg
+
+FROM alpine:3.24
 
 ARG PROXY=""
 ENV all_proxy=${PROXY}
@@ -35,8 +37,8 @@ ENV SERVER_PORT=8899
 
 RUN apk add --no-cache tzdata ca-certificates tini
 
-COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
-COPY --from=ffmpeg /usr/local/bin/ffprobe /usr/local/bin/ffprobe
+COPY --from=ffmpeg /usr/bin/ffmpeg /usr/bin/ffmpeg
+COPY --from=ffmpeg /usr/bin/ffprobe /usr/bin/ffprobe
 
 WORKDIR /app
 

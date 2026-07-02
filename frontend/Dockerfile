@@ -13,7 +13,7 @@ ENV NUXT_BACKEND_URL=${NUXT_BACKEND_URL_ARG}
 ENV NUXT_PUBLIC_DEFAULT_BACKEND_URL=/api
 RUN bun run build
 
-FROM node:20-alpine AS release
+FROM node:26-alpine AS release
 WORKDIR /app
 COPY --from=build /app/.output ./.output
 

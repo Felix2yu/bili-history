@@ -31,7 +31,7 @@ ENV DEDE_USER_ID_CKMD5=""
 ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=8899
 
-RUN apk add --no-cache tzdata ca-certificates tini
+RUN apk add --no-cache tzdata ca-certificates tini ffmpeg
 
 WORKDIR /app
 

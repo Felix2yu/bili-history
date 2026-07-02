@@ -21,6 +21,32 @@
               </button>
 
               <button
+                @click="activeTab = 'video-download'"
+                class="py-2 px-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200 whitespace-nowrap"
+                :class="activeTab === 'video-download'
+                  ? 'bg-accent/10 text-accent'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300'"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>视频下载</span>
+              </button>
+
+              <button
+                @click="activeTab = 'downloaded'"
+                class="py-2 px-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200 whitespace-nowrap"
+                :class="activeTab === 'downloaded'
+                  ? 'bg-accent/10 text-accent'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300'"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>已下载</span>
+              </button>
+
+              <button
                 @click="activeTab = 'images'"
                 class="py-2 px-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200 whitespace-nowrap"
                 :class="activeTab === 'images'
@@ -55,6 +81,16 @@
               <DynamicDownloader />
             </div>
 
+            <!-- 视频下载 -->
+            <div v-if="activeTab === 'video-download'" class="animate-fadeIn">
+              <VideoDownloader />
+            </div>
+
+            <!-- 已下载 -->
+            <div v-if="activeTab === 'downloaded'" class="animate-fadeIn">
+              <Downloads />
+            </div>
+
             <!-- 图片管理 -->
             <div v-if="activeTab === 'images'" class="animate-fadeIn">
               <Images />
@@ -77,6 +113,8 @@ import { useRoute } from 'vue-router'
 import Images from './Images.vue'
 import VideoDetailsManager from './VideoDetailsManager.vue'
 import DynamicDownloader from './DynamicDownloader.vue'
+import VideoDownloader from './VideoDownloader.vue'
+import Downloads from './Downloads.vue'
 
 const route = useRoute()
 
@@ -87,7 +125,7 @@ const activeTab = ref('dynamic')
 watch(
   () => route.query.tab,
   (tab) => {
-    if (tab && ['images', 'dynamic', 'details'].includes(tab)) {
+    if (tab && ['images', 'dynamic', 'details', 'video-download', 'downloaded'].includes(tab)) {
       activeTab.value = tab
     }
   },
@@ -97,7 +135,7 @@ watch(
 // 组件挂载时根据URL初始化标签
 onMounted(() => {
   const { tab } = route.query
-  if (tab && ['images', 'dynamic', 'details'].includes(tab)) {
+  if (tab && ['images', 'dynamic', 'details', 'video-download', 'downloaded'].includes(tab)) {
     activeTab.value = tab
   }
 })

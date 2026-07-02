@@ -54,6 +54,7 @@ func init() {
 	tagImage := []string{"图片管理"}
 	tagTitle := []string{"标题分析"}
 	tagInteraction := []string{"互动记录"}
+	tagDownload := []string{"视频下载"}
 
 	// ========== 历史记录 ==========
 	RegisterEndpointMeta("GET", "/history/available-years", EndpointMeta{
@@ -718,5 +719,67 @@ func init() {
 		Summary:     "同步互动记录",
 		Tags:        tagInteraction,
 		OperationID: "sync_interaction_records",
+	})
+
+	// ========== 视频下载 ==========
+	RegisterEndpointMeta("GET", "/download/video_info", EndpointMeta{
+		Summary:     "提取视频信息",
+		Tags:        tagDownload,
+		OperationID: "get_video_info",
+	})
+	RegisterEndpointMeta("GET", "/download/user_videos", EndpointMeta{
+		Summary:     "获取用户投稿视频列表",
+		Tags:        tagDownload,
+		OperationID: "get_user_videos",
+	})
+	RegisterEndpointMeta("GET", "/download/check_video_download", EndpointMeta{
+		Summary:     "检查视频是否已下载",
+		Tags:        tagDownload,
+		OperationID: "check_video_download",
+	})
+	RegisterEndpointMeta("GET", "/download/list_downloaded_videos", EndpointMeta{
+		Summary:     "获取已下载视频列表",
+		Tags:        tagDownload,
+		OperationID: "list_downloaded_videos",
+	})
+	RegisterEndpointMeta("DELETE", "/download/delete_downloaded_video", EndpointMeta{
+		Summary:     "删除已下载视频",
+		Tags:        tagDownload,
+		OperationID: "delete_downloaded_video",
+	})
+	RegisterEndpointMeta("GET", "/download/stream_video", EndpointMeta{
+		Summary:     "视频流播放",
+		Tags:        tagDownload,
+		OperationID: "stream_video",
+	})
+	RegisterEndpointMeta("GET", "/download/check_ffmpeg", EndpointMeta{
+		Summary:     "检查FFmpeg安装状态",
+		Tags:        tagDownload,
+		OperationID: "check_ffmpeg",
+	})
+	RegisterEndpointMeta("POST", "/download/download_video", EndpointMeta{
+		Summary:     "下载单个视频（SSE流）",
+		Tags:        tagDownload,
+		OperationID: "download_video_sse",
+	})
+	RegisterEndpointMeta("POST", "/download/batch_download", EndpointMeta{
+		Summary:     "批量下载视频（SSE流）",
+		Tags:        tagDownload,
+		OperationID: "batch_download_sse",
+	})
+	RegisterEndpointMeta("POST", "/download/download_user_videos", EndpointMeta{
+		Summary:     "下载用户全部视频（SSE流）",
+		Tags:        tagDownload,
+		OperationID: "download_user_videos_sse",
+	})
+	RegisterEndpointMeta("GET", "/collection/check_collection", EndpointMeta{
+		Summary:     "检查URL是否为合集",
+		Tags:        tagDownload,
+		OperationID: "check_collection",
+	})
+	RegisterEndpointMeta("POST", "/collection/download_collection", EndpointMeta{
+		Summary:     "下载合集（SSE流）",
+		Tags:        tagDownload,
+		OperationID: "download_collection_sse",
 	})
 }

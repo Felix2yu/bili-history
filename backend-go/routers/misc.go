@@ -36,11 +36,13 @@ func RegisterSchedulerRoutes(r *gin.RouterGroup) {
 	{
 		scheduler.GET("/tasks", getSchedulerTasks)
 		scheduler.POST("/tasks", addSchedulerTask)
+		// task_id may contain "/" (Python uses endpoint paths like
+		// "/fetch/bili-history" as IDs). The frontend URL-encodes the slash
+		// as %2F and the Gin engine uses UseRawPath so ":id" matches the
+		// encoded segment correctly.
 		scheduler.PUT("/tasks/:id", updateSchedulerTask)
 		scheduler.DELETE("/tasks/:id", deleteSchedulerTask)
-		// Frontend calls /tasks/{id}/execute (not /run).
 		scheduler.POST("/tasks/:id/execute", runSchedulerTask)
-		// Frontend calls /tasks/{id}/enable with {enabled: bool}.
 		scheduler.POST("/tasks/:id/enable", enableSchedulerTask)
 		// Frontend calls /tasks/history with task_id as a query param.
 		scheduler.GET("/tasks/history", getTaskHistory)

@@ -1,4 +1,4 @@
-import { defineEventHandler, createError, getRequestURL, getHeaders, setResponseHeader, setResponseStatus, readBody } from 'h3'
+import { defineEventHandler, createError, getHeaders, setResponseHeader, setResponseStatus, readBody } from 'h3'
 import http from 'node:http'
 import https from 'node:https'
 import { URL } from 'node:url'
@@ -8,9 +8,12 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const backendUrl = config.backendUrl || 'http://localhost:8899'
 
-  const reqUrl = getRequestURL(event)
   const method = event.method || 'GET'
-  const path = reqUrl.pathname.replace(/^\/api/, '') + reqUrl.search
+  // Use the raw request URL (event.node.req.url) instead of the parsed
+  // pathname so that percent-encoded characters like %2F (used in task IDs
+  // that contain "/") are preserved when forwarding to the backend.
+  const rawReqUrl = event.node.req.url || ''
+  const path = rawReqUrl.replace(/^\/api/, '')
   const target = backendUrl + path
 
   try {

@@ -776,21 +776,21 @@ export const createSchedulerTask = (taskData) => {
 }
 
 export const updateSchedulerTask = (taskId, taskData) => {
-  return instance.put(`/scheduler/tasks/${taskId}`, taskData)
+  return instance.put(`/scheduler/tasks/${encodeURIComponent(taskId)}`, taskData)
 }
 
 export const deleteSchedulerTask = (taskId) => {
-  return instance.delete(`/scheduler/tasks/${taskId}`)
+  return instance.delete(`/scheduler/tasks/${encodeURIComponent(taskId)}`)
 }
 
 export const executeSchedulerTask = (taskId, options = {}) => {
-  return instance.post(`/scheduler/tasks/${taskId}/execute`, options)
+  return instance.post(`/scheduler/tasks/${encodeURIComponent(taskId)}/execute`, options)
 }
 
 // 子任务管理接口
 export const addSubTask = (taskId, subTaskData) => {
   console.log('调用addSubTask API:', { taskId, subTaskData })
-  return instance.post(`/scheduler/tasks/${taskId}/subtasks`, subTaskData)
+  return instance.post(`/scheduler/tasks/${encodeURIComponent(taskId)}/subtasks`, subTaskData)
     .then(response => {
       console.log('addSubTask API响应:', response)
       return response
@@ -803,7 +803,7 @@ export const addSubTask = (taskId, subTaskData) => {
 
 
 export const deleteSubTask = (taskId, subTaskId) => {
-  return instance.delete(`/scheduler/tasks/${taskId}/subtasks/${subTaskId}`)
+  return instance.delete(`/scheduler/tasks/${encodeURIComponent(taskId)}/subtasks/${encodeURIComponent(subTaskId)}`)
 }
 
 
@@ -837,7 +837,7 @@ export const getAvailableEndpoints = () => {
 
 // 启用/禁用任务
 export const setTaskEnabled = (taskId, enabled) => {
-  return instance.post(`/scheduler/tasks/${taskId}/enable`, {
+  return instance.post(`/scheduler/tasks/${encodeURIComponent(taskId)}/enable`, {
     enabled
   })
 }

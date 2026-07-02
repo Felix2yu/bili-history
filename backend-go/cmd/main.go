@@ -45,6 +45,14 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	// task_id may contain "/" (Python uses endpoint paths like
+	// "/fetch/bili-history" as IDs). The frontend URL-encodes these slashes
+	// as %2F. With UseRawPath=true Gin matches routes against the raw
+	// (still-encoded) path, so %2F is treated as a single path segment and
+	// ":id" route params work correctly. UnescapePathValues=true (default)
+	// then gives handlers the decoded value (e.g. "/fetch/bili-history").
+	r.UseRawPath = true
+	r.UnescapePathValues = true
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},

@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"bili-history/internal/config"
+	"bili-history/internal/db"
 
 	"github.com/robfig/cron/v3"
 	"gopkg.in/yaml.v3"
@@ -119,7 +121,7 @@ func NewManager() (*Manager, error) {
 		}
 	}
 
-	// Load tasks from config
+	// Load tasks from config (fallback when DB is unavailable/empty)
 	if cfg.Tasks != nil {
 		for id, tc := range cfg.Tasks {
 			task := &Task{
@@ -139,7 +141,142 @@ func NewManager() (*Manager, error) {
 		}
 	}
 
+	// Load tasks from SQLite database (overrides YAML tasks with the same ID)
+	if err := m.loadTasksFromDB(); err != nil {
+		log.Printf("Warning: failed to load tasks from database: %v", err)
+	}
+
 	return m, nil
+}
+
+// loadTasksFromDB loads tasks from the SQLite scheduler database
+// (output/database/scheduler.db), which is the same database written to by
+// the Python API. Tasks loaded from the DB override any YAML tasks that
+// share the same ID. If the database is missing or empty, the existing
+// YAML-loaded tasks are left untouched.
+func (m *Manager) loadTasksFromDB() error {
+	database, err := db.OpenSchedulerDB()
+	if err != nil {
+		return fmt.Errorf("open scheduler db: %w", err)
+	}
+
+	// Load main tasks
+	mainRows, err := database.Query(`
+		SELECT task_id, name, endpoint, method, params, schedule_type,
+		       schedule_time, interval_value, interval_unit, enabled
+		FROM main_tasks
+	`)
+	if err != nil {
+		return fmt.Errorf("query main_tasks: %w", err)
+	}
+
+	mainCount := 0
+	for mainRows.Next() {
+		var (
+			id            string
+			name          string
+			endpoint      string
+			method        string
+			paramsJSON    sql.NullString
+			scheduleType  string
+			scheduleTime  sql.NullString
+			intervalValue sql.NullInt64
+			intervalUnit  sql.NullString
+			enabled       int
+		)
+		if err := mainRows.Scan(
+			&id, &name, &endpoint, &method, &paramsJSON, &scheduleType,
+			&scheduleTime, &intervalValue, &intervalUnit, &enabled,
+		); err != nil {
+			log.Printf("Warning: failed to scan main task row: %v", err)
+			continue
+		}
+
+		task := &Task{
+			ID:            id,
+			Name:          name,
+			Endpoint:      endpoint,
+			Method:        method,
+			ScheduleType:  scheduleType,
+			ScheduleTime:  scheduleTime.String,
+			IntervalValue: int(intervalValue.Int64),
+			IntervalUnit:  intervalUnit.String,
+			Enabled:       enabled != 0,
+		}
+
+		if paramsJSON.Valid && paramsJSON.String != "" {
+			var params map[string]interface{}
+			if err := json.Unmarshal([]byte(paramsJSON.String), &params); err == nil {
+				task.Params = params
+			} else {
+				log.Printf("Warning: failed to unmarshal params for task %s: %v", id, err)
+			}
+		}
+
+		m.tasks[id] = task
+		mainCount++
+	}
+	if err := mainRows.Err(); err != nil {
+		log.Printf("Warning: error iterating main tasks: %v", err)
+	}
+	mainRows.Close()
+
+	// Load sub tasks as chain tasks linked to their parent task.
+	subRows, err := database.Query(`
+		SELECT task_id, parent_id, name, endpoint, method, params, enabled
+		FROM sub_tasks
+	`)
+	if err != nil {
+		return fmt.Errorf("query sub_tasks: %w", err)
+	}
+	defer subRows.Close()
+
+	subCount := 0
+	for subRows.Next() {
+		var (
+			id         string
+			parentID   string
+			name       string
+			endpoint   string
+			method     string
+			paramsJSON sql.NullString
+			enabled    int
+		)
+		if err := subRows.Scan(
+			&id, &parentID, &name, &endpoint, &method, &paramsJSON, &enabled,
+		); err != nil {
+			log.Printf("Warning: failed to scan sub task row: %v", err)
+			continue
+		}
+
+		task := &Task{
+			ID:           id,
+			Name:         name,
+			Endpoint:     endpoint,
+			Method:       method,
+			ScheduleType: "chain",
+			Requires:     []string{parentID},
+			Enabled:      enabled != 0,
+		}
+
+		if paramsJSON.Valid && paramsJSON.String != "" {
+			var params map[string]interface{}
+			if err := json.Unmarshal([]byte(paramsJSON.String), &params); err == nil {
+				task.Params = params
+			} else {
+				log.Printf("Warning: failed to unmarshal params for sub task %s: %v", id, err)
+			}
+		}
+
+		m.tasks[id] = task
+		subCount++
+	}
+	if err := subRows.Err(); err != nil {
+		log.Printf("Warning: error iterating sub tasks: %v", err)
+	}
+
+	log.Printf("Loaded %d main tasks and %d sub tasks from scheduler database", mainCount, subCount)
+	return nil
 }
 
 // Start starts the scheduler.

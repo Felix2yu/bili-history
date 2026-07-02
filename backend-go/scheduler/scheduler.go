@@ -114,7 +114,29 @@ func (s *Scheduler) loadTasks() {
 		statusMap = make(map[string]database.TaskStatus)
 	}
 
+	// 合并 Python 的子任务状态表
+	subStatusMap, err := database.GetPythonSubTaskStatusMap()
+	if err != nil {
+		utils.LogError("Failed to load Python sub_task_status: %v", err)
+	} else {
+		for k, v := range subStatusMap {
+			statusMap[k] = v
+		}
+	}
+
+	// 读取 Python 的依赖关系表（task_dependencies），补充 depends_on
+	depMap, err := database.GetPythonDependencies()
+	if err != nil {
+		utils.LogError("Failed to load Python task_dependencies: %v", err)
+	}
+
 	for _, mt := range mainTasks {
+		// 如果 main_tasks 中的 depends_on 为空，尝试从 Python 依赖表补充
+		if mt.DependsOn == "" && depMap != nil {
+			if dep, ok := depMap[mt.TaskID]; ok {
+				mt.DependsOn = dep
+			}
+		}
 		task := convertTask(mt)
 		if status, ok := statusMap[mt.TaskID]; ok {
 			task.LastRunTime = status.LastRunTime
@@ -132,6 +154,36 @@ func (s *Scheduler) loadTasks() {
 		}
 		s.tasks[task.ID] = task
 	}
+
+	// 加载 Python 独立 sub_tasks 表中的子任务
+	pythonSubTasks, err := database.GetPythonSubTasks()
+	if err != nil {
+		utils.LogError("Failed to load Python sub_tasks: %v", err)
+	}
+	for _, mt := range pythonSubTasks {
+		// 如果该子任务已经在 main_tasks 中（迁移后可能已存在），则跳过
+		if _, exists := s.tasks[mt.TaskID]; exists {
+			continue
+		}
+		task := convertTask(mt)
+		if status, ok := statusMap[mt.TaskID]; ok {
+			task.LastRunTime = status.LastRunTime
+			task.NextRunTime = status.NextRunTime
+			task.LastStatus = status.LastStatus
+			task.LastError = status.LastError
+			task.TotalRuns = status.TotalRuns
+			task.SuccessRuns = status.SuccessRuns
+			task.FailRuns = status.FailRuns
+			task.AvgDuration = status.AvgDuration
+			task.SuccessRate = status.SuccessRate
+			if status.LastStatus == "running" {
+				task.Running = true
+			}
+		}
+		s.tasks[task.ID] = task
+	}
+
+	utils.LogSuccess("已加载 %d 个调度任务（含 Python 兼容数据）", len(s.tasks))
 }
 
 func convertTask(mt database.MainTask) *ScheduleTask {
@@ -759,9 +811,17 @@ func (s *Scheduler) RunTask(taskID string) error {
 
 // GetTaskExecutions returns recent execution history for a task from the DB.
 func (s *Scheduler) GetTaskExecutions(taskID string, limit int) []map[string]interface{} {
+	// 优先从 Go 的 task_execution_history 表读取
 	records, err := database.GetExecutionHistory(taskID, limit)
 	if err != nil {
-		return []map[string]interface{}{}
+		records = []map[string]interface{}{}
+	}
+	// 如果 Go 表没有数据，回退到 Python 的 task_executions 表
+	if len(records) == 0 {
+		pyRecords, pyErr := database.GetPythonExecutions(taskID, limit)
+		if pyErr == nil && len(pyRecords) > 0 {
+			return pyRecords
+		}
 	}
 	return records
 }

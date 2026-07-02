@@ -330,6 +330,191 @@ func GetTaskStatusMap() (map[string]TaskStatus, error) {
 	return statusMap, nil
 }
 
+// ---- Python 数据库兼容层 ----
+// Python 版本使用独立的 sub_tasks / sub_task_status / task_dependencies /
+// task_executions 表，Go 版本将其合并到 main_tasks / task_status /
+// task_execution_history 中。以下函数用于从 Python 表中读取已有数据。
+
+// tableExists 检查表是否存在。
+func tableExists(db *sql.DB, table string) bool {
+	var count int
+	err := db.QueryRow("SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?", table).Scan(&count)
+	if err != nil {
+		return false
+	}
+	return count > 0
+}
+
+// GetPythonSubTasks 从 Python 的 sub_tasks 表读取子任务，转换为 MainTask 格式。
+// 如果表不存在则返回空切片。
+func GetPythonSubTasks() ([]MainTask, error) {
+	db := GetSchedulerDB()
+	if db == nil {
+		return []MainTask{}, nil
+	}
+	if !tableExists(db, "sub_tasks") {
+		return []MainTask{}, nil
+	}
+	rows, err := db.Query(`SELECT task_id, parent_id, name, endpoint, method, params,
+		schedule_type, enabled, created_at, last_modified
+		FROM sub_tasks ORDER BY parent_id, created_at ASC`)
+	if err != nil {
+		return []MainTask{}, err
+	}
+	defer rows.Close()
+
+	var tasks []MainTask
+	for rows.Next() {
+		var t MainTask
+		var params, createdAt, lastModified sql.NullString
+		if err := rows.Scan(&t.TaskID, &t.ParentID, &t.Name, &t.Endpoint, &t.Method,
+			&params, &t.ScheduleType, &t.Enabled, &createdAt, &lastModified); err != nil {
+			continue
+		}
+		t.TaskType = "sub"
+		if t.ScheduleType == "" {
+			t.ScheduleType = "chain"
+		}
+		if params.Valid {
+			t.Params = params.String
+		}
+		if createdAt.Valid {
+			t.CreatedAt = createdAt.String
+		}
+		if lastModified.Valid {
+			t.LastModified = lastModified.String
+		}
+		tasks = append(tasks, t)
+	}
+	return tasks, nil
+}
+
+// GetPythonSubTaskStatusMap 从 Python 的 sub_task_status 表读取子任务状态。
+func GetPythonSubTaskStatusMap() (map[string]TaskStatus, error) {
+	db := GetSchedulerDB()
+	if db == nil {
+		return map[string]TaskStatus{}, nil
+	}
+	if !tableExists(db, "sub_task_status") {
+		return map[string]TaskStatus{}, nil
+	}
+	rows, err := db.Query(`SELECT task_id, last_run_time, next_run_time, last_status,
+		total_runs, success_runs, fail_runs, avg_duration, last_error, tags, success_rate
+		FROM sub_task_status`)
+	if err != nil {
+		return map[string]TaskStatus{}, err
+	}
+	defer rows.Close()
+
+	statusMap := make(map[string]TaskStatus)
+	for rows.Next() {
+		var s TaskStatus
+		var lastRunTime, nextRunTime, lastStatus, lastError, tags sql.NullString
+		if err := rows.Scan(&s.TaskID, &lastRunTime, &nextRunTime, &lastStatus,
+			&s.TotalRuns, &s.SuccessRuns, &s.FailRuns, &s.AvgDuration,
+			&lastError, &tags, &s.SuccessRate); err != nil {
+			continue
+		}
+		if lastRunTime.Valid {
+			s.LastRunTime = lastRunTime.String
+		}
+		if nextRunTime.Valid {
+			s.NextRunTime = nextRunTime.String
+		}
+		if lastStatus.Valid {
+			s.LastStatus = lastStatus.String
+		}
+		if lastError.Valid {
+			s.LastError = lastError.String
+		}
+		if tags.Valid {
+			s.Tags = tags.String
+		}
+		statusMap[s.TaskID] = s
+	}
+	return statusMap, nil
+}
+
+// GetPythonDependencies 从 Python 的 task_dependencies 表读取依赖关系。
+// 返回 task_id -> depends_on 的映射。
+func GetPythonDependencies() (map[string]string, error) {
+	db := GetSchedulerDB()
+	if db == nil {
+		return map[string]string{}, nil
+	}
+	if !tableExists(db, "task_dependencies") {
+		return map[string]string{}, nil
+	}
+	rows, err := db.Query("SELECT task_id, depends_on FROM task_dependencies")
+	if err != nil {
+		return map[string]string{}, err
+	}
+	defer rows.Close()
+
+	depMap := make(map[string]string)
+	for rows.Next() {
+		var taskID, dependsOn string
+		if err := rows.Scan(&taskID, &dependsOn); err != nil {
+			continue
+		}
+		depMap[taskID] = dependsOn
+	}
+	return depMap, nil
+}
+
+// GetPythonExecutions 从 Python 的 task_executions 表读取执行历史，兼容 Go 的返回格式。
+func GetPythonExecutions(taskID string, limit int) ([]map[string]interface{}, error) {
+	db := GetSchedulerDB()
+	if db == nil {
+		return []map[string]interface{}{}, nil
+	}
+	if !tableExists(db, "task_executions") {
+		return []map[string]interface{}{}, nil
+	}
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	var rows *sql.Rows
+	var err error
+	if taskID != "" {
+		rows, err = db.Query(`SELECT id, task_id, start_time, end_time, status, output, error_message
+			FROM task_executions WHERE task_id = ? ORDER BY start_time DESC LIMIT ?`, taskID, limit)
+	} else {
+		rows, err = db.Query(`SELECT id, task_id, start_time, end_time, status, output, error_message
+			FROM task_executions ORDER BY start_time DESC LIMIT ?`, limit)
+	}
+	if err != nil {
+		return []map[string]interface{}{}, err
+	}
+	defer rows.Close()
+
+	var results []map[string]interface{}
+	for rows.Next() {
+		var id, tid, startTime, status interface{}
+		var endTime, output, errorMsg sql.NullString
+		if err := rows.Scan(&id, &tid, &startTime, &endTime, &status, &output, &errorMsg); err != nil {
+			continue
+		}
+		m := map[string]interface{}{
+			"id":         id,
+			"task_id":    tid,
+			"start_time": startTime,
+			"status":     status,
+		}
+		if endTime.Valid {
+			m["end_time"] = endTime.String
+		}
+		if output.Valid {
+			m["result"] = output.String
+		}
+		if errorMsg.Valid {
+			m["error"] = errorMsg.String
+		}
+		results = append(results, m)
+	}
+	return results, nil
+}
+
 // UpsertMainTask inserts or updates a main task row. If the task already exists
 // (matched by task_id), it updates all mutable fields.
 func UpsertMainTask(t MainTask) error {

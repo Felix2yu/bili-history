@@ -9,6 +9,7 @@ import (
 	"bilibili-history-go/models"
 	"bilibili-history-go/scheduler"
 	"bilibili-history-go/services"
+	"bilibili-history-go/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -303,6 +304,7 @@ func saveServerConfig(c *gin.Context) {
 func getSchedulerTasks(c *gin.Context) {
 	sched := scheduler.GetScheduler()
 	tasks := sched.GetTasks()
+	utils.LogInfo("获取任务列表: 共 %d 个主任务", len(tasks))
 	// Frontend reads response.data.tasks (top-level tasks array, not nested
 	// under data). Also include the Python-style status/message envelope.
 	c.JSON(http.StatusOK, gin.H{
@@ -387,10 +389,12 @@ func deleteSchedulerTask(c *gin.Context) {
 
 func runSchedulerTask(c *gin.Context) {
 	taskID := c.Param("id")
+	utils.LogInfo("收到执行任务请求: task_id=%s", taskID)
 
 	sched := scheduler.GetScheduler()
 	err := sched.RunTask(taskID)
 	if err != nil {
+		utils.LogError("执行任务失败: task_id=%s, error=%v", taskID, err)
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "error",
 			"message": "运行任务失败: " + err.Error(),
@@ -398,6 +402,7 @@ func runSchedulerTask(c *gin.Context) {
 		return
 	}
 
+	utils.LogSuccess("任务已启动: task_id=%s", taskID)
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "任务已启动",

@@ -69,6 +69,7 @@ CREATE INDEX IF NOT EXISTS idx_exec_history_start ON task_execution_history(star
 func GetSchedulerDB() *sql.DB {
 	schedulerDBOnce.Do(func() {
 		schedulerDBPath := filepath.Join(utils.GetOutputPath("database"), "scheduler.db")
+		utils.LogInfo("调度器数据库路径: %s", schedulerDBPath)
 		var err error
 		schedulerDB, err = sql.Open("sqlite3", schedulerDBPath)
 		if err != nil {

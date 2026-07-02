@@ -556,6 +556,33 @@ func UpdateRemark(bvid string, viewAt int64, remark string) (map[string]interfac
 	}, nil
 }
 
+func GetRemarkByBvidAndViewAt(bvid string, viewAt int64) (string, int64, error) {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return "", 0, fmt.Errorf("database not initialized")
+	}
+
+	year := utils.GetYearFromTimestamp(viewAt)
+	tableName := fmt.Sprintf("bilibili_history_%d", year)
+
+	exists, _ := db.TableExists(tableName)
+	if !exists {
+		return "", 0, nil
+	}
+
+	var remark string
+	var remarkTime int64
+	err := conn.QueryRow(fmt.Sprintf(`
+		SELECT remark, remark_time FROM %s WHERE bvid = ? AND view_at = ?
+	`, tableName), bvid, viewAt).Scan(&remark, &remarkTime)
+	if err != nil {
+		return "", 0, nil
+	}
+
+	return remark, remarkTime, nil
+}
+
 func InsertHistoryRecord(conn *sql.DB, tableName string, record *models.HistoryRecord) (bool, error) {
 	existsQuery := fmt.Sprintf("SELECT id, author_name FROM %s WHERE bvid = ? AND view_at = ?", tableName)
 	var existingID int64

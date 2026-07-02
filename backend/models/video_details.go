@@ -90,5 +90,5 @@ type VideoDetailProgress struct {
 
 // BatchFetchRequest 批量获取请求
 type BatchFetchRequest struct {
-	Bvids []string `json:"bvids" binding:"required"`
+	Bvids []string `json:"bvids"`
 }

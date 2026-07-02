@@ -151,6 +151,18 @@ func batchFetchVideoDetails(c *gin.Context) {
 		return
 	}
 
+	// If no Bvids provided, fall back to fetching from history
+	if len(req.Bvids) == 0 {
+		skipExisting := c.DefaultQuery("skip_existing", "true") == "true"
+		result, err := services.BatchFetchFromHistory(skipExisting)
+		if err != nil {
+			c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+			return
+		}
+		c.JSON(http.StatusOK, models.SuccessResponse(result))
+		return
+	}
+
 	result, err := services.BatchFetchVideoDetails(req.Bvids)
 	if err != nil {
 		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))

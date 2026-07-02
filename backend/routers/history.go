@@ -19,6 +19,7 @@ func RegisterHistoryRoutes(r *gin.RouterGroup) {
 		history.POST("/reset-database", resetDatabase)
 		history.GET("/sqlite-version", getSQLiteVersion)
 		history.GET("/by_cid/:cid", getVideoByCID)
+		history.POST("/batch-remarks", batchGetRemarks)
 	}
 
 	daily := r.Group("/daily")
@@ -186,4 +187,34 @@ func getVideoByCID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(result))
+}
+
+func batchGetRemarks(c *gin.Context) {
+	var req struct {
+		Items []struct {
+			Bvid   string `json:"bvid"`
+			ViewAt int64  `json:"view_at"`
+		} `json:"items"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	results := make(map[string]interface{})
+	for _, item := range req.Items {
+		key := item.Bvid
+		if key == "" {
+			continue
+		}
+		remark, remarkTime, err := database.GetRemarkByBvidAndViewAt(item.Bvid, item.ViewAt)
+		if err == nil && remark != "" {
+			results[key] = map[string]interface{}{
+				"remark":      remark,
+				"remark_time": remarkTime,
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(results))
 }

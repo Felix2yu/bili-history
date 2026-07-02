@@ -102,6 +102,7 @@ func RegisterFetchRoutes(r *gin.RouterGroup) {
 		fetch.GET("/status", getFetchStatus)
 		fetch.GET("/bili-history-realtime", fetchBiliHistoryRealtime)
 		fetch.GET("/bili-history", fetchBiliHistoryFull)
+		fetch.POST("/bili-history", fetchBiliHistoryFull)
 		fetch.GET("/invalid-videos", getInvalidVideos)
 	}
 }

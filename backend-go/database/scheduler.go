@@ -559,13 +559,63 @@ func DeleteMainTask(taskID string) error {
 		return err
 	}
 	defer tx.Rollback()
+
+	// Collect sub-task IDs before deleting (for Python sub_tasks table)
+	var subTaskIDs []string
+	rows, _ := tx.Query("SELECT task_id FROM main_tasks WHERE parent_id = ?", taskID)
+	if rows != nil {
+		for rows.Next() {
+			var id string
+			rows.Scan(&id)
+			subTaskIDs = append(subTaskIDs, id)
+		}
+		rows.Close()
+	}
+
+	// Delete from main_tasks (includes Go-style sub-tasks with parent_id)
 	if _, err := tx.Exec("DELETE FROM main_tasks WHERE task_id = ? OR parent_id = ?", taskID, taskID); err != nil {
 		return err
 	}
-	if _, err := tx.Exec("DELETE FROM task_status WHERE task_id = ? OR task_id IN (SELECT task_id FROM main_tasks WHERE parent_id = ?)", taskID, taskID); err != nil {
-		// best effort
+
+	// Delete from task_status (including sub-tasks)
+	if _, err := tx.Exec("DELETE FROM task_status WHERE task_id = ?", taskID); err != nil {
 		_ = err
 	}
+	for _, sid := range subTaskIDs {
+		tx.Exec("DELETE FROM task_status WHERE task_id = ?", sid)
+	}
+
+	// Delete from task_execution_history
+	if _, err := tx.Exec("DELETE FROM task_execution_history WHERE task_id = ?", taskID); err != nil {
+		_ = err
+	}
+	for _, sid := range subTaskIDs {
+		tx.Exec("DELETE FROM task_execution_history WHERE task_id = ?", sid)
+	}
+
+	// Clean up Python tables (best effort, ignore errors if tables don't exist)
+	if tableExists(db, "sub_tasks") {
+		tx.Exec("DELETE FROM sub_tasks WHERE task_id = ? OR parent_id = ?", taskID, taskID)
+		for _, sid := range subTaskIDs {
+			tx.Exec("DELETE FROM sub_tasks WHERE task_id = ?", sid)
+		}
+	}
+	if tableExists(db, "sub_task_status") {
+		tx.Exec("DELETE FROM sub_task_status WHERE task_id = ?", taskID)
+		for _, sid := range subTaskIDs {
+			tx.Exec("DELETE FROM sub_task_status WHERE task_id = ?", sid)
+		}
+	}
+	if tableExists(db, "task_dependencies") {
+		tx.Exec("DELETE FROM task_dependencies WHERE task_id = ? OR depends_on = ?", taskID, taskID)
+	}
+	if tableExists(db, "task_executions") {
+		tx.Exec("DELETE FROM task_executions WHERE task_id = ?", taskID)
+		for _, sid := range subTaskIDs {
+			tx.Exec("DELETE FROM task_executions WHERE task_id = ?", sid)
+		}
+	}
+
 	return tx.Commit()
 }
 

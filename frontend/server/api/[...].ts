@@ -1,4 +1,4 @@
-import { defineEventHandler, createError, getRequestURL, getHeaders, setResponseHeader, readBody } from 'h3'
+import { defineEventHandler, createError, getRequestURL, getHeaders, setResponseHeader, setResponseStatus, readBody } from 'h3'
 import http from 'node:http'
 import https from 'node:https'
 import { URL } from 'node:url'
@@ -70,6 +70,9 @@ export default defineEventHandler(async (event) => {
           const body = Buffer.concat(chunks)
           const ct = (proxyRes.headers['content-type'] || 'application/json') as string
           setResponseHeader(event, 'content-type', ct)
+          // Forward the backend's HTTP status code so the client can
+          // properly distinguish success (2xx) from errors (4xx/5xx).
+          setResponseStatus(event, proxyRes.statusCode || 200)
           resolve(body)
         })
         proxyRes.on('error', (err) => {

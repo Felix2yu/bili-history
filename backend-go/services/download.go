@@ -308,7 +308,13 @@ func findDownloadedFile(outputDir, title, targetExt string) string {
 
 func remuxFile(inputPath, targetExt string) error {
 	outputPath := strings.TrimSuffix(inputPath, filepath.Ext(inputPath)) + "." + targetExt
-	cmd := exec.Command("ffmpeg", "-i", inputPath, "-c", "copy", "-y", outputPath)
+	args := []string{"-i", inputPath, "-c", "copy", "-y"}
+	// HEVC in MOV/MP4 needs hvc1 tag for Apple compatibility
+	if targetExt == "mov" {
+		args = append(args, "-tag:v", "hvc1")
+	}
+	args = append(args, outputPath)
+	cmd := exec.Command("ffmpeg", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("ffmpeg remux failed: %s: %w", string(output), err)

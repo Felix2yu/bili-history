@@ -2,8 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"bilibili-history-go/utils"
 	_ "github.com/mattn/go-sqlite3"
@@ -14,6 +16,56 @@ var (
 	schedulerDBOnce sync.Once
 )
 
+// schedulerSchema creates the main_tasks and task_status tables. Keeping the
+// column list in sync with GetMainTasks / GetTaskStatusMap.
+const schedulerSchema = `
+CREATE TABLE IF NOT EXISTS main_tasks (
+    task_id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    endpoint TEXT,
+    method TEXT DEFAULT 'GET',
+    params TEXT,
+    schedule_type TEXT DEFAULT 'daily',
+    schedule_time TEXT,
+    schedule_delay INTEGER DEFAULT 0,
+    interval_value INTEGER DEFAULT 0,
+    interval_unit TEXT DEFAULT '',
+    enabled INTEGER DEFAULT 0,
+    task_type TEXT DEFAULT 'main',
+    parent_id TEXT DEFAULT '',
+    depends_on TEXT DEFAULT '',
+    created_at TEXT,
+    last_modified TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_main_tasks_parent ON main_tasks(parent_id);
+
+CREATE TABLE IF NOT EXISTS task_status (
+    task_id TEXT PRIMARY KEY,
+    last_run_time TEXT,
+    next_run_time TEXT,
+    last_status TEXT DEFAULT 'idle',
+    total_runs INTEGER DEFAULT 0,
+    success_runs INTEGER DEFAULT 0,
+    fail_runs INTEGER DEFAULT 0,
+    avg_duration REAL DEFAULT 0,
+    last_error TEXT,
+    tags TEXT,
+    success_rate REAL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS task_execution_history (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL,
+    start_time TEXT,
+    end_time TEXT,
+    status TEXT,
+    result TEXT,
+    error TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_exec_history_task ON task_execution_history(task_id);
+CREATE INDEX IF NOT EXISTS idx_exec_history_start ON task_execution_history(start_time);
+`
+
 func GetSchedulerDB() *sql.DB {
 	schedulerDBOnce.Do(func() {
 		schedulerDBPath := filepath.Join(utils.GetOutputPath("database"), "scheduler.db")
@@ -23,6 +75,9 @@ func GetSchedulerDB() *sql.DB {
 			utils.LogError("Failed to open scheduler database: %v", err)
 			schedulerDB = nil
 			return
+		}
+		if _, err := schedulerDB.Exec(schedulerSchema); err != nil {
+			utils.LogError("Failed to ensure scheduler schema: %v", err)
 		}
 	})
 	return schedulerDB
@@ -41,6 +96,8 @@ type MainTask struct {
 	IntervalUnit   string `json:"interval_unit"`
 	Enabled        int    `json:"enabled"`
 	TaskType       string `json:"task_type"`
+	ParentID       string `json:"parent_id"`
+	DependsOn      string `json:"depends_on"`
 	CreatedAt      string `json:"created_at"`
 	LastModified   string `json:"last_modified"`
 }
@@ -65,7 +122,10 @@ func GetMainTasks() ([]MainTask, error) {
 		return []MainTask{}, nil
 	}
 
-	rows, err := db.Query("SELECT task_id, name, endpoint, method, params, schedule_type, schedule_time, schedule_delay, interval_value, interval_unit, enabled, task_type, created_at, last_modified FROM main_tasks ORDER BY created_at DESC")
+	rows, err := db.Query(`SELECT task_id, name, endpoint, method, params, schedule_type,
+		schedule_time, schedule_delay, interval_value, interval_unit, enabled, task_type,
+		COALESCE(parent_id, ''), COALESCE(depends_on, ''), created_at, last_modified
+		FROM main_tasks ORDER BY created_at ASC`)
 	if err != nil {
 		return []MainTask{}, err
 	}
@@ -76,6 +136,8 @@ func GetMainTasks() ([]MainTask, error) {
 		var task MainTask
 		var scheduleTime sql.NullString
 		var params sql.NullString
+		var createdAt sql.NullString
+		var lastModified sql.NullString
 		err := rows.Scan(
 			&task.TaskID,
 			&task.Name,
@@ -89,8 +151,10 @@ func GetMainTasks() ([]MainTask, error) {
 			&task.IntervalUnit,
 			&task.Enabled,
 			&task.TaskType,
-			&task.CreatedAt,
-			&task.LastModified,
+			&task.ParentID,
+			&task.DependsOn,
+			&createdAt,
+			&lastModified,
 		)
 		if err != nil {
 			continue
@@ -101,9 +165,62 @@ func GetMainTasks() ([]MainTask, error) {
 		if params.Valid {
 			task.Params = params.String
 		}
+		if createdAt.Valid {
+			task.CreatedAt = createdAt.String
+		}
+		if lastModified.Valid {
+			task.LastModified = lastModified.String
+		}
 		tasks = append(tasks, task)
 	}
 
+	return tasks, nil
+}
+
+func GetSubTasks(parentID string) ([]MainTask, error) {
+	db := GetSchedulerDB()
+	if db == nil {
+		return []MainTask{}, nil
+	}
+	rows, err := db.Query(`SELECT task_id, name, endpoint, method, params, schedule_type,
+		schedule_time, schedule_delay, interval_value, interval_unit, enabled, task_type,
+		COALESCE(parent_id, ''), COALESCE(depends_on, ''), created_at, last_modified
+		FROM main_tasks WHERE parent_id = ? ORDER BY created_at ASC`, parentID)
+	if err != nil {
+		return []MainTask{}, err
+	}
+	defer rows.Close()
+
+	var tasks []MainTask
+	for rows.Next() {
+		var task MainTask
+		var scheduleTime sql.NullString
+		var params sql.NullString
+		var createdAt sql.NullString
+		var lastModified sql.NullString
+		err := rows.Scan(
+			&task.TaskID, &task.Name, &task.Endpoint, &task.Method, &params,
+			&task.ScheduleType, &scheduleTime, &task.ScheduleDelay, &task.IntervalValue,
+			&task.IntervalUnit, &task.Enabled, &task.TaskType, &task.ParentID,
+			&task.DependsOn, &createdAt, &lastModified,
+		)
+		if err != nil {
+			continue
+		}
+		if scheduleTime.Valid {
+			task.ScheduleTime = scheduleTime.String
+		}
+		if params.Valid {
+			task.Params = params.String
+		}
+		if createdAt.Valid {
+			task.CreatedAt = createdAt.String
+		}
+		if lastModified.Valid {
+			task.LastModified = lastModified.String
+		}
+		tasks = append(tasks, task)
+	}
 	return tasks, nil
 }
 
@@ -162,4 +279,188 @@ func GetTaskStatusMap() (map[string]TaskStatus, error) {
 	}
 
 	return statusMap, nil
+}
+
+// UpsertMainTask inserts or updates a main task row. If the task already exists
+// (matched by task_id), it updates all mutable fields.
+func UpsertMainTask(t MainTask) error {
+	db := GetSchedulerDB()
+	if db == nil {
+		return fmt.Errorf("scheduler database not available")
+	}
+	now := time.Now().Format("2006-01-02 15:04:05")
+	if t.CreatedAt == "" {
+		t.CreatedAt = now
+	}
+	t.LastModified = now
+	_, err := db.Exec(`INSERT INTO main_tasks
+		(task_id, name, endpoint, method, params, schedule_type, schedule_time,
+		 schedule_delay, interval_value, interval_unit, enabled, task_type,
+		 parent_id, depends_on, created_at, last_modified)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(task_id) DO UPDATE SET
+			name=excluded.name, endpoint=excluded.endpoint, method=excluded.method,
+			params=excluded.params, schedule_type=excluded.schedule_type,
+			schedule_time=excluded.schedule_time, schedule_delay=excluded.schedule_delay,
+			interval_value=excluded.interval_value, interval_unit=excluded.interval_unit,
+			enabled=excluded.enabled, task_type=excluded.task_type,
+			parent_id=excluded.parent_id, depends_on=excluded.depends_on,
+			last_modified=excluded.last_modified`,
+		t.TaskID, t.Name, t.Endpoint, t.Method, t.Params, t.ScheduleType, t.ScheduleTime,
+		t.ScheduleDelay, t.IntervalValue, t.IntervalUnit, t.Enabled, t.TaskType,
+		t.ParentID, t.DependsOn, t.CreatedAt, t.LastModified)
+	return err
+}
+
+// DeleteMainTask removes a task and its status row. Sub-tasks (parent_id = task_id)
+// are also removed to keep referential integrity.
+func DeleteMainTask(taskID string) error {
+	db := GetSchedulerDB()
+	if db == nil {
+		return fmt.Errorf("scheduler database not available")
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if _, err := tx.Exec("DELETE FROM main_tasks WHERE task_id = ? OR parent_id = ?", taskID, taskID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("DELETE FROM task_status WHERE task_id = ? OR task_id IN (SELECT task_id FROM main_tasks WHERE parent_id = ?)", taskID, taskID); err != nil {
+		// best effort
+		_ = err
+	}
+	return tx.Commit()
+}
+
+// SetTaskEnabled toggles the enabled flag of a task.
+func SetTaskEnabled(taskID string, enabled bool) error {
+	db := GetSchedulerDB()
+	if db == nil {
+		return fmt.Errorf("scheduler database not available")
+	}
+	val := 0
+	if enabled {
+		val = 1
+	}
+	_, err := db.Exec("UPDATE main_tasks SET enabled = ?, last_modified = ? WHERE task_id = ?",
+		val, time.Now().Format("2006-01-02 15:04:05"), taskID)
+	return err
+}
+
+// UpdateTaskStatus records the result of a task execution.
+func UpdateTaskStatus(taskID, status, lastError string, durationSec float64, success bool) error {
+	db := GetSchedulerDB()
+	if db == nil {
+		return fmt.Errorf("scheduler database not available")
+	}
+	now := time.Now().Format("2006-01-02 15:04:05")
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var totalRuns, successRuns, failRuns int
+	var avgDuration float64
+	_ = tx.QueryRow("SELECT total_runs, success_runs, fail_runs, avg_duration FROM task_status WHERE task_id = ?", taskID).
+		Scan(&totalRuns, &successRuns, &failRuns, &avgDuration)
+
+	totalRuns++
+	if success {
+		successRuns++
+	} else {
+		failRuns++
+	}
+	// running average
+	if totalRuns > 0 {
+		avgDuration = (avgDuration*float64(totalRuns-1) + durationSec) / float64(totalRuns)
+	}
+	successRate := 0.0
+	if totalRuns > 0 {
+		successRate = float64(successRuns) / float64(totalRuns) * 100
+	}
+
+	_, err = tx.Exec(`INSERT INTO task_status
+		(task_id, last_run_time, next_run_time, last_status, total_runs, success_runs,
+		 fail_runs, avg_duration, last_error, tags, success_rate)
+		VALUES (?, ?, '', ?, ?, ?, ?, ?, ?, '', ?)
+		ON CONFLICT(task_id) DO UPDATE SET
+			last_run_time=excluded.last_run_time, last_status=excluded.last_status,
+			total_runs=excluded.total_runs, success_runs=excluded.success_runs,
+			fail_runs=excluded.fail_runs, avg_duration=excluded.avg_duration,
+			last_error=excluded.last_error, success_rate=excluded.success_rate`,
+		taskID, now, status, totalRuns, successRuns, failRuns, avgDuration, lastError, successRate)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// RecordExecution inserts a row into task_execution_history for the history endpoint.
+func RecordExecution(id, taskID, status, result, errMsg string, start, end time.Time) error {
+	db := GetSchedulerDB()
+	if db == nil {
+		return nil
+	}
+	_, err := db.Exec(`INSERT INTO task_execution_history
+		(id, task_id, start_time, end_time, status, result, error)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		id, taskID, start.Format("2006-01-02 15:04:05"), end.Format("2006-01-02 15:04:05"),
+		status, result, errMsg)
+	return err
+}
+
+// GetExecutionHistory returns recent execution records, optionally filtered by task_id.
+func GetExecutionHistory(taskID string, limit int) ([]map[string]interface{}, error) {
+	db := GetSchedulerDB()
+	if db == nil {
+		return []map[string]interface{}{}, nil
+	}
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	var rows *sql.Rows
+	var err error
+	if taskID != "" {
+		rows, err = db.Query(`SELECT id, task_id, start_time, end_time, status, result, error
+			FROM task_execution_history WHERE task_id = ? ORDER BY start_time DESC LIMIT ?`, taskID, limit)
+	} else {
+		rows, err = db.Query(`SELECT id, task_id, start_time, end_time, status, result, error
+			FROM task_execution_history ORDER BY start_time DESC LIMIT ?`, limit)
+	}
+	if err != nil {
+		return []map[string]interface{}{}, err
+	}
+	defer rows.Close()
+
+	columns, _ := rows.Columns()
+	var results []map[string]interface{}
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		ptrs := make([]interface{}, len(columns))
+		for i := range columns {
+			ptrs[i] = &values[i]
+		}
+		if err := rows.Scan(ptrs...); err != nil {
+			continue
+		}
+		m := make(map[string]interface{})
+		for i, col := range columns {
+			v := values[i]
+			if v == nil {
+				continue
+			}
+			switch vv := v.(type) {
+			case []byte:
+				m[col] = string(vv)
+			default:
+				m[col] = vv
+			}
+		}
+		results = append(results, m)
+	}
+	return results, nil
 }

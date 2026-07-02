@@ -1714,6 +1714,26 @@ export const getWatchLaterList = () => {
 export const getWatchLaterLocal = (params = {}) => {
   return instance.get('/watchlater/local', { params })
 }
+
+/**
+ * 删除单个稍后再看视频
+ * DELETE /watchlater/{bvid}
+ * @param {string} bvid
+ * @returns {Promise<any>}
+ */
+export const removeFromWatchLater = (bvid) => {
+  return instance.delete(`/watchlater/${bvid}`)
+}
+
+/**
+ * 批量删除稍后再看视频
+ * POST /watchlater/batch-delete
+ * @param {string[]} bvids
+ * @returns {Promise<any>}
+ */
+export const batchRemoveFromWatchLater = (bvids) => {
+  return instance.post('/watchlater/batch-delete', { bvids })
+}
 // =============================
 // 我的点赞接口（/like）
 // =============================

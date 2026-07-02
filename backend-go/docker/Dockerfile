@@ -4,7 +4,6 @@ ARG PROXY=""
 ENV all_proxy=${PROXY}
 ENV http_proxy=${PROXY}
 ENV https_proxy=${PROXY}
-ENV GOPROXY=https://goproxy.cn,https://proxy.golang.org,direct
 
 RUN apk add --no-cache gcc musl-dev git
 
@@ -16,6 +15,8 @@ RUN go mod download
 COPY . .
 
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o bilibili-history-go ./cmd/main.go
+
+FROM jrottenberg/ffmpeg:7-alpine AS ffmpeg
 
 FROM alpine:3.20
 
@@ -32,7 +33,10 @@ ENV DEDE_USER_ID_CKMD5=""
 ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=8899
 
-RUN apk add --no-cache tzdata ca-certificates tini ffmpeg
+RUN apk add --no-cache tzdata ca-certificates tini
+
+COPY --from=ffmpeg /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
+COPY --from=ffmpeg /usr/local/bin/ffprobe /usr/local/bin/ffprobe
 
 WORKDIR /app
 

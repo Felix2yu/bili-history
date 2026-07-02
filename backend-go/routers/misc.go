@@ -23,6 +23,11 @@ func RegisterConfigRoutes(r *gin.RouterGroup) {
 		configGroup.POST("/apprise", saveAppriseConfig)
 		configGroup.GET("/server", getServerConfig)
 		configGroup.POST("/server", saveServerConfig)
+		// Python-compatible aliases
+		configGroup.GET("/email-config", getEmailConfig)
+		configGroup.POST("/email-config", saveEmailConfig)
+		configGroup.GET("/apprise-config", getAppriseConfig)
+		configGroup.POST("/apprise-config", saveAppriseConfig)
 	}
 }
 
@@ -84,6 +89,8 @@ func RegisterCleanRoutes(r *gin.RouterGroup) {
 	{
 		clean.POST("/start", cleanData)
 		clean.GET("/status", getCleanStatus)
+		// Python-compatible alias
+		clean.POST("/clean_data", cleanData)
 	}
 }
 
@@ -92,6 +99,8 @@ func RegisterLogRoutes(r *gin.RouterGroup) {
 	{
 		log.POST("/send", sendLogEmail)
 		log.GET("/list", getLogList)
+		// Python-compatible alias
+		log.POST("/send-email", sendLogEmail)
 	}
 }
 

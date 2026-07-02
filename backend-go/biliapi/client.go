@@ -16,7 +16,6 @@ const (
 	HistoryURL      = "https://api.bilibili.com/x/web-interface/history/cursor"
 	LoginQrcodeURL  = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
 	QrcodePollURL   = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
-	PopularURL      = "https://api.bilibili.com/x/web-interface/popular"
 	VideoInfoURL    = "https://api.bilibili.com/x/web-interface/view"
 	WatchLaterURL   = "https://api.bilibili.com/x/v2/history/toview"
 	WatchLaterDelURL = "https://api.bilibili.com/x/v2/history/toview/del"
@@ -119,28 +118,6 @@ type VideoRights struct {
 	Autoplay    int `json:"autoplay"`
 	UgcPay      int `json:"ugc_pay"`
 	IsCooperation int `json:"is_cooperation"`
-}
-
-type PopularData struct {
-	List   []PopularItem `json:"list"`
-	NoMore bool          `json:"no_more"`
-}
-
-type PopularItem struct {
-	Aid      int        `json:"aid"`
-	Videos   int        `json:"videos"`
-	Tid      int        `json:"tid"`
-	Tname    string     `json:"tname"`
-	Copyright int       `json:"copyright"`
-	Pic      string     `json:"pic"`
-	Title    string     `json:"title"`
-	Pubdate  int64      `json:"pubdate"`
-	Ctime    int64      `json:"ctime"`
-	Desc     string     `json:"desc"`
-	Duration int        `json:"duration"`
-	Owner    VideoOwner `json:"owner"`
-	Stat     VideoStat  `json:"stat"`
-	Bvid     string     `json:"bvid"`
 }
 
 type QrCodeData struct {
@@ -328,34 +305,6 @@ func (c *Client) GetVideoInfo(bvid string) (*VideoInfo, error) {
 	}
 
 	var data VideoInfo
-	if err := json.Unmarshal(resp.Data, &data); err != nil {
-		return nil, fmt.Errorf("unmarshal data error: %w", err)
-	}
-
-	return &data, nil
-}
-
-func (c *Client) GetPopular(pn int, ps int) (*PopularData, error) {
-	params := map[string]string{
-		"pn": fmt.Sprintf("%d", pn),
-		"ps": fmt.Sprintf("%d", ps),
-	}
-
-	body, err := c.Get(PopularURL, params)
-	if err != nil {
-		return nil, err
-	}
-
-	var resp BiliResponse
-	if err := json.Unmarshal(body, &resp); err != nil {
-		return nil, fmt.Errorf("unmarshal response error: %w", err)
-	}
-
-	if resp.Code != 0 {
-		return nil, fmt.Errorf("api error: code=%d, message=%s", resp.Code, resp.Message)
-	}
-
-	var data PopularData
 	if err := json.Unmarshal(resp.Data, &data); err != nil {
 		return nil, fmt.Errorf("unmarshal data error: %w", err)
 	}

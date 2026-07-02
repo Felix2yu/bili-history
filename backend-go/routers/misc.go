@@ -189,18 +189,6 @@ func deleteBatchBiliHistory(c *gin.Context) {
 	})
 }
 
-func RegisterPopularRoutes(r *gin.RouterGroup) {
-	popular := r.Group("/bilibili")
-	{
-		popular.GET("/popular", getPopularVideos)
-	}
-
-	popularAnalytics := r.Group("/popular")
-	{
-		popularAnalytics.GET("/stats", getPopularStats)
-	}
-}
-
 func RegisterInteractionRoutes(r *gin.RouterGroup) {
 	interactions := r.Group("/interactions")
 	{
@@ -728,38 +716,6 @@ func getDeleteBiliStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
 		"status":  "idle",
 		"message": "删除B站历史记录状态功能待实现",
-	}))
-}
-
-func getPopularVideos(c *gin.Context) {
-	pn := 1
-	if pnStr := c.Query("pn"); pnStr != "" {
-		if p, err := strconv.Atoi(pnStr); err == nil {
-			pn = p
-		}
-	}
-
-	ps := 20
-	if psStr := c.Query("ps"); psStr != "" {
-		if p, err := strconv.Atoi(psStr); err == nil {
-			ps = p
-		}
-	}
-
-	client := biliapi.NewClient("")
-	data, err := client.GetPopular(pn, ps)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("获取热门视频失败: "+err.Error()))
-		return
-	}
-
-	c.JSON(http.StatusOK, models.SuccessResponse(data))
-}
-
-func getPopularStats(c *gin.Context) {
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"stats":   map[string]interface{}{},
-		"message": "热门视频分析功能待实现",
 	}))
 }
 

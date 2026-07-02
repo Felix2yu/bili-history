@@ -79,7 +79,6 @@ func main() {
 		routers.RegisterLogRoutes(api)
 		routers.RegisterFetchRoutes(api)
 		routers.RegisterDeleteRoutes(api)
-		routers.RegisterPopularRoutes(api)
 		routers.RegisterVideoDetailsRoutes(api)
 		routers.RegisterInteractionRoutes(api)
 		routers.RegisterTitleAnalyticsRoutes(api)

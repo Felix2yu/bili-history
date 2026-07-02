@@ -50,7 +50,6 @@ func init() {
 	tagLog := []string{"日志管理"}
 	tagFetch := []string{"数据抓取"}
 	tagDelete := []string{"删除操作"}
-	tagPopular := []string{"热门视频"}
 	tagVideo := []string{"视频详情"}
 	tagImage := []string{"图片管理"}
 	tagTitle := []string{"标题分析"}
@@ -608,18 +607,6 @@ func init() {
 		Summary:     "批量删除B站历史记录",
 		Tags:        tagDelete,
 		OperationID: "delete_batch_bili_history",
-	})
-
-	// ========== 热门视频 ==========
-	RegisterEndpointMeta("GET", "/bilibili/popular", EndpointMeta{
-		Summary:     "获取热门视频列表",
-		Tags:        tagPopular,
-		OperationID: "get_popular_videos",
-	})
-	RegisterEndpointMeta("GET", "/popular/stats", EndpointMeta{
-		Summary:     "热门视频统计分析",
-		Tags:        tagPopular,
-		OperationID: "get_popular_stats",
 	})
 
 	// ========== 视频详情 ==========

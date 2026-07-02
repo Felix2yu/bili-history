@@ -177,22 +177,30 @@ func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, 
 
 	onProgress(fmt.Sprintf("标题: %s", data.Title))
 
-	if streamID != "" {
-		if stream, ok := data.Streams[streamID]; ok {
-			sizeMB := float64(stream.Size) / 1024 / 1024
-			onProgress(fmt.Sprintf("画质: %s, 大小: %.1fMB", stream.Quality, sizeMB))
-		}
-	} else {
-		var bestStreamID string
-		var bestSize int64
+	// Pick best stream: highest quality, then av1 > hevc > avc
+	if streamID == "" {
+		var bestID string
+		var bestQ int
+		var bestC int
 		for id, stream := range data.Streams {
-			if stream.Size > bestSize {
-				bestSize = stream.Size
-				bestStreamID = id
+			parts := strings.Split(id, "-")
+			if len(parts) != 2 {
+				continue
+			}
+			q, _ := strconv.Atoi(parts[0])
+			c, _ := strconv.Atoi(parts[1])
+			cp := codecPriority(c)
+			if q > bestQ || (q == bestQ && cp > bestC) {
+				bestQ = q
+				bestC = cp
+				bestID = id
 			}
 		}
-		if bestStreamID != "" {
-			stream := data.Streams[bestStreamID]
+		streamID = bestID
+	}
+
+	if streamID != "" {
+		if stream, ok := data.Streams[streamID]; ok {
 			sizeMB := float64(stream.Size) / 1024 / 1024
 			onProgress(fmt.Sprintf("画质: %s, 大小: %.1fMB", stream.Quality, sizeMB))
 		}

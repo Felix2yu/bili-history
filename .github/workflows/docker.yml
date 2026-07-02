@@ -97,11 +97,11 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
-          context: backend-go
-          file: backend-go/docker/Dockerfile
+          context: backend
+          file: backend/docker/Dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=backend-go
-          cache-to: type=gha,scope=backend-go,mode=max
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max

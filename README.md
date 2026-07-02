@@ -10,7 +10,7 @@ Bilibili 观看历史记录分析工具
 ```
 bili-history/
 ├── frontend/      # Nuxt 3 + Vue 3 前端（支持 SSR）
-├── backend-go/    # Go Gin 后端
+├── backend/    # Go Gin 后端
 ├── docker-compose.yml
 ├── LICENSE        # MIT 许可证
 ├── NOTICE         # 原始项目归属声明
@@ -31,7 +31,7 @@ docker-compose up -d
 ### 后端
 
 ```bash
-cd backend-go
+cd backend
 go run ./cmd/main.go
 ```
 

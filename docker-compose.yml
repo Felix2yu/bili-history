@@ -4,7 +4,7 @@ services:
     container_name: bili-history-backend
     restart: unless-stopped
     volumes:
-      - ./backend-go/config:/app/config
+      - ./backend/config:/app/config
       - ./output:/app/output
     expose:
       - "8899"

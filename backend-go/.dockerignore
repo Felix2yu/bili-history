@@ -1,0 +1,17 @@
+.git
+.gitignore
+output/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+.DS_Store
+bilibili-history-go
+*.exe
+*.dll
+*.so
+*.dylib
+.vscode/
+.idea/
+*.md
+tests/

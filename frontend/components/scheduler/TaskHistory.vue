@@ -1,154 +1,133 @@
 <template>
-  <van-dialog
-    :show="show"
-    @update:show="$emit('update:show', $event)"
-    title="任务执行历史"
-    width="80%"
-    :show-confirm-button="false"
-    class="task-history-dialog"
-  >
-    <template #title>
-      <div class="flex items-center justify-between px-3">
-        <span>任务执行历史</span>
-        <button
-          @click="$emit('update:show', false)"
-          class="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-        >
-          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-    </template>
-    <div class="p-3">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center">
-          <div class="p-1.5 bg-[#fb7299]/10 dark:bg-[#fb7299]/20 rounded-lg mr-2">
-            <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h3 class="text-base font-medium text-gray-800 dark:text-gray-100">{{ taskName }}</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">ID: {{ taskId }}</p>
-          </div>
-        </div>
-        <div>
-          <button 
-            @click="refreshHistory" 
-            class="inline-flex items-center px-2 py-1 border border-transparent rounded-md text-xs font-medium text-white bg-[#fb7299] hover:bg-[#fb7299]/90 focus:outline-none"
-          >
-            <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            刷新
-          </button>
-        </div>
-      </div>
-      
-      <div v-if="loading" class="flex justify-center items-center py-8">
-        <van-loading type="spinner" color="#fb7299" />
-      </div>
-      <div v-else-if="!history.length" class="text-center py-8 text-gray-500 dark:text-gray-400">
-        暂无执行历史
-      </div>
-      <div v-else class="space-y-2">
-        <div v-for="record in history" :key="record.execution_id" class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <span 
-                :class="{
-                  'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800/60': record.status === 'success',
-                  'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800/60': record.status === 'running',
-                  'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800/60': record.status === 'error'
-                }"
-                class="px-1.5 py-0.5 text-xs font-medium rounded-md border"
-              >
-                {{ statusLabel(record.status) }}
-              </span>
-              <span class="text-sm text-gray-600 dark:text-gray-300">{{ record.start_time?.replace('T', ' ') }}</span>
+  <Teleport to="body">
+    <div v-if="show" class="fixed inset-0 z-[9999] flex items-center justify-center">
+      <div class="fixed inset-0 bg-black/60" @click="$emit('update:show', false)"></div>
+      <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] z-10 flex flex-col mx-4">
+        <!-- 标题栏 -->
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-xl bg-[#fb7299]/10 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">
-              耗时: {{ record.duration?.toFixed(2) || 0 }}秒
+            <div class="min-w-0">
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ taskName }}</h3>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">执行历史</p>
             </div>
           </div>
-          <div v-if="record.error" class="mt-2">
-            <button 
-              @click="viewError(record)"
-              class="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-            >
-              查看错误详情
+          <div class="flex items-center gap-1.5">
+            <button @click="refreshHistory"
+              class="px-2.5 py-1 text-xs font-medium text-[#fb7299] hover:bg-[#fb7299]/10 rounded-lg transition-colors">
+              刷新
+            </button>
+            <button @click="$emit('update:show', false)"
+              class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- 分页器 -->
-      <div v-if="total > pageSize" class="mt-4 flex justify-center">
-        <van-pagination
-          v-model="currentPage"
-          :total-items="total"
-          :items-per-page="pageSize"
-          :show-page-size="3"
-          force-ellipses
-          @change="handlePageChange"
-        />
+        <!-- 内容 -->
+        <div class="flex-1 overflow-y-auto px-5 py-4">
+          <!-- 加载 -->
+          <div v-if="loading" class="flex justify-center py-12">
+            <div class="animate-spin rounded-full h-8 w-8 border-2 border-[#fb7299] border-t-transparent"></div>
+          </div>
+
+          <!-- 空状态 -->
+          <div v-else-if="!history.length" class="text-center py-12">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+              <svg class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">暂无执行历史</p>
+          </div>
+
+          <!-- 历史列表 -->
+          <div v-else class="space-y-2">
+            <div v-for="record in history" :key="record.execution_id"
+              class="p-3 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full flex-shrink-0"
+                    :class="{
+                      'bg-green-500': record.status === 'success',
+                      'bg-amber-500': record.status === 'running',
+                      'bg-red-500': record.status === 'error'
+                    }"></span>
+                  <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+                    {{ statusLabel(record.status) }}
+                  </span>
+                </div>
+                <span class="text-xs text-gray-400">{{ record.duration?.toFixed(1) || 0 }}s</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ record.start_time?.replace('T', ' ') }}
+                </span>
+                <button v-if="record.error" @click="viewError(record)"
+                  class="text-xs text-red-500 hover:text-red-600 transition-colors">
+                  查看错误
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 分页 -->
+          <div v-if="total > pageSize" class="mt-4 flex justify-center">
+            <div class="flex items-center gap-2">
+              <button @click="handlePageChange(currentPage - 1)" :disabled="currentPage <= 1"
+                class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                上一页
+              </button>
+              <span class="text-xs text-gray-500">{{ currentPage }} / {{ Math.ceil(total / pageSize) }}</span>
+              <button @click="handlePageChange(currentPage + 1)" :disabled="currentPage >= Math.ceil(total / pageSize)"
+                class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                下一页
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 错误详情弹窗 -->
+        <Teleport to="body">
+          <div v-if="showErrorDialog" class="fixed inset-0 z-[10000] flex items-center justify-center">
+            <div class="fixed inset-0 bg-black/60" @click="showErrorDialog = false"></div>
+            <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg z-10 mx-4">
+              <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">错误详情</h3>
+                <button @click="showErrorDialog = false"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div class="p-5">
+                <pre class="text-xs font-mono text-red-600 dark:text-red-400 whitespace-pre-wrap bg-red-50 dark:bg-red-900/20 p-3 rounded-xl">{{ selectedRecord?.error }}</pre>
+              </div>
+            </div>
+          </div>
+        </Teleport>
       </div>
     </div>
-
-    <!-- 错误详情弹窗 -->
-    <van-dialog
-      v-model:show="showErrorDialog"
-      title="错误详情"
-      width="80%"
-      :show-confirm-button="false"
-      class="task-history-dialog"
-    >
-      <template #title>
-        <div class="flex items-center justify-between px-3">
-          <span>错误详情</span>
-          <button
-            @click="showErrorDialog = false"
-            class="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </template>
-      <div v-if="selectedRecord" class="p-3">
-        <div class="bg-red-50 dark:bg-red-900/30 p-2 rounded-md">
-          <pre class="text-xs font-mono text-red-800 dark:text-red-300 whitespace-pre-wrap overflow-x-auto">{{ selectedRecord.error }}</pre>
-        </div>
-      </div>
-    </van-dialog>
-  </van-dialog>
+  </Teleport>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { showNotify } from 'vant'
-import 'vant/es/dialog/style'
 import 'vant/es/notify/style'
-import 'vant/es/loading/style'
-import 'vant/es/pagination/style'
-import 'vant/es/date-picker/style'
 import { getTaskHistory } from '~/utils/api'
 
 const props = defineProps({
-  show: {
-    type: Boolean,
-    default: false
-  },
-  taskId: {
-    type: String,
-    default: ''
-  },
-  taskName: {
-    type: String,
-    default: ''
-  }
+  show: { type: Boolean, default: false },
+  taskId: { type: String, default: '' },
+  taskName: { type: String, default: '' }
 })
 
 const emit = defineEmits(['update:show'])
@@ -157,117 +136,45 @@ const loading = ref(false)
 const history = ref([])
 const showErrorDialog = ref(false)
 const selectedRecord = ref(null)
-
-// 分页相关
 const currentPage = ref(1)
 const pageSize = ref(20)
 const total = ref(0)
 
-// 获取任务历史记录
 const fetchHistory = async () => {
   if (!props.taskId) return
-  
   loading.value = true
   try {
     const response = await getTaskHistory({
-      task_id: props.taskId,
-      include_subtasks: false,
-      page: currentPage.value,
-      page_size: pageSize.value
+      task_id: props.taskId, include_subtasks: false,
+      page: currentPage.value, page_size: pageSize.value
     })
-    if (response.data && response.data.status === 'success') {
+    if (response.data?.status === 'success') {
       history.value = response.data.history || []
       total.value = response.data.total || 0
-    } else {
-      showNotify({ type: 'danger', message: '获取历史记录失败: ' + (response.data?.message || '未知错误') })
     }
-  } catch (error) {
-    showNotify({ type: 'danger', message: '获取历史记录出错: ' + (error.message || '未知错误') })
+  } catch {
+    showNotify({ type: 'danger', message: '获取历史记录失败' })
   } finally {
     loading.value = false
   }
 }
 
-// 处理页码变化
 const handlePageChange = (page) => {
   currentPage.value = page
   fetchHistory()
 }
 
-// 刷新历史记录
-const refreshHistory = () => {
-  fetchHistory()
-}
+const refreshHistory = () => fetchHistory()
 
-// 查看错误详情
 const viewError = (record) => {
   selectedRecord.value = record
   showErrorDialog.value = true
 }
 
-// 状态标签
 const statusLabel = (status) => {
-  switch (status) {
-    case 'success':
-      return '成功'
-    case 'error':
-      return '失败'
-    case 'running':
-      return '执行中'
-    case 'pending':
-      return '等待中'
-    default:
-      return status
-  }
+  return { success: '成功', error: '失败', running: '执行中', pending: '等待中' }[status] || status
 }
 
-// 监听任务ID变化，自动获取历史记录
-onMounted(() => {
-  if (props.show && props.taskId) {
-    fetchHistory()
-  }
-})
-
-// 监听show变化，自动获取历史记录
-watch(() => props.show, (newVal) => {
-  if (newVal && props.taskId) {
-    fetchHistory()
-  }
-})
+onMounted(() => { if (props.show && props.taskId) fetchHistory() })
+watch(() => props.show, (val) => { if (val && props.taskId) fetchHistory() })
 </script>
-
-<script>
-export default {
-  name: 'TaskHistory'
-}
-</script>
-
-<style scoped>
-.task-history-dialog :deep(.van-dialog) {
-  max-height: 85vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  margin-top: -10vh !important;
-}
-
-.task-history-dialog :deep(.van-dialog__header) {
-  flex-shrink: 0;
-  padding: 12px 16px;
-  font-size: 14px;
-}
-
-.result-dialog :deep(.van-dialog) {
-  max-height: 75vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  margin-top: -5vh !important;
-}
-
-.result-dialog :deep(.van-dialog__header) {
-  flex-shrink: 0;
-  padding: 10px 14px;
-  font-size: 13px;
-}
-</style> 

@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -1845,6 +1846,165 @@ func sortIntsDesc(arr []int) {
 			}
 		}
 	}
+}
+
+type DailyCountStats struct {
+	Date              string         `json:"date"`
+	TotalCount        int            `json:"total_count"`
+	TypeCounts        map[string]int `json:"type_counts"`
+	TotalWatchSeconds int            `json:"total_watch_seconds"`
+	TotalVideos       int            `json:"total_videos"`
+	UniqueAuthors     int            `json:"unique_authors"`
+	AvgDuration       float64        `json:"avg_duration"`
+	AvgCompletionRate float64        `json:"avg_completion_rate"`
+	CompletedVideos   int            `json:"completed_videos"`
+	TagDistribution   map[string]int `json:"tag_distribution"`
+	AuthorDistribution map[string]int `json:"author_distribution"`
+	Insights          []string       `json:"insights"`
+}
+
+func GetDailyCountStats(year int, month int, day int) (*DailyCountStats, error) {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
+	tableName := fmt.Sprintf("bilibili_history_%d", year)
+	exists, _ := db.TableExists(tableName)
+	if !exists {
+		return nil, fmt.Errorf("未找到 %d 年的历史记录数据", year)
+	}
+
+	dayStart := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
+	dayEnd := dayStart.Add(24 * time.Hour)
+	dayStartTS := dayStart.Unix()
+	dayEndTS := dayEnd.Unix()
+
+	result := &DailyCountStats{
+		Date:              dayStart.Format("2006-01-02"),
+		TypeCounts:        make(map[string]int),
+		TagDistribution:   make(map[string]int),
+		AuthorDistribution: make(map[string]int),
+		Insights:          []string{},
+	}
+
+	typeRows, err := conn.Query(fmt.Sprintf(`
+		SELECT business, COUNT(*) as count
+		FROM %s
+		WHERE view_at >= ? AND view_at < ?
+		GROUP BY business
+	`, tableName), dayStartTS, dayEndTS)
+	if err == nil {
+		defer typeRows.Close()
+		for typeRows.Next() {
+			var business sql.NullString
+			var count int
+			if typeRows.Scan(&business, &count) == nil {
+				typeKey := "other"
+				if business.Valid && business.String != "" {
+					typeKey = business.String
+				}
+				result.TypeCounts[typeKey] = count
+				result.TotalCount += count
+			}
+		}
+	}
+
+	var totalWatchSeconds sql.NullInt64
+	err = conn.QueryRow(fmt.Sprintf(`
+		SELECT SUM(
+			CASE
+				WHEN progress = -1 THEN duration
+				WHEN progress IS NULL THEN 0
+				WHEN progress >= 0 THEN
+					CASE WHEN progress > duration THEN duration ELSE progress END
+				ELSE 0
+			END
+		) AS total_watch_seconds
+		FROM %s
+		WHERE view_at >= ? AND view_at < ?
+	`, tableName), dayStartTS, dayEndTS).Scan(&totalWatchSeconds)
+	if err == nil && totalWatchSeconds.Valid {
+		result.TotalWatchSeconds = int(totalWatchSeconds.Int64)
+	}
+
+	var totalVideos int
+	var uniqueAuthors int
+	var avgDuration sql.NullFloat64
+	var avgCompletionRate sql.NullFloat64
+	var completedVideos int
+
+	err = conn.QueryRow(fmt.Sprintf(`
+		SELECT 
+			COUNT(*) as total_count,
+			COUNT(DISTINCT author_mid) as unique_authors,
+			COALESCE(AVG(duration), 0) as avg_duration,
+			COALESCE(AVG(CAST(progress AS FLOAT) / CAST(duration AS FLOAT)), 0) as avg_completion_rate,
+			COUNT(CASE WHEN progress >= duration * 0.9 THEN 1 END) as completed_videos
+		FROM %s
+		WHERE view_at >= ? AND view_at < ?
+	`, tableName), dayStartTS, dayEndTS).Scan(&totalVideos, &uniqueAuthors, &avgDuration, &avgCompletionRate, &completedVideos)
+	if err == nil {
+		result.TotalVideos = totalVideos
+		result.UniqueAuthors = uniqueAuthors
+		if avgDuration.Valid {
+			result.AvgDuration = avgDuration.Float64
+		}
+		if avgCompletionRate.Valid {
+			result.AvgCompletionRate = avgCompletionRate.Float64 * 100
+		}
+		result.CompletedVideos = completedVideos
+	}
+
+	tagRows, err := conn.Query(fmt.Sprintf(`
+		SELECT tag_name, COUNT(*) as count
+		FROM %s
+		WHERE view_at >= ? AND view_at < ? AND tag_name IS NOT NULL AND tag_name != ''
+		GROUP BY tag_name
+		ORDER BY count DESC
+		LIMIT 5
+	`, tableName), dayStartTS, dayEndTS)
+	if err == nil {
+		defer tagRows.Close()
+		for tagRows.Next() {
+			var tagName string
+			var count int
+			if tagRows.Scan(&tagName, &count) == nil {
+				result.TagDistribution[tagName] = count
+			}
+		}
+	}
+
+	authorRows, err := conn.Query(fmt.Sprintf(`
+		SELECT author_name, COUNT(*) as count
+		FROM %s
+		WHERE view_at >= ? AND view_at < ? AND author_mid IS NOT NULL
+		GROUP BY author_mid
+		ORDER BY count DESC
+		LIMIT 5
+	`, tableName), dayStartTS, dayEndTS)
+	if err == nil {
+		defer authorRows.Close()
+		for authorRows.Next() {
+			var authorName string
+			var count int
+			if authorRows.Scan(&authorName, &count) == nil {
+				result.AuthorDistribution[authorName] = count
+			}
+		}
+	}
+
+	result.Insights = []string{
+		fmt.Sprintf("这一天你一共观看了 %d 个视频", result.TotalVideos),
+		fmt.Sprintf("来自 %d 个不同的UP主", result.UniqueAuthors),
+		fmt.Sprintf("平均时长 %.1f 分钟", result.AvgDuration/60),
+		fmt.Sprintf("平均完成率 %.1f%%", result.AvgCompletionRate),
+		fmt.Sprintf("完整看完 %d 个视频", result.CompletedVideos),
+		fmt.Sprintf("总观看时长 %.1f 小时", float64(result.TotalWatchSeconds)/3600),
+	}
+
+	return result, nil
 }
 
 func init() {

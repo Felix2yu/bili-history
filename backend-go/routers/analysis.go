@@ -3,6 +3,7 @@ package routers
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"bilibili-history-go/database"
 	"bilibili-history-go/models"
@@ -82,9 +83,44 @@ func analyzeHistory(c *gin.Context) {
 }
 
 func getDailyStats(c *gin.Context) {
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"message": "每日统计功能待实现",
-	}))
+	dateStr := c.Query("date")
+	yearStr := c.Query("year")
+
+	if dateStr == "" || len(dateStr) != 4 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("日期参数无效，应为MMDD格式，例如0113表示1月13日"))
+		return
+	}
+
+	month, err := strconv.Atoi(dateStr[:2])
+	if err != nil || month < 1 || month > 12 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("月份无效"))
+		return
+	}
+
+	day, err := strconv.Atoi(dateStr[2:])
+	if err != nil || day < 1 || day > 31 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("日期无效"))
+		return
+	}
+
+	var year int
+	if yearStr != "" {
+		year, err = strconv.Atoi(yearStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, models.ErrorResponse("年份参数无效"))
+			return
+		}
+	} else {
+		year = time.Now().Year()
+	}
+
+	stats, err := database.GetDailyCountStats(year, month, day)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(stats))
 }
 
 func generateHeatmap(c *gin.Context) {

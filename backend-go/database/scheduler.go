@@ -79,8 +79,57 @@ func GetSchedulerDB() *sql.DB {
 		if _, err := schedulerDB.Exec(schedulerSchema); err != nil {
 			utils.LogError("Failed to ensure scheduler schema: %v", err)
 		}
+		migrateSchedulerDB(schedulerDB)
 	})
 	return schedulerDB
+}
+
+// migrateSchedulerDB adds columns that were introduced after the initial schema.
+// CREATE TABLE IF NOT EXISTS won't add new columns to an existing table, so we
+// must ALTER TABLE explicitly for upgrades from older database versions.
+func migrateSchedulerDB(db *sql.DB) {
+	// Columns to ensure exist in main_tasks: column_name -> DDL fragment
+	mainTaskMigrations := map[string]string{
+		"parent_id":     "TEXT DEFAULT ''",
+		"depends_on":    "TEXT DEFAULT ''",
+		"task_type":     "TEXT DEFAULT 'main'",
+		"schedule_delay": "INTEGER DEFAULT 0",
+	}
+	ensureColumns(db, "main_tasks", mainTaskMigrations)
+}
+
+// ensureColumns checks whether each column exists in the given table and adds
+// it via ALTER TABLE ADD COLUMN if missing.
+func ensureColumns(db *sql.DB, table string, columns map[string]string) {
+	rows, err := db.Query(fmt.Sprintf("PRAGMA table_info(%s)", table))
+	if err != nil {
+		utils.LogError("Failed to inspect %s columns: %v", table, err)
+		return
+	}
+	defer rows.Close()
+
+	existing := make(map[string]bool)
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull, pk int
+		var dflt sql.NullString
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			continue
+		}
+		existing[name] = true
+	}
+
+	for col, ddl := range columns {
+		if !existing[col] {
+			stmt := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", table, col, ddl)
+			if _, err := db.Exec(stmt); err != nil {
+				utils.LogError("Failed to add column %s to %s: %v", col, table, err)
+			} else {
+				utils.LogSuccess("Migrated %s: added column %s", table, col)
+			}
+		}
+	}
 }
 
 type MainTask struct {

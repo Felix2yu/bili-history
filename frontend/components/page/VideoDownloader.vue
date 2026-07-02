@@ -136,7 +136,7 @@
               <div class="relative aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
                   <img
                     v-if="videoInfo.pic"
-                    :src="getProxyImageUrl(videoInfo.pic)"
+                    :src="normalizeImageUrl(videoInfo.pic)"
                   :alt="videoInfo.title"
                   class="w-full h-full object-cover"
                 />
@@ -370,7 +370,7 @@ import DownloadDialog from '../DownloadDialog.vue'
 import SimpleSearchBar from '../SimpleSearchBar.vue'
 import CustomDropdown from '../CustomDropdown.vue'
 import UserVideos from '../UserVideos.vue'
-import { getProxyImageUrl } from '~/utils/imageUrl.js'
+import { normalizeImageUrl } from '~/utils/imageUrl.js'
 
 // 下载类型
 const downloadType = ref('video')

@@ -9,6 +9,7 @@ import (
 	"bilibili-history-go/models"
 	"bilibili-history-go/scheduler"
 	"bilibili-history-go/services"
+	"bilibili-history-go/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,12 +17,14 @@ import (
 func RegisterConfigRoutes(r *gin.RouterGroup) {
 	configGroup := r.Group("/config")
 	{
-		configGroup.GET("/email", getEmailConfig)
-		configGroup.POST("/email", saveEmailConfig)
-		configGroup.GET("/apprise", getAppriseConfig)
-		configGroup.POST("/apprise", saveAppriseConfig)
+		configGroup.GET("/shoutrrr", getShoutrrrConfig)
+		configGroup.POST("/shoutrrr", saveShoutrrrConfig)
+		configGroup.POST("/shoutrrr/test", testShoutrrrConfig)
 		configGroup.GET("/server", getServerConfig)
 		configGroup.POST("/server", saveServerConfig)
+		// Python-compatible aliases
+		configGroup.GET("/apprise-config", getShoutrrrConfig)
+		configGroup.POST("/apprise-config", saveShoutrrrConfig)
 	}
 }
 
@@ -30,10 +33,19 @@ func RegisterSchedulerRoutes(r *gin.RouterGroup) {
 	{
 		scheduler.GET("/tasks", getSchedulerTasks)
 		scheduler.POST("/tasks", addSchedulerTask)
+		// task_id may contain "/" (Python uses endpoint paths like
+		// "/fetch/bili-history" as IDs). The frontend URL-encodes the slash
+		// as %2F and the Gin engine uses UseRawPath so ":id" matches the
+		// encoded segment correctly.
 		scheduler.PUT("/tasks/:id", updateSchedulerTask)
 		scheduler.DELETE("/tasks/:id", deleteSchedulerTask)
-		scheduler.POST("/tasks/:id/run", runSchedulerTask)
-		scheduler.GET("/tasks/:id/history", getTaskHistory)
+		scheduler.POST("/tasks/:id/execute", runSchedulerTask)
+		scheduler.POST("/tasks/:id/enable", enableSchedulerTask)
+		// Frontend calls /tasks/history with task_id as a query param.
+		scheduler.GET("/tasks/history", getTaskHistory)
+		// Sub-task management (parent_id stored on the sub task).
+		scheduler.POST("/tasks/:id/subtasks", addSubTask)
+		scheduler.DELETE("/tasks/:id/subtasks/:subId", deleteSubTask)
 		scheduler.GET("/status", getSchedulerStatus)
 	}
 }
@@ -76,14 +88,18 @@ func RegisterCleanRoutes(r *gin.RouterGroup) {
 	{
 		clean.POST("/start", cleanData)
 		clean.GET("/status", getCleanStatus)
+		// Python-compatible alias
+		clean.POST("/clean_data", cleanData)
 	}
 }
 
 func RegisterLogRoutes(r *gin.RouterGroup) {
 	log := r.Group("/log")
 	{
-		log.POST("/send", sendLogEmail)
+		log.POST("/send", sendDailyReport)
 		log.GET("/list", getLogList)
+		// Python-compatible alias
+		log.POST("/send-email", sendDailyReport)
 	}
 }
 
@@ -94,6 +110,7 @@ func RegisterFetchRoutes(r *gin.RouterGroup) {
 		fetch.GET("/status", getFetchStatus)
 		fetch.GET("/bili-history-realtime", fetchBiliHistoryRealtime)
 		fetch.GET("/bili-history", fetchBiliHistoryFull)
+		fetch.POST("/bili-history", fetchBiliHistoryFull)
 		fetch.GET("/invalid-videos", getInvalidVideos)
 	}
 }
@@ -203,63 +220,61 @@ func RegisterTitleAnalyticsRoutes(r *gin.RouterGroup) {
 	}
 }
 
-func getEmailConfig(c *gin.Context) {
+func getShoutrrrConfig(c *gin.Context) {
 	cfg := config.GetConfig()
 	if cfg == nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("配置加载失败"))
 		return
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse(cfg.Email))
+	c.JSON(http.StatusOK, models.SuccessResponse(cfg.Shoutrrr))
 }
 
-func saveEmailConfig(c *gin.Context) {
-	var emailCfg config.EmailConfig
-	if err := c.ShouldBindJSON(&emailCfg); err != nil {
+func saveShoutrrrConfig(c *gin.Context) {
+	var shoutrrrCfg config.ShoutrrrConfig
+	if err := c.ShouldBindJSON(&shoutrrrCfg); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
 		return
 	}
 
 	cfg, _ := config.LoadConfig()
-	cfg.Email = emailCfg
+	cfg.Shoutrrr = shoutrrrCfg
 	if err := config.SaveConfig(cfg); err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("保存失败: "+err.Error()))
 		return
 	}
 
+	services.ResetShoutrrrRouter()
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "邮件配置已保存",
+		"message": "Shoutrrr配置已保存",
 	})
 }
 
-func getAppriseConfig(c *gin.Context) {
+func testShoutrrrConfig(c *gin.Context) {
 	cfg := config.GetConfig()
 	if cfg == nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("配置加载失败"))
 		return
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse(cfg.Apprise))
-}
-
-func saveAppriseConfig(c *gin.Context) {
-	var appriseCfg config.AppriseConfig
-	if err := c.ShouldBindJSON(&appriseCfg); err != nil {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+	if !cfg.Shoutrrr.Enabled || len(cfg.Shoutrrr.URLs) == 0 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("Shoutrrr未启用或未配置URL"))
 		return
 	}
 
-	cfg, _ := config.LoadConfig()
-	cfg.Apprise = appriseCfg
-	if err := config.SaveConfig(cfg); err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("保存失败: "+err.Error()))
+	if err := services.SendTestShoutrrr(); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": "测试通知发送失败: " + err.Error(),
+		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "Apprise配置已保存",
+		"message": "测试通知已发送，请检查各推送渠道",
 	})
 }
 
@@ -296,53 +311,66 @@ func saveServerConfig(c *gin.Context) {
 func getSchedulerTasks(c *gin.Context) {
 	sched := scheduler.GetScheduler()
 	tasks := sched.GetTasks()
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"tasks": tasks,
-		"total": len(tasks),
-	}))
+	utils.LogInfo("获取任务列表: 共 %d 个主任务", len(tasks))
+	// Frontend reads response.data.tasks (top-level tasks array, not nested
+	// under data). Also include the Python-style status/message envelope.
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "获取任务信息成功",
+		"tasks":   tasks,
+		"total":   len(tasks),
+	})
 }
 
 func addSchedulerTask(c *gin.Context) {
-	var task scheduler.ScheduleTask
-	if err := c.ShouldBindJSON(&task); err != nil {
+	var payload map[string]interface{}
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
 		return
 	}
 
 	sched := scheduler.GetScheduler()
-	newTask, err := sched.CreateTask(&task)
+	taskInfo, err := sched.CreateTaskFromConfig(payload)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("创建任务失败: "+err.Error()))
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": "创建任务失败: " + err.Error(),
+		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "任务创建成功",
-		"data":    newTask,
+		"status":    "success",
+		"message":   "成功创建任务",
+		"task_id":   taskInfo["task_id"],
+		"task_info": taskInfo,
 	})
 }
 
 func updateSchedulerTask(c *gin.Context) {
 	taskID := c.Param("id")
 
-	var updates map[string]interface{}
-	if err := c.ShouldBindJSON(&updates); err != nil {
+	var payload map[string]interface{}
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
 		return
 	}
 
 	sched := scheduler.GetScheduler()
-	updatedTask, err := sched.UpdateTask(taskID, updates)
+	taskInfo, err := sched.UpdateTaskFromConfig(taskID, payload)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("更新任务失败: "+err.Error()))
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": "更新任务失败: " + err.Error(),
+		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "任务更新成功",
-		"data":    updatedTask,
+		"status":    "success",
+		"message":   "任务更新成功",
+		"task_id":   taskID,
+		"task_info": taskInfo,
 	})
 }
 
@@ -352,48 +380,139 @@ func deleteSchedulerTask(c *gin.Context) {
 	sched := scheduler.GetScheduler()
 	err := sched.DeleteTask(taskID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("删除任务失败: "+err.Error()))
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": "删除任务失败: " + err.Error(),
+		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "任务删除成功",
+		"task_id": taskID,
 	})
 }
 
 func runSchedulerTask(c *gin.Context) {
 	taskID := c.Param("id")
+	utils.LogInfo("收到执行任务请求: task_id=%s", taskID)
 
 	sched := scheduler.GetScheduler()
 	err := sched.RunTask(taskID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("运行任务失败: "+err.Error()))
+		utils.LogError("执行任务失败: task_id=%s, error=%v", taskID, err)
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": "运行任务失败: " + err.Error(),
+		})
+		return
+	}
+
+	utils.LogSuccess("任务已启动: task_id=%s", taskID)
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "任务已启动",
+		"task_id": taskID,
+	})
+}
+
+func enableSchedulerTask(c *gin.Context) {
+	taskID := c.Param("id")
+	var body struct {
+		Enabled bool `json:"enabled"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	sched := scheduler.GetScheduler()
+	if err := sched.SetTaskEnabled(taskID, body.Enabled); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": "切换任务状态失败: " + err.Error(),
+		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "任务已启动",
+		"message": "任务状态已更新",
+		"task_id": taskID,
+		"enabled": body.Enabled,
+	})
+}
+
+func addSubTask(c *gin.Context) {
+	parentID := c.Param("id")
+	var payload map[string]interface{}
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+	payload["parent_id"] = parentID
+	if tt, ok := payload["task_type"].(string); !ok || tt == "" {
+		payload["task_type"] = "sub"
+	}
+
+	sched := scheduler.GetScheduler()
+	taskInfo, err := sched.CreateTaskFromConfig(payload)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": "创建子任务失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":    "success",
+		"message":   "成功创建子任务",
+		"task_id":   taskInfo["task_id"],
+		"task_info": taskInfo,
+	})
+}
+
+func deleteSubTask(c *gin.Context) {
+	subID := c.Param("subId")
+
+	sched := scheduler.GetScheduler()
+	if err := sched.DeleteTask(subID); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": "删除子任务失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "子任务删除成功",
+		"task_id": subID,
 	})
 }
 
 func getTaskHistory(c *gin.Context) {
-	taskID := c.Param("id")
-	limit := 20
-	if limitStr := c.Query("limit"); limitStr != "" {
-		if l, err := strconv.Atoi(limitStr); err == nil {
-			limit = l
+	taskID := c.Query("task_id")
+	pageSize := 20
+	if ps := c.Query("page_size"); ps != "" {
+		if n, err := strconv.Atoi(ps); err == nil && n > 0 {
+			pageSize = n
 		}
 	}
 
 	sched := scheduler.GetScheduler()
-	executions := sched.GetTaskExecutions(taskID, limit)
+	records := sched.GetTaskExecutions(taskID, pageSize)
 
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"records": executions,
-		"total":   len(executions),
-	}))
+	c.JSON(http.StatusOK, gin.H{
+		"status":      "success",
+		"message":     "获取任务执行历史成功",
+		"history":     records,
+		"total_count": len(records),
+		"page":        1,
+		"page_size":   pageSize,
+	})
 }
 
 func getSchedulerStatus(c *gin.Context) {
@@ -520,16 +639,21 @@ func getCleanStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(status))
 }
 
-func sendLogEmail(c *gin.Context) {
-	err := services.SendTestEmail()
+func sendDailyReport(c *gin.Context) {
+	stats := make(map[string]interface{})
+	if err := c.ShouldBindJSON(&stats); err != nil {
+		stats = make(map[string]interface{})
+	}
+
+	err := services.SendDailyReport(stats)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("发送邮件失败: "+err.Error()))
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("发送每日报告失败: "+err.Error()))
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "测试邮件已发送",
+		"message": "每日报告已发送",
 	})
 }
 

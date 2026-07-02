@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -17,13 +18,17 @@ const (
 	QrcodePollURL   = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
 	PopularURL      = "https://api.bilibili.com/x/web-interface/popular"
 	VideoInfoURL    = "https://api.bilibili.com/x/web-interface/view"
+	WatchLaterURL   = "https://api.bilibili.com/x/v2/history/toview"
+	WatchLaterDelURL = "https://api.bilibili.com/x/v2/history/toview/del"
 )
 
 type Client struct {
-	SESSDATA  string
-	Buvid3    string
-	UserAgent string
-	client    *http.Client
+	SESSDATA    string
+	BiliJct     string
+	DedeUserID  string
+	Buvid3      string
+	UserAgent   string
+	client      *http.Client
 }
 
 type BiliResponse struct {
@@ -160,6 +165,15 @@ func NewClient(sessdata string) *Client {
 	}
 }
 
+// NewClientWithConfig constructs a client with full credentials (SESSDATA + bili_jct + DedeUserID)
+// from the application config, required for write operations like removing watch later items.
+func NewClientWithConfig(sessdata, biliJct, dedeUserID string) *Client {
+	c := NewClient(sessdata)
+	c.BiliJct = biliJct
+	c.DedeUserID = dedeUserID
+	return c
+}
+
 func (c *Client) getHeaders() map[string]string {
 	headers := map[string]string{
 		"User-Agent": c.UserAgent,
@@ -168,7 +182,19 @@ func (c *Client) getHeaders() map[string]string {
 		"Accept":     "application/json, text/plain, */*",
 	}
 	if c.SESSDATA != "" {
-		headers["Cookie"] = fmt.Sprintf("SESSDATA=%s; buvid3=%s; b_nut=1234567890; buvid4=random_string", c.SESSDATA, c.Buvid3)
+		cookies := []string{
+			fmt.Sprintf("SESSDATA=%s", c.SESSDATA),
+			fmt.Sprintf("buvid3=%s", c.Buvid3),
+			"b_nut=1234567890",
+			"buvid4=random_string",
+		}
+		if c.BiliJct != "" {
+			cookies = append(cookies, fmt.Sprintf("bili_jct=%s", c.BiliJct))
+		}
+		if c.DedeUserID != "" {
+			cookies = append(cookies, fmt.Sprintf("DedeUserID=%s", c.DedeUserID))
+		}
+		headers["Cookie"] = strings.Join(cookies, "; ")
 	}
 	return headers
 }
@@ -335,6 +361,112 @@ func (c *Client) GetPopular(pn int, ps int) (*PopularData, error) {
 	}
 
 	return &data, nil
+}
+
+// WatchLaterItem represents a single entry in the Bilibili watch later list.
+type WatchLaterItem struct {
+	Aid      int64           `json:"aid"`
+	Bvid     string          `json:"bvid"`
+	Title    string          `json:"title"`
+	Pic      string          `json:"pic"`
+	Desc     string          `json:"desc"`
+	Duration int             `json:"duration"`
+	Tid      int             `json:"tid"`
+	Tname    string          `json:"tname"`
+	Owner    VideoOwner      `json:"owner"`
+	Stat     VideoStat       `json:"stat"`
+	AddAt    int64           `json:"add_at"`
+	Pubdate  int64           `json:"pubdate"`
+}
+
+// WatchLaterData is the raw payload returned by /x/v2/history/toview.
+type WatchLaterData struct {
+	Count int               `json:"count"`
+	List  []WatchLaterItem  `json:"list"`
+}
+
+// GetWatchLaterList fetches the user's full watch later list from Bilibili.
+// The official API returns up to 1000 items in a single response.
+func (c *Client) GetWatchLaterList() (*WatchLaterData, error) {
+	body, err := c.Get(WatchLaterURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp BiliResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return nil, fmt.Errorf("unmarshal response error: %w", err)
+	}
+	if resp.Code != 0 {
+		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+	}
+
+	var data WatchLaterData
+	if err := json.Unmarshal(resp.Data, &data); err != nil {
+		return nil, fmt.Errorf("unmarshal data error: %w", err)
+	}
+	return &data, nil
+}
+
+// PostForm sends a POST request with application/x-www-form-urlencoded body,
+// which is required by Bilibili write APIs such as removing a watch later item.
+func (c *Client) PostForm(urlStr string, form url.Values) ([]byte, error) {
+	req, err := http.NewRequest("POST", urlStr, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("create request error: %w", err)
+	}
+	headers := c.getHeaders()
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read body error: %w", err)
+	}
+	return respBody, nil
+}
+
+// RemoveFromWatchLater removes a single video from the watch later list using its aid.
+// The Bilibili API requires the bili_jct (csrf) token.
+func (c *Client) RemoveFromWatchLater(aid int64) error {
+	if c.BiliJct == "" {
+		return fmt.Errorf("bili_jct (csrf) is required to remove watch later items")
+	}
+	form := url.Values{}
+	form.Set("aid", fmt.Sprintf("%d", aid))
+	form.Set("platform", "web")
+	form.Set("csrf", c.BiliJct)
+
+	body, err := c.PostForm(WatchLaterDelURL, form)
+	if err != nil {
+		return err
+	}
+	var resp BiliResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return fmt.Errorf("unmarshal response error: %w", err)
+	}
+	if resp.Code != 0 {
+		return &ApiError{Code: resp.Code, Message: resp.Message}
+	}
+	return nil
+}
+
+// ApiError represents a Bilibili API-level error with its code and message.
+type ApiError struct {
+	Code    int
+	Message string
+}
+
+func (e *ApiError) Error() string {
+	return fmt.Sprintf("api error: code=%d, message=%s", e.Code, e.Message)
 }
 
 func GenerateQrcode() (*QrCodeData, error) {

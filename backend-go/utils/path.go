@@ -8,11 +8,11 @@ import (
 )
 
 func GetBasePath() string {
-	exe, err := os.Executable()
+	cwd, err := os.Getwd()
 	if err != nil {
 		return "."
 	}
-	return filepath.Dir(exe)
+	return cwd
 }
 
 func GetOutputPath(paths ...string) string {

@@ -277,107 +277,11 @@
                 </div>
               </div>
 
-              <!-- 邮件配置 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="text-[14px] font-medium text-gray-900 dark:text-gray-100 md:text-base">邮件配置</h3>
-                  <div class="flex space-x-2">
-                    <button
-                      @click="resetEmailConfig"
-                      class="inline-flex items-center px-3 py-1.5 text-[11px] font-medium text-[#fb7299] md:text-sm bg-[#fb7299]/5 dark:bg-[#fb7299]/10 rounded-lg hover:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20"
-                    >
-                      <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      重置
-                    </button>
-                    <button
-                      @click="saveEmailConfig"
-                      class="inline-flex items-center px-3 py-1.5 text-[11px] font-medium text-white md:text-sm bg-[#fb7299] rounded-lg hover:bg-[#fb7299]/90"
-                    >
-                      保存
-                    </button>
-                    <button
-                      @click="testEmailConfig"
-                      class="inline-flex items-center px-3 py-1.5 text-[11px] font-medium text-white md:text-sm bg-[#fb7299] rounded-lg hover:bg-[#fb7299]/90"
-                      :disabled="!isEmailConfigComplete"
-                    >
-                      <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
-                      </svg>
-                      测试
-                    </button>
-                  </div>
-                </div>
 
-                <div class="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <div class="space-y-3">
-                    <div>
-                      <label class="mb-1 block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">SMTP服务器</label>
-                      <input
-                        v-model="emailConfig.smtp_server"
-                        type="text"
-                        class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
-                        placeholder="smtp.qq.com"
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">发件人邮箱</label>
-                      <input
-                        v-model="emailConfig.sender"
-                        type="email"
-                        class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
-                        placeholder="example@qq.com"
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">收件人邮箱</label>
-                      <input
-                        v-model="emailConfig.receiver"
-                        type="email"
-                        class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
-                        placeholder="receiver@qq.com"
-                      />
-                    </div>
-                  </div>
-                  <div class="space-y-3">
-                    <div>
-                      <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">SMTP端口</label>
-                      <input
-                        v-model.number="emailConfig.smtp_port"
-                        type="number"
-                        class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
-                        placeholder="587"
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">SMTP认证用户名（可选）</label>
-                      <input
-                        v-model="emailConfig.auth_username"
-                        type="text"
-                        class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
-                        placeholder="为空则使用发件人邮箱"
-                      />
-                      <p class="mt-1 text-[10px] text-gray-500 dark:text-gray-400 md:text-xs">
-                        QQ邮箱通常留空；Resend等服务可填写独立认证用户名。
-                      </p>
-                    </div>
-                    <div>
-                      <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">邮箱授权码</label>
-                      <input
-                        v-model="emailConfig.password"
-                        type="password"
-                        class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
-                        placeholder="授权码"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </section>
 
-          <!-- Apprise推送配置 -->
+          <!-- Shoutrrr通知配置 -->
           <section v-if="activeTab === 'basic'">
             <div class="divide-y divide-gray-200 border-y border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 md:rounded-lg md:border md:border-x">
               <ApriseSettings />
@@ -607,11 +511,8 @@ import {
   resetDatabase,
   getAvailableYears,
   importSqliteData,
-  getEmailConfig,
-  updateEmailConfig,
   getMcpConfig,
   updateMcpConfig,
-  testEmailConfig as testEmailApi,
   getIntegrityCheckConfig,
   updateIntegrityCheckConfig
 } from '../../api/api'
@@ -664,16 +565,6 @@ const exportOptions = ref({
 })
 const serverUrl = ref('')
 const useLocalImages = ref(typeof window !== 'undefined' ? localStorage.getItem('useLocalImages') === 'true' : false)
-const DEFAULT_EMAIL_CONFIG = {
-  smtp_server: 'smtp.qq.com',
-  smtp_port: 587,
-  sender: '',
-  auth_username: '',
-  password: '',
-  receiver: ''
-}
-const emailConfig = ref({ ...DEFAULT_EMAIL_CONFIG })
-
 const DEFAULT_MCP_CONFIG = {
   enabled: false,
   path: '/mcp',
@@ -901,11 +792,6 @@ onMounted(async () => {
     })
 
     await Promise.all([
-      (async () => {
-        console.log('开始初始化邮件配置')
-        await initEmailConfig()
-        console.log('邮件配置初始化完成')
-      })(),
       (async () => {
         console.log('开始初始化MCP配置')
         await initMcpConfig()
@@ -1210,29 +1096,6 @@ const handleImageSourceChange = () => {
   window.location.reload()
 }
 
-// 初始化邮件配置
-const initEmailConfig = async () => {
-  try {
-    const response = await getEmailConfig()
-    if (response.data) {  // 直接检查 response.data
-      // 使用解构赋值来更新配置，保留默认值
-      emailConfig.value = {
-        ...DEFAULT_EMAIL_CONFIG,
-        ...response.data  // 直接使用 response.data
-      }
-    } else {
-      emailConfig.value = { ...DEFAULT_EMAIL_CONFIG }
-    }
-  } catch (error) {
-    console.error('获取邮件配置失败:', error)
-    showNotify({
-      type: 'warning',
-      message: '获取邮件配置失败，使用默认配置'
-    })
-    emailConfig.value = { ...DEFAULT_EMAIL_CONFIG }
-  }
-}
-
 // 初始化MCP配置
 const initMcpConfig = async () => {
   isMcpConfigLoading.value = true
@@ -1330,134 +1193,6 @@ const copyText = async (text, label = '内容') => {
     showNotify({
       type: 'danger',
       message: error.message || '复制失败，请手动复制'
-    })
-  }
-}
-
-// 保存邮件配置
-const saveEmailConfig = async () => {
-  try {
-    // 验证邮箱格式
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(emailConfig.value.sender)) {
-      throw new Error('发件人邮箱格式不正确')
-    }
-    if (!emailRegex.test(emailConfig.value.receiver)) {
-      throw new Error('收件人邮箱格式不正确')
-    }
-
-    // 验证端口号
-    if (emailConfig.value.smtp_port < 0 || emailConfig.value.smtp_port > 65535) {
-      throw new Error('端口号必须在0-65535之间')
-    }
-
-    const response = await updateEmailConfig(emailConfig.value)
-    if (response.data.status === 'success') {
-      showNotify({
-        type: 'success',
-        message: '邮件配置已保存'
-      })
-    } else {
-      throw new Error(response.data.message || '保存失败')
-    }
-  } catch (error) {
-    showNotify({
-      type: 'danger',
-      message: `保存失败：${error.message}`
-    })
-  }
-}
-
-// 重置邮件配置
-const resetEmailConfig = () => {
-  showDialog({
-    title: '重置邮件配置',
-    message: '确定要重置邮件配置吗？这将清空所有配置并恢复默认的SMTP服务器和端口设置。',
-    showCancelButton: true,
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    confirmButtonColor: '#fb7299'
-  }).then(async (result) => {
-    if (result === 'confirm') {
-      try {
-        // 完全重置为默认配置
-        const resetConfig = { ...DEFAULT_EMAIL_CONFIG }
-        emailConfig.value = resetConfig
-
-        // 调用后端API保存重置后的配置
-        const response = await updateEmailConfig(resetConfig)
-        if (response.data.status === 'success') {
-          showNotify({
-            type: 'success',
-            message: '邮件配置已重置'
-          })
-        } else {
-          throw new Error(response.data.message || '重置失败')
-        }
-      } catch (error) {
-        showNotify({
-          type: 'danger',
-          message: `重置失败：${error.message}`
-        })
-        // 如果保存失败，重新获取配置
-        await initEmailConfig()
-      }
-    }
-  })
-}
-
-// 检查邮件配置是否完整
-const isEmailConfigComplete = computed(() => {
-  return emailConfig.value.smtp_server &&
-         emailConfig.value.smtp_port &&
-         emailConfig.value.sender &&
-         emailConfig.value.password &&
-         emailConfig.value.receiver
-})
-
-// 测试邮件配置
-const testEmailConfig = async () => {
-  try {
-    if (!isEmailConfigComplete.value) {
-      showNotify({
-        type: 'warning',
-        message: '请先完善邮件配置'
-      })
-      return
-    }
-
-    // 先保存邮件配置
-    try {
-      await saveEmailConfig()
-    } catch (error) {
-      // 如果保存配置失败，则终止测试
-      return
-    }
-
-    showNotify({
-      type: 'primary',
-      message: '正在发送测试邮件...'
-    })
-
-    const testData = {
-      to_email: emailConfig.value.receiver,
-      subject: '测试邮件',
-      content: '这是一封测试邮件，用于验证邮箱配置是否有效。'
-    }
-
-    const response = await testEmailApi(testData)
-    if (response.data.status === 'success') {
-      showNotify({
-        type: 'success',
-        message: '测试邮件发送成功'
-      })
-    } else {
-      throw new Error(response.data.message || '发送失败')
-    }
-  } catch (error) {
-    showNotify({
-      type: 'danger',
-      message: `发送失败：${error.message || '未知错误'}`
     })
   }
 }

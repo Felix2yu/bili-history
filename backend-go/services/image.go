@@ -253,6 +253,14 @@ func StartFullImageDownload(year *int, useSessdata bool) {
 			return
 		}
 
+		conn := db.GetDB()
+		if conn == nil {
+			status := GetImageDownloadStatus()
+			status.ErrorMessage = "数据库连接未初始化"
+			setImageDownloadStatus(status)
+			return
+		}
+
 		years := []int{}
 		if year != nil {
 			years = append(years, *year)
@@ -281,17 +289,9 @@ func StartFullImageDownload(year *int, useSessdata bool) {
 				continue
 			}
 
-			params := database.HistoryQueryParams{
-				Page:      1,
-				Size:      99999,
-				SortOrder: 0,
-			}
-			pagedResponse, _, err := database.GetHistoryPage(params)
-			if err != nil || pagedResponse == nil {
-				continue
-			}
-			records, ok := pagedResponse.Records.([]map[string]interface{})
-			if !ok {
+			query := fmt.Sprintf("SELECT cover, author_face FROM %s WHERE (cover != '' AND cover IS NOT NULL) OR (author_face != '' AND author_face IS NOT NULL)", tableName)
+			rows, err := conn.Query(query)
+			if err != nil {
 				continue
 			}
 
@@ -299,13 +299,16 @@ func StartFullImageDownload(year *int, useSessdata bool) {
 			status.CurrentYear = y
 			setImageDownloadStatus(status)
 
-			for _, record := range records {
+			for rows.Next() {
 				if isImageDownloadStopped() {
+					rows.Close()
 					break
 				}
 
-				cover, _ := record["cover"].(string)
-				authorFace, _ := record["author_face"].(string)
+				var cover, authorFace string
+				if err := rows.Scan(&cover, &authorFace); err != nil {
+					continue
+				}
 
 				if cover != "" {
 					hash := md5.Sum([]byte(cover))
@@ -343,11 +346,16 @@ func StartFullImageDownload(year *int, useSessdata bool) {
 					totalTasks++
 				}
 			}
+			rows.Close()
 		}
 
 		status = GetImageDownloadStatus()
 		status.TotalImages = totalTasks
 		setImageDownloadStatus(status)
+
+		if totalTasks == 0 {
+			return
+		}
 
 		concurrency := 5
 		sem := make(chan struct{}, concurrency)

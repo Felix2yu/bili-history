@@ -23,17 +23,17 @@
           </svg>
         </button>
 
-        <!-- 页眉区域：包含Yutto致谢和FFmpeg状态 -->
+        <!-- 页眉区域：包含Lux致谢和FFmpeg状态 -->
         <div
           class="px-3 md:px-6 py-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 space-x-2">
           <div class="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
-            <img src="https://yutto.nyakku.moe/logo-mini.svg" alt="Yutto Logo" class="w-5 h-5 md:w-6 md:h-6">
+            <div class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-[#fb7299] font-bold text-lg">👾</div>
             <div class="flex flex-col">
-              <p class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">下载功能基于 <a href="https://yutto.nyakku.moe/"
-                                                                                  target="_blank"
-                                                                                  class="text-[#fb7299] hover:text-[#fb7299]/80 font-medium">Yutto</a>
+              <p class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">下载功能基于 <a href="https://github.com/iawia002/lux"
+                                                                                   target="_blank"
+                                                                                   class="text-[#fb7299] hover:text-[#fb7299]/80 font-medium">Lux</a>
               </p>
-              <p class="hidden md:block text-xs text-gray-500 dark:text-gray-400">感谢 Yutto 开发团队的开源贡献</p>
+              <p class="hidden md:block text-xs text-gray-500 dark:text-gray-400">感谢 Lux 开发团队的开源贡献</p>
             </div>
           </div>
 
@@ -62,10 +62,10 @@
                 <div class="text-xs text-gray-600 dark:text-gray-400">
                   <p>
                     <a
-                      href="https://yutto.nyakku.moe/guide/quick-start#ffmpeg-%E4%B8%8B%E8%BD%BD%E4%B8%8E%E9%85%8D%E7%BD%AE"
+                      href="https://ffmpeg.org/download.html"
                       target="_blank"
                       class="text-[#fb7299] hover:text-[#fb7299]/80">
-                      点击查看Yutto说明 →
+                      点击查看FFmpeg安装说明 →
                     </a>
                   </p>
                 </div>
@@ -222,209 +222,43 @@
               </div>
 
               <div class="p-2 md:p-3">
-                <!-- 基础参数区块 -->
+                <!-- 下载参数区块 -->
                 <div class="mb-3">
                   <h5 class="text-[10px] md:text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 md:mb-2 uppercase tracking-wide flex items-center">
                     <svg class="w-3 h-3 mr-1 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    视频和音频质量
+                    下载设置
                   </h5>
-                  <div class="grid grid-cols-3 gap-2 md:gap-3">
-                    <!-- 视频清晰度 -->
-                    <div>
-                      <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-0.5 md:mb-1">视频清晰度</label>
-                      <CustomDropdown
-                        v-model="advancedOptions.video_quality"
-                        :options="videoQualityOptions"
-                        :selected-text="getVideoQualityText(advancedOptions.video_quality)"
-                        custom-class="w-full text-xs"
-                      />
-                    </div>
+                  <div class="grid grid-cols-2 gap-2 md:gap-3">
+                    <!-- 多线程下载 -->
+                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        v-model="advancedOptions.multi_thread"
+                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
+                      >
+                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">多线程下载</span>
+                    </label>
 
-                    <!-- 音频码率 -->
+                    <!-- 画质选择 -->
                     <div>
-                      <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-0.5 md:mb-1">音频码率</label>
+                      <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-0.5 md:mb-1">
+                        画质选择
+                        <span v-if="loadingStreams" class="text-[#fb7299] ml-1">加载中...</span>
+                      </label>
                       <CustomDropdown
-                        v-model="advancedOptions.audio_quality"
-                        :options="audioQualityOptions"
-                        :selected-text="getAudioQualityText(advancedOptions.audio_quality)"
+                        v-model="advancedOptions.stream_id"
+                        :options="streamOptions"
+                        :selected-text="getStreamText(advancedOptions.stream_id)"
                         custom-class="w-full text-xs"
-                      />
-                    </div>
-
-                    <!-- 输出格式 -->
-                    <div>
-                      <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-0.5 md:mb-1">输出格式</label>
-                      <CustomDropdown
-                        v-model="advancedOptions.output_format"
-                        :options="outputFormatOptions"
-                        :selected-text="getOutputFormatText(advancedOptions.output_format)"
-                        custom-class="w-full text-xs"
+                        :disabled="loadingStreams"
                       />
                     </div>
                   </div>
                   <div class="text-gray-500 dark:text-gray-400 mt-1.5 md:mt-2 text-[9px] md:text-[10px]">
-                    * yutto会尽可能满足清晰度要求，如不存在会自动调节
-                  </div>
-                </div>
-
-                <!-- 编码参数区块 -->
-                <div class="mb-3">
-                  <h5 class="text-[10px] md:text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 md:mb-2 uppercase tracking-wide flex items-center">
-                    <svg class="w-3 h-3 mr-1 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
-                    编码选项
-                  </h5>
-                  <div class="grid grid-cols-2 gap-2 md:gap-3">
-                    <!-- 视频编码 -->
-                    <div>
-                      <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-0.5 md:mb-1">视频编码</label>
-                      <CustomDropdown
-                        v-model="advancedOptions.vcodec"
-                        :options="vcodecOptions"
-                        :selected-text="getVcodecText(advancedOptions.vcodec)"
-                        custom-class="w-full text-xs"
-                      />
-                    </div>
-
-                    <!-- 音频编码 -->
-                    <div>
-                      <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-0.5 md:mb-1">音频编码</label>
-                      <CustomDropdown
-                        v-model="advancedOptions.acodec"
-                        :options="acodecOptions"
-                        :selected-text="getAcodecText(advancedOptions.acodec)"
-                        custom-class="w-full text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 资源选项区块 -->
-                <div>
-                  <h5 class="text-[10px] md:text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 md:mb-2 uppercase tracking-wide flex items-center">
-                    <svg class="w-3 h-3 mr-1 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    资源选择
-                  </h5>
-                  <div class="grid grid-cols-4 gap-2 md:gap-3">
-                    <!-- 第一行 -->
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.video_only"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                        :disabled="onlyAudio"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">仅下载视频流</span>
-                    </label>
-
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.no_danmaku"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                        :disabled="advancedOptions.danmaku_only"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">不生成弹幕</span>
-                    </label>
-
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.danmaku_only"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                        :disabled="advancedOptions.no_danmaku"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300 ">仅生成弹幕</span>
-                    </label>
-
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.no_subtitle"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                        :disabled="advancedOptions.subtitle_only"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300 ">不生成字幕</span>
-                    </label>
-
-                    <!-- 第二行 -->
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.subtitle_only"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                        :disabled="advancedOptions.no_subtitle"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300 ">仅生成字幕</span>
-                    </label>
-
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.with_metadata"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                        :disabled="advancedOptions.metadata_only"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300 ">生成元数据</span>
-                    </label>
-
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.metadata_only"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                        :disabled="advancedOptions.with_metadata"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300 ">仅生成元数据</span>
-                    </label>
-
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.no_cover"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                        :disabled="!downloadCover || advancedOptions.save_cover || advancedOptions.cover_only"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300 ">不生成封面</span>
-                    </label>
-
-                    <!-- 第三行 -->
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.save_cover"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                        :disabled="!downloadCover || advancedOptions.cover_only || advancedOptions.no_cover"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300 ">单独保存封面</span>
-                    </label>
-
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.cover_only"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                        :disabled="!downloadCover || advancedOptions.save_cover || advancedOptions.no_cover"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300 ">仅生成封面</span>
-                    </label>
-
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.no_chapter_info"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300 ">不生成章节</span>
-                    </label>
+                    * 弹窗打开时自动获取可用画质，Lux 会自动选择最佳画质
                   </div>
                 </div>
               </div>
@@ -502,6 +336,7 @@ import {
   downloadUserVideos,
   batchDownloadVideos,
   downloadCollection,
+  getVideoInfo,
 } from '~/utils/api'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
@@ -563,6 +398,8 @@ const downloadError = ref(false)
 const downloadLogs = ref([])
 // 控制高级选项的显示状态
 const showAdvancedOptions = ref(false)
+// 视频流信息加载状态
+const loadingStreams = ref(false)
 
 // 下载状态文本
 const downloadStatus = computed(() => {
@@ -596,12 +433,10 @@ const checkFFmpegStatus = async () => {
   try {
     const response = await checkFFmpeg()
     if (response.data) {
+      const data = response.data.data || response.data
       ffmpegStatus.value = {
-        installed: response.data.status === 'success',
-        version: response.data.version,
-        path: response.data.path,
-        os_info: response.data.os_info,
-        install_guide: response.data.install_guide,
+        installed: data.installed || false,
+        version: data.version || '',
       }
     }
   } catch (error) {
@@ -615,27 +450,9 @@ const downloadCover = ref(true)
 const onlyAudio = ref(false)
 // 高级选项
 const advancedOptions = ref({
-  // 基础参数
-  video_quality: null,
-  audio_quality: null,
-  vcodec: null,
-  acodec: null,
-  download_vcodec_priority: null,
-  output_format: null,
-  output_format_audio_only: null,
-
-  // 资源选择参数
-  video_only: false,
-  danmaku_only: false,
-  no_danmaku: false,
-  subtitle_only: false,
-  no_subtitle: false,
-  with_metadata: false,
-  metadata_only: false,
-  no_cover: false,
-  save_cover: false,
-  cover_only: false,
-  no_chapter_info: false,
+  multi_thread: true,
+  thread_number: 10,
+  stream_id: null,
 })
 
 // 当前正在下载的视频信息
@@ -929,6 +746,42 @@ watch(() => props.show, async (isVisible) => {
     currentVideoIndex.value = -1
     favoriteVideos.value = []
 
+    // 如果已有 streams 信息，直接填充
+    if (props.videoInfo.streams && props.videoInfo.streams.length > 0) {
+      streamOptions.value = [
+        { label: '自动选择最佳画质', value: null },
+        ...props.videoInfo.streams.map(s => ({
+          label: `${s.quality} (${s.ext}) - ${(s.size / 1024 / 1024).toFixed(1)}MB`,
+          value: s.id,
+        })),
+      ]
+    }
+    // 单个视频下载时，自动获取视频信息（包含可用画质）
+    else if (props.videoInfo.bvid && !props.videoInfo.is_user_videos && !props.videoInfo.is_collection_download && !props.isBatchDownload && !isFavoriteFolder.value) {
+      loadingStreams.value = true
+      try {
+        const url = `https://www.bilibili.com/video/${props.videoInfo.bvid}`
+        const response = await getVideoInfo({ url })
+        if (response.data && response.data.status === 'success' && response.data.data) {
+          const data = response.data.data
+          if (data.streams && data.streams.length > 0) {
+            streamOptions.value = [
+              { label: '自动选择最佳画质', value: null },
+              ...data.streams.map(s => ({
+                label: `${s.quality} (${s.ext}) - ${(s.size / 1024 / 1024).toFixed(1)}MB`,
+                value: s.id,
+              })),
+            ]
+            if (data.title) currentVideoTitle.value = data.title
+          }
+        }
+      } catch (error) {
+        console.error('获取视频流信息失败:', error)
+      } finally {
+        loadingStreams.value = false
+      }
+    }
+
     // 如果是收藏夹，预加载收藏夹内容
     if (isFavoriteFolder.value && props.videoInfo.fid) {
       await preloadFavoriteVideos()
@@ -950,6 +803,7 @@ const resetState = () => {
   isDownloading.value = false
   downloadError.value = false
   downloadLogs.value = []
+  loadingStreams.value = false
   currentVideoTitle.value = props.videoInfo.title
   currentVideoCover.value = props.videoInfo.pic || props.videoInfo.cover
   currentVideoAuthor.value = props.videoInfo.author || ''
@@ -962,27 +816,9 @@ const resetState = () => {
 
   // 重置高级选项
   advancedOptions.value = {
-    // 基础参数
-    video_quality: null,
-    audio_quality: null,
-    vcodec: null,
-    acodec: null,
-    download_vcodec_priority: null,
-    output_format: null,
-    output_format_audio_only: null,
-
-    // 资源选择参数
-    video_only: false,
-    danmaku_only: false,
-    no_danmaku: false,
-    subtitle_only: false,
-    no_subtitle: false,
-    with_metadata: false,
-    metadata_only: false,
-    no_cover: false,
-    save_cover: false,
-    cover_only: false,
-    no_chapter_info: false,
+    multi_thread: true,
+    thread_number: 10,
+    stream_id: null,
   }
 }
 
@@ -1393,97 +1229,16 @@ const getCommandContent = (line) => {
   return line.trim()
 }
 
-// 下拉菜单选项定义
-const videoQualityOptions = [
-  { label: '默认', value: null },
-  { label: '127: 8K 超高清', value: '127' },
-  { label: '126: 杜比视界', value: '126' },
-  { label: '125: HDR 真彩', value: '125' },
-  { label: '120: 4K 超清', value: '120' },
-  { label: '116: 1080P 60帧', value: '116' },
-  { label: '112: 1080P 高码率', value: '112' },
-  { label: '100: 智能修复', value: '100' },
-  { label: '80: 1080P 高清', value: '80' },
-  { label: '74: 720P 60帧', value: '74' },
-  { label: '64: 720P 高清', value: '64' },
-  { label: '32: 480P 清晰', value: '32' },
-  { label: '16: 360P 流畅', value: '16' },
-]
-
-const audioQualityOptions = [
-  { label: '默认', value: null },
-  { label: '30251: Hi-Res', value: '30251' },
-  { label: '30255: 杜比音效', value: '30255' },
-  { label: '30250: 杜比全景声', value: '30250' },
-  { label: '30280: 320kbps', value: '30280' },
-  { label: '30232: 128kbps', value: '30232' },
-  { label: '30216: 64kbps', value: '30216' },
-]
-
-const vcodecOptions = [
-  { label: '默认 (avc:copy)', value: null },
-  { label: '下载AVC(H.264):直接复制', value: 'avc:copy' },
-  { label: '下载HEVC(H.265):直接复制', value: 'hevc:copy' },
-  { label: '下载AV1:直接复制', value: 'av1:copy' },
-  { label: '下载AVC(H.264):转码为H.264', value: 'avc:h264' },
-  { label: '下载HEVC(H.265):转码为H.265', value: 'hevc:hevc' },
-  { label: '下载AV1:转码为AV1', value: 'av1:av1' },
-]
-
-const acodecOptions = [
-  { label: '默认 (mp4a:copy)', value: null },
-  { label: '下载MP4A:直接复制', value: 'mp4a:copy' },
-  { label: '下载MP4A:转码为AAC', value: 'mp4a:aac' },
-  { label: '下载MP4A:转码为MP3', value: 'mp4a:mp3' },
-  { label: '下载MP4A:转码为FLAC', value: 'mp4a:flac' },
-]
-
-const outputFormatOptions = [
-  { label: '默认', value: null },
-  { label: '自动推断', value: 'infer' },
-  { label: 'MP4', value: 'mp4' },
-  { label: 'MKV', value: 'mkv' },
-  { label: 'MOV', value: 'mov' },
-]
-
-const audioOutputFormatOptions = [
-  { label: '默认', value: null },
-  { label: '自动推断', value: 'infer' },
-  { label: 'M4A', value: 'm4a' },
-  { label: 'AAC', value: 'aac' },
-  { label: 'MP3', value: 'mp3' },
-  { label: 'FLAC', value: 'flac' },
-]
+// 下拉菜单选项定义 (Lux 兼容)
+const streamOptions = ref([
+  { label: '自动选择最佳画质', value: null },
+])
 
 // 获取选项文本的方法
-const getVideoQualityText = (value) => {
-  const option = videoQualityOptions.find(opt => opt.value === value)
-  return option ? option.label : '默认'
-}
-
-const getAudioQualityText = (value) => {
-  const option = audioQualityOptions.find(opt => opt.value === value)
-  return option ? option.label : '默认'
-}
-
-const getVcodecText = (value) => {
-  const option = vcodecOptions.find(opt => opt.value === value)
-  return option ? option.label : '默认'
-}
-
-const getAcodecText = (value) => {
-  const option = acodecOptions.find(opt => opt.value === value)
-  return option ? option.label : '默认'
-}
-
-const getOutputFormatText = (value) => {
-  const option = outputFormatOptions.find(opt => opt.value === value)
-  return option ? option.label : '默认'
-}
-
-const getAudioOutputFormatText = (value) => {
-  const option = audioOutputFormatOptions.find(opt => opt.value === value)
-  return option ? option.label : '默认'
+const getStreamText = (value) => {
+  if (!value) return '自动选择最佳画质'
+  const option = streamOptions.value.find(opt => opt.value === value)
+  return option ? option.label : value
 }
 </script>
 

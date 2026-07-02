@@ -1,4 +1,4 @@
-import { axiosInstance } from '~/src/api/api'
+import { axiosInstance } from '~/utils/api'
 
 export default defineNuxtPlugin(() => {
   const event = useRequestEvent()

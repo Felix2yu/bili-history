@@ -275,6 +275,8 @@ func StartFullImageDownload(year *int, useSessdata bool) {
 			years = allYears
 		}
 
+		utils.LogWarning("[图片下载] 可用年份: %v", years)
+
 		totalTasks := 0
 		allTasks := []ImageDownloadTask{}
 
@@ -284,14 +286,16 @@ func StartFullImageDownload(year *int, useSessdata bool) {
 			}
 
 			tableName := fmt.Sprintf("bilibili_history_%d", y)
-			exists, _ := db.TableExists(tableName)
+			exists, err := db.TableExists(tableName)
 			if !exists {
+				utils.LogWarning("[图片下载] 表 %s 不存在 (err=%v)", tableName, err)
 				continue
 			}
 
 			query := fmt.Sprintf("SELECT cover, author_face FROM %s WHERE (cover != '' AND cover IS NOT NULL) OR (author_face != '' AND author_face IS NOT NULL)", tableName)
 			rows, err := conn.Query(query)
 			if err != nil {
+				utils.LogWarning("[图片下载] 查询 %s 失败: %v", tableName, err)
 				continue
 			}
 
@@ -347,7 +351,10 @@ func StartFullImageDownload(year *int, useSessdata bool) {
 				}
 			}
 			rows.Close()
+			utils.LogWarning("[图片下载] 年份 %d: 累计任务数 %d", y, totalTasks)
 		}
+
+		utils.LogWarning("[图片下载] 总任务数: %d", totalTasks)
 
 		status = GetImageDownloadStatus()
 		status.TotalImages = totalTasks

@@ -310,10 +310,31 @@ func saveServerConfig(c *gin.Context) {
 
 func getSchedulerTasks(c *gin.Context) {
 	sched := scheduler.GetScheduler()
+	taskID := c.Query("task_id")
+
+	if taskID != "" {
+		task, err := sched.GetTask(taskID)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  "success",
+				"message": "任务不存在",
+				"tasks":   []interface{}{},
+				"total":   0,
+			})
+			return
+		}
+		utils.LogInfo("获取任务详情: %s", taskID)
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "success",
+			"message": "获取任务信息成功",
+			"tasks":   []interface{}{task},
+			"total":   1,
+		})
+		return
+	}
+
 	tasks := sched.GetTasks()
 	utils.LogInfo("获取任务列表: 共 %d 个主任务", len(tasks))
-	// Frontend reads response.data.tasks (top-level tasks array, not nested
-	// under data). Also include the Python-style status/message envelope.
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "获取任务信息成功",

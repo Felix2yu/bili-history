@@ -244,17 +244,21 @@
 
                     <!-- 画质选择 -->
                     <div>
-                      <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-0.5 md:mb-1">画质选择</label>
+                      <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-0.5 md:mb-1">
+                        画质选择
+                        <span v-if="loadingStreams" class="text-[#fb7299] ml-1">加载中...</span>
+                      </label>
                       <CustomDropdown
                         v-model="advancedOptions.stream_id"
                         :options="streamOptions"
                         :selected-text="getStreamText(advancedOptions.stream_id)"
                         custom-class="w-full text-xs"
+                        :disabled="loadingStreams"
                       />
                     </div>
                   </div>
                   <div class="text-gray-500 dark:text-gray-400 mt-1.5 md:mt-2 text-[9px] md:text-[10px]">
-                    * Lux 会自动选择最佳画质，如需指定请先获取视频信息
+                    * 弹窗打开时自动获取可用画质，Lux 会自动选择最佳画质
                   </div>
                 </div>
               </div>
@@ -332,6 +336,7 @@ import {
   downloadUserVideos,
   batchDownloadVideos,
   downloadCollection,
+  getVideoInfo,
 } from '@/api/api.js'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
@@ -393,6 +398,8 @@ const downloadError = ref(false)
 const downloadLogs = ref([])
 // 控制高级选项的显示状态
 const showAdvancedOptions = ref(false)
+// 视频流信息加载状态
+const loadingStreams = ref(false)
 
 // 下载状态文本
 const downloadStatus = computed(() => {
@@ -740,7 +747,7 @@ watch(() => props.show, async (isVisible) => {
     currentVideoIndex.value = -1
     favoriteVideos.value = []
 
-    // 从视频信息中填充画质选项
+    // 如果已有 streams 信息，直接填充
     if (props.videoInfo.streams && props.videoInfo.streams.length > 0) {
       streamOptions.value = [
         { label: '自动选择最佳画质', value: null },
@@ -749,6 +756,32 @@ watch(() => props.show, async (isVisible) => {
           value: s.id,
         })),
       ]
+    }
+    // 单个视频下载时，自动获取视频信息（包含可用画质）
+    else if (props.videoInfo.bvid && !props.videoInfo.is_user_videos && !props.videoInfo.is_collection_download && !props.isBatchDownload && !isFavoriteFolder.value) {
+      loadingStreams.value = true
+      try {
+        const url = `https://www.bilibili.com/video/${props.videoInfo.bvid}`
+        const response = await getVideoInfo({ url })
+        if (response.data && response.data.status === 'success' && response.data.data) {
+          const data = response.data.data
+          if (data.streams && data.streams.length > 0) {
+            streamOptions.value = [
+              { label: '自动选择最佳画质', value: null },
+              ...data.streams.map(s => ({
+                label: `${s.quality} (${s.ext}) - ${(s.size / 1024 / 1024).toFixed(1)}MB`,
+                value: s.id,
+              })),
+            ]
+            // 更新标题和封面
+            if (data.title) currentVideoTitle.value = data.title
+          }
+        }
+      } catch (error) {
+        console.error('获取视频流信息失败:', error)
+      } finally {
+        loadingStreams.value = false
+      }
     }
 
     // 如果是收藏夹，预加载收藏夹内容
@@ -772,6 +805,7 @@ const resetState = () => {
   isDownloading.value = false
   downloadError.value = false
   downloadLogs.value = []
+  loadingStreams.value = false
   currentVideoTitle.value = props.videoInfo.title
   currentVideoCover.value = props.videoInfo.pic || props.videoInfo.cover
   currentVideoAuthor.value = props.videoInfo.author || ''

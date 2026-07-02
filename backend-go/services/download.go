@@ -177,22 +177,35 @@ func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, 
 
 	onProgress(fmt.Sprintf("标题: %s", data.Title))
 
-	// Pick best stream: highest quality, then av1 > hevc > avc
+	// Auto-select best stream:
+	// 1. Find the HIGHEST quality level available
+	// 2. Among streams at that quality, prefer av1 > hevc > avc
+	// This ensures we always get the clearest resolution first,
+	// then pick the most efficient codec within that resolution.
 	if streamID == "" {
 		var bestID string
-		var bestQ int
+		var highestQ int
+		for id := range data.Streams {
+			parts := strings.Split(id, "-")
+			if len(parts) != 2 {
+				continue
+			}
+			q, _ := strconv.Atoi(parts[0])
+			if q > highestQ {
+				highestQ = q
+			}
+		}
+		// Among streams at the highest quality, pick best codec
 		var bestC int
-		for id, stream := range data.Streams {
+		for id := range data.Streams {
 			parts := strings.Split(id, "-")
 			if len(parts) != 2 {
 				continue
 			}
 			q, _ := strconv.Atoi(parts[0])
 			c, _ := strconv.Atoi(parts[1])
-			cp := codecPriority(c)
-			if q > bestQ || (q == bestQ && cp > bestC) {
-				bestQ = q
-				bestC = cp
+			if q == highestQ && codecPriority(c) > bestC {
+				bestC = codecPriority(c)
 				bestID = id
 			}
 		}

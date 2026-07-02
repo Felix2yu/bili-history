@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -75,6 +76,21 @@ func initLuxRequest(cookie string) {
 	})
 }
 
+// codecPriority returns sort priority for bilibili codec IDs
+// av1(13) > hevc(12) > avc(7)
+func codecPriority(codecid int) int {
+	switch codecid {
+	case 13: // AV1
+		return 3
+	case 12: // HEVC
+		return 2
+	case 7: // AVC
+		return 1
+	default:
+		return 0
+	}
+}
+
 func ExtractVideoInfo(url string) (*VideoInfo, error) {
 	cookie := getCookie()
 	initLuxRequest(cookie)
@@ -105,6 +121,18 @@ func ExtractVideoInfo(url string) (*VideoInfo, error) {
 			Ext:     stream.Ext,
 		})
 	}
+	// Sort streams: higher quality first, then by codec priority (av1 > hevc > avc)
+	sort.Slice(streams, func(i, j int) bool {
+		qi, _ := strconv.Atoi(strings.Split(streams[i].ID, "-")[0])
+		qj, _ := strconv.Atoi(strings.Split(streams[j].ID, "-")[0])
+		if qi != qj {
+			return qi > qj
+		}
+		// Codec priority: av1(13) > hevc(12) > avc(7)
+		ci, _ := strconv.Atoi(strings.Split(streams[i].ID, "-")[1])
+		cj, _ := strconv.Atoi(strings.Split(streams[j].ID, "-")[1])
+		return codecPriority(ci) > codecPriority(cj)
+	})
 
 	info := &VideoInfo{
 		URL:     data.URL,

@@ -18,7 +18,7 @@ import (
 func RegisterDownloadRoutes(r *gin.RouterGroup) {
 	download := r.Group("/download")
 	{
-		download.GET("/video_info", getVideoInfo)
+		download.GET("/video_info", extractVideoInfo)
 		download.GET("/user_videos", getUserVideos)
 		download.GET("/check_video_download", checkVideoDownload)
 		download.GET("/list_downloaded_videos", listDownloadedVideos)
@@ -37,7 +37,7 @@ func RegisterDownloadRoutes(r *gin.RouterGroup) {
 	}
 }
 
-func getVideoInfo(c *gin.Context) {
+func extractVideoInfo(c *gin.Context) {
 	url := c.Query("url")
 	bvid := c.Query("bvid")
 	if url == "" && bvid != "" {

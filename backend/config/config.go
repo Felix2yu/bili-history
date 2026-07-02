@@ -284,6 +284,16 @@ func updateShoutrrrNode(node *yaml.Node, shoutrrr *ShoutrrrConfig) {
 		switch key.Value {
 		case "enabled":
 			val.Value = fmt.Sprintf("%t", shoutrrr.Enabled)
+		case "urls":
+			// Replace the sequence node with new values
+			val.Content = nil
+			for _, url := range shoutrrr.URLs {
+				val.Content = append(val.Content, &yaml.Node{
+					Kind:  yaml.ScalarNode,
+					Value: url,
+					Tag:   "!!str",
+				})
+			}
 		}
 	}
 }

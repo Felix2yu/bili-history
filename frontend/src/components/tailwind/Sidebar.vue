@@ -76,16 +76,6 @@
         <span>媒体管理</span>
       </router-link>
 
-      <router-link to="/bili-tools" @click="emit('navigate')"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-        :class="currentContent === 'bili-tools' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
-      >
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-        <span>B站助手</span>
-      </router-link>
-
       <router-link to="/scheduler" @click="emit('navigate')"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
         :class="currentContent === 'scheduler' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
@@ -179,7 +169,6 @@ const currentContent = computed(() => {
   if (p.startsWith('/favorites')) return 'favorites'
   if (p.startsWith('/watchlater')) return 'watchlater'
   if (p.startsWith('/likes')) return 'likes'
-  if (p.startsWith('/bili-tools')) return 'bili-tools'
   return 'history'
 })
 

@@ -4,15 +4,14 @@ services:
     container_name: bili-history-backend
     restart: unless-stopped
     volumes:
-      - ./config:/app/config
+      - ./backend-go/config:/app/config
       - ./output:/app/output
     expose:
       - "8899"
     environment:
       - TZ=Asia/Shanghai
-      - DOCKER_ENV=true
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8899/health', timeout=2)"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8899/health"]
       interval: 10s
       timeout: 5s
       retries: 10

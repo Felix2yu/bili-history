@@ -1,20 +1,19 @@
 # BiliHistory
 
-Bilibili 观看历史记录分析工具，合并自以下两个项目：
+Bilibili 观看历史记录分析工具
 
 - **前端 (Nuxt 3 + Vue 3)**：[BiliHistoryFrontend](https://github.com/LifeArchiveProject/BiliHistoryFrontend)
-- **后端 (Python FastAPI)**：[BilibiliHistoryFetcher](https://github.com/LifeArchiveProject/BilibiliHistoryFetcher)
+- **后端 (Go + Gin)**：[bilibili-history-go](https://github.com/LifeArchiveProject/bilibili-history-go)
 
 ## 目录结构
 
 ```
 bili-history/
-├── frontend/     # Nuxt 3 + Vue 3 前端（支持 SSR）
-├── backend/      # Python FastAPI 后端
-├── config/       # 配置文件目录（Docker 挂载）
+├── frontend/      # Nuxt 3 + Vue 3 前端（支持 SSR）
+├── backend-go/    # Go Gin 后端
 ├── docker-compose.yml
-├── LICENSE       # MIT 许可证
-├── NOTICE        # 原始项目归属声明
+├── LICENSE        # MIT 许可证
+├── NOTICE         # 原始项目归属声明
 └── README.md
 ```
 
@@ -28,14 +27,12 @@ docker-compose up -d
 
 - 前端：`http://localhost:3000`
 - 后端 API：`http://localhost:8899`
-- API 文档：`http://localhost:8899/docs`
 
 ### 后端
 
 ```bash
-cd backend
-pip install -r requirements.txt
-python main.py
+cd backend-go
+go run ./cmd/main.go
 ```
 
 ### 前端
@@ -55,7 +52,6 @@ npm run dev
 - **HistoryContent**：登录状态 + 历史记录列表
 - **Favorites**：收藏夹列表
 - **WatchLater**：稍后再看列表
-- **Downloads**：下载列表
 - **Images**：图片状态
 - **MyLikes**：点赞列表
 - **SchedulerTasks**：计划任务列表

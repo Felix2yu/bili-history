@@ -71,16 +71,6 @@ func init() {
 		Tags:        tagHistory,
 		OperationID: "search_history",
 	})
-	RegisterEndpointMeta("GET", "/history/remarks", EndpointMeta{
-		Summary:     "获取所有备注信息",
-		Tags:        tagHistory,
-		OperationID: "get_all_remarks",
-	})
-	RegisterEndpointMeta("POST", "/history/update-remark", EndpointMeta{
-		Summary:     "更新视频备注",
-		Tags:        tagHistory,
-		OperationID: "update_remark",
-	})
 	RegisterEndpointMeta("POST", "/history/reset-database", EndpointMeta{
 		Summary:     "重置历史数据库",
 		Tags:        tagHistory,
@@ -90,11 +80,6 @@ func init() {
 		Summary:     "获取SQLite版本信息",
 		Tags:        tagHistory,
 		OperationID: "get_sqlite_version",
-	})
-	RegisterEndpointMeta("POST", "/history/batch-remarks", EndpointMeta{
-		Summary:     "批量获取视频备注",
-		Tags:        tagHistory,
-		OperationID: "batch_get_remarks",
 	})
 	RegisterEndpointMeta("GET", "/history/by_cid/:cid", EndpointMeta{
 		Summary:     "按CID查找视频",
@@ -346,18 +331,6 @@ func init() {
 		Summary:     "同步动态数据",
 		Tags:        tagFavorite,
 		OperationID: "sync_dynamic",
-	})
-
-	// ========== 评论 ==========
-	RegisterEndpointMeta("GET", "/comment/list", EndpointMeta{
-		Summary:     "获取评论列表",
-		Tags:        tagFavorite,
-		OperationID: "get_comment_list",
-	})
-	RegisterEndpointMeta("POST", "/comment/sync", EndpointMeta{
-		Summary:     "同步评论数据",
-		Tags:        tagFavorite,
-		OperationID: "sync_comments",
 	})
 
 	// ========== 系统配置 ==========

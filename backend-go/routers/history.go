@@ -16,11 +16,8 @@ func RegisterHistoryRoutes(r *gin.RouterGroup) {
 		history.GET("/available-years", getAvailableYears)
 		history.GET("/all", getHistoryPage)
 		history.GET("/search", searchHistory)
-		history.GET("/remarks", getAllRemarks)
-		history.POST("/update-remark", updateRemark)
 		history.POST("/reset-database", resetDatabase)
 		history.GET("/sqlite-version", getSQLiteVersion)
-		history.POST("/batch-remarks", getBatchRemarks)
 		history.GET("/by_cid/:cid", getVideoByCID)
 	}
 
@@ -146,36 +143,6 @@ func searchHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(data))
 }
 
-func getAllRemarks(c *gin.Context) {
-	c.JSON(http.StatusOK, models.SuccessResponse([]interface{}{}))
-}
-
-type UpdateRemarkRequest struct {
-	Bvid    string `json:"bvid" binding:"required"`
-	ViewAt  int64  `json:"view_at" binding:"required"`
-	Remark  string `json:"remark"`
-}
-
-func updateRemark(c *gin.Context) {
-	var req UpdateRemarkRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
-		return
-	}
-
-	result, err := database.UpdateRemark(req.Bvid, req.ViewAt, req.Remark)
-	if err != nil {
-		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "备注更新成功",
-		"data":    result,
-	})
-}
-
 func resetDatabase(c *gin.Context) {
 	db := database.GetSQLiteDB()
 	err := db.ResetDatabase()
@@ -199,21 +166,6 @@ func getSQLiteVersion(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(versionInfo))
-}
-
-type BatchRemarksRequest struct {
-	Items []map[string]interface{} `json:"items" binding:"required"`
-}
-
-func getBatchRemarks(c *gin.Context) {
-	var req BatchRemarksRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
-		return
-	}
-
-	results := make(map[string]interface{})
-	c.JSON(http.StatusOK, models.SuccessResponse(results))
 }
 
 func getVideoByCID(c *gin.Context) {

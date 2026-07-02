@@ -49,12 +49,6 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 		dynamic.GET("/list", getDynamicList)
 		dynamic.POST("/sync", syncDynamic)
 	}
-
-	comment := r.Group("/comment")
-	{
-		comment.GET("/list", getCommentList)
-		comment.POST("/sync", syncComments)
-	}
 }
 
 type BatchCheckFavoriteRequest struct {
@@ -545,17 +539,4 @@ func syncDynamic(c *gin.Context) {
 	})
 }
 
-func getCommentList(c *gin.Context) {
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"records": []interface{}{},
-		"total":   0,
-		"message": "评论功能待实现",
-	}))
-}
 
-func syncComments(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "评论同步功能待实现",
-	})
-}

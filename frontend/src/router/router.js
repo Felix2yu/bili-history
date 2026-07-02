@@ -9,7 +9,6 @@ import SchedulerTasks from '../components/tailwind/page/SchedulerTasks.vue'
 import Downloads from '../components/tailwind/page/Downloads.vue'
 import MediaManager from '../components/tailwind/page/MediaManager.vue'
 import Favorites from '../components/tailwind/page/Favorites.vue'
-import BiliTools from '../components/tailwind/page/BiliTools.vue'
 import VideoActions from '../components/tailwind/page/VideoActions.vue'
 import WatchLater from '../components/tailwind/page/WatchLater.vue'
 import MyLikes from '../components/tailwind/page/MyLikes.vue'
@@ -48,11 +47,6 @@ const routes = [
         component: Settings,
       },
       {
-        path: 'remarks',
-        name: 'Remarks',
-        redirect: '/media?tab=remarks'
-      },
-      {
         path: 'images',
         name: 'Images',
         component: Images
@@ -66,11 +60,6 @@ const routes = [
         path: 'downloads',
         name: 'Downloads',
         component: Downloads
-      },
-      {
-        path: 'comments',
-        name: 'Comments',
-        redirect: '/media?tab=comments'
       },
       {
         path: 'media',
@@ -96,16 +85,6 @@ const routes = [
         path: 'likes',
         name: 'MyLikes',
         component: MyLikes
-      },
-      {
-        path: 'video-downloader',
-        name: 'VideoDownloader',
-        redirect: '/bili-tools?tab=video-download'
-      },
-      {
-        path: 'bili-tools',
-        name: 'BiliTools',
-        component: BiliTools
       },
       {
         path: 'record/:bvid/:viewAt',

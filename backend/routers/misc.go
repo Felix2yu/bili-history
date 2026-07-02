@@ -1,10 +1,12 @@
 package routers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"bilibili-history-go/config"
+	"bilibili-history-go/database"
 	"bilibili-history-go/models"
 	"bilibili-history-go/scheduler"
 	"bilibili-history-go/services"
@@ -57,6 +59,8 @@ func RegisterDataSyncRoutes(r *gin.RouterGroup) {
 		dataSync.POST("/config", updateDataSyncConfig)
 		dataSync.POST("/check", checkDataIntegrity)
 		dataSync.POST("/sync", syncData)
+		dataSync.GET("/sync/result", getSyncResult)
+		dataSync.GET("/report", getIntegrityReport)
 	}
 }
 
@@ -563,6 +567,42 @@ func syncData(c *gin.Context) {
 		"status":  "success",
 		"message": "数据同步功能待实现",
 	})
+}
+
+func getSyncResult(c *gin.Context) {
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"status":  "idle",
+		"message": "暂无同步结果",
+	}))
+}
+
+func getIntegrityReport(c *gin.Context) {
+	db := database.GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		c.JSON(http.StatusOK, models.ErrorResponse("数据库未初始化"))
+		return
+	}
+
+	years, _ := db.GetAvailableYears()
+	totalRecords := int64(0)
+	for _, year := range years {
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			continue
+		}
+		var count int64
+		conn.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)).Scan(&count)
+		totalRecords += count
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"total_records": totalRecords,
+		"years":         years,
+		"status":        "ok",
+		"message":       fmt.Sprintf("共 %d 条历史记录，%d 个年份", totalRecords, len(years)),
+	}))
 }
 
 func exportToExcel(c *gin.Context) {

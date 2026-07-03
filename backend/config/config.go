@@ -29,29 +29,6 @@ type DataIntegrityConfig struct {
 	CheckOnStartup bool `yaml:"check_on_startup" json:"check_on_startup"`
 }
 
-type HeatmapChartConfig struct {
-	Width  string `yaml:"width" json:"width"`
-	Height string `yaml:"height" json:"height"`
-}
-
-type HeatmapPiecesConfig struct {
-	Min   int    `yaml:"min" json:"min"`
-	Max   int    `yaml:"max" json:"max"`
-	Color string `yaml:"color" json:"color"`
-}
-
-type HeatmapColorsConfig struct {
-	Pieces []HeatmapPiecesConfig `yaml:"pieces" json:"pieces"`
-}
-
-type HeatmapConfig struct {
-	OutputDir    string             `yaml:"output_dir" json:"output_dir"`
-	TemplateFile string             `yaml:"template_file" json:"template_file"`
-	Title        string             `yaml:"title" json:"title"`
-	Chart        HeatmapChartConfig `yaml:"chart" json:"chart"`
-	Colors       HeatmapColorsConfig `yaml:"colors" json:"colors"`
-}
-
 type SchedulerConfig struct {
 	TaskTimeout int `yaml:"task_timeout" json:"task_timeout"`
 	RetryDelay  int `yaml:"retry_delay" json:"retry_delay"`
@@ -60,18 +37,14 @@ type SchedulerConfig struct {
 
 type Config struct {
 	SESSDATA         string          `yaml:"SESSDATA" json:"SESSDATA"`
-	InputFolder      string          `yaml:"input_folder" json:"input_folder"`
 	OutputFolder     string          `yaml:"output_folder" json:"output_folder"`
 	DBFile           string          `yaml:"db_file" json:"db_file"`
 	LogFile          string          `yaml:"log_file" json:"log_file"`
 	CategoriesFile   string          `yaml:"categories_file" json:"categories_file"`
-	DailyCountFolder string          `yaml:"daily_count_folder" json:"daily_count_folder"`
-	HeatmapTemplate  string          `yaml:"heatmap_template" json:"heatmap_template"`
 	FieldsToRemove   []string        `yaml:"fields_to_remove" json:"fields_to_remove"`
 	Shoutrrr         ShoutrrrConfig  `yaml:"shoutrrr" json:"shoutrrr"`
 	LogFolder        string          `yaml:"log_folder" json:"log_folder"`
 	Server           ServerConfig    `yaml:"server" json:"server"`
-	Heatmap          HeatmapConfig   `yaml:"heatmap" json:"heatmap"`
 	Scheduler        SchedulerConfig `yaml:"scheduler" json:"scheduler"`
 	BiliJct          string          `yaml:"bili_jct" json:"bili_jct"`
 	DedeUserID       string          `yaml:"DedeUserID" json:"DedeUserID"`
@@ -266,8 +239,6 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 		switch keyNode.Value {
 		case "SESSDATA":
 			valueNode.Value = cfg.SESSDATA
-		case "input_folder":
-			valueNode.Value = cfg.InputFolder
 		case "output_folder":
 			valueNode.Value = cfg.OutputFolder
 		case "db_file":
@@ -276,10 +247,6 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 			valueNode.Value = cfg.LogFile
 		case "categories_file":
 			valueNode.Value = cfg.CategoriesFile
-		case "daily_count_folder":
-			valueNode.Value = cfg.DailyCountFolder
-		case "heatmap_template":
-			valueNode.Value = cfg.HeatmapTemplate
 		case "log_folder":
 			valueNode.Value = cfg.LogFolder
 		case "bili_jct":

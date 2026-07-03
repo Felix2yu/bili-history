@@ -484,8 +484,8 @@ func processRecord(record models.HistoryRecord, useLocalImages, useSessdata bool
 		"id":            record.ID,
 		"title":         record.Title,
 		"long_title":    record.LongTitle,
-		"cover":         processImageURL(record.Cover, "covers", useLocalImages, useSessdata),
-		"author_face":   processImageURL(record.AuthorFace, "avatars", useLocalImages, useSessdata),
+		"cover":         processImageURL(record.Cover, useLocalImages, useSessdata),
+		"author_face":   processImageURL(record.AuthorFace, useLocalImages, useSessdata),
 		"uri":           record.URI,
 		"oid":           record.OID,
 		"epid":          record.Epid,
@@ -530,7 +530,7 @@ func processRecord(record models.HistoryRecord, useLocalImages, useSessdata bool
 	return result
 }
 
-func processImageURL(url, imageType string, useLocal, useSessdata bool) string {
+func processImageURL(url string, useLocal, useSessdata bool) string {
 	if !useLocal || url == "" {
 		if !useSessdata && strings.Contains(url, "?") {
 			return strings.Split(url, "?")[0]

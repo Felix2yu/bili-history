@@ -37,20 +37,6 @@ type HistoryRecord struct {
 	RemarkTime   int64  `json:"remark_time" db:"remark_time"`
 }
 
-type HistoryRecordWithExtra struct {
-	HistoryRecord
-	OriginalURL string   `json:"original_url"`
-	CoversList  []string `json:"covers_list"`
-	ViewTime    string   `json:"view_time"`
-}
-
-type DeletedHistory struct {
-	ID         int64  `json:"id" db:"id"`
-	Bvid       string `json:"bvid" db:"bvid"`
-	ViewAt     int64  `json:"view_at" db:"view_at"`
-	DeleteTime int64  `json:"delete_time" db:"delete_time"`
-}
-
 type VideoCategory struct {
 	MainCategory string `json:"main_category" db:"main_category"`
 	SubCategory  string `json:"sub_category" db:"sub_category"`

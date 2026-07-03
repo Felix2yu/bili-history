@@ -269,13 +269,6 @@ func logout(c *gin.Context) {
 	})
 }
 
-type NavResponse struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	TTL     int         `json:"ttl"`
-	Data    interface{} `json:"data"`
-}
-
 func checkLoginStatus(c *gin.Context) {
 	cfg, _ := config.LoadConfig()
 	if cfg == nil || cfg.SESSDATA == "" {

@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -174,15 +173,4 @@ func LogSuccess(format string, args ...interface{}) {
 
 func init() {
 	GetLogger()
-}
-
-var _ io.Writer = (*logWriter)(nil)
-
-type logWriter struct {
-	level LogLevel
-}
-
-func (w *logWriter) Write(p []byte) (n int, err error) {
-	GetLogger().log(w.level, "%s", string(p))
-	return len(p), nil
 }

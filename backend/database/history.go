@@ -613,15 +613,34 @@ func GetRemarkByBvidAndViewAt(bvid string, viewAt int64) (string, int64, error) 
 }
 
 func InsertHistoryRecord(conn *sql.DB, tableName string, record *models.HistoryRecord) (bool, error) {
-	existsQuery := fmt.Sprintf("SELECT id, author_name FROM %s WHERE bvid = ? AND view_at = ?", tableName)
+	// Check if a record with the same bvid already exists (regardless of view_at)
+	existsQuery := fmt.Sprintf("SELECT id, author_name, view_at FROM %s WHERE bvid = ?", tableName)
 	var existingID int64
 	var existingAuthor string
-	err := conn.QueryRow(existsQuery, record.Bvid, record.ViewAt).Scan(&existingID, &existingAuthor)
+	var existingViewAt int64
+	err := conn.QueryRow(existsQuery, record.Bvid).Scan(&existingID, &existingAuthor, &existingViewAt)
 	if err == nil {
-		// Record exists — update author info if it was empty
+		// Record exists — update if this fetch has a newer view_at or better author info
+		updates := []string{}
+		args := []interface{}{}
+
+		if record.ViewAt > existingViewAt {
+			updates = append(updates, "view_at = ?, progress = ?, current = ?")
+			args = append(args, record.ViewAt, record.Progress, record.Current)
+		}
 		if existingAuthor == "" && record.AuthorName != "" {
-			updateQuery := fmt.Sprintf("UPDATE %s SET author_name = ?, author_face = ?, author_mid = ? WHERE id = ?", tableName)
-			_, _ = conn.Exec(updateQuery, record.AuthorName, record.AuthorFace, record.AuthorMid, existingID)
+			updates = append(updates, "author_name = ?, author_face = ?, author_mid = ?")
+			args = append(args, record.AuthorName, record.AuthorFace, record.AuthorMid)
+		}
+		if record.Cover != "" {
+			updates = append(updates, "cover = ?")
+			args = append(args, record.Cover)
+		}
+
+		if len(updates) > 0 {
+			args = append(args, existingID)
+			updateQuery := fmt.Sprintf("UPDATE %s SET %s WHERE id = ?", tableName, strings.Join(updates, ", "))
+			_, _ = conn.Exec(updateQuery, args...)
 		}
 		return false, nil
 	}

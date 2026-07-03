@@ -1,29 +1,7 @@
 <template>
   <div class="relative">
     <!-- 筛选头部 - 所有元素在同一行 -->
-    <div class="flex items-center justify-between flex-wrap py-2 px-3 rounded-md">
-      <!-- 右侧操作区 -->
-      <div class="flex items-center space-x-2 sm:space-x-3 ml-1 sm:ml-2">
-        <!-- 每页显示条数设置 -->
-        <div class="hidden sm:flex items-center text-xs text-gray-500 dark:text-gray-400">
-          <span class="mr-1">每页</span>
-          <input
-            type="number"
-            :value="pageSize"
-            @input="handlePageSizeChange"
-            @blur="handlePageSizeBlur"
-            min="10"
-            max="100"
-            class="w-12 h-6 rounded border border-gray-200 dark:border-gray-600 bg-transparent px-1 text-center text-gray-700 dark:text-gray-200 transition-colors [appearance:textfield] hover:border-[#fb7299] focus:border-[#fb7299] focus:outline-none focus:ring-1 focus:ring-[#fb7299]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          />
-          <span class="ml-1">条</span>
-        </div>
-
-        <!-- 总视频数显示 -->
-        <div class="text-xs text-gray-500 dark:text-gray-400">
-          总视频数: <span class="text-[#FF6699] font-medium">{{ total }}</span>
-        </div>
-      </div>
+    <div class="flex items-center justify-end flex-wrap py-2 px-3 rounded-md">
     </div>
 
     <!-- 底部弹出式筛选栏 -->

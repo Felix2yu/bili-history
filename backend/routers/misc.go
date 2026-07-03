@@ -649,31 +649,9 @@ var (
 )
 
 func importFromSqlite(c *gin.Context) {
-	syncDeleted := false
-	if syncStr := c.Query("sync_deleted"); syncStr == "true" {
-		syncDeleted = true
-	}
-
-	go func() {
-		sqliteImportStatus["status"] = "running"
-		sqliteImportStatus["message"] = "正在导入数据..."
-
-		result, err := services.ImportHistoryFiles(syncDeleted)
-		if err != nil {
-			sqliteImportStatus["status"] = "error"
-			sqliteImportStatus["message"] = err.Error()
-			return
-		}
-
-		sqliteImportStatus["status"] = "completed"
-		sqliteImportStatus["inserted_count"] = result.InsertedCount
-		sqliteImportStatus["total_files"] = result.TotalFiles
-		sqliteImportStatus["message"] = "导入完成"
-	}()
-
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "开始导入SQLite数据",
+		"message": "数据已直接写入数据库，无需额外导入",
 	})
 }
 

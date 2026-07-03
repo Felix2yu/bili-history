@@ -323,13 +323,43 @@ func init() {
 	})
 
 	// ========== 动态 ==========
+	RegisterEndpointMeta("GET", "/dynamic/db/hosts", EndpointMeta{
+		Summary:     "获取已抓取的UP主列表",
+		Tags:        tagFavorite,
+		OperationID: "get_dynamic_db_hosts",
+	})
+	RegisterEndpointMeta("GET", "/dynamic/db/space/:host_mid", EndpointMeta{
+		Summary:     "获取指定UP的动态列表",
+		Tags:        tagFavorite,
+		OperationID: "get_dynamic_db_space",
+	})
+	RegisterEndpointMeta("GET", "/dynamic/space/auto/:host_mid", EndpointMeta{
+		Summary:     "启动自动抓取动态",
+		Tags:        tagFavorite,
+		OperationID: "start_dynamic_auto_fetch",
+	})
+	RegisterEndpointMeta("GET", "/dynamic/space/auto/:host_mid/progress", EndpointMeta{
+		Summary:     "动态抓取进度SSE",
+		Tags:        tagFavorite,
+		OperationID: "dynamic_progress_sse",
+	})
+	RegisterEndpointMeta("POST", "/dynamic/space/auto/:host_mid/stop", EndpointMeta{
+		Summary:     "停止动态抓取",
+		Tags:        tagFavorite,
+		OperationID: "stop_dynamic_auto_fetch",
+	})
+	RegisterEndpointMeta("DELETE", "/dynamic/space/:host_mid", EndpointMeta{
+		Summary:     "删除指定UP的动态",
+		Tags:        tagFavorite,
+		OperationID: "delete_dynamic_space",
+	})
 	RegisterEndpointMeta("GET", "/dynamic/list", EndpointMeta{
-		Summary:     "获取动态列表",
+		Summary:     "获取动态列表(旧)",
 		Tags:        tagFavorite,
 		OperationID: "get_dynamic_list",
 	})
 	RegisterEndpointMeta("POST", "/dynamic/sync", EndpointMeta{
-		Summary:     "同步动态数据",
+		Summary:     "同步动态数据(旧)",
 		Tags:        tagFavorite,
 		OperationID: "sync_dynamic",
 	})

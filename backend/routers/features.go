@@ -1,14 +1,17 @@
 package routers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"bilibili-history-go/biliapi"
 	"bilibili-history-go/config"
 	"bilibili-history-go/database"
 	"bilibili-history-go/models"
+	"bilibili-history-go/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -46,8 +49,15 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 
 	dynamic := r.Group("/dynamic")
 	{
-		dynamic.GET("/list", getDynamicList)
-		dynamic.POST("/sync", syncDynamic)
+		dynamic.GET("/db/hosts", getDynamicDbHosts)
+		dynamic.GET("/db/space/:host_mid", getDynamicDbSpace)
+		dynamic.GET("/space/auto/:host_mid", startDynamicAutoFetch)
+		dynamic.GET("/space/auto/:host_mid/progress", dynamicProgressSSE)
+		dynamic.POST("/space/auto/:host_mid/stop", stopDynamicAutoFetch)
+		dynamic.DELETE("/space/:host_mid", deleteDynamicSpace)
+		// Legacy stubs
+		dynamic.GET("/list", getDynamicListLegacy)
+		dynamic.POST("/sync", syncDynamicLegacy)
 	}
 }
 
@@ -524,19 +534,123 @@ func batchDeleteWatchLaterVideos(c *gin.Context) {
 	}))
 }
 
-func getDynamicList(c *gin.Context) {
+func getDynamicListLegacy(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
 		"records": []interface{}{},
 		"total":   0,
-		"message": "动态列表功能待实现",
+		"message": "请使用 /dynamic/db/hosts 和 /dynamic/db/space 端点",
 	}))
 }
 
-func syncDynamic(c *gin.Context) {
+func syncDynamicLegacy(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "动态同步功能待实现",
+		"message": "请使用 /dynamic/space/auto/{host_mid} 端点",
 	})
+}
+
+func getDynamicDbHosts(c *gin.Context) {
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
+	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+
+	hosts, err := database.GetDynamicHosts(limit, offset)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	if hosts == nil {
+		hosts = []database.DynamicHost{}
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": hosts})
+}
+
+func getDynamicDbSpace(c *gin.Context) {
+	hostMid := c.Param("host_mid")
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+
+	total, items, err := database.GetDynamicSpace(hostMid, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	if items == nil {
+		items = []database.DynamicItem{}
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "total": total, "items": items})
+}
+
+func startDynamicAutoFetch(c *gin.Context) {
+	hostMid := c.Param("host_mid")
+	if hostMid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "host_mid 不能为空"})
+		return
+	}
+
+	needTop := c.DefaultQuery("need_top", "false") == "true"
+	saveToDB := c.DefaultQuery("save_to_db", "true") == "true"
+	saveMedia := c.DefaultQuery("save_media", "true") == "true"
+
+	status := services.GetDynamicFetchStatus(hostMid)
+	if status.IsRunning {
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": "该 UP 的动态抓取正在进行中"})
+		return
+	}
+
+	go services.FetchDynamicSpace(hostMid, needTop, saveToDB, saveMedia)
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "开始抓取动态"})
+}
+
+func dynamicProgressSSE(c *gin.Context) {
+	_ = c.Param("host_mid") // reserved for future per-host channels
+
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+
+	flusher, ok := c.Writer.(http.Flusher)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "不支持流式传输"})
+		return
+	}
+
+	ch := services.GetDynamicProgressChan()
+	timeout := time.After(5 * time.Minute)
+
+	for {
+		select {
+		case msg, ok := <-ch:
+			if !ok {
+				return
+			}
+			fmt.Fprintf(c.Writer, "event: progress\ndata: {\"message\":\"%s\"}\n\n", strings.ReplaceAll(msg, `"`, `\"`))
+			flusher.Flush()
+			// Check for completion
+			if strings.Contains(msg, "全部抓取完毕") || strings.Contains(msg, "已停止") {
+				return
+			}
+		case <-timeout:
+			return
+		case <-c.Request.Context().Done():
+			return
+		}
+	}
+}
+
+func stopDynamicAutoFetch(c *gin.Context) {
+	hostMid := c.Param("host_mid")
+	services.StopDynamicFetch(hostMid)
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "已发送停止信号"})
+}
+
+func deleteDynamicSpace(c *gin.Context) {
+	hostMid := c.Param("host_mid")
+	if err := database.DeleteDynamicSpace(hostMid); err != nil {
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "已删除"})
 }
 
 

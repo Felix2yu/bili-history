@@ -1,0 +1,282 @@
+package database
+
+import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"sync"
+	"time"
+
+	"bilibili-history-go/utils"
+)
+
+type DynamicHost struct {
+	HostMid       string `json:"host_mid"`
+	UpName        string `json:"up_name"`
+	FacePath      string `json:"face_path"`
+	ItemCount     int    `json:"item_count"`
+	CoreCount     int    `json:"core_count"`
+	LastPublishTS int64  `json:"last_publish_ts"`
+	LastFetchTime int64  `json:"last_fetch_time"`
+}
+
+type DynamicItem struct {
+	ID              string   `json:"id_str"`
+	Type            string   `json:"type"`
+	HostMid         string   `json:"host_mid"`
+	AuthorName      string   `json:"author_name"`
+	Txt             string   `json:"txt"`
+	OpusTitle       string   `json:"opus_title"`
+	OpusSummaryText string   `json:"opus_summary_text"`
+	Bvid            string   `json:"bvid"`
+	Title           string   `json:"title"`
+	Desc            string   `json:"desc"`
+	Cover           string   `json:"cover"`
+	PublishTS       int64    `json:"publish_ts"`
+	MediaLocals     []string `json:"media_locals"`
+	LiveMediaLocals []string `json:"live_media_locals"`
+	RawJSON         string   `json:"-"`
+	FetchTime       int64    `json:"-"`
+}
+
+var (
+	dynamicDB   *ExtraDB
+	dynamicOnce sync.Once
+)
+
+const dynamicSchema = `
+CREATE TABLE IF NOT EXISTS dynamic_hosts (
+    host_mid TEXT PRIMARY KEY,
+    up_name TEXT DEFAULT '',
+    face_path TEXT DEFAULT '',
+    item_count INTEGER DEFAULT 0,
+    core_count INTEGER DEFAULT 0,
+    last_publish_ts INTEGER DEFAULT 0,
+    last_fetch_time INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS dynamics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_str TEXT NOT NULL UNIQUE,
+    type TEXT DEFAULT '',
+    host_mid TEXT NOT NULL,
+    author_name TEXT DEFAULT '',
+    txt TEXT DEFAULT '',
+    opus_title TEXT DEFAULT '',
+    opus_summary_text TEXT DEFAULT '',
+    bvid TEXT DEFAULT '',
+    title TEXT DEFAULT '',
+    desc TEXT DEFAULT '',
+    cover TEXT DEFAULT '',
+    publish_ts INTEGER DEFAULT 0,
+    media_locals TEXT DEFAULT '[]',
+    live_media_locals TEXT DEFAULT '[]',
+    raw_json TEXT DEFAULT '',
+    fetch_time INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_dynamics_host_mid ON dynamics(host_mid);
+CREATE INDEX IF NOT EXISTS idx_dynamics_publish_ts ON dynamics(publish_ts);
+CREATE INDEX IF NOT EXISTS idx_dynamics_bvid ON dynamics(bvid);
+`
+
+func GetDynamicDB() *sql.DB {
+	dynamicOnce.Do(func() {
+		db := getExtraDB("bilibili_dynamic.db")
+		if db != nil {
+			if _, err := db.Exec(dynamicSchema); err != nil {
+				utils.LogError("Failed to ensure dynamic schema: %v", err)
+			}
+		}
+		dynamicDB = &ExtraDB{db: db}
+	})
+	if dynamicDB == nil {
+		return nil
+	}
+	return dynamicDB.db
+}
+
+func GetDynamicHosts(limit, offset int) ([]DynamicHost, error) {
+	db := GetDynamicDB()
+	if db == nil {
+		return nil, fmt.Errorf("dynamic database not initialized")
+	}
+
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	rows, err := db.Query(`
+		SELECT host_mid, up_name, face_path, item_count, core_count, last_publish_ts, last_fetch_time
+		FROM dynamic_hosts
+		ORDER BY last_fetch_time DESC
+		LIMIT ? OFFSET ?
+	`, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var hosts []DynamicHost
+	for rows.Next() {
+		var h DynamicHost
+		if err := rows.Scan(&h.HostMid, &h.UpName, &h.FacePath, &h.ItemCount, &h.CoreCount, &h.LastPublishTS, &h.LastFetchTime); err != nil {
+			continue
+		}
+		hosts = append(hosts, h)
+	}
+	return hosts, nil
+}
+
+func GetDynamicSpace(hostMid string, limit, offset int) (int, []DynamicItem, error) {
+	db := GetDynamicDB()
+	if db == nil {
+		return 0, nil, fmt.Errorf("dynamic database not initialized")
+	}
+
+	if limit <= 0 || limit > 200 {
+		limit = 20
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	var total int
+	err := db.QueryRow("SELECT COUNT(*) FROM dynamics WHERE host_mid = ?", hostMid).Scan(&total)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	rows, err := db.Query(`
+		SELECT id_str, type, host_mid, author_name, txt, opus_title, opus_summary_text,
+		       bvid, title, desc, cover, publish_ts, media_locals, live_media_locals
+		FROM dynamics
+		WHERE host_mid = ?
+		ORDER BY publish_ts DESC
+		LIMIT ? OFFSET ?
+	`, hostMid, limit, offset)
+	if err != nil {
+		return 0, nil, err
+	}
+	defer rows.Close()
+
+	var items []DynamicItem
+	for rows.Next() {
+		var item DynamicItem
+		var mediaLocalsJSON, liveMediaLocalsJSON string
+		if err := rows.Scan(&item.ID, &item.Type, &item.HostMid, &item.AuthorName, &item.Txt,
+			&item.OpusTitle, &item.OpusSummaryText, &item.Bvid, &item.Title, &item.Desc,
+			&item.Cover, &item.PublishTS, &mediaLocalsJSON, &liveMediaLocalsJSON); err != nil {
+			continue
+		}
+		json.Unmarshal([]byte(mediaLocalsJSON), &item.MediaLocals)
+		json.Unmarshal([]byte(liveMediaLocalsJSON), &item.LiveMediaLocals)
+		items = append(items, item)
+	}
+
+	return total, items, nil
+}
+
+func SaveDynamicHost(host DynamicHost) error {
+	db := GetDynamicDB()
+	if db == nil {
+		return fmt.Errorf("dynamic database not initialized")
+	}
+
+	_, err := db.Exec(`
+		INSERT INTO dynamic_hosts (host_mid, up_name, face_path, item_count, core_count, last_publish_ts, last_fetch_time)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(host_mid) DO UPDATE SET
+			up_name = excluded.up_name,
+			face_path = CASE WHEN excluded.face_path != '' THEN excluded.face_path ELSE dynamic_hosts.face_path END,
+			item_count = excluded.item_count,
+			core_count = excluded.core_count,
+			last_publish_ts = excluded.last_publish_ts,
+			last_fetch_time = excluded.last_fetch_time
+	`, host.HostMid, host.UpName, host.FacePath, host.ItemCount, host.CoreCount, host.LastPublishTS, host.LastFetchTime)
+	return err
+}
+
+func SaveDynamics(hostMid string, items []DynamicItem) (int, error) {
+	db := GetDynamicDB()
+	if db == nil {
+		return 0, fmt.Errorf("dynamic database not initialized")
+	}
+
+	now := time.Now().Unix()
+	inserted := 0
+
+	for _, item := range items {
+		mediaJSON, _ := json.Marshal(item.MediaLocals)
+		liveMediaJSON, _ := json.Marshal(item.LiveMediaLocals)
+
+		result, err := db.Exec(`
+			INSERT INTO dynamics (id_str, type, host_mid, author_name, txt, opus_title, opus_summary_text,
+			                      bvid, title, desc, cover, publish_ts, media_locals, live_media_locals, raw_json, fetch_time)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT(id_str) DO UPDATE SET
+				txt = excluded.txt,
+				media_locals = excluded.media_locals,
+				live_media_locals = excluded.live_media_locals
+		`, item.ID, item.Type, hostMid, item.AuthorName, item.Txt, item.OpusTitle, item.OpusSummaryText,
+			item.Bvid, item.Title, item.Desc, item.Cover, item.PublishTS,
+			string(mediaJSON), string(liveMediaJSON), item.RawJSON, now)
+		if err != nil {
+			continue
+		}
+		aff, _ := result.RowsAffected()
+		if aff > 0 {
+			inserted++
+		}
+	}
+
+	// Update host stats
+	if len(items) > 0 {
+		var maxPublishTS int64
+		coreCount := 0
+		for _, item := range items {
+			if item.PublishTS > maxPublishTS {
+				maxPublishTS = item.PublishTS
+			}
+			if item.Type == "DYNAMIC_TYPE_AV" || item.Type == "DYNAMIC_TYPE_DRAW" {
+				coreCount++
+			}
+		}
+		var totalCount int
+		db.QueryRow("SELECT COUNT(*) FROM dynamics WHERE host_mid = ?", hostMid).Scan(&totalCount)
+
+		var upName, facePath string
+		db.QueryRow("SELECT up_name, face_path FROM dynamic_hosts WHERE host_mid = ?", hostMid).Scan(&upName, &facePath)
+		if len(items) > 0 && items[0].AuthorName != "" {
+			upName = items[0].AuthorName
+		}
+
+		SaveDynamicHost(DynamicHost{
+			HostMid:       hostMid,
+			UpName:        upName,
+			FacePath:      facePath,
+			ItemCount:     totalCount,
+			CoreCount:     coreCount,
+			LastPublishTS: maxPublishTS,
+			LastFetchTime: now,
+		})
+	}
+
+	return inserted, nil
+}
+
+func DeleteDynamicSpace(hostMid string) error {
+	db := GetDynamicDB()
+	if db == nil {
+		return fmt.Errorf("dynamic database not initialized")
+	}
+
+	_, err := db.Exec("DELETE FROM dynamics WHERE host_mid = ?", hostMid)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("DELETE FROM dynamic_hosts WHERE host_mid = ?", hostMid)
+	return err
+}

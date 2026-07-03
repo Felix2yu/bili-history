@@ -16,6 +16,7 @@ const (
 	VideoInfoURL     = "https://api.bilibili.com/x/web-interface/view"
 	WatchLaterURL    = "https://api.bilibili.com/x/v2/history/toview"
 	WatchLaterDelURL = "https://api.bilibili.com/x/v2/history/toview/del"
+	DynamicSpaceURL  = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
 )
 
 type Client struct {
@@ -405,4 +406,47 @@ type ApiError struct {
 
 func (e *ApiError) Error() string {
 	return fmt.Sprintf("api error: code=%d, message=%s", e.Code, e.Message)
+}
+
+type DynamicRawItem struct {
+	IDStr   string          `json:"id_str"`
+	Type    string          `json:"type"`
+	Modules json.RawMessage `json:"modules"`
+}
+
+type DynamicSpaceResponse struct {
+	HasMore bool             `json:"has_more"`
+	Offset  string           `json:"offset"`
+	Items   []DynamicRawItem `json:"items"`
+}
+
+func (c *Client) GetDynamicList(hostMid string, offset string, ps int) (*DynamicSpaceResponse, error) {
+	params := map[string]string{
+		"host_mid": hostMid,
+		"ps":       fmt.Sprintf("%d", ps),
+	}
+	if offset != "" {
+		params["offset"] = offset
+	}
+
+	body, err := c.Get(DynamicSpaceURL, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp BiliResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return nil, fmt.Errorf("unmarshal response error: %w", err)
+	}
+
+	if resp.Code != 0 {
+		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+	}
+
+	var result DynamicSpaceResponse
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		return nil, fmt.Errorf("unmarshal data error: %w", err)
+	}
+
+	return &result, nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"bilibili-history-go/config"
@@ -178,15 +179,15 @@ func pollScanStatus(c *gin.Context) {
 	})
 }
 
-func parseURLCookies(url string, cookies map[string]string) {
-	if !contains(url, "?") {
+func parseURLCookies(rawURL string, cookies map[string]string) {
+	if !strings.Contains(rawURL, "?") {
 		return
 	}
 
-	query := url[len(url)-len(url)+containsIndex(url, "?")+1:]
-	for _, param := range split(query, "&") {
-		if contains(param, "=") {
-			parts := split(param, "=")
+	query := rawURL[strings.Index(rawURL, "?")+1:]
+	for _, param := range strings.Split(query, "&") {
+		if strings.Contains(param, "=") {
+			parts := strings.SplitN(param, "=", 2)
 			name := parts[0]
 			value := parts[1]
 			if name == "DedeUserID" || name == "DedeUserID__ckMd5" || name == "SESSDATA" || name == "bili_jct" {
@@ -194,38 +195,6 @@ func parseURLCookies(url string, cookies map[string]string) {
 			}
 		}
 	}
-}
-
-func contains(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
-
-func containsIndex(s, substr string) int {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return i
-		}
-	}
-	return -1
-}
-
-func split(s, sep string) []string {
-	var result []string
-	for len(s) > 0 {
-		idx := containsIndex(s, sep)
-		if idx == -1 {
-			result = append(result, s)
-			break
-		}
-		result = append(result, s[:idx])
-		s = s[idx+len(sep):]
-	}
-	return result
 }
 
 func saveCookies(cookies map[string]string) {

@@ -80,7 +80,7 @@ func FindLatestHistoryDate() (time.Time, error) {
 	return time.Unix(latestViewAt, 0), nil
 }
 
-func FetchHistory(skipExists bool, processVideoDetails bool) (map[string]interface{}, error) {
+func FetchHistory(skipExists bool) (map[string]interface{}, error) {
 	status := GetFetchStatus()
 	if status.IsRunning {
 		return nil, fmt.Errorf("fetch already running")

@@ -121,10 +121,6 @@ func (l *Logger) Info(format string, args ...interface{}) {
 	l.log(LevelInfo, format, args...)
 }
 
-func (l *Logger) Debug(format string, args ...interface{}) {
-	l.log(LevelDebug, format, args...)
-}
-
 func (l *Logger) Warning(format string, args ...interface{}) {
 	l.log(LevelWarning, format, args...)
 }
@@ -137,26 +133,8 @@ func (l *Logger) Success(format string, args ...interface{}) {
 	l.log(LevelSuccess, format, args...)
 }
 
-func (l *Logger) Close() {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	
-	if l.logFile != nil {
-		l.logFile.Close()
-		l.logFile = nil
-	}
-	if l.errorFile != nil {
-		l.errorFile.Close()
-		l.errorFile = nil
-	}
-}
-
 func LogInfo(format string, args ...interface{}) {
 	GetLogger().Info(format, args...)
-}
-
-func LogDebug(format string, args ...interface{}) {
-	GetLogger().Debug(format, args...)
 }
 
 func LogWarning(format string, args ...interface{}) {

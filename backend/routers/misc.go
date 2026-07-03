@@ -117,9 +117,7 @@ func RegisterFetchRoutes(r *gin.RouterGroup) {
 }
 
 func fetchBiliHistoryRealtime(c *gin.Context) {
-	syncDeleted := c.DefaultQuery("sync_deleted", "false") == "true"
-
-	result, err := services.FetchHistory(true, false)
+	result, err := services.FetchHistory(true)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "error",
@@ -128,12 +126,11 @@ func fetchBiliHistoryRealtime(c *gin.Context) {
 		return
 	}
 
-	_ = syncDeleted
 	c.JSON(http.StatusOK, result)
 }
 
 func fetchBiliHistoryFull(c *gin.Context) {
-	result, err := services.FetchHistory(false, false)
+	result, err := services.FetchHistory(false)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "error",
@@ -695,12 +692,7 @@ func fetchBiliHistory(c *gin.Context) {
 		skipExists = false
 	}
 
-	processVideoDetails := false
-	if processStr := c.Query("process_video_details"); processStr == "true" {
-		processVideoDetails = true
-	}
-
-	result, err := services.FetchHistory(skipExists, processVideoDetails)
+	result, err := services.FetchHistory(skipExists)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("启动历史记录获取失败: "+err.Error()))
 		return

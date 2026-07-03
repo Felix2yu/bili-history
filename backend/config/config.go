@@ -55,7 +55,6 @@ var (
 	config     *Config
 	configOnce sync.Once
 	configPath string
-	rawConfig  []byte
 )
 
 func getBasePath() string {
@@ -112,9 +111,6 @@ func LoadConfig() (*Config, error) {
 				loadErr = fmt.Errorf("读取配置文件失败: %v", err)
 				return
 			}
-
-			rawConfig = make([]byte, len(data))
-			copy(rawConfig, data)
 
 			if err := yaml.Unmarshal(data, &cfg); err != nil {
 				loadErr = fmt.Errorf("解析配置文件失败: %v", err)
@@ -192,10 +188,6 @@ func SaveConfig(cfg *Config) error {
 	if err := os.WriteFile(cfgPath, []byte(output.String()), 0644); err != nil {
 		return fmt.Errorf("写入配置文件失败: %v", err)
 	}
-
-	newData, _ := os.ReadFile(cfgPath)
-	rawConfig = make([]byte, len(newData))
-	copy(rawConfig, newData)
 
 	config = cfg
 	return nil

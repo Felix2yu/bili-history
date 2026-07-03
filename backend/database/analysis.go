@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
-
-	"bilibili-history-go/utils"
 )
 
 type DailyStats struct {
@@ -2007,6 +2005,3 @@ func GetDailyCountStats(year int, month int, day int) (*DailyCountStats, error) 
 	return result, nil
 }
 
-func init() {
-	_ = utils.Now
-}

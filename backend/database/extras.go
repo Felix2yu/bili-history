@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"bilibili-history-go/utils"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type ExtraDB struct {

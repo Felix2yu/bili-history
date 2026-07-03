@@ -87,6 +87,8 @@ func GetHistoryPage(params HistoryQueryParams) (*models.PagedResponse, []int, er
 		if params.Business != "" {
 			query += " AND business = ?"
 			paramsList = append(paramsList, params.Business)
+		} else {
+			query += " AND business NOT IN ('live', 'article', 'article-list')"
 		}
 
 		queries = append(queries, query)
@@ -202,7 +204,14 @@ func SearchHistory(params HistorySearchParams) (*models.PagedResponse, []int, er
 			continue
 		}
 
-		subQuery := fmt.Sprintf("SELECT * FROM %s %s", tableName, whereClause)
+		var businessFilter string
+		if whereClause == "" {
+			businessFilter = "WHERE business NOT IN ('live', 'article', 'article-list')"
+		} else {
+			businessFilter = whereClause + " AND business NOT IN ('live', 'article', 'article-list')"
+		}
+
+		subQuery := fmt.Sprintf("SELECT * FROM %s %s", tableName, businessFilter)
 		subQueries = append(subQueries, subQuery)
 		baseParams = append(baseParams, searchParams...)
 	}

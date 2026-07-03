@@ -72,13 +72,29 @@ const urlList = computed(() => {
 const loadConfig = async () => {
   try {
     const response = await getShoutrrrConfig()
+    console.log('[ShoutrrrSettings] loadConfig response:', response)
+    let configData = null
+
     if (response.data && response.data.status === 'success' && response.data.data) {
-      const data = response.data.data
-      const urls = Array.isArray(data.urls) ? data.urls.join('\n') : (data.urls || '')
+      configData = response.data.data
+    } else if (response.data && response.data.enabled !== undefined) {
+      configData = response.data
+    } else if (response.data && response.data.data) {
+      configData = response.data.data
+    }
+
+    if (configData) {
+      console.log('[ShoutrrrSettings] configData:', configData)
+      const urls = Array.isArray(configData.urls)
+        ? configData.urls.join('\n')
+        : (typeof configData.urls === 'string' ? configData.urls : '')
       config.value = {
-        enabled: data.enabled ?? false,
+        enabled: !!configData.enabled,
         urls
       }
+      console.log('[ShoutrrrSettings] config.value set to:', config.value)
+    } else {
+      console.warn('[ShoutrrrSettings] 无法解析配置数据:', response.data)
     }
   } catch (error) {
     console.error('获取Shoutrrr配置失败:', error)

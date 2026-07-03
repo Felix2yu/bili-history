@@ -251,7 +251,7 @@
           <!-- Shoutrrr通知配置 -->
           <section v-if="activeTab === 'basic'">
             <div class="divide-y divide-gray-200 border-y border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 md:rounded-lg md:border md:border-x">
-              <ApriseSettings />
+              <ShoutrrrSettings />
             </div>
           </section>
 
@@ -535,7 +535,7 @@ import {
   getIntegrityCheckConfig,
   updateIntegrityCheckConfig
 } from '~/utils/api'
-import ApriseSettings from './ApriseSettings.vue'
+import ShoutrrrSettings from './ShoutrrrSettings.vue'
 import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
 import { usePrivacyStore } from '~/stores/privacy'
 import { showDialog } from 'vant'

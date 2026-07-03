@@ -441,13 +441,6 @@ func updateServerNode(node *yaml.Node, server *ServerConfig) {
 	}
 }
 
-func ReloadConfig() (*Config, error) {
-	configOnce = sync.Once{}
-	config = nil
-	rawConfig = nil
-	return LoadConfig()
-}
-
 func applyEnvOverrides(cfg *Config) {
 	if v := os.Getenv("SESSDATA"); v != "" {
 		cfg.SESSDATA = v

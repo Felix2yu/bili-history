@@ -227,53 +227,6 @@ func GetMainTasks() ([]MainTask, error) {
 	return tasks, nil
 }
 
-func GetSubTasks(parentID string) ([]MainTask, error) {
-	db := GetSchedulerDB()
-	if db == nil {
-		return []MainTask{}, nil
-	}
-	rows, err := db.Query(`SELECT task_id, name, endpoint, method, params, schedule_type,
-		schedule_time, schedule_delay, interval_value, interval_unit, enabled, task_type,
-		COALESCE(parent_id, ''), COALESCE(depends_on, ''), created_at, last_modified
-		FROM main_tasks WHERE parent_id = ? ORDER BY created_at ASC`, parentID)
-	if err != nil {
-		return []MainTask{}, err
-	}
-	defer rows.Close()
-
-	var tasks []MainTask
-	for rows.Next() {
-		var task MainTask
-		var scheduleTime sql.NullString
-		var params sql.NullString
-		var createdAt sql.NullString
-		var lastModified sql.NullString
-		err := rows.Scan(
-			&task.TaskID, &task.Name, &task.Endpoint, &task.Method, &params,
-			&task.ScheduleType, &scheduleTime, &task.ScheduleDelay, &task.IntervalValue,
-			&task.IntervalUnit, &task.Enabled, &task.TaskType, &task.ParentID,
-			&task.DependsOn, &createdAt, &lastModified,
-		)
-		if err != nil {
-			continue
-		}
-		if scheduleTime.Valid {
-			task.ScheduleTime = scheduleTime.String
-		}
-		if params.Valid {
-			task.Params = params.String
-		}
-		if createdAt.Valid {
-			task.CreatedAt = createdAt.String
-		}
-		if lastModified.Valid {
-			task.LastModified = lastModified.String
-		}
-		tasks = append(tasks, task)
-	}
-	return tasks, nil
-}
-
 func GetTaskStatusMap() (map[string]TaskStatus, error) {
 	db := GetSchedulerDB()
 	if db == nil {

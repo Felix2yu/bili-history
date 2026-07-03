@@ -12,22 +12,19 @@ import (
 )
 
 const (
-	BaseURL         = "https://api.bilibili.com"
-	HistoryURL      = "https://api.bilibili.com/x/web-interface/history/cursor"
-	LoginQrcodeURL  = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
-	QrcodePollURL   = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
-	VideoInfoURL    = "https://api.bilibili.com/x/web-interface/view"
-	WatchLaterURL   = "https://api.bilibili.com/x/v2/history/toview"
+	HistoryURL       = "https://api.bilibili.com/x/web-interface/history/cursor"
+	VideoInfoURL     = "https://api.bilibili.com/x/web-interface/view"
+	WatchLaterURL    = "https://api.bilibili.com/x/v2/history/toview"
 	WatchLaterDelURL = "https://api.bilibili.com/x/v2/history/toview/del"
 )
 
 type Client struct {
-	SESSDATA    string
-	BiliJct     string
-	DedeUserID  string
-	Buvid3      string
-	UserAgent   string
-	client      *http.Client
+	SESSDATA   string
+	BiliJct    string
+	DedeUserID string
+	Buvid3     string
+	UserAgent  string
+	client     *http.Client
 }
 
 type BiliResponse struct {
@@ -121,17 +118,6 @@ type VideoRights struct {
 	Autoplay    int `json:"autoplay"`
 	UgcPay      int `json:"ugc_pay"`
 	IsCooperation int `json:"is_cooperation"`
-}
-
-type QrCodeData struct {
-	URL       string `json:"url"`
-	QrcodeKey string `json:"qrcode_key"`
-}
-
-type QrCodePollData struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	URL     string `json:"url"`
 }
 
 func NewClient(sessdata string) *Client {
@@ -419,96 +405,4 @@ type ApiError struct {
 
 func (e *ApiError) Error() string {
 	return fmt.Sprintf("api error: code=%d, message=%s", e.Code, e.Message)
-}
-
-func GenerateQrcode() (*QrCodeData, error) {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-
-	req, err := http.NewRequest("GET", LoginQrcodeURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("create request error: %w", err)
-	}
-
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-	req.Header.Set("Referer", "https://passport.bilibili.com/login")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request error: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read body error: %w", err)
-	}
-
-	var biliResp BiliResponse
-	if err := json.Unmarshal(body, &biliResp); err != nil {
-		return nil, fmt.Errorf("unmarshal response error: %w", err)
-	}
-
-	if biliResp.Code != 0 {
-		return nil, fmt.Errorf("api error: code=%d, message=%s", biliResp.Code, biliResp.Message)
-	}
-
-	var data QrCodeData
-	if err := json.Unmarshal(biliResp.Data, &data); err != nil {
-		return nil, fmt.Errorf("unmarshal data error: %w", err)
-	}
-
-	return &data, nil
-}
-
-func PollQrcode(qrcodeKey string) (*QrCodePollData, []*http.Cookie, error) {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
-	params := url.Values{}
-	params.Set("qrcode_key", qrcodeKey)
-	urlStr := QrcodePollURL + "?" + params.Encode()
-
-	req, err := http.NewRequest("GET", urlStr, nil)
-	if err != nil {
-		return nil, nil, fmt.Errorf("create request error: %w", err)
-	}
-
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-	req.Header.Set("Referer", "https://passport.bilibili.com/login")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, nil, fmt.Errorf("request error: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, nil, fmt.Errorf("read body error: %w", err)
-	}
-
-	var biliResp BiliResponse
-	if err := json.Unmarshal(body, &biliResp); err != nil {
-		return nil, nil, fmt.Errorf("unmarshal response error: %w", err)
-	}
-
-	var data QrCodePollData
-	if len(biliResp.Data) > 0 {
-		if err := json.Unmarshal(biliResp.Data, &data); err != nil {
-			return nil, nil, fmt.Errorf("unmarshal data error: %w", err)
-		}
-	} else {
-		data.Code = biliResp.Code
-		data.Message = biliResp.Message
-	}
-
-	cookies := resp.Cookies()
-
-	return &data, cookies, nil
 }

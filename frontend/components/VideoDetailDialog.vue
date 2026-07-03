@@ -127,6 +127,7 @@ import {
 } from '~/utils/api'
 import { openInBrowser } from '~/utils/openUrl.js'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
+import { formatDuration, formatTimestamp, getBusinessType } from '~/utils/format'
 
 const props = defineProps({
   modelValue: {
@@ -159,25 +160,6 @@ const remarkContent = ref('')
 const originalRemark = ref('')
 const remarkTime = ref(null)
 
-// 格式化时间戳
-const formatTimestamp = (timestamp) => {
-  if (!timestamp) return '时间未知'
-
-  try {
-    const date = new Date(timestamp * 1000)
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch (error) {
-    console.error('格式化时间戳失败:', error)
-    return '时间未知'
-  }
-}
-
 // 格式化备注时间
 const formatRemarkTime = (timestamp) => {
   if (!timestamp) return ''
@@ -188,14 +170,6 @@ const formatRemarkTime = (timestamp) => {
     hour: '2-digit',
     minute: '2-digit',
   })
-}
-
-// 格式化时长
-const formatDuration = (seconds) => {
-  if (seconds === -1) return '已看完'
-  const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
-  const secs = String(seconds % 60).padStart(2, '0')
-  return `${minutes}:${secs}`
 }
 
 // 计算进度条宽度百分比
@@ -213,18 +187,7 @@ const getDeviceType = (dt) => {
   return '未知设备'
 }
 
-// 获取业务类型
-const getBusinessType = (business) => {
-  const businessTypes = {
-    archive: '稿件',
-    cheese: '课堂',
-    pgc: '电影',
-    live: '直播',
-    'article-list': '专栏',
-    article: '专栏',
-  }
-  return businessTypes[business] || '其他类型'
-}
+// getBusinessType 已从 ~/utils/format 导入
 
 // 初始化备注内容
 const initRemark = () => {

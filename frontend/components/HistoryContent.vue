@@ -406,6 +406,7 @@ import DownloadDialog from './DownloadDialog.vue'
 import FavoriteDialog from './FavoriteDialog.vue'
 import { openInBrowser } from '~/utils/openUrl.js'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
+import { formatDuration, formatTimestamp, getBusinessType } from '~/utils/format'
 
 const { isPrivacyMode } = usePrivacyStore()
 
@@ -1223,21 +1224,7 @@ const handleAuthorClick = async (record) => {
 }
 
 // 格式化时长
-const formatDuration = (seconds) => {
-  if (seconds === -1) return '已看完'
-  const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
-  const secs = String(seconds % 60).padStart(2, '0')
-  return `${minutes}:${secs}`
-}
-
-// 获取业务类型
-const getBusinessType = (business) => {
-  const businessTypes = {
-    archive: '稿件',
-    cheese: '课堂',
-    pgc: '电影',
-    live: '直播',
-    'article-list': '专栏',
+// formatDuration, formatTimestamp, getBusinessType 从 ~/utils/format 导入
     article: '专栏',
   }
   return businessTypes[business] || '其他类型'
@@ -1250,41 +1237,7 @@ const getProgressWidth = (progress, duration) => {
   return `${(progress / duration) * 100}%`
 }
 
-// 格式化时间戳
-const formatTimestamp = (timestamp) => {
-  if (!timestamp) {
-    console.warn('Invalid timestamp:', timestamp)
-    return '时间未知'
-  }
-
-  try {
-    const date = new Date(timestamp * 1000)
-    const now = new Date()
-
-    if (isNaN(date.getTime())) {
-      console.warn('Invalid date from timestamp:', timestamp)
-      return '时间未知'
-    }
-
-    const isToday = now.toDateString() === date.toDateString()
-    const isYesterday =
-      new Date(now.setDate(now.getDate() - 1)).toDateString() === date.toDateString()
-    const timeString = date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-
-    if (isToday) {
-      return timeString
-    } else if (isYesterday) {
-      return `昨天 ${timeString}`
-    } else if (now.getFullYear() === date.getFullYear()) {
-      return `${date.getMonth() + 1}-${date.getDate()} ${timeString}`
-    } else {
-      return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${timeString}`
-    }
-  } catch (error) {
-    console.error('Error formatting timestamp:', error)
-    return '时间未知'
-  }
-}
+// formatTimestamp 已从 ~/utils/format 导入
 
 // 高亮显示匹配的文本
 const highlightText = (text) => {

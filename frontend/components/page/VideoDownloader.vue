@@ -371,6 +371,7 @@ import SimpleSearchBar from '../SimpleSearchBar.vue'
 import CustomDropdown from '../CustomDropdown.vue'
 import UserVideos from '../UserVideos.vue'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
+import { formatDuration } from '~/utils/format'
 
 // 下载类型
 const downloadType = ref('video')
@@ -674,21 +675,6 @@ const fetchUpUserVideosList = async (userId) => {
     console.log(`已预加载 ${upUserVideosList.value.length} 个视频信息`)
   } catch (error) {
     console.error('预加载UP主视频列表失败:', error)
-  }
-}
-
-// 格式化时长
-const formatDuration = (seconds) => {
-  if (!seconds) return '未知时长'
-
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const remainingSeconds = seconds % 60
-
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
-  } else {
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
   }
 }
 

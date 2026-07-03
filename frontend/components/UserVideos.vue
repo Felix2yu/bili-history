@@ -85,6 +85,7 @@ import { ref, onMounted, watch } from 'vue'
 import { getUserVideos } from '~/utils/api'
 import Pagination from './Pagination.vue'
 import { openInBrowser } from '~/utils/openUrl.js'
+import { formatTimestamp } from '~/utils/format'
 
 export default {
   name: 'UserVideos',
@@ -137,15 +138,6 @@ export default {
         return (num / 10000).toFixed(1) + '万'
       }
       return num.toString()
-    }
-
-    const formatTimestamp = (timestamp) => {
-      const date = new Date(timestamp * 1000)
-      return date.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      })
     }
 
     watch(() => props.mid, () => {

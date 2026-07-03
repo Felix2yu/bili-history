@@ -339,6 +339,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useAsyncData } from '#imports'
 import { getWatchLaterList, getWatchLaterLocal, removeFromWatchLater, batchRemoveFromWatchLater } from '~/utils/api'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
+import { formatDuration } from '~/utils/format'
 
 // 图片懒加载
 let imageObserver = null
@@ -689,13 +690,6 @@ function openVideo(video) {
   if (video.link) {
     window.open(video.link, '_blank')
   }
-}
-
-function formatDuration(seconds) {
-  if (!seconds) return '00:00'
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
 }
 
 function formatViews(count) {

@@ -86,6 +86,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import * as echarts from 'echarts'
 import gsap from 'gsap'
 import { useDarkMode } from '~/stores/darkMode'
+import { formatDuration, formatDurationShort } from '~/utils/format'
 
 const props = defineProps({
   viewingData: {
@@ -109,22 +110,6 @@ const { isDarkMode } = useDarkMode()
 const formatInsightText = (text) => {
   if (!text) return '';
   return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-[#fb7299]">$1</span>')
-}
-
-const formatDuration = (seconds) => {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  return `${hours}小时${minutes}分钟`
-}
-
-// 短格式时长显示
-const formatDurationShort = (seconds) => {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  if (hours > 0) {
-    return `${hours}h${minutes}m`
-  }
-  return `${minutes}m`
 }
 
 const formatDate = (dateStr) => {

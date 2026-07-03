@@ -238,6 +238,7 @@ import { normalizeImageUrl } from '~/utils/imageUrl.js'
 import { openInBrowser } from '~/utils/openUrl.js'
 import { getHistoryRecord } from '~/utils/historyRecordStore'
 import { usePrivacyStore } from '~/stores/privacy'
+import { formatDuration, formatTimestamp, getBusinessType } from '~/utils/format'
 
 const route = useRoute()
 const router = useRouter()
@@ -282,30 +283,6 @@ const loadRecord = () => {
   record.value = getHistoryRecord(bvid, viewAt)
 }
 
-const formatDuration = (seconds) => {
-  if (seconds === -1) return '已看完'
-  const minutes = String(Math.floor((seconds || 0) / 60)).padStart(2, '0')
-  const secs = String((seconds || 0) % 60).padStart(2, '0')
-  return `${minutes}:${secs}`
-}
-
-const formatTimestamp = (timestamp) => {
-  if (!timestamp) return '时间未知'
-  try {
-    const date = new Date(timestamp * 1000)
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch (error) {
-    console.error('时间格式化失败:', error)
-    return '时间未知'
-  }
-}
-
 const formatRemarkTime = (timestamp) => {
   if (!timestamp) return ''
   return new Date(timestamp * 1000).toLocaleString('zh-CN', {
@@ -314,18 +291,6 @@ const formatRemarkTime = (timestamp) => {
     hour: '2-digit',
     minute: '2-digit',
   })
-}
-
-const getBusinessType = (business) => {
-  const businessMap = {
-    archive: '视频',
-    article: '专栏',
-    'article-list': '文集',
-    live: '直播',
-    pgc: '番剧',
-    cheese: '课程',
-  }
-  return businessMap[business] || '其他'
 }
 
 const initRemark = async () => {

@@ -179,6 +179,7 @@ import DownloadDialog from './DownloadDialog.vue'
 import { openInBrowser } from '~/utils/openUrl.js'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
 import { saveHistoryRecord } from '~/utils/historyRecordStore.js'
+import { formatDuration, formatTimestamp } from '~/utils/format'
 
 const { isPrivacyMode } = usePrivacyStore()
 const router = useRouter()
@@ -255,27 +256,6 @@ const handleContentClick = async () => {
 
 const handleAuthorClick = async () => {
   await openInBrowser(`https://space.bilibili.com/${props.record.author_mid}`)
-}
-
-const formatTimestamp = (timestamp) => {
-  if (!timestamp) return '时间未知'
-  try {
-    const date = new Date(timestamp * 1000)
-    const now = new Date()
-    if (isNaN(date.getTime())) return '时间未知'
-    const isToday = now.toDateString() === date.toDateString()
-    const isYesterday = new Date(now.setDate(now.getDate() - 1)).toDateString() === date.toDateString()
-    const timeString = date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-    if (isToday) return timeString
-    if (isYesterday) return `昨天 ${timeString}`
-    if (now.getFullYear() === date.getFullYear()) return `${date.getMonth() + 1}-${date.getDate()} ${timeString}`
-    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${timeString}`
-  } catch (error) { return '时间未知' }
-}
-
-const formatDuration = (seconds) => {
-  if (seconds === -1) return '已看完'
-  return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
 }
 
 const getProgressWidth = (progress, duration) => {

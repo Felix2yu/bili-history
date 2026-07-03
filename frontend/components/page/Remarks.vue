@@ -132,6 +132,7 @@ import { getAllRemarks, updateVideoRemark, batchGetRemarks } from '~/utils/api'
 import { showNotify } from 'vant'
 import Pagination from '../Pagination.vue'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
+import { formatDuration, formatTimestamp } from '~/utils/format'
 
 const { isPrivacyMode } = usePrivacyStore()
 
@@ -191,26 +192,6 @@ const handlePageChange = (newPage) => {
 const openVideo = (record) => {
   const url = `https://www.bilibili.com/video/${record.bvid}`
   window.open(url, '_blank')
-}
-
-// 格式化时间戳
-const formatTimestamp = (timestamp) => {
-  const date = new Date(timestamp * 1000)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-// 格式化时长
-const formatDuration = (seconds) => {
-  if (seconds === -1) return '已看完'
-  const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
-  const secs = String(seconds % 60).padStart(2, '0')
-  return `${minutes}:${secs}`
 }
 
 // 获取进度条宽度

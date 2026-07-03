@@ -383,6 +383,7 @@ import {
 } from '~/utils/api'
 import { openInBrowser } from '~/utils/openUrl.js'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
+import { formatDuration } from '~/utils/format'
 
 const router = useRouter()
 
@@ -810,16 +811,6 @@ function formatTime(timestamp) {
     month: '2-digit',
     day: '2-digit'
   })
-}
-
-// 格式化视频时长
-function formatDuration(seconds) {
-  if (!seconds) return '00:00'
-
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
-
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
 }
 
 // 获取作者头像

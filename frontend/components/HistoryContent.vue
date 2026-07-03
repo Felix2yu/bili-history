@@ -77,7 +77,7 @@
               :video="record"
               :select-mode="isBatchMode"
               :is-selected="selectedRecords.has(`${record.bvid}_${record.view_at}`)"
-              :show-category="record.business === 'archive'"
+              :show-category="true"
               :show-owner="record.business !== 'cheese' && record.business !== 'pgc'"
               :show-views="false"
               :show-time="false"

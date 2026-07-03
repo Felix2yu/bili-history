@@ -405,10 +405,69 @@ func toString(val interface{}) string {
 
 func processRecords(records []models.HistoryRecord, useLocalImages, useSessdata bool) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(records))
+
+	tnameMap := getTnameMapForRecords(records)
+
 	for _, record := range records {
-		result = append(result, processRecord(record, useLocalImages, useSessdata))
+		processed := processRecord(record, useLocalImages, useSessdata)
+		if processed["tag_name"] == "" || processed["tag_name"] == nil {
+			if tname, ok := tnameMap[record.Bvid]; ok && tname != "" {
+				processed["tag_name"] = tname
+				processed["tname"] = tname
+			}
+		}
+		result = append(result, processed)
 	}
 	return result
+}
+
+func getTnameMapForRecords(records []models.HistoryRecord) map[string]string {
+	tnameMap := make(map[string]string)
+	if len(records) == 0 {
+		return tnameMap
+	}
+
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return tnameMap
+	}
+
+	bvids := make([]string, 0, len(records))
+	seen := make(map[string]bool)
+	for _, r := range records {
+		if r.Bvid != "" && !seen[r.Bvid] {
+			bvids = append(bvids, r.Bvid)
+			seen[r.Bvid] = true
+		}
+	}
+
+	if len(bvids) == 0 {
+		return tnameMap
+	}
+
+	placeholders := make([]string, len(bvids))
+	args := make([]interface{}, len(bvids))
+	for i, bvid := range bvids {
+		placeholders[i] = "?"
+		args[i] = bvid
+	}
+
+	query := fmt.Sprintf("SELECT bvid, tname FROM video_base_info WHERE bvid IN (%s)", strings.Join(placeholders, ","))
+	rows, err := conn.Query(query, args...)
+	if err != nil {
+		return tnameMap
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var bvid, tname string
+		if err := rows.Scan(&bvid, &tname); err == nil {
+			tnameMap[bvid] = tname
+		}
+	}
+
+	return tnameMap
 }
 
 func processRecord(record models.HistoryRecord, useLocalImages, useSessdata bool) map[string]interface{} {
@@ -442,6 +501,7 @@ func processRecord(record models.HistoryRecord, useLocalImages, useSessdata bool
 		"is_fav":        record.IsFav,
 		"kid":           record.Kid,
 		"tag_name":      record.TagName,
+		"tname":         record.TagName,
 		"live_status":   record.LiveStatus,
 		"main_category": record.MainCategory,
 		"remark":        record.Remark,

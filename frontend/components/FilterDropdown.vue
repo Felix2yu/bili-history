@@ -2,19 +2,6 @@
   <div class="relative">
     <!-- 筛选头部 - 所有元素在同一行 -->
     <div class="flex items-center justify-between flex-wrap py-2 px-3 rounded-md">
-      <!-- 条目类型快速切换区域 -->
-      <div class="flex flex-1 flex-wrap gap-1 sm:gap-2">
-        <button
-          v-for="(label, type) in businessTypeMap"
-          :key="type"
-          class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs rounded-md border transition-colors duration-200"
-          :class="business === type ? 'border-[#fb7299] bg-[#fb7299]/10 text-[#fb7299]' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#fb7299]/50'"
-          @click="selectBusiness(type)"
-        >
-          {{ label }}
-        </button>
-      </div>
-
       <!-- 右侧操作区 -->
       <div class="flex items-center space-x-2 sm:space-x-3 ml-1 sm:ml-2">
         <!-- 每页显示条数设置 -->
@@ -348,8 +335,6 @@ const formatDateForDisplay = (dateStr) => {
 // 业务类型映射表
 const businessTypeMap = {
   '': '全部',
-  'archive': '普通视频',
-  'pgc': '番剧',
 }
 
 // 选择业务类型（快速切换区域）

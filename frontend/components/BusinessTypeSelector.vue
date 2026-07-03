@@ -7,17 +7,23 @@
     round
   >
     <div class="pt-6 px-3">
-      <div class="grid grid-cols-2 gap-2">
+      <div class="grid grid-cols-1 gap-2">
         <!-- 全部 -->
         <div
-          class="flex items-center p-2 rounded-lg cursor-pointer border"
-          :class="selectedType === '' ? 'border-[#fb7299] bg-[#fb7299]/5' : 'border-gray-200 hover:border-[#fb7299]/50'"
-          @click="selectType('')"
+          class="flex items-center p-2 rounded-lg cursor-pointer border border-[#fb7299] bg-[#fb7299]/5"
         >
           <div class="flex-1">
             <div class="font-medium">全部</div>
             <div class="text-xs text-gray-500">显示所有类型</div>
           </div>
+          <div class="text-[#fb7299]">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
           <div v-if="selectedType === ''" class="text-[#fb7299]">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -104,9 +110,7 @@ const selectType = (type) => {
 
 // 业务类型映射表
 const businessTypeMap = {
-  '': '全部',
-  'archive': '普通视频',
-  'pgc': '番剧'
+  '': '全部'
 }
 
 // 导出映射表，方便外部使用

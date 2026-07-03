@@ -1,117 +1,119 @@
 <template>
-  <van-dialog
-    :show="show"
-    @update:show="$emit('update:show', $event)"
-    :title="title"
-    width="90%"
-    :show-confirm-button="false"
-    class="select-dialog"
-  >
-    <template #title>
-      <div class="flex items-center justify-between px-4">
-        <span>{{ title }}</span>
-        <button
-          @click="$emit('update:show', false)"
-          class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-        >
-          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-    </template>
-
-    <div class="p-4">
-      <!-- 搜索框 -->
-      <div class="mb-4 flex items-center space-x-2">
-        <div class="flex-1 relative">
-          <input
-            v-model="searchQuery"
-            type="text"
-            :placeholder="searchPlaceholder"
-            class="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#fb7299] focus:border-[#fb7299]"
-          />
-          <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+  <Teleport to="body">
+    <van-dialog
+      :show="show"
+      @update:show="$emit('update:show', $event)"
+      :title="title"
+      width="90%"
+      :show-confirm-button="false"
+      class="select-dialog"
+    >
+      <template #title>
+        <div class="flex items-center justify-between px-4">
+          <span>{{ title }}</span>
           <button
-            v-if="searchQuery"
-            @click="resetSearch"
-            class="absolute right-2 top-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+            @click="$emit('update:show', false)"
+            class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        
-        <!-- 方法过滤器 -->
-        <select
-          v-if="showMethodFilter"
-          v-model="methodFilter"
-          class="text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#fb7299] focus:border-[#fb7299] py-1.5 pl-2 pr-8"
-        >
-          <option value="ALL">全部</option>
-          <option value="GET">GET</option>
-          <option value="POST">POST</option>
-          <option value="PUT">PUT</option>
-          <option value="DELETE">DELETE</option>
-        </select>
-      </div>
+      </template>
 
-      <!-- 列表内容 -->
-      <div class="custom-scrollbar max-h-[45vh] overflow-y-auto pr-2">
-        <div v-for="(items, group) in filteredGroupedItems" :key="group" class="mb-4">
-          <div 
-            class="flex items-center justify-between cursor-pointer mb-2 bg-gray-100 dark:bg-gray-800 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
-            @click="toggleGroup(group)"
-          >
-            <div class="flex items-center space-x-2">
-              <span class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ group || '未分类' }}</span>
-              <span class="text-xs text-gray-600 dark:text-gray-400">({{ items.length }}个)</span>
-            </div>
-            <svg 
-              class="w-4 h-4 text-gray-600 transform transition-transform duration-200"
-              :class="{ 'rotate-90': expandedGroups[group] }"
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      <div class="p-4">
+        <!-- 搜索框 -->
+        <div class="mb-4 flex items-center space-x-2">
+          <div class="flex-1 relative">
+            <input
+              v-model="searchQuery"
+              type="text"
+              :placeholder="searchPlaceholder"
+              class="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#fb7299] focus:border-[#fb7299]"
+            />
+            <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
+            <button
+              v-if="searchQuery"
+              @click="resetSearch"
+              class="absolute right-2 top-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
           
-          <div v-show="expandedGroups[group]" class="space-y-1 pl-2 border-l-2 border-gray-100 dark:border-gray-700">
+          <!-- 方法过滤器 -->
+          <select
+            v-if="showMethodFilter"
+            v-model="methodFilter"
+            class="text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#fb7299] focus:border-[#fb7299] py-1.5 pl-2 pr-8"
+          >
+            <option value="ALL">全部</option>
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+        </div>
+
+        <!-- 列表内容 -->
+        <div class="custom-scrollbar max-h-[45vh] overflow-y-auto pr-2">
+          <div v-for="(items, group) in filteredGroupedItems" :key="group" class="mb-4">
             <div 
-              v-for="item in items" 
-              :key="item.id"
-              @click="selectItem(item)"
-              class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-md transition-colors"
-              :class="{'bg-[#fb7299]/10 hover:bg-[#fb7299]/20': isSelected(item)}"
+              class="flex items-center justify-between cursor-pointer mb-2 bg-gray-100 dark:bg-gray-800 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+              @click="toggleGroup(group)"
             >
-              <div class="flex items-start justify-between">
-                <div class="flex-1">
-                  <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ item.name || '' }}</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ item.description || '' }}</div>
-                </div>
-                <div v-if="item.method" class="ml-3">
-                  <span class="px-2 py-0.5 text-xs font-medium rounded-full" 
-                        :class="{
-                          'bg-blue-100 text-blue-800': item.method === 'GET',
-                          'bg-green-100 text-green-800': item.method === 'POST',
-                          'bg-yellow-100 text-yellow-800': item.method === 'PUT',
-                          'bg-red-100 text-red-800': item.method === 'DELETE'
-                        }">
-                    {{ item.method }}
-                  </span>
+              <div class="flex items-center space-x-2">
+                <span class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ group || '未分类' }}</span>
+                <span class="text-xs text-gray-600 dark:text-gray-400">({{ items.length }}个)</span>
+              </div>
+              <svg 
+                class="w-4 h-4 text-gray-600 transform transition-transform duration-200"
+                :class="{ 'rotate-90': expandedGroups[group] }"
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+            
+            <div v-show="expandedGroups[group]" class="space-y-1 pl-2 border-l-2 border-gray-100 dark:border-gray-700">
+              <div 
+                v-for="item in items" 
+                :key="item.id"
+                @click="selectItem(item)"
+                class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-md transition-colors"
+                :class="{'bg-[#fb7299]/10 hover:bg-[#fb7299]/20': isSelected(item)}"
+              >
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ item.name || '' }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ item.description || '' }}</div>
+                  </div>
+                  <div v-if="item.method" class="ml-3">
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full" 
+                          :class="{
+                            'bg-blue-100 text-blue-800': item.method === 'GET',
+                            'bg-green-100 text-green-800': item.method === 'POST',
+                            'bg-yellow-100 text-yellow-800': item.method === 'PUT',
+                            'bg-red-100 text-red-800': item.method === 'DELETE'
+                          }">
+                      {{ item.method }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </van-dialog>
+    </van-dialog>
+  </Teleport>
 </template>
 
 <script setup>
@@ -277,6 +279,11 @@ watch(() => props.show, (newVal) => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  z-index: 10000 !important;
+}
+
+.select-dialog :deep(.van-overlay) {
+  z-index: 9999 !important;
 }
 
 .select-dialog :deep(.van-dialog__header) {

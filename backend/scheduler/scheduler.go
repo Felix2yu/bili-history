@@ -640,9 +640,10 @@ func (s *Scheduler) GetTask(taskID string) (map[string]interface{}, error) {
 	return s.toFrontendFormat(task), nil
 }
 
-// CreateTaskFromConfig creates a task from the frontend payload shape:
-// {task_id, task_type, config:{name,endpoint,method,params,schedule_type,
-//  schedule_time,interval,unit,enabled}, depends_on}
+// CreateTaskFromConfig creates a task from the frontend payload shape.
+// Supports two formats:
+//  1. Nested: {task_id, task_type, config:{name,endpoint,method,params,schedule_type,...}, depends_on}
+//  2. Flat:   {task_id, task_type, name, endpoint, method, params, schedule_type, ..., depends_on}
 func (s *Scheduler) CreateTaskFromConfig(payload map[string]interface{}) (map[string]interface{}, error) {
 	taskID, _ := payload["task_id"].(string)
 	if taskID == "" {
@@ -655,7 +656,7 @@ func (s *Scheduler) CreateTaskFromConfig(payload map[string]interface{}) (map[st
 
 	cfgMap, ok := payload["config"].(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("缺少 config 字段")
+		cfgMap = payload
 	}
 
 	mt := database.MainTask{
@@ -678,6 +679,14 @@ func (s *Scheduler) CreateTaskFromConfig(payload map[string]interface{}) (map[st
 	}
 	if dep, ok := payload["depends_on"].(string); ok {
 		mt.DependsOn = dep
+	} else if depList, ok := payload["depends_on"].([]interface{}); ok {
+		depStr := make([]string, 0, len(depList))
+		for _, d := range depList {
+			if s, ok := d.(string); ok {
+				depStr = append(depStr, s)
+			}
+		}
+		mt.DependsOn = strings.Join(depStr, ",")
 	}
 
 	if err := database.UpsertMainTask(mt); err != nil {

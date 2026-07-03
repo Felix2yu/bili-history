@@ -35,13 +35,15 @@ type IntegrityCheckResult struct {
 }
 
 type SyncResult struct {
-	Success       bool              `json:"success"`
-	Timestamp     string            `json:"timestamp"`
-	TotalSynced   int               `json:"total_synced"`
-	JSONToDBCount int               `json:"json_to_db_count"`
-	DBToJSONCount int               `json:"db_to_json_count"`
-	SyncedDays    []SyncedDayDetail `json:"synced_days,omitempty"`
-	Message       string            `json:"message,omitempty"`
+	Success         bool              `json:"success"`
+	Timestamp       string            `json:"timestamp"`
+	TotalSynced     int               `json:"total_synced"`
+	JSONToDBCount   int               `json:"json_to_db_count"`
+	DBToJSONCount   int               `json:"db_to_json_count"`
+	TotalJSONRecords int              `json:"total_json_records"`
+	TotalDBRecords  int               `json:"total_db_records"`
+	SyncedDays      []SyncedDayDetail `json:"synced_days,omitempty"`
+	Message         string            `json:"message,omitempty"`
 }
 
 type SyncedDayDetail struct {
@@ -343,7 +345,7 @@ func RunSyncData(dbPath, jsonPath string) (*SyncResult, error) {
 	setDataSyncStatus(DataSyncStatus{
 		IsRunning:    false,
 		Status:       "completed",
-		Message:      fmt.Sprintf("同步完成，共导入 %d 条记录", result.JSONToDBCount),
+		Message:      result.Message,
 		LastUpdateAt: time.Now().Unix(),
 	})
 
@@ -494,10 +496,16 @@ func syncDataInternal(jsonPath string) *SyncResult {
 	result.TotalSynced = result.JSONToDBCount
 	result.DBToJSONCount = 0
 
+	// Count totals for user context
+	_, jsonRecords, _ := countJSONRecords(jsonPath)
+	dbRecords, _ := countDBRecords()
+	result.TotalJSONRecords = jsonRecords
+	result.TotalDBRecords = dbRecords
+
 	if result.JSONToDBCount == 0 {
-		result.Message = "数据已是最新，无需同步"
+		result.Message = fmt.Sprintf("数据已是最新，无需同步（JSON: %d条, 数据库: %d条）", jsonRecords, dbRecords)
 	} else {
-		result.Message = fmt.Sprintf("同步完成，共导入 %d 条记录", result.JSONToDBCount)
+		result.Message = fmt.Sprintf("同步完成，共导入 %d 条记录（JSON: %d条, 数据库: %d条）", result.JSONToDBCount, jsonRecords, dbRecords)
 	}
 
 	return result

@@ -295,7 +295,23 @@ const removeTask = (taskId) => {
 
 const handleApiSelect = (endpoint) => {
   if (!endpoint) return
-  form.endpoint = endpoint.path || endpoint.id || ''
+  let endpointPath = endpoint.path || ''
+  if (!endpointPath && endpoint.operationId) {
+    const found = availableEndpoints.value.find(e => e.operationId === endpoint.operationId)
+    if (found && found.path) {
+      endpointPath = found.path
+    }
+  }
+  if (!endpointPath && endpoint.id) {
+    const found = availableEndpoints.value.find(e => e.operationId === endpoint.id || e.path === endpoint.id)
+    if (found && found.path) {
+      endpointPath = found.path
+    }
+  }
+  if (endpointPath && !endpointPath.startsWith('/')) {
+    endpointPath = '/' + endpointPath
+  }
+  form.endpoint = endpointPath
   form.method = endpoint.method || 'GET'
   form.task_id = endpoint.operationId || endpoint.id || ''
 }

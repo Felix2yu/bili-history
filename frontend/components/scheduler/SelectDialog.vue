@@ -161,6 +161,7 @@ watch(() => props.selected, (newVal) => {
 const formatTaskItem = (task) => {
   const formattedTask = {
     id: task.id || task.operationId || task.path,
+    path: task.path || '',
     name: task.name || task.summary || task.path,
     description: task.description || task.path,
     method: task.method || 'GET',

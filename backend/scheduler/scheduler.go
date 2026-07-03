@@ -700,7 +700,7 @@ func (s *Scheduler) CreateTaskFromConfig(payload map[string]interface{}) (map[st
 	mt := database.MainTask{
 		TaskID: taskID,
 		Name:   getString(cfgMap, "name"),
-		Endpoint: getString(cfgMap, "endpoint"),
+		Endpoint: normalizeEndpointPath(getString(cfgMap, "endpoint")),
 		Method:   getString(cfgMap, "method"),
 		Params:   getParamsString(cfgMap),
 		ScheduleType: getString(cfgMap, "schedule_type"),
@@ -773,7 +773,7 @@ func (s *Scheduler) UpdateTaskFromConfig(taskID string, payload map[string]inter
 			mt.Name = v
 		}
 		if v := getString(cfg, "endpoint"); v != "" {
-			mt.Endpoint = v
+			mt.Endpoint = normalizeEndpointPath(v)
 		}
 		if v := getString(cfg, "method"); v != "" {
 			mt.Method = v

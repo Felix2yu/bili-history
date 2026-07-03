@@ -316,7 +316,13 @@ func updateShoutrrrNode(node *yaml.Node, shoutrrr *ShoutrrrConfig) {
 
 	getOrAddScalar := func(key string) *yaml.Node {
 		if idx, ok := existingKeys[key]; ok {
-			return node.Content[idx+1]
+			n := node.Content[idx+1]
+			if n.Kind != yaml.ScalarNode {
+				n.Kind = yaml.ScalarNode
+				n.Tag = "!!bool"
+				n.Content = nil
+			}
+			return n
 		}
 		keyNode := &yaml.Node{
 			Kind:  yaml.ScalarNode,
@@ -325,7 +331,7 @@ func updateShoutrrrNode(node *yaml.Node, shoutrrr *ShoutrrrConfig) {
 		}
 		valNode := &yaml.Node{
 			Kind: yaml.ScalarNode,
-			Tag:  "!!str",
+			Tag:  "!!bool",
 		}
 		node.Content = append(node.Content, keyNode, valNode)
 		existingKeys[key] = len(node.Content) - 2
@@ -334,7 +340,13 @@ func updateShoutrrrNode(node *yaml.Node, shoutrrr *ShoutrrrConfig) {
 
 	getOrAddSeq := func(key string) *yaml.Node {
 		if idx, ok := existingKeys[key]; ok {
-			return node.Content[idx+1]
+			n := node.Content[idx+1]
+			if n.Kind != yaml.SequenceNode {
+				n.Kind = yaml.SequenceNode
+				n.Tag = ""
+				n.Content = nil
+			}
+			return n
 		}
 		keyNode := &yaml.Node{
 			Kind:  yaml.ScalarNode,
@@ -374,7 +386,13 @@ func updateServerNode(node *yaml.Node, server *ServerConfig) {
 
 	getOrAddScalar := func(key string) *yaml.Node {
 		if idx, ok := existingKeys[key]; ok {
-			return node.Content[idx+1]
+			n := node.Content[idx+1]
+			if n.Kind != yaml.ScalarNode {
+				n.Kind = yaml.ScalarNode
+				n.Tag = "!!str"
+				n.Content = nil
+			}
+			return n
 		}
 		keyNode := &yaml.Node{
 			Kind:  yaml.ScalarNode,

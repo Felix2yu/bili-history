@@ -73,14 +73,41 @@
 
       <!-- 数据完整性检查面板 -->
       <div v-if="currentTab === 'integrity'">
-        <!-- 直接显示完整性报告 -->
-        <div v-if="reportHtml" class="mb-6 prose prose-sm max-w-none bg-white dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700 dark:text-gray-100">
-          <div v-html="reportHtml"></div>
+        <!-- 报告概览卡片 -->
+        <div v-if="reportData" class="mb-6">
+          <div class="bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 p-4 rounded-lg border border-pink-100 dark:border-pink-800/30 mb-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">数据库总记录</p>
+                <p class="text-2xl font-bold text-pink-600 dark:text-pink-400">{{ reportData.total_records?.toLocaleString() }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-gray-500 dark:text-gray-400">数据年份</p>
+                <p class="text-2xl font-bold text-gray-800 dark:text-gray-200">{{ reportData.years?.length || 0 }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 各年份柱状图 -->
+          <div v-if="reportData.years && reportData.years.length" class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">各年份记录分布</h4>
+            <div class="space-y-2">
+              <div v-for="year in reportData.years" :key="year.year" class="flex items-center gap-3">
+                <span class="text-xs font-mono text-gray-500 w-10 text-right">{{ year.year }}</span>
+                <div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-5 overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all duration-500"
+                    :class="year.count === reportData.max_year_count ? 'bg-pink-500' : 'bg-pink-300 dark:bg-pink-600'"
+                    :style="{ width: reportData.max_year_count ? (year.count / reportData.max_year_count * 100) + '%' : '0%' }"
+                  ></div>
+                </div>
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-20 text-right">{{ year.count?.toLocaleString() }}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="mb-4">
-          <p class="text-sm text-gray-600 mb-2">检查数据库记录完整性。</p>
-
           <button
             @click="startCheck"
             class="w-full bg-pink-600 hover:bg-pink-700 text-white font-medium py-2 px-4 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -91,32 +118,15 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              检查数据中...
+              检查中...
             </span>
-            <span v-else>开始检查</span>
+            <span v-else>刷新数据</span>
           </button>
         </div>
 
-        <!-- 检查结果显示 -->
-        <div v-if="checkResult" class="mt-6 border-t pt-4">
-          <h3 class="font-medium text-gray-900 mb-2">数据完整性检查结果</h3>
-          <div class="bg-gray-50 dark:bg-gray-900 p-3 rounded-md border border-gray-200 dark:border-gray-700">
-            <div class="grid grid-cols-2 gap-3 mb-3">
-              <div class="text-sm">
-                <span class="text-gray-500">检查时间：</span>
-                <span class="text-gray-900">{{ formatDateTime(checkResult.timestamp) }}</span>
-              </div>
-              <div class="text-sm">
-                <span class="text-gray-500">数据库记录总数：</span>
-                <span class="text-gray-900">{{ checkResult.total_db_records }}</span>
-              </div>
-            </div>
-
-            <div class="text-sm p-2 mb-3 rounded-md bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-              <span class="font-medium">状态：</span>
-              <span>{{ checkResult.message }}</span>
-            </div>
-          </div>
+        <!-- 检查结果提示 -->
+        <div v-if="checkResult" class="text-sm p-2 rounded-md" :class="checkResult.difference === 0 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'">
+          {{ checkResult.message }}
         </div>
       </div>
     </div>
@@ -150,7 +160,7 @@ const isSyncing = ref(false)
 const isChecking = ref(false)
 const syncResult = ref(null)
 const checkResult = ref(null)
-const reportHtml = ref('')
+const reportData = ref(null)
 
 // 格式化日期时间
 const formatDateTime = (dateTimeString) => {
@@ -239,45 +249,11 @@ const startCheck = async () => {
 const fetchIntegrityReport = async () => {
   try {
     const response = await getIntegrityReport()
-
-    if (response.data && response.data.content) {
-      let content = response.data.content
-        .replace(/^#\s*$/gm, '')
-        .replace(/^\s*#\s*$/gm, '')
-        .replace(/^#(?!\s)/gm, '')
-
-      content = content.replace(/### ([^\n]+)/g, '<h3 class="text-base font-medium my-2">$1</h3>')
-        .replace(/## ([^\n]+)/g, '<h2 class="text-lg font-semibold my-3">$1</h2>')
-        .replace(/# ([^\n]+)/g, '<h1 class="text-xl font-bold my-4">$1</h1>')
-
-      content = content.replace(/^\* (.*?)$/gm, '<li class="ml-4">$1</li>')
-      content = content.replace(/<li class="ml-4">(.*?)<\/li>(\s*)<li/g, '<li class="ml-4">$1</li></ul><ul><li')
-        .replace(/<li class="ml-4">(.*?)<\/li>(?!\s*<li|\s*<\/ul>)/g, '<li class="ml-4">$1</li></ul>')
-        .replace(/<li/g, '<ul><li')
-      content = content.replace(/<\/ul>\s*<ul>/g, '')
-      content = content.replace(/\n\n/g, '</p><p class="my-2">')
-      content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-
-      if (!content.startsWith('<')) {
-        content = '<p class="my-2">' + content + '</p>'
-      }
-
-      reportHtml.value = content
-      return true
-    } else {
-      reportHtml.value = `<div class="p-4 bg-gray-50 text-gray-600 rounded-md">
-        <p>暂无报告内容。请点击"开始检查"按钮执行数据完整性检查。</p>
-      </div>`
-      return false
+    if (response.data && response.data.data) {
+      reportData.value = response.data.data
     }
   } catch (error) {
     console.error('获取报告失败:', error)
-    reportHtml.value = `<div class="p-4 bg-red-50 text-red-600 rounded-md">
-      <h3 class="font-medium">获取报告失败</h3>
-      <p class="mt-2">错误信息: ${error.message || '未知错误'}</p>
-    </div>`
-    return false
   }
 }
 

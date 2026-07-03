@@ -3,7 +3,6 @@ package services
 import (
 	"fmt"
 	"sort"
-	"strings"
 	"sync"
 	"time"
 
@@ -53,7 +52,6 @@ var (
 	dataSyncMutex   sync.Mutex
 	lastCheckResult *IntegrityCheckResult
 	lastSyncResult  *SyncResult
-	integrityReport string
 )
 
 func GetDataSyncStatus() DataSyncStatus {
@@ -74,10 +72,8 @@ func GetLastSyncResult() *SyncResult {
 	return lastSyncResult
 }
 
-func GetIntegrityReport() string {
-	dataSyncMutex.Lock()
-	defer dataSyncMutex.Unlock()
-	return integrityReport
+func GetIntegrityReportData() *IntegrityReportData {
+	return getReportData()
 }
 
 func RunIntegrityCheck(dbPath, jsonPath string, forceCheck bool) (*IntegrityCheckResult, error) {
@@ -106,12 +102,8 @@ func RunIntegrityCheck(dbPath, jsonPath string, forceCheck bool) (*IntegrityChec
 
 	result.Message = fmt.Sprintf("数据库共 %d 条记录", dbRecords)
 
-	// Generate markdown report
-	report := generateIntegrityReport(result)
-
 	dataSyncMutex.Lock()
 	lastCheckResult = result
-	integrityReport = report
 	dataSyncMutex.Unlock()
 
 	return result, nil
@@ -146,38 +138,34 @@ func countDBRecords() (int, error) {
 	return total, nil
 }
 
-func generateIntegrityReport(result *IntegrityCheckResult) string {
-	var sb strings.Builder
+type IntegrityReportData struct {
+	TotalRecords int            `json:"total_records"`
+	Years        []YearStatData `json:"years"`
+	MaxYearCount int            `json:"max_year_count"`
+}
 
-	sb.WriteString("# 数据完整性检查报告\n\n")
-	sb.WriteString(fmt.Sprintf("**检查时间**: %s\n\n", result.Timestamp))
+type YearStatData struct {
+	Year  int `json:"year"`
+	Count int `json:"count"`
+}
 
-	sb.WriteString("## 统计概览\n\n")
-	sb.WriteString(fmt.Sprintf("| 项目 | 数量 |\n"))
-	sb.WriteString(fmt.Sprintf("|------|------|\n"))
-	sb.WriteString(fmt.Sprintf("| 数据库记录数 | %d |\n\n", result.TotalDBRecords))
-
-	sb.WriteString("**状态**: 数据正常\n\n")
-
-	// Per-year breakdown
-	sb.WriteString("## 各年份数据统计\n\n")
-	sb.WriteString("| 年份 | 记录数 |\n")
-	sb.WriteString("|------|--------|\n")
+func getReportData() *IntegrityReportData {
+	data := &IntegrityReportData{}
 
 	db := database.GetSQLiteDB()
 	conn := db.GetDB()
 	if conn == nil {
-		return sb.String()
+		return data
 	}
 
 	years, err := db.GetAvailableYears()
 	if err != nil {
-		return sb.String()
+		return data
 	}
 
-	// Sort years
 	sort.Ints(years)
 
+	maxCount := 0
 	for _, year := range years {
 		tableName := fmt.Sprintf("bilibili_history_%d", year)
 		exists, _ := db.TableExists(tableName)
@@ -186,10 +174,15 @@ func generateIntegrityReport(result *IntegrityCheckResult) string {
 		}
 		var count int
 		conn.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)).Scan(&count)
-		sb.WriteString(fmt.Sprintf("| %d | %d |\n", year, count))
+		data.Years = append(data.Years, YearStatData{Year: year, Count: count})
+		data.TotalRecords += count
+		if count > maxCount {
+			maxCount = count
+		}
 	}
+	data.MaxYearCount = maxCount
 
-	return sb.String()
+	return data
 }
 
 func RunSyncData(dbPath, jsonPath string) (*SyncResult, error) {

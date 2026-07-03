@@ -616,8 +616,8 @@ func getSyncResult(c *gin.Context) {
 }
 
 func getIntegrityReport(c *gin.Context) {
-	report := services.GetIntegrityReport()
-	c.JSON(http.StatusOK, gin.H{"content": report})
+	data := services.GetIntegrityReportData()
+	c.JSON(http.StatusOK, gin.H{"data": data})
 }
 
 func exportToExcel(c *gin.Context) {

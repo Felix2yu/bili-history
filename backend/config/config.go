@@ -413,6 +413,32 @@ func updateServerNode(node *yaml.Node, server *ServerConfig) {
 	getOrAddScalar("ssl_enabled").Value = fmt.Sprintf("%t", server.SSLEnabled)
 	getOrAddScalar("ssl_certfile").Value = server.SSLCertFile
 	getOrAddScalar("ssl_keyfile").Value = server.SSLKeyFile
+
+	// data_integrity sub-node
+	diKey := "data_integrity"
+	var diNode *yaml.Node
+	if idx, ok := existingKeys[diKey]; ok {
+		diNode = node.Content[idx+1]
+	} else {
+		kn := &yaml.Node{Kind: yaml.ScalarNode, Value: diKey, Tag: "!!str"}
+		diNode = &yaml.Node{Kind: yaml.MappingNode}
+		node.Content = append(node.Content, kn, diNode)
+	}
+	if diNode.Kind != yaml.MappingNode {
+		diNode.Kind = yaml.MappingNode
+		diNode.Content = nil
+	}
+	diExisting := make(map[string]int)
+	for i := 0; i < len(diNode.Content); i += 2 {
+		diExisting[diNode.Content[i].Value] = i
+	}
+	if idx, ok := diExisting["check_on_startup"]; ok {
+		diNode.Content[idx+1].Value = fmt.Sprintf("%t", server.DataIntegrity.CheckOnStartup)
+	} else {
+		kn := &yaml.Node{Kind: yaml.ScalarNode, Value: "check_on_startup", Tag: "!!str"}
+		vn := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!bool", Value: fmt.Sprintf("%t", server.DataIntegrity.CheckOnStartup)}
+		diNode.Content = append(diNode.Content, kn, vn)
+	}
 }
 
 func ReloadConfig() (*Config, error) {

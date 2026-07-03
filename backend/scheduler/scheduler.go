@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -490,15 +491,17 @@ func (s *Scheduler) callEndpoint(method, endpoint, params string) (string, error
 		return "", fmt.Errorf("任务未配置 endpoint")
 	}
 	baseURL := fmt.Sprintf("http://127.0.0.1:%d", s.serverPort)
-	urlStr := baseURL + endpoint
+	normalizedEndpoint := normalizeEndpointPath(endpoint)
+	urlStr := baseURL + normalizedEndpoint
 
 	if strings.EqualFold(method, "GET") || method == "" {
-		if params != "" {
+		queryStr := buildQueryString(params)
+		if queryStr != "" {
 			sep := "?"
-			if strings.Contains(endpoint, "?") {
+			if strings.Contains(normalizedEndpoint, "?") {
 				sep = "&"
 			}
-			urlStr = baseURL + endpoint + sep + params
+			urlStr = baseURL + normalizedEndpoint + sep + queryStr
 		}
 		req, err := http.NewRequest("GET", urlStr, nil)
 		if err != nil {
@@ -521,6 +524,41 @@ func (s *Scheduler) callEndpoint(method, endpoint, params string) (string, error
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 	return s.doRequest(req)
+}
+
+// buildQueryString converts params to URL query string format.
+// If params is already in k=v&k=v format, returns it as-is.
+// If params is JSON object, converts it to query string.
+func buildQueryString(params string) string {
+	if params == "" {
+		return ""
+	}
+	trimmed := strings.TrimSpace(params)
+	if trimmed == "{}" {
+		return ""
+	}
+	if strings.HasPrefix(trimmed, "{") {
+		var m map[string]interface{}
+		if err := json.Unmarshal([]byte(trimmed), &m); err == nil {
+			parts := make([]string, 0, len(m))
+			for k, v := range m {
+				parts = append(parts, fmt.Sprintf("%s=%v", url.QueryEscape(k), url.QueryEscape(fmt.Sprintf("%v", v))))
+			}
+			return strings.Join(parts, "&")
+		}
+	}
+	return params
+}
+
+func normalizeEndpointPath(endpoint string) string {
+	trimmed := strings.TrimSpace(endpoint)
+	if trimmed == "" {
+		return "/"
+	}
+	if !strings.HasPrefix(trimmed, "/") {
+		trimmed = "/" + trimmed
+	}
+	return trimmed
 }
 
 func (s *Scheduler) doRequest(req *http.Request) (string, error) {

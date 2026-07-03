@@ -145,68 +145,79 @@ func (s *SQLiteDB) EnsureTableForYear(year int) error {
 		return err
 	}
 
-	if exists {
+	if !exists {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+
+		createSQL := fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (
+			id INTEGER PRIMARY KEY,
+			title TEXT NOT NULL,
+			long_title TEXT,
+			cover TEXT,
+			covers JSON,
+			uri TEXT,
+			oid INTEGER NOT NULL,
+			epid INTEGER DEFAULT 0,
+			bvid TEXT NOT NULL,
+			page INTEGER DEFAULT 1,
+			cid INTEGER,
+			part TEXT,
+			business TEXT,
+			dt INTEGER NOT NULL,
+			videos INTEGER DEFAULT 1,
+			author_name TEXT NOT NULL,
+			author_face TEXT,
+			author_mid INTEGER NOT NULL,
+			view_at INTEGER NOT NULL,
+			progress INTEGER DEFAULT 0,
+			badge TEXT,
+			show_title TEXT,
+			duration INTEGER NOT NULL,
+			current TEXT,
+			total INTEGER DEFAULT 0,
+			new_desc TEXT,
+			is_finish INTEGER DEFAULT 0,
+			is_fav INTEGER DEFAULT 0,
+			kid INTEGER,
+			tag_name TEXT,
+			live_status INTEGER DEFAULT 0,
+			main_category TEXT,
+			remark TEXT DEFAULT '',
+			remark_time INTEGER DEFAULT 0,
+			status INTEGER DEFAULT 0
+		);
+		`, tableName)
+
+		_, err = s.db.Exec(createSQL)
+		if err != nil {
+			return fmt.Errorf("failed to create table %s: %v", tableName, err)
+		}
+
+		indexSQLs := []string{
+			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_author_mid ON %s (author_mid);", tableName, tableName),
+			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_view_at ON %s (view_at);", tableName, tableName),
+			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_remark_time ON %s (remark_time);", tableName, tableName),
+		}
+
+		for _, idxSQL := range indexSQLs {
+			_, err = s.db.Exec(idxSQL)
+			if err != nil {
+				utils.LogWarning("Failed to create index: %v", err)
+			}
+		}
+
 		return nil
 	}
 
+	// Table exists — ensure status column exists (for tables created before this feature)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	createSQL := fmt.Sprintf(`
-	CREATE TABLE IF NOT EXISTS %s (
-		id INTEGER PRIMARY KEY,
-		title TEXT NOT NULL,
-		long_title TEXT,
-		cover TEXT,
-		covers JSON,
-		uri TEXT,
-		oid INTEGER NOT NULL,
-		epid INTEGER DEFAULT 0,
-		bvid TEXT NOT NULL,
-		page INTEGER DEFAULT 1,
-		cid INTEGER,
-		part TEXT,
-		business TEXT,
-		dt INTEGER NOT NULL,
-		videos INTEGER DEFAULT 1,
-		author_name TEXT NOT NULL,
-		author_face TEXT,
-		author_mid INTEGER NOT NULL,
-		view_at INTEGER NOT NULL,
-		progress INTEGER DEFAULT 0,
-		badge TEXT,
-		show_title TEXT,
-		duration INTEGER NOT NULL,
-		current TEXT,
-		total INTEGER DEFAULT 0,
-		new_desc TEXT,
-		is_finish INTEGER DEFAULT 0,
-		is_fav INTEGER DEFAULT 0,
-		kid INTEGER,
-		tag_name TEXT,
-		live_status INTEGER DEFAULT 0,
-		main_category TEXT,
-		remark TEXT DEFAULT '',
-		remark_time INTEGER DEFAULT 0
-	);
-	`, tableName)
-
-	_, err = s.db.Exec(createSQL)
-	if err != nil {
-		return fmt.Errorf("failed to create table %s: %v", tableName, err)
-	}
-
-	indexSQLs := []string{
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_author_mid ON %s (author_mid);", tableName, tableName),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_view_at ON %s (view_at);", tableName, tableName),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_remark_time ON %s (remark_time);", tableName, tableName),
-	}
-
-	for _, idxSQL := range indexSQLs {
-		_, err = s.db.Exec(idxSQL)
-		if err != nil {
-			utils.LogWarning("Failed to create index: %v", err)
-		}
+	var colExists bool
+	err = s.db.QueryRow("SELECT EXISTS(SELECT 1 FROM pragma_table_info(?) WHERE name='status')", tableName).Scan(&colExists)
+	if err == nil && !colExists {
+		_, _ = s.db.Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN status INTEGER DEFAULT 0", tableName))
 	}
 
 	return nil

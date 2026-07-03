@@ -35,6 +35,7 @@ type HistoryRecord struct {
 	MainCategory string `json:"main_category" db:"main_category"`
 	Remark       string `json:"remark" db:"remark"`
 	RemarkTime   int64  `json:"remark_time" db:"remark_time"`
+	Status       int    `json:"status" db:"status"`
 }
 
 type VideoCategory struct {

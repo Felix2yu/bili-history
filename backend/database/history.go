@@ -366,6 +366,8 @@ func scanHistoryRecords(rows *sql.Rows) ([]models.HistoryRecord, error) {
 				record.Remark = toString(val)
 			case "remark_time":
 				record.RemarkTime = toInt64(val)
+			case "status":
+				record.Status = toInt(val)
 			}
 		}
 
@@ -515,6 +517,7 @@ func processRecord(record models.HistoryRecord, useLocalImages, useSessdata bool
 		"main_category": record.MainCategory,
 		"remark":        record.Remark,
 		"remark_time":   record.RemarkTime,
+		"status":        record.Status,
 		"original_url":  buildOriginalURL(record),
 		"view_time":     utils.FormatDateTime(utils.TimestampToTime(record.ViewAt)),
 	}
@@ -829,4 +832,58 @@ func GetDailyStats(date string, year string) (int, int, error) {
 	}
 
 	return count, totalSeconds, nil
+}
+
+func MarkVideoDeleted(bvid string) error {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return fmt.Errorf("database not initialized")
+	}
+
+	years, err := db.GetAvailableYears()
+	if err != nil {
+		return err
+	}
+
+	for _, year := range years {
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			continue
+		}
+		conn.Exec(fmt.Sprintf("UPDATE %s SET status = 1 WHERE bvid = ? AND (status IS NULL OR status = 0)", tableName), bvid)
+	}
+	return nil
+}
+
+func GetDeletedStatus(bvids []string) map[string]bool {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return nil
+	}
+
+	result := make(map[string]bool)
+	years, err := db.GetAvailableYears()
+	if err != nil {
+		return result
+	}
+
+	for _, year := range years {
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			continue
+		}
+
+		for _, bvid := range bvids {
+			var status int
+			err := conn.QueryRow(fmt.Sprintf("SELECT COALESCE(status, 0) FROM %s WHERE bvid = ? LIMIT 1", tableName), bvid).Scan(&status)
+			if err == nil && status == 1 {
+				result[bvid] = true
+			}
+		}
+	}
+	return result
 }

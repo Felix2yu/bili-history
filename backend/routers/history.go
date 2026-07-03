@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"bilibili-history-go/biliapi"
+	"bilibili-history-go/config"
 	"bilibili-history-go/database"
 	"bilibili-history-go/models"
 
@@ -20,6 +22,8 @@ func RegisterHistoryRoutes(r *gin.RouterGroup) {
 		history.GET("/sqlite-version", getSQLiteVersion)
 		history.GET("/by_cid/:cid", getVideoByCID)
 		history.POST("/batch-remarks", batchGetRemarks)
+		history.POST("/check-deleted", checkDeletedVideos)
+		history.POST("/deleted-status", getDeletedStatus)
 	}
 
 	daily := r.Group("/daily")
@@ -217,4 +221,51 @@ func batchGetRemarks(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(results))
+}
+
+func checkDeletedVideos(c *gin.Context) {
+	var body struct {
+		Bvids []string `json:"bvids"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil || len(body.Bvids) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "参数错误"})
+		return
+	}
+
+	cfg := config.GetConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": "SESSDATA 未配置"})
+		return
+	}
+
+	client := biliapi.NewClient(cfg.SESSDATA)
+	deleted := []string{}
+
+	for _, bvid := range body.Bvids {
+		_, err := client.GetVideoInfo(bvid)
+		if err != nil {
+			// Video not found or deleted
+			database.MarkVideoDeleted(bvid)
+			deleted = append(deleted, bvid)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"deleted": deleted,
+		"checked": len(body.Bvids),
+	})
+}
+
+func getDeletedStatus(c *gin.Context) {
+	var body struct {
+		Bvids []string `json:"bvids"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "参数错误"})
+		return
+	}
+
+	status := database.GetDeletedStatus(body.Bvids)
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": status})
 }

@@ -624,6 +624,24 @@ export const batchGetRemarks = (records) => {
   })
 }
 
+/**
+ * 检查视频是否已删除（通过Bilibili API验证）
+ * @param {string[]} bvids - 要检查的bvid列表
+ * @returns {Promise} - { success, deleted: string[], checked: number }
+ */
+export const checkDeletedVideos = (bvids) => {
+  return instance.post('/history/check-deleted', { bvids })
+}
+
+/**
+ * 获取视频删除状态
+ * @param {string[]} bvids - 要查询的bvid列表
+ * @returns {Promise} - { success, data: { [bvid]: boolean } }
+ */
+export const getDeletedStatus = (bvids) => {
+  return instance.post('/history/deleted-status', { bvids })
+}
+
 // 获取所有备注记录
 export const getAllRemarks = (page = 1, size = 10, sortOrder = 0) => {
   return instance.get('/history/remarks', {

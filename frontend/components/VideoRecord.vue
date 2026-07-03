@@ -3,10 +3,15 @@
     class="mx-auto max-w-2xl cursor-pointer transition-all duration-200 ease-in-out lg:max-w-4xl relative group"
     :class="{
       'glass-card-hover p-3': !isBatchMode || !isSelected,
-      'ring-2 ring-accent bg-accent/5': isBatchMode && isSelected
+      'ring-2 ring-accent bg-accent/5': isBatchMode && isSelected,
+      'opacity-50': record.status === 1
     }"
     @click="handleClick"
   >
+    <!-- Deleted badge -->
+    <div v-if="record.status === 1" class="absolute top-2 left-2 z-20 bg-red-500/80 text-white text-[10px] px-1.5 py-0.5 rounded">
+      已删除
+    </div>
     <!-- Article type: full-width cover -->
     <div v-if="record.business === 'article-list' || record.business === 'article'">
       <div class="mb-2">

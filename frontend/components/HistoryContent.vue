@@ -1179,13 +1179,6 @@ const handleAuthorClick = async (record) => {
   await openInBrowser(url)
 }
 
-// 格式化时长
-// formatDuration, formatTimestamp, getBusinessType 从 ~/utils/format 导入
-    article: '专栏',
-  }
-  return businessTypes[business] || '其他类型'
-}
-
 // 获取进度条宽度
 const getProgressWidth = (progress, duration) => {
   if (progress === -1) return '100%'

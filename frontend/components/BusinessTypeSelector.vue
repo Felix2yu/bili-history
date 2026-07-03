@@ -41,7 +41,7 @@
             </svg>
           </div>
         </div>
-        
+
         <!-- 番剧 -->
         <div
           class="flex items-center p-2 rounded-lg cursor-pointer border"
@@ -53,57 +53,6 @@
             <div class="text-xs text-gray-500">番剧、电影、纪录片等</div>
           </div>
           <div v-if="selectedType === 'pgc'" class="text-[#fb7299]">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        </div>
-        
-        <!-- 直播 -->
-        <div
-          class="flex items-center p-2 rounded-lg cursor-pointer border"
-          :class="selectedType === 'live' ? 'border-[#fb7299] bg-[#fb7299]/5' : 'border-gray-200 hover:border-[#fb7299]/50'"
-          @click="selectType('live')"
-        >
-          <div class="flex-1">
-            <div class="font-medium">直播</div>
-            <div class="text-xs text-gray-500">B站直播间</div>
-          </div>
-          <div v-if="selectedType === 'live'" class="text-[#fb7299]">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        </div>
-        
-        <!-- 文章 -->
-        <div
-          class="flex items-center p-2 rounded-lg cursor-pointer border"
-          :class="selectedType === 'article' ? 'border-[#fb7299] bg-[#fb7299]/5' : 'border-gray-200 hover:border-[#fb7299]/50'"
-          @click="selectType('article')"
-        >
-          <div class="flex-1">
-            <div class="font-medium">文章</div>
-            <div class="text-xs text-gray-500">B站专栏文章</div>
-          </div>
-          <div v-if="selectedType === 'article'" class="text-[#fb7299]">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        </div>
-        
-        <!-- 文集 -->
-        <div
-          class="flex items-center p-2 rounded-lg cursor-pointer border"
-          :class="selectedType === 'article-list' ? 'border-[#fb7299] bg-[#fb7299]/5' : 'border-gray-200 hover:border-[#fb7299]/50'"
-          @click="selectType('article-list')"
-        >
-          <div class="flex-1">
-            <div class="font-medium">文集</div>
-            <div class="text-xs text-gray-500">B站专栏文集</div>
-          </div>
-          <div v-if="selectedType === 'article-list'" class="text-[#fb7299]">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
@@ -157,10 +106,7 @@ const selectType = (type) => {
 const businessTypeMap = {
   '': '全部',
   'archive': '普通视频',
-  'pgc': '番剧',
-  'live': '直播',
-  'article': '文章',
-  'article-list': '文集'
+  'pgc': '番剧'
 }
 
 // 导出映射表，方便外部使用

@@ -350,9 +350,6 @@ const businessTypeMap = {
   '': '全部',
   'archive': '普通视频',
   'pgc': '番剧',
-  'live': '直播',
-  'article': '文章',
-  'article-list': '文集',
 }
 
 // 选择业务类型（快速切换区域）

@@ -613,38 +613,43 @@ func GetRemarkByBvidAndViewAt(bvid string, viewAt int64) (string, int64, error) 
 }
 
 func InsertHistoryRecord(conn *sql.DB, tableName string, record *models.HistoryRecord) (bool, error) {
-	// Check if a record with the same bvid already exists (regardless of view_at)
-	existsQuery := fmt.Sprintf("SELECT id, author_name, view_at FROM %s WHERE bvid = ?", tableName)
+	// Check if a record with the same bvid already exists
+	existsQuery := fmt.Sprintf("SELECT id, author_name, view_at FROM %s WHERE bvid = ? ORDER BY view_at DESC LIMIT 1", tableName)
 	var existingID int64
 	var existingAuthor string
 	var existingViewAt int64
 	err := conn.QueryRow(existsQuery, record.Bvid).Scan(&existingID, &existingAuthor, &existingViewAt)
 	if err == nil {
-		// Record exists — update if this fetch has a newer view_at or better author info
-		updates := []string{}
-		args := []interface{}{}
+		hoursSinceLastView := (record.ViewAt - existingViewAt) / 3600
 
-		if record.ViewAt > existingViewAt {
-			updates = append(updates, "view_at = ?, progress = ?, current = ?")
-			args = append(args, record.ViewAt, record.Progress, record.Current)
-		}
-		if existingAuthor == "" && record.AuthorName != "" {
-			updates = append(updates, "author_name = ?, author_face = ?, author_mid = ?")
-			args = append(args, record.AuthorName, record.AuthorFace, record.AuthorMid)
-		}
-		if record.Cover != "" {
-			updates = append(updates, "cover = ?")
-			args = append(args, record.Cover)
-		}
+		if hoursSinceLastView < 24 {
+			// Within 24h — same viewing session, update progress
+			updates := []string{}
+			args := []interface{}{}
 
-		if len(updates) > 0 {
-			args = append(args, existingID)
-			updateQuery := fmt.Sprintf("UPDATE %s SET %s WHERE id = ?", tableName, strings.Join(updates, ", "))
-			_, _ = conn.Exec(updateQuery, args...)
+			if record.ViewAt > existingViewAt {
+				updates = append(updates, "view_at = ?, progress = ?, current = ?")
+				args = append(args, record.ViewAt, record.Progress, record.Current)
+			}
+			if existingAuthor == "" && record.AuthorName != "" {
+				updates = append(updates, "author_name = ?, author_face = ?, author_mid = ?")
+				args = append(args, record.AuthorName, record.AuthorFace, record.AuthorMid)
+			}
+			if record.Cover != "" {
+				updates = append(updates, "cover = ?")
+				args = append(args, record.Cover)
+			}
+
+			if len(updates) > 0 {
+				args = append(args, existingID)
+				updateQuery := fmt.Sprintf("UPDATE %s SET %s WHERE id = ?", tableName, strings.Join(updates, ", "))
+				_, _ = conn.Exec(updateQuery, args...)
+			}
+			return false, nil
 		}
-		return false, nil
+		// Beyond 24h — new viewing session, fall through to insert
 	}
-	if err != sql.ErrNoRows {
+	if err != nil && err != sql.ErrNoRows {
 		return false, err
 	}
 

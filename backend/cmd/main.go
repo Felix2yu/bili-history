@@ -158,7 +158,7 @@ func main() {
 	if cfg.Server.DataIntegrity.CheckOnStartup {
 		go func() {
 			utils.LogInfo("启动时数据完整性检查...")
-			result, err := services.RunIntegrityCheck("output/bilibili_history.db", "output/history_by_date", false)
+			result, err := services.RunIntegrityCheck(false)
 			if err != nil {
 				utils.LogWarning("启动时完整性检查失败: %v", err)
 			} else {

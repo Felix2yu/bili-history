@@ -567,18 +567,11 @@ func updateDataSyncConfig(c *gin.Context) {
 
 func checkDataIntegrity(c *gin.Context) {
 	var body struct {
-		DBPath     string `json:"db_path"`
-		JSONPath   string `json:"json_path"`
-		AsyncMode  bool   `json:"async_mode"`
-		ForceCheck bool   `json:"force_check"`
+		ForceCheck bool `json:"force_check"`
 	}
 	c.ShouldBindJSON(&body)
 
-	if body.JSONPath == "" {
-		body.JSONPath = "output/history_by_date"
-	}
-
-	result, err := services.RunIntegrityCheck(body.DBPath, body.JSONPath, body.ForceCheck)
+	result, err := services.RunIntegrityCheck(body.ForceCheck)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
 		return
@@ -587,18 +580,9 @@ func checkDataIntegrity(c *gin.Context) {
 }
 
 func syncData(c *gin.Context) {
-	var body struct {
-		DBPath    string `json:"db_path"`
-		JSONPath  string `json:"json_path"`
-		AsyncMode bool   `json:"async_mode"`
-	}
-	c.ShouldBindJSON(&body)
+	c.ShouldBindJSON(&struct{}{})
 
-	if body.JSONPath == "" {
-		body.JSONPath = "output/history_by_date"
-	}
-
-	result, err := services.RunSyncData(body.DBPath, body.JSONPath)
+	result, err := services.RunSyncData()
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
 		return

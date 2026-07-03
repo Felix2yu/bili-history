@@ -76,7 +76,7 @@ func GetIntegrityReportData() *IntegrityReportData {
 	return getReportData()
 }
 
-func RunIntegrityCheck(dbPath, jsonPath string, forceCheck bool) (*IntegrityCheckResult, error) {
+func RunIntegrityCheck(forceCheck bool) (*IntegrityCheckResult, error) {
 	cfg := config.GetConfig()
 	if !forceCheck && cfg != nil && !cfg.Server.DataIntegrity.CheckOnStartup {
 		return &IntegrityCheckResult{
@@ -185,7 +185,7 @@ func getReportData() *IntegrityReportData {
 	return data
 }
 
-func RunSyncData(dbPath, jsonPath string) (*SyncResult, error) {
+func RunSyncData() (*SyncResult, error) {
 	status := GetDataSyncStatus()
 	if status.IsRunning {
 		return nil, fmt.Errorf("同步正在进行中")

@@ -47,6 +47,9 @@
             <span>已收藏</span>
           </div>
         </div>
+        <div v-if="record.tag_name || record.tname" class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]" :class="isBatchMode ? 'ml-6' : ''">
+          {{ record.tag_name || record.tname }}
+        </div>
         <img :src="normalizeImageUrl(record.cover || record.covers[0])" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
       </div>
       <div class="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
@@ -89,10 +92,10 @@
           <img :src="normalizeImageUrl(cover)" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
         </div>
         <!-- Tag badge on cover -->
-        <div v-if="record.tag_name"
+        <div v-if="record.tag_name || record.tname"
              class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]"
              :class="isBatchMode ? 'ml-6' : ''">
-          {{ record.tag_name }}
+          {{ record.tag_name || record.tname }}
         </div>
         <!-- Duration & progress -->
         <div v-if="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live'">

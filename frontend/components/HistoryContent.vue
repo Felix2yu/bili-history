@@ -73,160 +73,115 @@
             </div>
 
             <!-- 网格布局的视频卡片 -->
-            <div
-              class="glass-card-hover overflow-hidden relative group"
-              :class="{ 'ring-2 ring-accent': selectedRecords.has(`${record.bvid}_${record.view_at}`), 'cursor-pointer': isBatchMode }"
-              @click="isBatchMode ? toggleRecordSelection(record) : null">
-              <!-- 多选框 -->
-              <div v-if="isBatchMode"
-                   class="absolute top-2 left-2 z-10">
-                <div class="w-5 h-5 rounded border-2 flex items-center justify-center"
-                     :class="selectedRecords.has(`${record.bvid}_${record.view_at}`) ? 'bg-[#fb7299] border-[#fb7299]' : 'border-white bg-black/20'">
-                  <svg v-if="selectedRecords.has(`${record.bvid}_${record.view_at}`)" class="w-3 h-3 text-white"
-                       fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              </div>
-
-              <!-- 封面图片 -->
-              <div class="relative aspect-video" :class="{ 'cursor-pointer': !isBatchMode }"
-                   @click="!isBatchMode ? handleVideoClick(record) : null">
-                <!-- 下载状态标识 -->
-                <div v-if="isVideoDownloaded(record.cid) && record.business === 'archive'"
-                     class="absolute left-0 top-0 z-20">
-                  <div
-                    class="bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold px-2 py-0.5 text-xs flex items-center space-x-1.5 rounded-br-md shadow-md">
-                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <VideoGridCard
+              :video="record"
+              :select-mode="isBatchMode"
+              :is-selected="selectedRecords.has(`${record.bvid}_${record.view_at}`)"
+              :show-category="record.business === 'archive'"
+              :show-owner="record.business !== 'cheese' && record.business !== 'pgc'"
+              :show-views="false"
+              :show-time="false"
+              :category-key="'tag_name'"
+              :owner-key="'author_name'"
+              :owner-face-key="'author_face'"
+              :cover-key="'cover'"
+              :progress="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live' ? record.progress : null"
+              :total-duration="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live' ? record.duration : null"
+              :is-blurred="isPrivacyMode"
+              card-style="glass"
+              @click="handleVideoClick(record)"
+              @toggle-select="toggleRecordSelection"
+              @owner-click="handleAuthorClick"
+            >
+              <template #cover-top-left="{ video: r }">
+                <div class="absolute top-1 left-1 z-10 flex flex-col gap-1" :class="isBatchMode ? 'ml-6' : ''">
+                  <div v-if="isVideoDownloaded(r.cid) && r.business === 'archive'"
+                       class="bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold px-1.5 py-0.5 text-[10px] flex items-center space-x-1 rounded shadow-md">
+                    <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     <span>已下载</span>
                   </div>
+                  <div v-if="r.tag_name && r.business === 'archive'"
+                       class="bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]">
+                    {{ r.tag_name }}
+                  </div>
                 </div>
+              </template>
 
-                <!-- 收藏状态标识 - 不对直播类型显示 -->
-                <div
-                  v-if="isVideoFavorited(parseInt(record.aid || record.avid || (record.business === 'archive' ? record.oid : 0), 10)) && record.business !== 'live'"
-                  class="absolute right-0 top-0 z-20">
+              <template #cover-top-right="{ video: r }">
+                <div v-if="isVideoFavorited(parseInt(r.aid || r.avid || (r.business === 'archive' ? r.oid : 0), 10)) && r.business !== 'live'"
+                     class="absolute right-0 top-0 z-10">
                   <div
-                    class="bg-gradient-to-r from-amber-500 to-yellow-400 text-white font-semibold px-2 py-0.5 text-xs flex items-center space-x-1.5 rounded-bl-md shadow-md">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    class="bg-gradient-to-r from-amber-500 to-yellow-400 text-white font-semibold px-1.5 py-0.5 text-[10px] flex items-center space-x-1 rounded-bl-md shadow-md">
+                    <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                     </svg>
                     <span>已收藏</span>
                   </div>
                 </div>
+              </template>
 
-                <!-- 分区标签 - 封面左上角 -->
-                <div v-if="record.tag_name && record.business === 'archive'"
-                     class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]"
-                     :class="isBatchMode ? 'ml-6' : ''">
-                  {{ record.tag_name }}
+              <template #actions="{ video: r }">
+                <div v-if="r.business !== 'live'"
+                     class="glass-icon-btn !w-6 !h-6"
+                     @click.stop.prevent="handleFavoriteGrid(r)">
+                  <svg class="w-3 h-3"
+                       :class="isVideoFavorited(parseInt(r.aid || r.avid || (r.business === 'archive' ? r.oid : 0), 10)) ? 'text-yellow-400' : ''"
+                       :fill="isVideoFavorited(parseInt(r.aid || r.avid || (r.business === 'archive' ? r.oid : 0), 10)) ? 'currentColor' : 'none'"
+                       viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
                 </div>
+                <div v-if="r.business === 'archive'"
+                     class="glass-icon-btn !w-6 !h-6"
+                     @click.stop.prevent="handleDownloadGrid(r)">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </div>
+                <div class="glass-icon-btn !w-6 !h-6 hover:!bg-red-500/20 hover:!text-red-500"
+                     @click.stop="handleDelete(r)">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+              </template>
 
-                <!-- 按钮组 -->
-                <div v-if="!isBatchMode"
-                     class="absolute right-2 top-2 z-20 hidden group-hover:flex flex-row items-center gap-1.5">
-                  <div v-if="record.business !== 'live'"
-                       class="glass-icon-btn !w-7 !h-7"
-                       @click.stop.prevent="handleFavoriteGrid(record)">
-                    <svg class="w-3.5 h-3.5"
-                         :class="isVideoFavorited(parseInt(record.aid || record.avid || (record.business === 'archive' ? record.oid : 0), 10)) ? 'text-yellow-400' : ''"
-                         :fill="isVideoFavorited(parseInt(record.aid || record.avid || (record.business === 'archive' ? record.oid : 0), 10)) ? 'currentColor' : 'none'"
-                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                  </div>
-                  <div v-if="record.business === 'archive'"
-                       class="glass-icon-btn !w-7 !h-7"
-                       @click.stop.prevent="handleDownloadGrid(record)">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                  </div>
-                  <div class="glass-icon-btn !w-7 !h-7 hover:!bg-red-500/20 hover:!text-red-500"
-                       @click.stop="handleDelete(record)">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </div>
+              <template #title="{ video: r }">
+                <span v-if="isPrivacyMode">******</span>
+                <span v-else v-html="highlightText(r.title)"></span>
+              </template>
+
+              <template #meta-top="{ video: r }">
+                <div v-if="r.business !== 'archive'" class="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center">
+                  <span class="inline-flex items-center rounded-md bg-[#f1f2f3] dark:bg-gray-700 px-2 py-0.5 text-[10px] text-[#71767d] dark:text-gray-300">
+                    {{ getBusinessType(r.business) }}
+                  </span>
                 </div>
-                <img
-                  :src="normalizeImageUrl(record.cover || record.covers?.[0])"
-                  class="w-full h-full object-cover transition-all duration-300"
-                  :class="{ 'blur-md': isPrivacyMode }"
-                  alt=""
-                />
-                <!-- 视频进度条 -->
-                <div
-                  v-if="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live'"
-                  class="absolute bottom-0 left-0 w-full">
-                  <div
-                    class="absolute bottom-1 right-1 rounded bg-black/50 px-1 py-1 text-[10px] font-semibold text-white">
-                    <span>{{ formatDuration(record.progress) }}</span>
-                    <span>/</span>
-                    <span>{{ formatDuration(record.duration) }}</span>
-                  </div>
-                  <div class="absolute bottom-0 left-0 h-0.5 w-full bg-black">
-                    <div class="h-full bg-[#FF6699]"
-                         :style="{ width: getProgressWidth(record.progress, record.duration) }">
-                    </div>
-                  </div>
+              </template>
+
+              <template #meta-bottom-right="{ video: r }">
+                <div class="flex items-center space-x-1">
+                  <img v-if="r.dt === 1 || r.dt === 3 || r.dt === 5 || r.dt === 7"
+                       src="/Mobile.svg"
+                       alt="Mobile"
+                       class="h-3 w-3"
+                  />
+                  <img v-else-if="r.dt === 2 || r.dt === 33"
+                       src="/PC.svg"
+                       alt="PC"
+                       class="h-3 w-3"
+                  />
+                  <img v-else-if="r.dt === 4 || r.dt === 6"
+                       src="/Pad.svg"
+                       alt="Pad"
+                       class="h-3 w-3"
+                  />
+                  <span class="text-[10px]">{{ formatTimestamp(r.view_at) }}</span>
                 </div>
-              </div>
-              <!-- 视频信息 -->
-              <div class="p-3 flex flex-col space-y-1">
-                <!-- 标题 - 单行显示 -->
-                <div class="line-clamp-1 text-sm text-gray-900 dark:text-gray-100"
-                     v-html="isPrivacyMode ? '******' : highlightText(record.title)"
-                     :class="{ 'blur-sm': isPrivacyMode, 'cursor-pointer': !isBatchMode }"
-                     @click="!isBatchMode ? handleVideoClick(record) : null">
-                </div>
-                 <!-- 业务类型标签 - 非视频类型显示 -->
-                <div v-if="record.business !== 'archive'" class="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center space-x-1">
- <span class="inline-flex items-center rounded-md bg-[#f1f2f3] dark:bg-gray-700 px-2 py-1 text-xs text-[#71767d] dark:text-gray-300">
- {{ getBusinessType(record.business) }}
- </span>
-                </div>
-                <!-- UP主和时间信息 - 单行显示 -->
-                <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                  <div class="flex items-center space-x-2 min-w-0 flex-1">
-                    <img v-if="record.business !== 'cheese' && record.business !== 'pgc'"
-                         :src="normalizeImageUrl(record.author_face)"
-                         :class="{ 'blur-md': isPrivacyMode, 'cursor-pointer': !isBatchMode }"
-                         class="w-4 h-4 rounded-full flex-shrink-0"
-                         @click="!isBatchMode ? handleAuthorClick(record) : null"
-                         :title="isPrivacyMode ? '隐私模式已开启' : `访问 ${record.author_name} 的个人空间`"
-                    />
-                    <span v-html="isPrivacyMode ? '******' : highlightText(record.author_name)"
-                          :class="{ 'blur-sm': isPrivacyMode, 'cursor-pointer': !isBatchMode }"
-                          class="hover:text-[#fb7299] transition-colors duration-200 truncate"
-                          @click="!isBatchMode ? handleAuthorClick(record) : null">
- </span>
-                  </div>
-                  <div class="flex items-center space-x-2 flex-shrink-0">
-                    <img v-if="record.dt === 1 || record.dt === 3 || record.dt === 5 || record.dt === 7"
-                         src="/Mobile.svg"
-                         alt="Mobile"
-                         class="h-4 w-4"
-                    />
-                    <img v-else-if="record.dt === 2 || record.dt === 33"
-                         src="/PC.svg"
-                         alt="PC"
-                         class="h-4 w-4"
-                    />
-                    <img v-else-if="record.dt === 4 || record.dt === 6"
-                         src="/Pad.svg"
-                         alt="Pad"
-                         class="h-4 w-4"
-                    />
-                    <span>{{ formatTimestamp(record.view_at) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+              </template>
+            </VideoGridCard>
           </template>
         </div>
 
@@ -407,6 +362,7 @@ import FavoriteDialog from './FavoriteDialog.vue'
 import { openInBrowser } from '~/utils/openUrl.js'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
 import { formatDuration, formatTimestamp, getBusinessType } from '~/utils/format'
+import VideoGridCard from './VideoGridCard.vue'
 
 const { isPrivacyMode } = usePrivacyStore()
 

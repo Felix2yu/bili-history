@@ -26,126 +26,19 @@
             </div>
           </div>
 
-          <div v-if="videos.length > 0" class="border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-            <div class="flex flex-wrap items-center gap-3">
-              <div class="flex items-center space-x-2">
-                <span class="text-xs text-gray-500 dark:text-gray-400">排序:</span>
-                <button
-                  v-for="opt in sortOptions"
-                  :key="opt.key"
-                  @click="toggleSort(opt.key)"
-                  class="px-2 py-1 text-xs rounded-md transition-colors"
-                  :class="sortKey === opt.key
-                    ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
-                >
-                  {{ opt.label }}
-                  <span v-if="sortKey === opt.key" class="ml-0.5">{{ sortOrder === 'desc' ? '↓' : '↑' }}</span>
-                </button>
-              </div>
-
-              <div class="w-px h-4 bg-gray-200 dark:bg-gray-700"></div>
-
-              <div class="flex items-center space-x-2 flex-wrap">
-                <span class="text-xs text-gray-500 dark:text-gray-400">分区:</span>
-                <button
-                  @click="selectedCategory = ''"
-                  class="px-2 py-1 text-xs rounded-md transition-colors"
-                  :class="selectedCategory === ''
-                    ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
-                >
-                  全部
-                </button>
-                <button
-                  v-for="cat in topCategories"
-                  :key="cat.tname"
-                  @click="selectedCategory = cat.tname"
-                  class="px-2 py-1 text-xs rounded-md transition-colors"
-                  :class="selectedCategory === cat.tname
-                    ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
-                >
-                  {{ cat.tname }} ({{ cat.count }})
-                </button>
-                <div v-if="topCategories.length < allCategories.length" class="relative" ref="catDropdownRef">
-                  <button
-                    @click.stop="showCatDropdown = !showCatDropdown"
-                    class="px-2 py-1 text-xs rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    更多...
-                  </button>
-                  <div
-                    v-if="showCatDropdown"
-                    class="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 p-2 max-h-60 overflow-y-auto min-w-[180px]"
-                  >
-                    <button
-                      v-for="cat in restCategories"
-                      :key="cat.tname"
-                      @click="selectedCategory = cat.tname; showCatDropdown = false"
-                      class="w-full text-left px-2 py-1 text-xs rounded transition-colors"
-                      :class="selectedCategory === cat.tname
-                        ? 'bg-[#fb7299]/10 text-[#fb7299]'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
-                    >
-                      {{ cat.tname }} ({{ cat.count }})
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="w-px h-4 bg-gray-200 dark:border-gray-700"></div>
-
-              <div class="flex items-center space-x-2 flex-wrap">
-                <span class="text-xs text-gray-500 dark:text-gray-400">UP主:</span>
-                <button
-                  @click="selectedOwner = ''"
-                  class="px-2 py-1 text-xs rounded-md transition-colors"
-                  :class="selectedOwner === ''
-                    ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
-                >
-                  全部
-                </button>
-                <button
-                  v-for="owner in topOwners"
-                  :key="owner.name"
-                  @click="selectedOwner = owner.name"
-                  class="px-2 py-1 text-xs rounded-md transition-colors max-w-[120px] truncate"
-                  :class="selectedOwner === owner.name
-                    ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
-                  :title="owner.name"
-                >
-                  {{ owner.name }} ({{ owner.count }})
-                </button>
-                <div v-if="topOwners.length < allOwners.length" class="relative" ref="ownerDropdownRef">
-                  <button
-                    @click.stop="showOwnerDropdown = !showOwnerDropdown"
-                    class="px-2 py-1 text-xs rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    更多...
-                  </button>
-                  <div
-                    v-if="showOwnerDropdown"
-                    class="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 p-2 max-h-60 overflow-y-auto min-w-[180px]"
-                  >
-                    <button
-                      v-for="owner in restOwners"
-                      :key="owner.name"
-                      @click="selectedOwner = owner.name; showOwnerDropdown = false"
-                      class="w-full text-left px-2 py-1 text-xs rounded transition-colors"
-                      :class="selectedOwner === owner.name
-                        ? 'bg-[#fb7299]/10 text-[#fb7299]'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
-                    >
-                      {{ owner.name }} ({{ owner.count }})
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <VideoFilterBar
+            v-if="videos.length > 0"
+            v-model:sort-key="sortKey"
+            v-model:sort-order="sortOrder"
+            v-model:selected-category="selectedCategory"
+            v-model:selected-owner="selectedOwner"
+            :sort-options="sortOptions"
+            :all-categories="allCategories"
+            :all-owners="allOwners"
+            @sort-change="handleSortChange"
+            @category-change="handleFilterChange"
+            @owner-change="handleFilterChange"
+          />
 
           <div class="p-5">
             <div v-if="loading" class="flex justify-center py-20">
@@ -179,47 +72,13 @@
             </div>
 
             <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              <div
+              <VideoGridCard
                 v-for="video in videos"
                 :key="video.bvid"
-                class="bg-white/50 dark:bg-gray-800/50 rounded-md overflow-hidden border border-gray-200/50 dark:border-gray-700/50 hover:border-[#fb7299] hover:shadow-sm transition-all duration-200 relative group"
-              >
-                <div class="relative pb-[56.25%] overflow-hidden cursor-pointer group" @click="openVideo(video)">
-                  <img
-                    :src="normalizeImageUrl(video.pic)"
-                    :alt="video.title"
-                    class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                    onerror="this.src='https://i0.hdslb.com/bfs/archive/c9e72655b7c9c9c68a30d3275313c501e68427d1.jpg'"
-                  />
-                  <div class="absolute bottom-1 right-1 bg-black/60 px-1 py-0.5 rounded text-white text-[10px]">
-                    {{ formatDuration(video.duration) }}
-                  </div>
-                  <div v-if="video.tname" class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]">
-                    {{ video.tname }}
-                  </div>
-                </div>
-
-                <div class="p-2 flex flex-col space-y-1">
-                  <div class="line-clamp-2 text-xs text-gray-900 dark:text-gray-100 font-medium cursor-pointer" @click="openVideo(video)">
-                    {{ video.title }}
-                  </div>
-                  <div class="flex items-center space-x-1">
-                    <img
-                      :src="normalizeImageUrl(video.owner_face)"
-                      :alt="video.owner_name"
-                      class="w-3.5 h-3.5 rounded-full object-cover"
-                      loading="lazy"
-                      onerror="this.src='https://i1.hdslb.com/bfs/face/1b6f746be0d0c8324e01e618c5e85e113a8b38be.jpg'"
-                    />
-                    <span class="text-[10px] text-gray-600 dark:text-gray-400 truncate">{{ video.owner_name }}</span>
-                  </div>
-                  <div class="flex justify-between items-center text-[10px] text-gray-500">
-                    <span>{{ formatViews(video.view) }} 次观看</span>
-                    <span>{{ formatTime(video.pubdate) }}</span>
-                  </div>
-                </div>
-              </div>
+                :video="video"
+                :time-field="'pubdate'"
+                @click="openVideo(video)"
+              />
             </div>
 
             <div v-if="totalPages > 1" class="mt-6 flex justify-center">
@@ -238,13 +97,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAsyncData } from '#imports'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import { getLikeList, getLikeLocal } from '~/utils/api'
-import { normalizeImageUrl } from '~/utils/imageUrl.js'
-import { formatDuration } from '~/utils/format'
+import VideoGridCard from '../VideoGridCard.vue'
+import VideoFilterBar from '../VideoFilterBar.vue'
+import Pagination from '../Pagination.vue'
 
 const loading = ref(false)
 const syncing = ref(false)
@@ -258,10 +118,6 @@ const sortKey = ref('fetch_time')
 const sortOrder = ref('desc')
 const selectedOwner = ref('')
 const selectedCategory = ref('')
-const showOwnerDropdown = ref(false)
-const showCatDropdown = ref(false)
-const ownerDropdownRef = ref(null)
-const catDropdownRef = ref(null)
 
 const allOwners = ref([])
 const allCategories = ref([])
@@ -273,21 +129,14 @@ const sortOptions = [
   { key: 'view', label: '播放量' },
 ]
 
-const topOwners = computed(() => allOwners.value.slice(0, 10))
-const restOwners = computed(() => allOwners.value.slice(10))
-
-const topCategories = computed(() => allCategories.value.slice(0, 10))
-const restCategories = computed(() => allCategories.value.slice(10))
-
 const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value))
 
-function toggleSort(key) {
-  if (sortKey.value === key) {
-    sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
-  } else {
-    sortKey.value = key
-    sortOrder.value = key === 'owner_name' ? 'asc' : 'desc'
-  }
+function handleSortChange() {
+  currentPage.value = 1
+  fetchLocal()
+}
+
+function handleFilterChange() {
   currentPage.value = 1
   fetchLocal()
 }
@@ -298,16 +147,6 @@ function goToPage(page) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function handleClickOutside(e) {
-  if (ownerDropdownRef.value && !ownerDropdownRef.value.contains(e.target)) {
-    showOwnerDropdown.value = false
-  }
-  if (catDropdownRef.value && !catDropdownRef.value.contains(e.target)) {
-    showCatDropdown.value = false
-  }
-}
-
-// SSR: 初始数据在服务端获取
 const { data: initialData } = await useAsyncData('likes-initial', async () => {
   try {
     const response = await getLikeLocal({
@@ -329,22 +168,16 @@ const { data: initialData } = await useAsyncData('likes-initial', async () => {
   }
 })
 
-// 从 SSR 数据初始化组件状态
 if (initialData.value) {
   videos.value = initialData.value.videos
   totalCount.value = initialData.value.totalCount
 }
 
 onMounted(async () => {
-  document.addEventListener('click', handleClickOutside)
   if (videos.value.length === 0) {
     await fetchLocal()
   }
   loadFilterOptions()
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
 })
 
 async function fetchLocal() {
@@ -356,6 +189,8 @@ async function fetchLocal() {
       size: pageSize.value,
       sort: sortKey.value,
       order: sortOrder.value,
+      category: selectedCategory.value || undefined,
+      owner: selectedOwner.value || undefined,
     })
     if (response.data.status === 'success') {
       videos.value = response.data.data.list || []
@@ -417,17 +252,5 @@ function openVideo(video) {
   if (video.link) {
     window.open(video.link, '_blank')
   }
-}
-
-function formatViews(count) {
-  if (!count) return '0'
-  if (count >= 10000) return (count / 10000).toFixed(1) + '万'
-  return count.toString()
-}
-
-function formatTime(timestamp) {
-  if (!timestamp) return ''
-  const date = new Date(timestamp * 1000)
-  return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
 }
 </script>

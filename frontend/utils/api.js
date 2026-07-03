@@ -982,18 +982,11 @@ export const getDanmakuFile = async (cid = '', file_path = '') => {
 
 // 数据同步相关接口
 /**
- * 数据同步API
- * @param {string} db_path - 数据库文件路径
- * @param {string} json_path - JSON文件根目录
- * @param {boolean} async_mode - 是否异步执行
+ * 数据状态API
  * @returns {Promise} - API响应
  */
-export const syncData = (db_path = 'output/bilibili_history.db', json_path = 'output/history_by_date', async_mode = false) => {
-  return instance.post('/data_sync/sync', {
-    db_path,
-    json_path,
-    async_mode
-  })
+export const syncData = () => {
+  return instance.post('/data_sync/sync', {})
 }
 
 /**
@@ -1006,17 +999,11 @@ export const getSyncResult = () => {
 
 /**
  * 检查数据完整性API
- * @param {string} db_path - 数据库文件路径
- * @param {string} json_path - JSON文件根目录
- * @param {boolean} async_mode - 是否异步执行
  * @param {boolean} force_check - 是否强制执行检查，忽略配置设置
  * @returns {Promise} - API响应
  */
-export const checkDataIntegrity = (db_path = 'output/bilibili_history.db', json_path = 'output/history_by_date', async_mode = false, force_check = false) => {
+export const checkDataIntegrity = (force_check = false) => {
   return instance.post('/data_sync/check', {
-    db_path,
-    json_path,
-    async_mode,
     force_check
   })
 }

@@ -585,46 +585,6 @@ func buildOriginalURL(record models.HistoryRecord) string {
 	return ""
 }
 
-func UpdateRemark(bvid string, viewAt int64, remark string) (map[string]interface{}, error) {
-	db := GetSQLiteDB()
-	conn := db.GetDB()
-	if conn == nil {
-		return nil, fmt.Errorf("database not initialized")
-	}
-
-	year := utils.GetYearFromTimestamp(viewAt)
-	tableName := fmt.Sprintf("bilibili_history_%d", year)
-
-	exists, _ := db.TableExists(tableName)
-	if !exists {
-		return nil, fmt.Errorf("未找到 %d 年的历史记录数据", year)
-	}
-
-	currentTime := utils.NowUnix()
-
-	result, err := conn.Exec(fmt.Sprintf(`
-		UPDATE %s
-		SET remark = ?, remark_time = ?
-		WHERE bvid = ? AND view_at = ?
-	`, tableName), remark, currentTime, bvid, viewAt)
-
-	if err != nil {
-		return nil, err
-	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		return nil, fmt.Errorf("未找到指定的视频记录")
-	}
-
-	return map[string]interface{}{
-		"bvid":        bvid,
-		"view_at":     viewAt,
-		"remark":      remark,
-		"remark_time": currentTime,
-	}, nil
-}
-
 func GetRemarkByBvidAndViewAt(bvid string, viewAt int64) (string, int64, error) {
 	db := GetSQLiteDB()
 	conn := db.GetDB()

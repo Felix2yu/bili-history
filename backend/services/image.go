@@ -111,111 +111,11 @@ func DownloadImage(url, imageType, filename string) (string, error) {
 	return savePath, nil
 }
 
-func GetLocalImagePath(url, imageType string) string {
-	if url == "" {
-		return ""
-	}
-
-	outputPath := utils.GetOutputPath("images")
-	saveDir := filepath.Join(outputPath, imageType)
-
-	filename := filepath.Base(url)
-	if idx := stringsIndex(filename, '?'); idx >= 0 {
-		filename = filename[:idx]
-	}
-
-	savePath := filepath.Join(saveDir, filename)
-
-	if _, err := os.Stat(savePath); err == nil {
-		return fmt.Sprintf("/images/%s/%s", imageType, filename)
-	}
-
-	return url
-}
-
-func stringsIndex(s string, c byte) int {
-	for i := 0; i < len(s); i++ {
-		if s[i] == c {
-			return i
-		}
-	}
-	return -1
-}
-
 type ImageDownloadTask struct {
 	URL       string
 	ImageType string
 	Filename  string
 	Year      int
-}
-
-func BatchDownloadImages(tasks []ImageDownloadTask, concurrency int) {
-	status := GetImageDownloadStatus()
-	if status.IsRunning {
-		return
-	}
-
-	newStatus := ImageDownloadStatus{
-		IsRunning:   true,
-		Status:      "running",
-		TotalImages: len(tasks),
-		StartTime:   time.Now().Unix(),
-	}
-	setImageDownloadStatus(newStatus)
-	atomic.StoreInt32(&stopImageDownload, 0)
-
-	go func() {
-		defer func() {
-			status := GetImageDownloadStatus()
-			status.IsRunning = false
-			if status.ErrorMessage != "" {
-				status.Status = "error"
-			} else {
-				status.Status = "completed"
-			}
-			setImageDownloadStatus(status)
-		}()
-
-		if concurrency <= 0 {
-			concurrency = 5
-		}
-
-		sem := make(chan struct{}, concurrency)
-		var wg sync.WaitGroup
-
-		for _, task := range tasks {
-			if isImageDownloadStopped() {
-				break
-			}
-
-			wg.Add(1)
-			sem <- struct{}{}
-
-			go func(t ImageDownloadTask) {
-				defer wg.Done()
-				defer func() { <-sem }()
-
-				if isImageDownloadStopped() {
-					return
-				}
-
-				_, err := DownloadImage(t.URL, t.ImageType, t.Filename)
-
-				status := GetImageDownloadStatus()
-				if err != nil {
-					status.FailedImages++
-				} else {
-					status.DownloadedImages++
-				}
-				if t.Year > 0 {
-					status.CurrentYear = t.Year
-				}
-				setImageDownloadStatus(status)
-			}(task)
-		}
-
-		wg.Wait()
-	}()
 }
 
 func StartFullImageDownload(year *int, useSessdata bool) {

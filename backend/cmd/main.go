@@ -9,6 +9,7 @@ import (
 	"bilibili-history-go/database"
 	"bilibili-history-go/routers"
 	"bilibili-history-go/scheduler"
+	"bilibili-history-go/services"
 	"bilibili-history-go/utils"
 
 	"github.com/gin-contrib/cors"
@@ -153,6 +154,19 @@ func main() {
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	utils.LogSuccess("服务启动成功，监听地址: %s", addr)
 	utils.LogSuccess("=== 应用启动完成 ===")
+
+	if cfg.Server.DataIntegrity.CheckOnStartup {
+		go func() {
+			utils.LogInfo("启动时数据完整性检查...")
+			result, err := services.RunIntegrityCheck(false)
+			if err != nil {
+				utils.LogWarning("启动时完整性检查失败: %v", err)
+			} else {
+				utils.LogInfo("完整性检查完成: JSON=%d条, DB=%d条, 差异=%d",
+					result.TotalJSONRecords, result.TotalDBRecords, result.Difference)
+			}
+		}()
+	}
 
 	if cfg.Server.SSLEnabled && cfg.Server.SSLCertFile != "" && cfg.Server.SSLKeyFile != "" {
 		utils.LogInfo("使用HTTPS启动服务")

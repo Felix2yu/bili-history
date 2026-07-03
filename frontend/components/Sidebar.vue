@@ -239,7 +239,7 @@ const fetchIntegrityStatus = async () => {
     if (configResponse.data?.success && !configResponse.data.check_on_startup) {
       integrityStatus.value = { status: 'disabled' }; return
     }
-    const response = await checkDataIntegrity('output/bilibili_history.db', 'output/history_by_date', false)
+    const response = await checkDataIntegrity()
     if (response.data?.success) {
       integrityStatus.value = {
         status: response.data.difference === 0 ? 'consistent' : 'inconsistent'

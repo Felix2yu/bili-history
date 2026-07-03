@@ -102,9 +102,9 @@
                     </svg>
                     <span>已下载</span>
                   </div>
-                  <div v-if="r.tag_name && r.business === 'archive'"
+                  <div v-if="getCategoryName(r)"
                        class="bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]">
-                    {{ r.tag_name }}
+                    {{ getCategoryName(r) }}
                   </div>
                 </div>
               </template>
@@ -676,6 +676,15 @@ const batchCheckDownloadStatus = async () => {
 // 检查视频是否已下载
 const isVideoDownloaded = (cid) => {
   return cid && downloadedVideos.value.has(cid.toString())
+}
+
+// 获取分区名称，优先使用子分区，其次主分区
+function getCategoryName(record) {
+  if (!record) return ''
+  if (record.tag_name) return record.tag_name
+  if (record.tname) return record.tname
+  if (record.main_category) return record.main_category
+  return ''
 }
 
 // 检查视频是否已收藏

@@ -72,10 +72,11 @@ const urlList = computed(() => {
 const loadConfig = async () => {
   try {
     const response = await getShoutrrrConfig()
-    if (response.data) {
-      const urls = Array.isArray(response.data.urls) ? response.data.urls.join('\n') : (response.data.urls || '')
+    if (response.data && response.data.status === 'success' && response.data.data) {
+      const data = response.data.data
+      const urls = Array.isArray(data.urls) ? data.urls.join('\n') : (data.urls || '')
       config.value = {
-        enabled: response.data.enabled ?? false,
+        enabled: data.enabled ?? false,
         urls
       }
     }

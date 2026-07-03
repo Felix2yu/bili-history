@@ -237,6 +237,28 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 		return
 	}
 
+	existingKeys := make(map[string]int)
+	for i := 0; i < len(root.Content); i += 2 {
+		existingKeys[root.Content[i].Value] = i
+	}
+
+	getOrAddNode := func(key string) *yaml.Node {
+		if idx, ok := existingKeys[key]; ok {
+			return root.Content[idx+1]
+		}
+		keyNode := &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: key,
+			Tag:   "!!str",
+		}
+		valueNode := &yaml.Node{
+			Kind: yaml.MappingNode,
+		}
+		root.Content = append(root.Content, keyNode, valueNode)
+		existingKeys[key] = len(root.Content) - 2
+		return valueNode
+	}
+
 	for i := 0; i < len(root.Content); i += 2 {
 		keyNode := root.Content[i]
 		valueNode := root.Content[i+1]
@@ -272,29 +294,72 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 			updateServerNode(valueNode, &cfg.Server)
 		}
 	}
+
+	if _, ok := existingKeys["shoutrrr"]; !ok {
+		node := getOrAddNode("shoutrrr")
+		updateShoutrrrNode(node, &cfg.Shoutrrr)
+	}
+	if _, ok := existingKeys["server"]; !ok {
+		node := getOrAddNode("server")
+		updateServerNode(node, &cfg.Server)
+	}
 }
 
 func updateShoutrrrNode(node *yaml.Node, shoutrrr *ShoutrrrConfig) {
 	if node.Kind != yaml.MappingNode {
 		return
 	}
+	existingKeys := make(map[string]int)
 	for i := 0; i < len(node.Content); i += 2 {
-		key := node.Content[i]
-		val := node.Content[i+1]
-		switch key.Value {
-		case "enabled":
-			val.Value = fmt.Sprintf("%t", shoutrrr.Enabled)
-		case "urls":
-			// Replace the sequence node with new values
-			val.Content = nil
-			for _, url := range shoutrrr.URLs {
-				val.Content = append(val.Content, &yaml.Node{
-					Kind:  yaml.ScalarNode,
-					Value: url,
-					Tag:   "!!str",
-				})
-			}
+		existingKeys[node.Content[i].Value] = i
+	}
+
+	getOrAddScalar := func(key string) *yaml.Node {
+		if idx, ok := existingKeys[key]; ok {
+			return node.Content[idx+1]
 		}
+		keyNode := &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: key,
+			Tag:   "!!str",
+		}
+		valNode := &yaml.Node{
+			Kind: yaml.ScalarNode,
+			Tag:  "!!str",
+		}
+		node.Content = append(node.Content, keyNode, valNode)
+		existingKeys[key] = len(node.Content) - 2
+		return valNode
+	}
+
+	getOrAddSeq := func(key string) *yaml.Node {
+		if idx, ok := existingKeys[key]; ok {
+			return node.Content[idx+1]
+		}
+		keyNode := &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: key,
+			Tag:   "!!str",
+		}
+		valNode := &yaml.Node{
+			Kind: yaml.SequenceNode,
+		}
+		node.Content = append(node.Content, keyNode, valNode)
+		existingKeys[key] = len(node.Content) - 2
+		return valNode
+	}
+
+	enabledNode := getOrAddScalar("enabled")
+	enabledNode.Value = fmt.Sprintf("%t", shoutrrr.Enabled)
+
+	urlsNode := getOrAddSeq("urls")
+	urlsNode.Content = nil
+	for _, url := range shoutrrr.URLs {
+		urlsNode.Content = append(urlsNode.Content, &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: url,
+			Tag:   "!!str",
+		})
 	}
 }
 
@@ -302,22 +367,34 @@ func updateServerNode(node *yaml.Node, server *ServerConfig) {
 	if node.Kind != yaml.MappingNode {
 		return
 	}
+	existingKeys := make(map[string]int)
 	for i := 0; i < len(node.Content); i += 2 {
-		key := node.Content[i]
-		val := node.Content[i+1]
-		switch key.Value {
-		case "host":
-			val.Value = server.Host
-		case "port":
-			val.Value = fmt.Sprintf("%d", server.Port)
-		case "ssl_enabled":
-			val.Value = fmt.Sprintf("%t", server.SSLEnabled)
-		case "ssl_certfile":
-			val.Value = server.SSLCertFile
-		case "ssl_keyfile":
-			val.Value = server.SSLKeyFile
-		}
+		existingKeys[node.Content[i].Value] = i
 	}
+
+	getOrAddScalar := func(key string) *yaml.Node {
+		if idx, ok := existingKeys[key]; ok {
+			return node.Content[idx+1]
+		}
+		keyNode := &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: key,
+			Tag:   "!!str",
+		}
+		valNode := &yaml.Node{
+			Kind: yaml.ScalarNode,
+			Tag:  "!!str",
+		}
+		node.Content = append(node.Content, keyNode, valNode)
+		existingKeys[key] = len(node.Content) - 2
+		return valNode
+	}
+
+	getOrAddScalar("host").Value = server.Host
+	getOrAddScalar("port").Value = fmt.Sprintf("%d", server.Port)
+	getOrAddScalar("ssl_enabled").Value = fmt.Sprintf("%t", server.SSLEnabled)
+	getOrAddScalar("ssl_certfile").Value = server.SSLCertFile
+	getOrAddScalar("ssl_keyfile").Value = server.SSLKeyFile
 }
 
 func ReloadConfig() (*Config, error) {

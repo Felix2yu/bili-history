@@ -25,6 +25,9 @@ export const useDarkMode = defineStore('darkMode', {
         this.darkMode = 'system'
       }
 
+      // 同步到 localStorage，供首屏脚本使用
+      try { localStorage.setItem('darkMode', this.darkMode) } catch(e) {}
+
       this.applyDarkMode()
       this.setupSystemListener()
       this.initialized = true
@@ -65,6 +68,9 @@ export const useDarkMode = defineStore('darkMode', {
 
       this.darkMode = mode
       this.applyDarkMode()
+
+      // 同步到 localStorage
+      try { localStorage.setItem('darkMode', mode) } catch(e) {}
 
       // 保存到后端API
       if (process.client) {

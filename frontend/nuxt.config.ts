@@ -42,6 +42,11 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'Bilibili 历史记录管理',
+      script: [
+        {
+          innerHTML: `(function(){try{var s=localStorage.getItem('darkMode');var d=s?s==='dark'||(s==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark')}catch(e){}})()`,
+        },
+      ],
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no' },

@@ -141,7 +141,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAsyncData } from '#imports'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
-import { getLikeList, getLikeLocal, batchCheckFavoriteStatus } from '~/utils/api'
+import { getLikeList, getLikeLocal, syncLikes, batchCheckFavoriteStatus } from '~/utils/api'
 import VideoGridCard from '../VideoGridCard.vue'
 import VideoFilterBar from '../VideoFilterBar.vue'
 import Pagination from '../Pagination.vue'
@@ -281,9 +281,10 @@ async function loadFilterOptions() {
 async function syncFromBilibili() {
   syncing.value = true
   try {
-    const response = await getLikeList()
+    const response = await syncLikes()
     if (response.data.status === 'success') {
-      showNotify({ type: 'success', message: `同步完成：新增 ${response.data.data.new}，更新 ${response.data.data.updated}` })
+      const total = response.data.data?.total || 0
+      showNotify({ type: 'success', message: `同步完成：共 ${total} 条点赞记录` })
       await fetchLocal()
       loadFilterOptions()
     } else {

@@ -1749,6 +1749,14 @@ export const getLikeList = () => {
 }
 
 /**
+ * 从B站同步点赞数据到本地
+ * POST /like/sync
+ */
+export const syncLikes = () => {
+  return instance.post('/like/sync')
+}
+
+/**
  * 从本地数据库获取点赞视频列表
  * GET /like/local
  */

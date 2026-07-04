@@ -185,7 +185,7 @@ const handleConfirm = async () => {
       // 获取视频ID，适配不同的属性名（aid/avid/oid）
       const videoId = props.videoInfo?.aid || props.videoInfo?.avid || props.videoInfo?.oid;
 
-      if (!props.videoInfo || !videoId) {
+      if (!props.videoInfo || videoId == null || videoId === 0) {
         showNotify({ type: 'warning', message: '视频信息不完整，无法收藏' });
         return;
       }

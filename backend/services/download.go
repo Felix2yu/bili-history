@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,11 +18,8 @@ import (
 	"bilibili-history-go/config"
 	"bilibili-history-go/utils"
 
-	"github.com/iawia002/lux/downloader"
-	"github.com/iawia002/lux/extractors"
-	"github.com/iawia002/lux/request"
-
-	_ "github.com/iawia002/lux/extractors/bilibili"
+	"github.com/Felix2yu/bili-dl/C"
+	"github.com/Felix2yu/bili-dl/api"
 )
 
 type VideoInfo struct {
@@ -57,338 +56,269 @@ func getCookie() string {
 	if cfg == nil {
 		return ""
 	}
-	var parts []string
 	if cfg.SESSDATA != "" {
-		parts = append(parts, "SESSDATA="+cfg.SESSDATA)
+		return cfg.SESSDATA
 	}
-	if cfg.BiliJct != "" {
-		parts = append(parts, "bili_jct="+cfg.BiliJct)
-	}
-	if cfg.DedeUserID != "" {
-		parts = append(parts, "DedeUserID="+cfg.DedeUserID)
-	}
-	return strings.Join(parts, "; ")
+	return ""
 }
 
-func initLuxRequest(cookie string) {
-	request.SetOptions(request.Options{
-		RetryTimes: 10,
-		Cookie:     cookie,
-	})
+var bvRegexp = regexp.MustCompile(`BV[a-zA-Z0-9]+`)
+
+func extractBVFromURL(url string) string {
+	if bv := bvRegexp.FindString(url); bv != "" {
+		return bv
+	}
+	return ""
 }
 
-// codecPriority returns sort priority for bilibili codec IDs
-// av1(13) > hevc(12) > avc(7)
-func codecPriority(codecid int) int {
-	switch codecid {
-	case 13: // AV1
+// codecPriority returns sort priority for bilibili codec strings
+// av1 > hevc > avc
+func codecPriorityStr(codec string) int {
+	if strings.HasPrefix(codec, "av01") {
 		return 3
-	case 12: // HEVC
+	} else if strings.HasPrefix(codec, "hev") {
 		return 2
-	case 7: // AVC
+	} else if strings.HasPrefix(codec, "avc") {
 		return 1
-	default:
-		return 0
 	}
+	return 0
+}
+
+// dashVideoStream represents a single video stream from DASH response
+type dashVideoStream struct {
+	ID        float64 `json:"id"`
+	Codecs    string  `json:"codecs"`
+	Width     int     `json:"width"`
+	Height    int     `json:"height"`
+	Bandwidth float64 `json:"bandwidth"`
+	BaseURL   string  `json:"base_url"`
+}
+
+// dashAudioStream represents a single audio stream from DASH response
+type dashAudioStream struct {
+	ID        float64 `json:"id"`
+	Codecs    string  `json:"codecs"`
+	Bandwidth float64 `json:"bandwidth"`
+	BaseURL   string  `json:"base_url"`
+}
+
+// fetchDashStreams fetches DASH stream info from bilibili API
+func fetchDashStreams(bv, cid, cookie string) ([]dashVideoStream, []dashAudioStream, error) {
+	apiURL := "https://api.bilibili.com/x/player/wbi/playurl?fnver=0&fnval=3216&fourk=1&qn=127"
+	parse, _ := url.Parse(apiURL)
+	query := parse.Query()
+	query.Add("bvid", bv)
+	query.Add("cid", cid)
+	parse.RawQuery = query.Encode()
+	apiURL = parse.String()
+
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+	req.Header.Set("Referer", "https://www.bilibili.com/")
+	if cookie != "" {
+		req.AddCookie(&http.Cookie{Name: "SESSDATA", Value: cookie})
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var result struct {
+		Code int `json:"code"`
+		Data struct {
+			Dash struct {
+				Video []dashVideoStream `json:"video"`
+				Audio []dashAudioStream `json:"audio"`
+			} `json:"dash"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, nil, err
+	}
+
+	if result.Code != 0 {
+		return nil, nil, fmt.Errorf("API 返回错误码: %d", result.Code)
+	}
+
+	return result.Data.Dash.Video, result.Data.Dash.Audio, nil
 }
 
 func ExtractVideoInfo(url string) (*VideoInfo, error) {
+	bv := extractBVFromURL(url)
+	if bv == "" {
+		return nil, fmt.Errorf("无法从 URL 提取 BV 号: %s", url)
+	}
+
 	cookie := getCookie()
-	initLuxRequest(cookie)
 
-	dataList, err := extractors.Extract(url, extractors.Options{
-		Playlist: false,
-		Cookie:   cookie,
-	})
+	video, err := api.VideoFromBV(bv)
 	if err != nil {
-		return nil, fmt.Errorf("提取视频信息失败: %w", err)
+		return nil, fmt.Errorf("获取视频信息失败: %w", err)
 	}
 
-	if len(dataList) == 0 {
-		return nil, fmt.Errorf("未找到视频信息")
+	_, err = api.ResolveVideo(video)
+	if err != nil {
+		return nil, fmt.Errorf("解析视频信息失败: %w", err)
 	}
 
-	data := dataList[0]
-	if data.Err != nil {
-		return nil, fmt.Errorf("提取视频信息出错: %w", data.Err)
+	videoStreams, _, err := fetchDashStreams(video.BV, video.Cid, cookie)
+	if err != nil {
+		return nil, fmt.Errorf("获取视频流信息失败: %w", err)
 	}
 
 	var streams []StreamInfo
-	for id, stream := range data.Streams {
+	for _, vs := range videoStreams {
+		codec := vs.Codecs
+		qualityID := int(vs.ID)
 		streams = append(streams, StreamInfo{
-			ID:      id,
-			Quality: stream.Quality,
-			Size:    stream.Size,
-			Ext:     stream.Ext,
+			ID:      fmt.Sprintf("%d-%s", qualityID, codec),
+			Quality: fmt.Sprintf("%s (%dx%d)", codec, vs.Width, vs.Height),
+			Size:    int64(vs.Bandwidth),
+			Ext:     "mp4",
 		})
 	}
-	// Sort streams: higher quality first, then by codec priority (av1 > hevc > avc)
+
 	sort.Slice(streams, func(i, j int) bool {
-		qi, _ := strconv.Atoi(strings.Split(streams[i].ID, "-")[0])
-		qj, _ := strconv.Atoi(strings.Split(streams[j].ID, "-")[0])
+		qi, _ := strconv.Atoi(strings.SplitN(streams[i].ID, "-", 2)[0])
+		qj, _ := strconv.Atoi(strings.SplitN(streams[j].ID, "-", 2)[0])
 		if qi != qj {
 			return qi > qj
 		}
-		// Codec priority: av1(13) > hevc(12) > avc(7)
-		ci, _ := strconv.Atoi(strings.Split(streams[i].ID, "-")[1])
-		cj, _ := strconv.Atoi(strings.Split(streams[j].ID, "-")[1])
-		return codecPriority(ci) > codecPriority(cj)
+		ci := codecPriorityStr(strings.SplitN(streams[i].ID, "-", 2)[1])
+		cj := codecPriorityStr(strings.SplitN(streams[j].ID, "-", 2)[1])
+		return ci > cj
 	})
 
 	info := &VideoInfo{
-		URL:     data.URL,
-		Site:    data.Site,
-		Title:   data.Title,
-		Type:    string(data.Type),
+		URL:     url,
+		Site:    "bilibili",
+		Title:   video.Title,
+		Type:    "video",
 		Streams: streams,
-	}
-
-	if captions, ok := data.Captions["danmaku"]; ok {
-		info.DanmakuURL = captions.URL
 	}
 
 	return info, nil
 }
 
 func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, streamID string, onProgress func(string)) error {
+	bv := extractBVFromURL(url)
+	if bv == "" {
+		return fmt.Errorf("无法从 URL 提取 BV 号: %s", url)
+	}
+
 	cookie := sessdata
 	if cookie == "" {
 		cookie = getCookie()
 	}
-	initLuxRequest(cookie)
+	C.Cookie = cookie
 
 	onProgress("正在提取视频信息...")
 
-	dataList, err := extractors.Extract(url, extractors.Options{
-		Playlist: false,
-		Cookie:   cookie,
-	})
+	video, err := api.VideoFromBV(bv)
 	if err != nil {
-		return fmt.Errorf("提取视频信息失败: %w", err)
+		return fmt.Errorf("获取视频信息失败: %w", err)
 	}
 
-	if len(dataList) == 0 {
-		return fmt.Errorf("未找到视频信息")
+	_, err = api.ResolveVideo(video)
+	if err != nil {
+		return fmt.Errorf("解析视频信息失败: %w", err)
 	}
 
-	data := dataList[0]
-	if data.Err != nil {
-		return fmt.Errorf("提取视频出错: %w", data.Err)
+	onProgress(fmt.Sprintf("标题: %s", video.Title))
+
+	videoStreams, audioStreams, err := fetchDashStreams(video.BV, video.Cid, cookie)
+	if err != nil {
+		return fmt.Errorf("获取视频流信息失败: %w", err)
 	}
 
-	onProgress(fmt.Sprintf("标题: %s", data.Title))
-
-	// Auto-select best stream:
-	// 1. Find the HIGHEST quality level available
-	// 2. Among streams at that quality, prefer av1 > hevc > avc
-	// This ensures we always get the clearest resolution first,
-	// then pick the most efficient codec within that resolution.
-	if streamID == "" {
-		var bestID string
-		var highestQ int
-		for id := range data.Streams {
-			parts := strings.Split(id, "-")
-			if len(parts) != 2 {
-				continue
-			}
-			q, _ := strconv.Atoi(parts[0])
-			if q > highestQ {
-				highestQ = q
-			}
-		}
-		// Among streams at the highest quality, pick best codec
-		var bestC int
-		for id := range data.Streams {
-			parts := strings.Split(id, "-")
-			if len(parts) != 2 {
-				continue
-			}
-			q, _ := strconv.Atoi(parts[0])
-			c, _ := strconv.Atoi(parts[1])
-			if q == highestQ && codecPriority(c) > bestC {
-				bestC = codecPriority(c)
-				bestID = id
-			}
-		}
-		streamID = bestID
+	if len(videoStreams) == 0 {
+		return fmt.Errorf("未找到可用的视频流")
+	}
+	if len(audioStreams) == 0 {
+		return fmt.Errorf("未找到可用的音频流")
 	}
 
+	// Select video stream based on streamID or auto-select best
+	var selectedVideo *dashVideoStream
 	if streamID != "" {
-		if stream, ok := data.Streams[streamID]; ok {
-			sizeMB := float64(stream.Size) / 1024 / 1024
-			onProgress(fmt.Sprintf("画质: %s, 大小: %.1fMB", stream.Quality, sizeMB))
+		// Parse streamID to find matching stream
+		parts := strings.SplitN(streamID, "-", 2)
+		if len(parts) == 2 {
+			targetID, _ := strconv.ParseFloat(parts[0], 64)
+			targetCodec := parts[1]
+			for i, vs := range videoStreams {
+				if vs.ID == targetID && vs.Codecs == targetCodec {
+					selectedVideo = &videoStreams[i]
+					break
+				}
+			}
 		}
 	}
+
+	if selectedVideo == nil {
+		// Auto-select: best codec, then highest quality
+		bestIdx := 0
+		for i := 1; i < len(videoStreams); i++ {
+			ci, cj := codecPriorityStr(videoStreams[i].Codecs), codecPriorityStr(videoStreams[bestIdx].Codecs)
+			if ci > cj || (ci == cj && videoStreams[i].ID > videoStreams[bestIdx].ID) {
+				bestIdx = i
+			}
+		}
+		selectedVideo = &videoStreams[bestIdx]
+	}
+
+	// Select best audio stream (highest bandwidth)
+	bestAudioIdx := 0
+	for i := 1; i < len(audioStreams); i++ {
+		if audioStreams[i].Bandwidth > audioStreams[bestAudioIdx].Bandwidth {
+			bestAudioIdx = i
+		}
+	}
+	selectedAudio := &audioStreams[bestAudioIdx]
+
+	sizeMB := float64(selectedVideo.Bandwidth) / 1024 / 1024
+	onProgress(fmt.Sprintf("画质: %s, 大小: %.1fMB", selectedVideo.Codecs, sizeMB))
 
 	os.MkdirAll(outputDir, 0755)
 
-	dl := downloader.New(downloader.Options{
-		Silent:         true,
-		Stream:         streamID,
-		OutputPath:     outputDir,
-		FileNameLength: 255,
-		MultiThread:    true,
-		ThreadNumber:   10,
-		RetryTimes:     10,
-		ChunkSizeMB:    1,
-		AudioOnly:      onlyAudio,
-	})
+	// Set bili-dl global config
+	C.O = outputDir
+	C.Merge = true
+	C.Delete = true
+	C.AddBVSuffix = true
 
-	onProgress("开始下载...")
-	if err := dl.Download(data); err != nil {
+	stream := &api.Stream{
+		V:     selectedVideo.BaseURL,
+		A:     selectedAudio.BaseURL,
+		Video: api.Video{Title: video.Title, BV: video.BV, Cid: video.Cid},
+	}
+
+	onProgress("开始下载视频...")
+	if err := api.Dl(stream); err != nil {
 		return fmt.Errorf("下载失败: %w", err)
 	}
 
-	// Remux to target container based on codec:
-	// av1(13) → mkv, hevc(12) → mov, avc(7) → mp4
-	codecid := extractCodecid(streamID)
-	targetExt := containerForCodec(codecid)
-	if targetExt != "" {
-		downloadedFile := findDownloadedFile(outputDir, data.Title, targetExt)
-		if downloadedFile != "" {
-			onProgress(fmt.Sprintf("正在转封装为 %s ...", targetExt))
-			if err := remuxFile(downloadedFile, targetExt); err != nil {
-				onProgress(fmt.Sprintf("转封装失败: %v，保留原文件", err))
-			}
+	if !onlyAudio {
+		onProgress("正在合并音视频...")
+		if err := api.Merge(stream); err != nil {
+			onProgress(fmt.Sprintf("合并失败: %v，保留单独文件", err))
 		}
 	}
 
 	onProgress("下载完成")
 	return nil
-}
-
-func extractCodecid(streamID string) int {
-	parts := strings.Split(streamID, "-")
-	if len(parts) == 2 {
-		c, _ := strconv.Atoi(parts[1])
-		return c
-	}
-	return 0
-}
-
-// containerForCodec returns the target container extension for a codec.
-// Empty string means no remux needed (already correct).
-func containerForCodec(codecid int) string {
-	switch codecid {
-	case 13: // AV1 → mkv
-		return "mkv"
-	case 12: // HEVC → mov
-		return "mov"
-	case 7: // AVC → mp4 (lux already outputs mp4)
-		return ""
-	default:
-		return ""
-	}
-}
-
-func findDownloadedFile(outputDir, title, targetExt string) string {
-	entries, err := os.ReadDir(outputDir)
-	if err != nil {
-		return ""
-	}
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
-		}
-		name := e.Name()
-		ext := filepath.Ext(name)
-		base := strings.TrimSuffix(name, ext)
-		if strings.Contains(base, title) || strings.Contains(title, base) {
-			// Skip if already target format
-			if ext == "."+targetExt {
-				return ""
-			}
-			if ext == ".mp4" || ext == ".webm" || ext == ".flv" {
-				return filepath.Join(outputDir, name)
-			}
-		}
-	}
-	return ""
-}
-
-func remuxFile(inputPath, targetExt string) error {
-	outputPath := strings.TrimSuffix(inputPath, filepath.Ext(inputPath)) + "." + targetExt
-	args := []string{"-i", inputPath, "-c", "copy", "-y"}
-	// HEVC in MOV/MP4 needs hvc1 tag for Apple compatibility
-	if targetExt == "mov" {
-		args = append(args, "-tag:v", "hvc1")
-	}
-	args = append(args, outputPath)
-	cmd := exec.Command("ffmpeg", args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("ffmpeg remux failed: %s: %w", string(output), err)
-	}
-	os.Remove(inputPath)
-	return nil
-}
-
-func GetUserVideos(mid string, pn, ps int) ([]map[string]string, int, error) {
-	cookie := getCookie()
-
-	url := fmt.Sprintf("https://api.bilibili.com/x/space/wbi/arc/search?mid=%s&pn=%d&ps=%d&order=pubdate", mid, pn, ps)
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-	req.Header.Set("Referer", "https://www.bilibili.com")
-	if cookie != "" {
-		req.Header.Set("Cookie", cookie)
-	}
-
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var result struct {
-		Code int `json:"code"`
-		Data struct {
-			List struct {
-				Vlist []struct {
-					BVID  string `json:"bvid"`
-					Title string `json:"title"`
-					Pic   string `json:"pic"`
-					AID   int64  `json:"aid"`
-					Length string `json:"length"`
-				} `json:"vlist"`
-			} `json:"list"`
-			Page struct {
-				Count int `json:"count"`
-			} `json:"page"`
-		} `json:"data"`
-	}
-
-	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, 0, err
-	}
-
-	if result.Code != 0 {
-		return nil, 0, fmt.Errorf("API 返回错误码: %d", result.Code)
-	}
-
-	var videos []map[string]string
-	for _, v := range result.Data.List.Vlist {
-		videos = append(videos, map[string]string{
-			"bvid":  v.BVID,
-			"title": v.Title,
-			"pic":   v.Pic,
-			"aid":   strconv.FormatInt(v.AID, 10),
-			"length": v.Length,
-		})
-	}
-
-	return videos, result.Data.Page.Count, nil
 }
 
 func CheckVideoDownloaded(cids []string) map[string]bool {
@@ -483,7 +413,6 @@ func DeleteDownloadedVideo(cid string, deleteDir bool, directory string) error {
 		return fmt.Errorf("缺少 cid 参数")
 	}
 
-	// Find and delete files matching CID
 	var found bool
 	filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
@@ -509,80 +438,200 @@ func DeleteDownloadedVideo(cid string, deleteDir bool, directory string) error {
 }
 
 func CheckCollection(url string) (map[string]interface{}, error) {
-	cookie := getCookie()
-	initLuxRequest(cookie)
-
-	dataList, err := extractors.Extract(url, extractors.Options{
-		Playlist: true,
-		Cookie:   cookie,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("检查合集失败: %w", err)
+	// Extract BV from URL and check if it's a collection page
+	// Bilibili collections use the space/collection API
+	bv := extractBVFromURL(url)
+	if bv == "" {
+		return nil, fmt.Errorf("无法从 URL 提取 BV 号")
 	}
 
-	isCollection := len(dataList) > 1
+	cookie := getCookie()
+	C.Cookie = cookie
+
+	video, err := api.VideoFromBV(bv)
+	if err != nil {
+		return nil, fmt.Errorf("获取视频信息失败: %w", err)
+	}
+
+	_, err = api.ResolveVideo(video)
+	if err != nil {
+		return nil, fmt.Errorf("解析视频信息失败: %w", err)
+	}
+
+	// For now, treat single video as non-collection
+	// Collection detection would need additional API calls
 	return map[string]interface{}{
-		"is_collection": isCollection,
-		"video_count":   len(dataList),
-		"videos": func() []map[string]string {
-			var videos []map[string]string
-			for _, d := range dataList {
-				if d.Err == nil {
-					videos = append(videos, map[string]string{
-						"title": d.Title,
-						"url":   d.URL,
-					})
-				}
-			}
-			return videos
-		}(),
+		"is_collection": false,
+		"video_count":   1,
+		"videos": []map[string]string{
+			{
+				"title": video.Title,
+				"url":   fmt.Sprintf("https://www.bilibili.com/video/%s", video.BV),
+			},
+		},
 	}, nil
 }
 
 func DownloadCollectionWithProgress(url, sessdata, outputDir string, onlyAudio bool, onProgress func(string)) error {
+	bv := extractBVFromURL(url)
+	if bv == "" {
+		return fmt.Errorf("无法从 URL 提取 BV 号: %s", url)
+	}
+
 	cookie := sessdata
 	if cookie == "" {
 		cookie = getCookie()
 	}
-	initLuxRequest(cookie)
+	C.Cookie = cookie
+	C.O = outputDir
+	C.Merge = true
+	C.Delete = true
+	C.AddBVSuffix = true
 
-	onProgress("正在获取合集信息...")
+	onProgress("正在获取视频信息...")
 
-	dataList, err := extractors.Extract(url, extractors.Options{
-		Playlist: true,
-		Cookie:   cookie,
-	})
+	video, err := api.VideoFromBV(bv)
 	if err != nil {
-		return fmt.Errorf("获取合集信息失败: %w", err)
+		return fmt.Errorf("获取视频信息失败: %w", err)
 	}
 
-	total := len(dataList)
-	onProgress(fmt.Sprintf("共找到 %d 个视频", total))
+	_, err = api.ResolveVideo(video)
+	if err != nil {
+		return fmt.Errorf("解析视频信息失败: %w", err)
+	}
 
-	os.MkdirAll(outputDir, 0755)
+	onProgress(fmt.Sprintf("下载: %s", video.Title))
 
-	dl := downloader.New(downloader.Options{
-		Silent:         true,
-		OutputPath:     outputDir,
-		FileNameLength: 255,
-		MultiThread:    true,
-		ThreadNumber:   10,
-		RetryTimes:     10,
-		ChunkSizeMB:    1,
-		AudioOnly:      onlyAudio,
-	})
+	videoStreams, audioStreams, err := fetchDashStreams(video.BV, video.Cid, cookie)
+	if err != nil {
+		return fmt.Errorf("获取视频流信息失败: %w", err)
+	}
 
-	for i, data := range dataList {
-		if data.Err != nil {
-			onProgress(fmt.Sprintf("[%d/%d] 跳过: %v", i+1, total, data.Err))
-			continue
-		}
-		onProgress(fmt.Sprintf("[%d/%d] 下载: %s", i+1, total, data.Title))
-		if err := dl.Download(data); err != nil {
-			onProgress(fmt.Sprintf("[%d/%d] 失败: %v", i+1, total, err))
+	if len(videoStreams) == 0 {
+		return fmt.Errorf("未找到可用的视频流")
+	}
+	if len(audioStreams) == 0 {
+		return fmt.Errorf("未找到可用的音频流")
+	}
+
+	// Auto-select best video stream
+	bestIdx := 0
+	for i := 1; i < len(videoStreams); i++ {
+		ci, cj := codecPriorityStr(videoStreams[i].Codecs), codecPriorityStr(videoStreams[bestIdx].Codecs)
+		if ci > cj || (ci == cj && videoStreams[i].ID > videoStreams[bestIdx].ID) {
+			bestIdx = i
 		}
 	}
 
-	onProgress("合集下载完成")
+	bestAudioIdx := 0
+	for i := 1; i < len(audioStreams); i++ {
+		if audioStreams[i].Bandwidth > audioStreams[bestAudioIdx].Bandwidth {
+			bestAudioIdx = i
+		}
+	}
+
+	stream := &api.Stream{
+		V:     videoStreams[bestIdx].BaseURL,
+		A:     audioStreams[bestAudioIdx].BaseURL,
+		Video: api.Video{Title: video.Title, BV: video.BV, Cid: video.Cid},
+	}
+
+	onProgress("开始下载...")
+	if err := api.Dl(stream); err != nil {
+		return fmt.Errorf("下载失败: %w", err)
+	}
+
+	if !onlyAudio {
+		onProgress("正在合并音视频...")
+		if err := api.Merge(stream); err != nil {
+			onProgress(fmt.Sprintf("合并失败: %v，保留单独文件", err))
+		}
+	}
+
+	onProgress("下载完成")
+	return nil
+}
+
+func GetUserVideos(mid string, pn, ps int) ([]map[string]string, int, error) {
+	cookie := getCookie()
+
+	url := fmt.Sprintf("https://api.bilibili.com/x/space/wbi/arc/search?mid=%s&pn=%d&ps=%d&order=pubdate", mid, pn, ps)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+	req.Header.Set("Referer", "https://www.bilibili.com")
+	if cookie != "" {
+		req.Header.Set("Cookie", cookie)
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var result struct {
+		Code int `json:"code"`
+		Data struct {
+			List struct {
+				Vlist []struct {
+					BVID  string `json:"bvid"`
+					Title string `json:"title"`
+					Pic   string `json:"pic"`
+					AID   int64  `json:"aid"`
+					Length string `json:"length"`
+				} `json:"vlist"`
+			} `json:"list"`
+			Page struct {
+				Count int `json:"count"`
+			} `json:"page"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, 0, err
+	}
+
+	if result.Code != 0 {
+		return nil, 0, fmt.Errorf("API 返回错误码: %d", result.Code)
+	}
+
+	var videos []map[string]string
+	for _, v := range result.Data.List.Vlist {
+		videos = append(videos, map[string]string{
+			"bvid":  v.BVID,
+			"title": v.Title,
+			"pic":   v.Pic,
+			"aid":   strconv.FormatInt(v.AID, 10),
+			"length": v.Length,
+		})
+	}
+
+	return videos, result.Data.Page.Count, nil
+}
+
+func remuxFile(inputPath, targetExt string) error {
+	outputPath := strings.TrimSuffix(inputPath, filepath.Ext(inputPath)) + "." + targetExt
+	args := []string{"-i", inputPath, "-c", "copy", "-y"}
+	if targetExt == "mov" {
+		args = append(args, "-tag:v", "hvc1")
+	}
+	args = append(args, outputPath)
+	cmd := exec.Command("ffmpeg", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("ffmpeg remux failed: %s: %w", string(output), err)
+	}
+	os.Remove(inputPath)
 	return nil
 }

@@ -1,3 +1,7 @@
+github.com/Felix2yu/bili-dl v0.0.0-20260704063036-284169afccb4 h1:8Zj3G2bW8vuIymaFd18G7wtGkV6Aa4i5gCfygrj3lHw=
+github.com/Felix2yu/bili-dl v0.0.0-20260704063036-284169afccb4/go.mod h1:qBf4CF33M33UcfOkstGbzPXwC3P3T/gYOscEgKEWkNI=
+github.com/Felix2yu/bili-dl v0.0.0-20260704065237-b274721c931e h1:RSb4wdb0U4bRjrAhSvGA9hb+1oUtLYo/dvMrbZ1O4xY=
+github.com/Felix2yu/bili-dl v0.0.0-20260704065237-b274721c931e/go.mod h1:tjaEplxEsluJ9LVnykVT76SC9/68s4m2lg324UbRZrQ=
 github.com/MercuryEngineering/CookieMonster v0.0.0-20180304172713-1584578b3403 h1:EtZwYyLbkEcIt+B//6sujwRCnHuTEK3qiSypAX5aJeM=
 github.com/MercuryEngineering/CookieMonster v0.0.0-20180304172713-1584578b3403/go.mod h1:mM6WvakkX2m+NgMiPCfFFjwfH4KzENC07zeGEqq9U7s=
 github.com/PuerkitoBio/goquery v1.8.0 h1:PJTF7AmFCFKk1N6V6jmKfrNH9tV5pNE6lZMkG0gta/U=

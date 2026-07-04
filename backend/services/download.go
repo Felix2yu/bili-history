@@ -157,6 +157,52 @@ type dashAudioStream struct {
 	BaseURL   string  `json:"base_url"`
 }
 
+// videoDetail holds extra info from bilibili view API
+type videoDetail struct {
+	Title string `json:"title"`
+	Owner struct {
+		Name string `json:"name"`
+	} `json:"owner"`
+}
+
+// fetchVideoDetail fetches video detail including author name
+func fetchVideoDetail(bv, cookie string) (*videoDetail, error) {
+	apiURL := fmt.Sprintf("https://api.bilibili.com/x/web-interface/view?bvid=%s", bv)
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+	req.Header.Set("Referer", "https://www.bilibili.com/")
+	if cookie != "" {
+		req.AddCookie(&http.Cookie{Name: "SESSDATA", Value: cookie})
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var result struct {
+		Code int         `json:"code"`
+		Data videoDetail `json:"data"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, err
+	}
+	if result.Code != 0 {
+		return nil, fmt.Errorf("API 返回错误码: %d", result.Code)
+	}
+	return &result.Data, nil
+}
+
 // fetchDashStreams fetches DASH stream info from bilibili API
 func fetchDashStreams(bv, cid, cookie string) ([]dashVideoStream, []dashAudioStream, error) {
 	apiURL := "https://api.bilibili.com/x/player/wbi/playurl?fnver=0&fnval=3216&fourk=1&qn=127"
@@ -291,6 +337,12 @@ func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, 
 		return fmt.Errorf("解析视频信息失败: %w", err)
 	}
 
+	// 获取UP主名字，构建 [UP主名]投稿名 格式的文件名
+	detail, err := fetchVideoDetail(bv, cookie)
+	if err == nil && detail.Owner.Name != "" {
+		video.Title = fmt.Sprintf("[%s]%s", detail.Owner.Name, video.Title)
+	}
+
 	onProgress(fmt.Sprintf("标题: %s", video.Title))
 
 	videoStreams, audioStreams, err := fetchDashStreams(video.BV, video.Cid, cookie)
@@ -352,7 +404,7 @@ func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, 
 	C.O = outputDir
 	C.Merge = true
 	C.Delete = true
-	C.AddBVSuffix = true
+	C.AddBVSuffix = false
 
 	stream := &api.Stream{
 		V:     selectedVideo.BaseURL,
@@ -685,8 +737,8 @@ func GetUserVideos(mid string, pn, ps int) ([]map[string]string, int, error) {
 }
 
 func remuxToContainer(outputDir, title, bv, targetExt string) error {
-	inputPath := filepath.Join(outputDir, title+"_"+bv+".mp4")
-	outputPath := filepath.Join(outputDir, title+"_"+bv+"."+strings.ToLower(targetExt))
+	inputPath := filepath.Join(outputDir, title+".mp4")
+	outputPath := filepath.Join(outputDir, title+"."+strings.ToLower(targetExt))
 
 	if _, err := os.Stat(inputPath); os.IsNotExist(err) {
 		return fmt.Errorf("文件不存在: %s", inputPath)

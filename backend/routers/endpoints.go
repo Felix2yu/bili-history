@@ -258,22 +258,22 @@ func init() {
 		OperationID: "get_favorite_contents",
 	})
 	RegisterEndpointMeta("POST", "/favorite/sync", EndpointMeta{
-		Summary:     "同步收藏数据（待实现）",
+		Summary:     "从B站同步收藏夹及内容到本地",
 		Tags:        tagFavorite,
 		OperationID: "sync_favorites",
 	})
 	RegisterEndpointMeta("POST", "/favorite/resource/deal", EndpointMeta{
-		Summary:     "收藏/取消收藏单个视频（待实现）",
+		Summary:     "收藏/取消收藏单个视频",
 		Tags:        tagFavorite,
 		OperationID: "favorite_resource",
 	})
 	RegisterEndpointMeta("POST", "/favorite/resource/batch-deal", EndpointMeta{
-		Summary:     "批量收藏/取消收藏视频（待实现）",
+		Summary:     "批量收藏/取消收藏视频",
 		Tags:        tagFavorite,
 		OperationID: "batch_favorite_resource",
 	})
 	RegisterEndpointMeta("POST", "/favorite/resource/local-batch-deal", EndpointMeta{
-		Summary:     "本地批量处理收藏（待实现）",
+		Summary:     "本地批量处理收藏",
 		Tags:        tagFavorite,
 		OperationID: "local_batch_favorite_resource",
 	})
@@ -295,7 +295,7 @@ func init() {
 		OperationID: "get_like_local",
 	})
 	RegisterEndpointMeta("POST", "/like/sync", EndpointMeta{
-		Summary:     "同步点赞数据（待实现）",
+		Summary:     "从B站同步点赞数据到本地",
 		Tags:        tagFavorite,
 		OperationID: "sync_likes",
 	})
@@ -410,7 +410,7 @@ func init() {
 
 	// ========== 数据导出 ==========
 	RegisterEndpointMeta("POST", "/export/excel", EndpointMeta{
-		Summary:     "导出历史记录到Excel（待实现）",
+		Summary:     "导出历史记录到Excel",
 		Tags:        tagExport,
 		OperationID: "export_to_excel",
 	})

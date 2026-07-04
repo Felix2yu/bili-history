@@ -582,53 +582,19 @@ async function preloadFirstVideoCover(folder) {
     const folderId = folder.id || folder.media_id
     if (!folderId) return
 
-    let response
-    if (activeTab.value === 'local') {
-      response = await getLocalFavoriteContents({
-        media_id: folderId,
-        page: 1,
-        size: 1
-      })
-    } else {
-      // 对于线上收藏夹，直接获取收藏夹详细信息
-      response = await getFavoriteContents({
-        media_id: folderId,
-        pn: 1,
-        ps: 1
-      })
+    const response = await getLocalFavoriteContents({
+      media_id: folderId,
+      page: 1,
+      size: 20
+    })
 
-      // 从响应中获取收藏夹详细信息
-      if (response.data.status === 'success' && response.data.data && response.data.data.info) {
-        // 更新收藏夹信息
-        const info = response.data.data.info
-        folder.title = info.title || folder.title
-        folder.cover = info.cover || folder.cover
-        folder.intro = info.intro || folder.intro
-        folder.media_count = info.media_count || folder.media_count
-
-        // 更新UP主信息
-        if (info.upper) {
-          folder.upper = info.upper
-        }
-
-        // 获取到了详细信息，无需继续处理
-        return
-      }
-    }
-
-    // 如果没有获取到详细信息或是本地收藏夹，则使用第一个视频的封面
     if (response.data.status === 'success') {
-      let contents = []
-      if (response.data.data && response.data.data.list) {
-        contents = response.data.data.list || []
-      } else if (response.data.data && response.data.data.medias) {
-        contents = response.data.data.medias || []
-      } else if (response.data.data && Array.isArray(response.data.data)) {
-        contents = response.data.data
-      }
-
-      if (contents.length > 0 && contents[0].cover) {
-        folder.cover = contents[0].cover
+      const contents = response.data.data?.list || []
+      for (const item of contents) {
+        if (item.cover) {
+          folder.cover = item.cover
+          return
+        }
       }
     }
   } catch (error) {

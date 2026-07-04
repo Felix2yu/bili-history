@@ -354,7 +354,7 @@ func syncFavorites(c *gin.Context) {
 			LikeState:  f.LikeState,
 		})
 	}
-	// Update covers for folders that have no cover: use first content item's cover
+	// Update covers for folders that have no cover: find first valid video cover
 	for i := range folders {
 		if folders[i].Cover != "" {
 			continue
@@ -362,9 +362,15 @@ func syncFavorites(c *gin.Context) {
 		if folders[i].MediaCount == 0 {
 			continue
 		}
-		res, err := client.GetFavoriteResources(folders[i].MediaID, 1, 1)
-		if err == nil && len(res.Media) > 0 && res.Media[0].Cover != "" {
-			folders[i].Cover = res.Media[0].Cover
+		res, err := client.GetFavoriteResources(folders[i].MediaID, 1, 20)
+		if err != nil {
+			continue
+		}
+		for _, item := range res.Media {
+			if item.Cover != "" {
+				folders[i].Cover = item.Cover
+				break
+			}
 		}
 	}
 	if err := database.SaveFavoriteFolders(folders); err != nil {

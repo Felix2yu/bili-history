@@ -20,7 +20,7 @@ const (
 	FavoriteFolderListURL   = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"
 	FavoriteResourceListURL = "https://api.bilibili.com/x/v3/fav/resource/list"
 	FavoriteDealURL         = "https://api.bilibili.com/x/v3/fav/resource/deal"
-	LikedVideoURL           = "https://api.bilibili.com/x/v2/liked/web/video"
+	LikedVideoURL           = "https://api.bilibili.com/x/space/like/video"
 	LikeURL                 = "https://api.bilibili.com/x/web-interface/archive/like"
 )
 
@@ -603,34 +603,26 @@ func (c *Client) DealFavoriteResource(resources string, mediaIDs string) error {
 // ===== Likes =====
 
 type LikedVideoItem struct {
-	ID       int64  `json:"id"`
-	Title    string `json:"title"`
-	Pic      string `json:"pic"`
-	Desc     string `json:"desc"`
-	Duration int    `json:"duration"`
-	Tid      int    `json:"tid"`
-	Tname    string `json:"tname"`
-	Owner    VideoOwner `json:"owner"`
-	Stat     VideoStat  `json:"stat"`
-	Pubdate  int64  `json:"pubdate"`
-	Bvid     string `json:"bvid"`
-	Aid      int64  `json:"aid"`
-}
-
-type LikedVideoPage struct {
-	Total int `json:"total"`
+	Aid      int64       `json:"aid"`
+	Title    string      `json:"title"`
+	Pic      string      `json:"pic"`
+	Desc     string      `json:"desc"`
+	Duration int         `json:"duration"`
+	Tid      int         `json:"tid"`
+	Tname    string      `json:"tname"`
+	Owner    VideoOwner  `json:"owner"`
+	Stat     VideoStat   `json:"stat"`
+	Pubdate  int64       `json:"pubdate"`
+	Bvid     string      `json:"bvid"`
 }
 
 type LikedVideoData struct {
 	List  []LikedVideoItem `json:"list"`
-	Page  LikedVideoPage   `json:"page"`
 }
 
-func (c *Client) GetLikedVideos(vmid int64, pn, ps int) (*LikedVideoData, error) {
+func (c *Client) GetLikedVideos(vmid int64) (*LikedVideoData, error) {
 	params := map[string]string{
 		"vmid": fmt.Sprintf("%d", vmid),
-		"pn":   fmt.Sprintf("%d", pn),
-		"ps":   fmt.Sprintf("%d", ps),
 	}
 	body, err := c.Get(LikedVideoURL, params)
 	if err != nil {

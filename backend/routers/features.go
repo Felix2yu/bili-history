@@ -483,45 +483,35 @@ func syncLikes(c *gin.Context) {
 
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 
-	var allVideos []database.LikeVideo
-	for pn := 1; pn <= 25; pn++ { // max 500 videos (20 per page)
-		res, err := client.GetLikedVideos(vmid, pn, 20)
-		if err != nil {
-			if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
-				c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
-				return
-			}
-			if pn == 1 {
-				c.JSON(http.StatusOK, models.ErrorResponse("获取点赞列表失败: "+err.Error()))
-				return
-			}
-			break
+	res, err := client.GetLikedVideos(vmid)
+	if err != nil {
+		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+			return
 		}
-		if len(res.List) == 0 {
-			break
-		}
-		for _, item := range res.List {
-			allVideos = append(allVideos, database.LikeVideo{
-				Bvid:      item.Bvid,
-				Aid:       item.Aid,
-				Title:     item.Title,
-				Pic:       item.Pic,
-				Desc:      item.Desc,
-				Duration:  item.Duration,
-				Tid:       item.Tid,
-				Tname:     item.Tname,
-				OwnerName: item.Owner.Name,
-				OwnerMid:  int64(item.Owner.Mid),
-				OwnerFace: item.Owner.Face,
-				Pubdate:   item.Pubdate,
-				View:      item.Stat.View,
-				Danmaku:   item.Stat.Danmaku,
-				LikeCount: item.Stat.Like,
-			})
-		}
-		if res.Page.Total <= pn*20 {
-			break
-		}
+		c.JSON(http.StatusOK, models.ErrorResponse("获取点赞列表失败: "+err.Error()))
+		return
+	}
+
+	allVideos := make([]database.LikeVideo, 0, len(res.List))
+	for _, item := range res.List {
+		allVideos = append(allVideos, database.LikeVideo{
+			Bvid:      item.Bvid,
+			Aid:       item.Aid,
+			Title:     item.Title,
+			Pic:       item.Pic,
+			Desc:      item.Desc,
+			Duration:  item.Duration,
+			Tid:       item.Tid,
+			Tname:     item.Tname,
+			OwnerName: item.Owner.Name,
+			OwnerMid:  int64(item.Owner.Mid),
+			OwnerFace: item.Owner.Face,
+			Pubdate:   item.Pubdate,
+			View:      item.Stat.View,
+			Danmaku:   item.Stat.Danmaku,
+			LikeCount: item.Stat.Like,
+		})
 	}
 
 	if err := database.SaveLikedVideos(allVideos); err != nil {

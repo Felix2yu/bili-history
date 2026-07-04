@@ -93,6 +93,11 @@ sync:
   # 同步删除到B站（删除本地记录时同时删除B站服务器上的记录）
   sync_delete_to_bilibili: false
 
+# 外观配置
+appearance:
+  # 深色模式: system(跟随系统) / light(浅色) / dark(深色)
+  dark_mode: system
+
 # 热力图配置
 heatmap:
   # 热力图输出目录

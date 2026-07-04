@@ -34,6 +34,10 @@ type SyncConfig struct {
 	SyncDeleteToBilibili bool `yaml:"sync_delete_to_bilibili" json:"sync_delete_to_bilibili"`
 }
 
+type AppearanceConfig struct {
+	DarkMode string `yaml:"dark_mode" json:"dark_mode"`
+}
+
 type SchedulerConfig struct {
 	TaskTimeout int `yaml:"task_timeout" json:"task_timeout"`
 	RetryDelay  int `yaml:"retry_delay" json:"retry_delay"`
@@ -52,6 +56,7 @@ type Config struct {
 	Server           ServerConfig    `yaml:"server" json:"server"`
 	Scheduler        SchedulerConfig `yaml:"scheduler" json:"scheduler"`
 	Sync             SyncConfig      `yaml:"sync" json:"sync"`
+	Appearance       AppearanceConfig `yaml:"appearance" json:"appearance"`
 	BiliJct          string          `yaml:"bili_jct" json:"bili_jct"`
 	DedeUserID       string          `yaml:"DedeUserID" json:"DedeUserID"`
 	DedeUserIDCkMd5  string          `yaml:"DedeUserID__ckMd5" json:"DedeUserID__ckMd5"`
@@ -259,6 +264,8 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 			updateServerNode(valueNode, &cfg.Server)
 		case "sync":
 			updateSyncNode(valueNode, &cfg.Sync)
+		case "appearance":
+			updateAppearanceNode(valueNode, &cfg.Appearance)
 		}
 	}
 
@@ -273,6 +280,10 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 	if _, ok := existingKeys["sync"]; !ok {
 		node := getOrAddNode("sync")
 		updateSyncNode(node, &cfg.Sync)
+	}
+	if _, ok := existingKeys["appearance"]; !ok {
+		node := getOrAddNode("appearance")
+		updateAppearanceNode(node, &cfg.Appearance)
 	}
 }
 
@@ -440,6 +451,35 @@ func updateSyncNode(node *yaml.Node, sync *SyncConfig) {
 
 	getOrAddBool("sync_deleted", sync.SyncDeleted)
 	getOrAddBool("sync_delete_to_bilibili", sync.SyncDeleteToBilibili)
+}
+
+func updateAppearanceNode(node *yaml.Node, appearance *AppearanceConfig) {
+	if node.Kind != yaml.MappingNode {
+		return
+	}
+	existingKeys := make(map[string]int)
+	for i := 0; i < len(node.Content); i += 2 {
+		existingKeys[node.Content[i].Value] = i
+	}
+
+	getOrAddString := func(key string, val string) *yaml.Node {
+		if idx, ok := existingKeys[key]; ok {
+			n := node.Content[idx+1]
+			if n.Kind != yaml.ScalarNode {
+				n.Kind = yaml.ScalarNode
+				n.Tag = "!!str"
+				n.Content = nil
+			}
+			n.Value = val
+			return n
+		}
+		keyNode := &yaml.Node{Kind: yaml.ScalarNode, Value: key, Tag: "!!str"}
+		valNode := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: val}
+		node.Content = append(node.Content, keyNode, valNode)
+		return valNode
+	}
+
+	getOrAddString("dark_mode", appearance.DarkMode)
 }
 
 func applyEnvOverrides(cfg *Config) {

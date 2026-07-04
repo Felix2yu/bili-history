@@ -174,6 +174,29 @@
                 </div>
               </div>
 
+              <!-- 深色模式 -->
+              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex-1">
+                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">深色模式</h3>
+                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">切换应用的显示主题，跟随系统将自动匹配系统设置</p>
+                  </div>
+                  <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5">
+                    <button
+                      v-for="mode in darkModeOptions"
+                      :key="mode.value"
+                      @click="darkMode = mode.value; handleDarkModeChange()"
+                      class="px-2.5 py-1 text-[11px] font-medium rounded-md transition-all duration-200"
+                      :class="darkMode === mode.value
+                        ? 'bg-white dark:bg-gray-600 text-[#fb7299] shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                    >
+                      {{ mode.label }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <!-- 侧边栏设置 -->
               <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
                 <div class="flex items-center justify-between gap-3">
@@ -535,7 +558,9 @@ import {
   getIntegrityCheckConfig,
   updateIntegrityCheckConfig,
   getSyncConfig,
-  updateSyncConfig
+  updateSyncConfig,
+  getAppearanceConfig,
+  updateAppearanceConfig
 } from '~/utils/api'
 import ShoutrrrSettings from './ShoutrrrSettings.vue'
 import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
@@ -701,14 +726,43 @@ const handleSyncDeleteToBilibiliChange = async () => {
     syncDeleteToBilibili.value = !syncDeleteToBilibili.value
   }
 }
+
+// 深色模式设置
+const darkMode = ref('system')
+const darkModeOptions = [
+  { value: 'system', label: '跟随系统' },
+  { value: 'light', label: '浅色' },
+  { value: 'dark', label: '深色' },
+]
+
+// 处理深色模式变更
+const handleDarkModeChange = async () => {
+  try {
+    const response = await updateAppearanceConfig({ dark_mode: darkMode.value })
+    if (response.data && response.data.success) {
+      // 同步到 darkMode store
+      const { useDarkMode } = await import('~/stores/darkMode')
+      const darkModeStore = useDarkMode()
+      await darkModeStore.setDarkMode(darkMode.value)
+
+      const modeLabels = { system: '跟随系统', light: '浅色模式', dark: '深色模式' }
+      showNotify({
+        type: 'success',
+        message: `已切换到${modeLabels[darkMode.value]}`
+      })
+    } else {
+      throw new Error(response.data?.message || '更新配置失败')
+    }
   } catch (error) {
-    console.error('更新同步配置失败:', error)
+    console.error('更新外观配置失败:', error)
     showNotify({
       type: 'danger',
       message: `更新配置失败: ${error.message}`
     })
     // 恢复原值
-    syncDeleteToBilibili.value = !syncDeleteToBilibili.value
+    const modes = ['system', 'light', 'dark']
+    const currentIndex = modes.indexOf(darkMode.value)
+    darkMode.value = modes[(currentIndex + 2) % 3]
   }
 }
 
@@ -927,6 +981,22 @@ onMounted(async () => {
           syncDeleteToBilibili.value = false
         }
         console.log('同步删除配置获取完成')
+      })(),
+      (async () => {
+        console.log('开始获取外观配置')
+        try {
+          const response = await getAppearanceConfig()
+          if (response.data && response.data.success) {
+            darkMode.value = response.data.dark_mode || 'system'
+            console.log('外观配置获取成功:', darkMode.value)
+          } else {
+            throw new Error(response.data?.message || '获取配置失败')
+          }
+        } catch (error) {
+          console.error('获取外观配置失败:', error)
+          darkMode.value = 'system'
+        }
+        console.log('外观配置获取完成')
       })()
     ])
     console.log('Settings组件初始化完成')

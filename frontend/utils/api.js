@@ -1073,6 +1073,24 @@ export const updateSyncConfig = (params) => {
 }
 
 /**
+ * 获取外观配置API
+ * @returns {Promise} - API响应
+ */
+export const getAppearanceConfig = () => {
+  return instance.get('/data_sync/appearance-config')
+}
+
+/**
+ * 更新外观配置API
+ * @param {Object} params - 配置参数
+ * @param {string} [params.dark_mode] - 深色模式: system/light/dark
+ * @returns {Promise} - API响应
+ */
+export const updateAppearanceConfig = (params) => {
+  return instance.post('/data_sync/appearance-config', params)
+}
+
+/**
  * 获取指定用户创建的所有收藏夹信息
  * @param {Object} params 请求参数
  * @param {number} [params.up_mid] 目标用户mid，不提供则使用当前登录用户

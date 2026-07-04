@@ -480,6 +480,16 @@ func init() {
 		Tags:        tagDataSync,
 		OperationID: "update_sync_config",
 	})
+	RegisterEndpointMeta("GET", "/data_sync/appearance-config", EndpointMeta{
+		Summary:     "获取外观配置",
+		Tags:        tagDataSync,
+		OperationID: "get_appearance_config",
+	})
+	RegisterEndpointMeta("POST", "/data_sync/appearance-config", EndpointMeta{
+		Summary:     "更新外观配置",
+		Tags:        tagDataSync,
+		OperationID: "update_appearance_config",
+	})
 	RegisterEndpointMeta("POST", "/data_sync/check", EndpointMeta{
 		Summary:     "检查数据完整性",
 		Tags:        tagDataSync,

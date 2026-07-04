@@ -57,6 +57,8 @@ func RegisterDataSyncRoutes(r *gin.RouterGroup) {
 		dataSync.POST("/config", updateDataSyncConfig)
 		dataSync.GET("/sync-config", getSyncConfig)
 		dataSync.POST("/sync-config", updateSyncConfig)
+		dataSync.GET("/appearance-config", getAppearanceConfig)
+		dataSync.POST("/appearance-config", updateAppearanceConfig)
 		dataSync.POST("/check", checkDataIntegrity)
 		dataSync.POST("/sync", syncData)
 		dataSync.GET("/sync/result", getSyncResult)
@@ -596,6 +598,44 @@ func updateSyncConfig(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "同步配置已更新"})
+}
+
+func getAppearanceConfig(c *gin.Context) {
+	cfg := config.GetConfig()
+	darkMode := cfg.Appearance.DarkMode
+	if darkMode == "" {
+		darkMode = "system"
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"dark_mode": darkMode,
+	})
+}
+
+func updateAppearanceConfig(c *gin.Context) {
+	var body struct {
+		DarkMode *string `json:"dark_mode"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "参数错误"})
+		return
+	}
+
+	cfg, _ := config.LoadConfig()
+	if body.DarkMode != nil {
+		darkMode := *body.DarkMode
+		if darkMode != "system" && darkMode != "light" && darkMode != "dark" {
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "dark_mode 必须是 system、light 或 dark"})
+			return
+		}
+		cfg.Appearance.DarkMode = darkMode
+	}
+	if err := config.SaveConfig(cfg); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "保存配置失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "外观配置已更新"})
 }
 
 func checkDataIntegrity(c *gin.Context) {

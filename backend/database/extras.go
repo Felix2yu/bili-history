@@ -632,10 +632,10 @@ func GetWatchLaterVideos(page, size int, sort, order string) ([]map[string]inter
 	return results, total, nil
 }
 
-// SaveWatchLaterVideos upserts the given watch later videos into the local DB.
-// Videos are matched by bvid (UNIQUE). Existing records are updated in place;
-// new records are inserted. Local records not present in the remote list are
-// kept intact (incremental merge, no pruning).
+// SaveWatchLaterVideos performs a differential sync: upserts all remote items,
+// then deletes local items that are genuinely absent from the remote list.
+// Unlike a blind prune, this only runs after a successful full fetch, so partial
+// failures won't accidentally wipe local data.
 func SaveWatchLaterVideos(videos []WatchLaterVideo) error {
 	db := GetWatchLaterDB()
 	if db == nil {
@@ -650,6 +650,7 @@ func SaveWatchLaterVideos(videos []WatchLaterVideo) error {
 
 	now := time.Now().Unix()
 
+	// Step 1: upsert all remote items
 	stmt, err := tx.Prepare(`INSERT INTO watchlater_videos
 		(bvid, aid, title, pic, desc, duration, tid, tname, owner_name, owner_mid, owner_face, add_at, pubdate, view, danmaku, link, fetch_time)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -664,15 +665,43 @@ func SaveWatchLaterVideos(videos []WatchLaterVideo) error {
 	}
 	defer stmt.Close()
 
+	remoteBvids := make(map[string]bool, len(videos))
 	for _, v := range videos {
 		if v.Bvid == "" {
 			continue
 		}
+		remoteBvids[v.Bvid] = true
 		_, err := stmt.Exec(v.Bvid, v.Aid, v.Title, v.Pic, v.Desc, v.Duration, v.Tid, v.Tname,
 			v.OwnerName, v.OwnerMid, v.OwnerFace, v.AddAt, v.Pubdate, v.View, v.Danmaku, v.Link, now)
 		if err != nil {
 			utils.LogError("Failed to upsert watchlater %s: %v", v.Bvid, err)
-			continue
+		}
+	}
+
+	// Step 2: delete local items not in remote list
+	var localBvids []string
+	rows, err := tx.Query("SELECT bvid FROM watchlater_videos")
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var bvid string
+			if rows.Scan(&bvid) == nil {
+				if !remoteBvids[bvid] {
+					localBvids = append(localBvids, bvid)
+				}
+			}
+		}
+	}
+	if len(localBvids) > 0 {
+		placeholders := make([]string, len(localBvids))
+		args := make([]interface{}, len(localBvids))
+		for i, b := range localBvids {
+			placeholders[i] = "?"
+			args[i] = b
+		}
+		query := "DELETE FROM watchlater_videos WHERE bvid IN (" + strings.Join(placeholders, ",") + ")"
+		if _, err := tx.Exec(query, args...); err != nil {
+			utils.LogError("Failed to delete removed watchlater items: %v", err)
 		}
 	}
 

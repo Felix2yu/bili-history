@@ -10,6 +10,7 @@ RUN apk add --no-cache gcc musl-dev git
 WORKDIR /app
 
 COPY go.mod go.sum ./
+RUN go mod tidy
 RUN go mod download
 
 COPY . .

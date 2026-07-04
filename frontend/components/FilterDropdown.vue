@@ -1,9 +1,5 @@
 <template>
   <div class="relative">
-    <!-- 筛选头部 - 所有元素在同一行 -->
-    <div class="flex items-center justify-end flex-wrap py-2 px-3 rounded-md">
-    </div>
-
     <!-- 底部弹出式筛选栏 -->
     <VanPopup
       v-model:show="showFilterPopup"
@@ -12,151 +8,181 @@
       :z-index="2000"
       get-container="body"
       teleport="body"
-      :style="{ height: '75%', maxHeight: '600px' }"
-      class="overflow-hidden bg-white dark:bg-gray-900 flex flex-col items-stretch"
+      :style="{ height: '80%', maxHeight: '640px' }"
+      class="overflow-hidden flex flex-col"
     >
       <!-- 固定的抽屉头部 -->
-      <div class="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-10 shrink-0">
-        <span class="text-[14px] font-bold text-gray-800 dark:text-gray-100 ml-1">高级筛选</span>
-        <button @click="closeFilterPopup" class="p-1 px-2 rounded-full cursor-pointer bg-gray-100 dark:bg-gray-800 hover:bg-gray-200">
-          <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100/80 dark:border-gray-800/80 sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm z-10 shrink-0">
+        <div class="flex items-center gap-2">
+          <div class="w-1 h-4 rounded-full bg-[#fb7299]"></div>
+          <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">高级筛选</span>
+          <span v-if="activeFilterCount > 0" class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-[#fb7299] rounded-full">{{ activeFilterCount }}</span>
+        </div>
+        <button @click="closeFilterPopup" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 active:scale-95">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
-      <div class="px-4 py-3 flex-1 overflow-y-auto w-full">
-          <!-- 条目类型筛选 -->
-          <div class="hidden sm:block mb-5">
-            <div class="flex items-center justify-between mb-2">
-              <h4 class="text-[13px] font-medium text-gray-700 dark:text-gray-200">条目类型</h4>
-              <div class="flex items-center">
-                <span v-if="businessLabel" class="text-[10px] text-gray-400 mr-2 max-w-[80%] truncate">已选: {{ businessLabel }}</span>
-                <button 
-                  v-if="business" 
-                  @click="clearBusiness" 
-                  class="text-[11px] font-medium text-[#fb7299] active:opacity-80 transition-opacity"
-                >重置</button>
-              </div>
-            </div>
+      <div class="px-5 py-4 flex-1 overflow-y-auto w-full">
+        <!-- 活跃筛选标签 -->
+        <div v-if="activeFilterCount > 0" class="mb-4 animate-fade-in">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400">当前筛选</span>
+            <button @click="clearAllFilters" class="text-[11px] font-medium text-[#fb7299] hover:text-[#fb7299]/80 active:scale-95 transition-all duration-200">清除全部</button>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <span v-if="business" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-[#fb7299] bg-[#fb7299]/8 dark:bg-[#fb7299]/15 rounded-full cursor-pointer hover:bg-[#fb7299]/15 dark:hover:bg-[#fb7299]/25 transition-colors duration-200 active:scale-95" @click="clearBusiness">
+              {{ businessLabel || '条目类型' }}
+              <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </span>
+            <span v-if="date" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-[#fb7299] bg-[#fb7299]/8 dark:bg-[#fb7299]/15 rounded-full cursor-pointer hover:bg-[#fb7299]/15 dark:hover:bg-[#fb7299]/25 transition-colors duration-200 active:scale-95" @click="clearDate">
+              日期区间
+              <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </span>
+            <span v-if="category" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-[#fb7299] bg-[#fb7299]/8 dark:bg-[#fb7299]/15 rounded-full cursor-pointer hover:bg-[#fb7299]/15 dark:hover:bg-[#fb7299]/25 transition-colors duration-200 active:scale-95" @click="clearCategory">
+              {{ category }}
+              <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </span>
+          </div>
+        </div>
 
-            <div class="grid grid-cols-4 gap-2">
-              <div
-                v-for="(label, type) in businessTypeMap"
-                :key="type"
-                class="flex items-center justify-center py-1.5 px-1 rounded-full cursor-pointer border transition-colors duration-200"
-                :class="business === type ? 'border-[#fb7299] bg-[#fb7299]/5 text-[#fb7299]' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 bg-gray-50/50 dark:bg-gray-800'"
-                @click="selectBusinessFromPopup(type)"
-              >
-                <div class="text-[11px] font-medium truncate text-center">{{ label }}</div>
-              </div>
-            </div>
+        <!-- 条目类型筛选 -->
+        <div class="mb-5">
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="text-[13px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
+              条目类型
+            </h4>
+            <button v-if="business" @click="clearBusiness" class="text-[11px] font-medium text-[#fb7299] active:scale-95 transition-all duration-200">重置</button>
           </div>
 
-          <!-- 日期筛选 -->
-          <div class="mb-5">
-            <div class="flex items-center justify-between mb-2">
-              <h4 class="text-[13px] font-medium text-gray-700 dark:text-gray-200">日期区间</h4>
-              <div class="flex items-center">
-                <span v-if="date" class="text-[10px] text-gray-400 mr-2 max-w-[80%] truncate">已选范围</span>
-                <button 
-                  v-if="date" 
-                  @click="clearDate" 
-                  class="text-[11px] font-medium text-[#fb7299] active:opacity-80 transition-opacity"
-                >重置</button>
-              </div>
-            </div>
-
-            <div class="flex items-center space-x-2">
-              <div class="flex-1 flex flex-col">
-                <label class="text-[10px] mb-1 pl-1 text-gray-500 dark:text-gray-400">开始日期</label>
-                <input
-                  type="date"
-                  v-model="startDate"
-                  @change="onDateChange"
-                  class="w-full px-2 py-1.5 text-[11px] sm:text-xs border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#fb7299] focus:border-[#fb7299] cursor-pointer transition-colors"
-                  :max="endDate || undefined"
-                />
-              </div>
-              <div class="flex-none mt-4 text-gray-400 text-[10px] px-1 font-medium">至</div>
-              <div class="flex-1 flex flex-col">
-                <label class="text-[10px] mb-1 pl-1 text-gray-500 dark:text-gray-400">结束日期</label>
-                <input
-                  type="date"
-                  v-model="endDate"
-                  @change="onDateChange"
-                  class="w-full px-2 py-1.5 text-[11px] sm:text-xs border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#fb7299] focus:border-[#fb7299] cursor-pointer transition-colors"
-                  :min="startDate || undefined"
-                />
-              </div>
+          <div class="flex flex-wrap gap-2">
+            <div
+              v-for="(label, type) in businessTypeMap"
+              :key="type"
+              class="flex items-center justify-center py-1.5 px-3.5 rounded-full cursor-pointer border transition-all duration-200 active:scale-95"
+              :class="business === type
+                ? 'border-[#fb7299] bg-[#fb7299] text-white shadow-sm shadow-[#fb7299]/20'
+                : 'border-gray-200/60 dark:border-gray-700/60 text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-white/80 dark:hover:bg-gray-700/50'"
+              @click="selectBusinessFromPopup(type)"
+            >
+              <span class="text-[12px] font-medium">{{ label }}</span>
             </div>
           </div>
+        </div>
 
-          <!-- 视频分区筛选 -->
-          <div class="pb-6">
-            <div class="flex items-center justify-between mb-2">
-              <h4 class="text-[13px] font-medium text-gray-700 dark:text-gray-200">视频分区</h4>
-              <div class="flex items-center">
-                <span v-if="category" class="text-[10px] text-gray-400 mr-2 max-w-[80%] truncate">已选: {{ category }}</span>
-                <button 
-                  v-if="category" 
-                  @click="clearCategory" 
-                  class="text-[11px] font-medium text-[#fb7299] active:opacity-80 transition-opacity"
-                >重置</button>
-              </div>
+        <!-- 分隔线 -->
+        <div class="h-px bg-gray-100 dark:bg-gray-800/80 mb-5"></div>
+
+        <!-- 日期筛选 -->
+        <div class="mb-5">
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="text-[13px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              日期区间
+            </h4>
+            <button v-if="date" @click="clearDate" class="text-[11px] font-medium text-[#fb7299] active:scale-95 transition-all duration-200">重置</button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="flex-1">
+              <label class="text-[10px] mb-1 pl-1 text-gray-500 dark:text-gray-400 block">开始日期</label>
+              <input
+                type="date"
+                v-model="startDate"
+                @change="onDateChange"
+                class="w-full px-3 py-2 text-[12px] border border-gray-200/60 dark:border-gray-700/60 bg-white/50 dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fb7299]/30 focus:border-[#fb7299] cursor-pointer transition-all duration-200 backdrop-blur-sm"
+                :max="endDate || undefined"
+              />
             </div>
+            <div class="flex-none mt-5">
+              <span class="text-[12px] font-semibold text-[#fb7299]/60">至</span>
+            </div>
+            <div class="flex-1">
+              <label class="text-[10px] mb-1 pl-1 text-gray-500 dark:text-gray-400 block">结束日期</label>
+              <input
+                type="date"
+                v-model="endDate"
+                @change="onDateChange"
+                class="w-full px-3 py-2 text-[12px] border border-gray-200/60 dark:border-gray-700/60 bg-white/50 dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#fb7299]/30 focus:border-[#fb7299] cursor-pointer transition-all duration-200 backdrop-blur-sm"
+                :min="startDate || undefined"
+              />
+            </div>
+          </div>
+        </div>
 
-            <!-- 分区选择器 -->
-            <div class="rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm flex flex-col mt-2">
-              <div class="flex flex-row h-[220px]">
-                <!-- 主分区选择 -->
-                <div class="w-2/5 overflow-y-auto bg-gray-50/70 dark:bg-gray-800/50">
-                  <div
-                    v-for="(categoryItem, index) in videoCategories"
-                    :key="categoryItem.text"
-                    class="py-2.5 px-3 text-[11px] sm:text-xs cursor-pointer transition-colors duration-200 truncate relative"
-                    :class="activeMainCategory === index ? 'bg-white dark:bg-gray-900 font-medium text-[#fb7299]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'"
-                    @click="activeMainCategory = index"
-                  >
-                    <div v-if="activeMainCategory === index" class="absolute left-0 top-0 bottom-0 w-[3px] bg-[#fb7299] rounded-r-sm"></div>
-                    {{ categoryItem.text }}
-                  </div>
+        <!-- 分隔线 -->
+        <div class="h-px bg-gray-100 dark:bg-gray-800/80 mb-5"></div>
+
+        <!-- 视频分区筛选 -->
+        <div class="pb-4">
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="text-[13px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+              视频分区
+            </h4>
+            <button v-if="category" @click="clearCategory" class="text-[11px] font-medium text-[#fb7299] active:scale-95 transition-all duration-200">重置</button>
+          </div>
+
+          <!-- 分区选择器 -->
+          <div class="rounded-2xl border border-gray-200/60 dark:border-gray-700/60 overflow-hidden bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm shadow-sm">
+            <div class="flex flex-row h-[200px] md:h-[240px]">
+              <!-- 主分区选择 -->
+              <div class="w-2/5 overflow-y-auto bg-gray-50/50 dark:bg-gray-800/30 border-r border-gray-100/80 dark:border-gray-800/60 scrollbar-thin">
+                <div
+                  v-for="(categoryItem, index) in videoCategories"
+                  :key="categoryItem.text"
+                  class="py-2.5 px-3 text-[12px] cursor-pointer transition-all duration-200 truncate relative"
+                  :class="activeMainCategory === index
+                    ? 'bg-white dark:bg-gray-900 font-medium text-[#fb7299] shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/30'"
+                  @click="activeMainCategory = index"
+                >
+                  <div v-if="activeMainCategory === index" class="absolute left-0 top-1 bottom-1 w-[3px] bg-[#fb7299] rounded-r-full"></div>
+                  <span class="truncate block pl-1">{{ categoryItem.text }}</span>
                 </div>
+              </div>
 
-                <!-- 子分区选择 -->
-                <div class="w-3/5 overflow-y-auto bg-white dark:bg-gray-900 border-l border-gray-100 dark:border-gray-800 p-2 pl-3">
-                  <div class="grid grid-cols-2 gap-2">
-                    <!-- 主分区选项 -->
-                    <div
-                      class="py-1.5 px-2 text-[11px] text-center border rounded-full cursor-pointer transition-colors duration-200 truncate"
-                      :class="category === videoCategories[activeMainCategory]?.text ? 'border-[#fb7299] bg-[#fb7299] text-white font-medium' : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 bg-gray-50 dark:bg-gray-800'"
-                      @click="selectVideoCategory({text: videoCategories[activeMainCategory]?.text, type: 'main'})"
-                    >
-                      全部 {{ videoCategories[activeMainCategory]?.text || '频道' }}
-                    </div>
+              <!-- 子分区选择 -->
+              <div class="w-3/5 overflow-y-auto p-2.5 pl-3 scrollbar-thin">
+                <div class="grid grid-cols-2 gap-1.5">
+                  <!-- 主分区选项 -->
+                  <div
+                    class="py-1.5 px-2 text-[11px] text-center border rounded-full cursor-pointer transition-all duration-200 truncate active:scale-95"
+                    :class="category === videoCategories[activeMainCategory]?.text
+                      ? 'border-[#fb7299] bg-[#fb7299] text-white font-medium shadow-sm shadow-[#fb7299]/20'
+                      : 'border-gray-200/60 dark:border-gray-700/60 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-700/50'"
+                    @click="selectVideoCategory({text: videoCategories[activeMainCategory]?.text, type: 'main'})"
+                  >
+                    全部 {{ videoCategories[activeMainCategory]?.text || '频道' }}
+                  </div>
 
-                    <!-- 子分区选项 -->
-                    <div
-                      v-for="subCategory in videoCategories[activeMainCategory]?.children"
-                      :key="subCategory.id"
-                      class="py-1.5 px-2 text-[11px] text-center border rounded-full cursor-pointer transition-colors duration-200 truncate"
-                      :class="category === subCategory.text ? 'border-[#fb7299] bg-[#fb7299] text-white font-medium' : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 bg-gray-50 dark:bg-gray-800'"
-                      @click="selectVideoCategory(subCategory)"
-                    >
-                      {{ subCategory.text }}
-                    </div>
+                  <!-- 子分区选项 -->
+                  <div
+                    v-for="subCategory in videoCategories[activeMainCategory]?.children"
+                    :key="subCategory.id"
+                    class="py-1.5 px-2 text-[11px] text-center border rounded-full cursor-pointer transition-all duration-200 truncate active:scale-95"
+                    :class="category === subCategory.text
+                      ? 'border-[#fb7299] bg-[#fb7299] text-white font-medium shadow-sm shadow-[#fb7299]/20'
+                      : 'border-gray-200/60 dark:border-gray-700/60 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-700/50'"
+                    @click="selectVideoCategory(subCategory)"
+                  >
+                    {{ subCategory.text }}
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
     </VanPopup>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { showNotify, Popup as VanPopup } from 'vant'
 import 'vant/es/popup/style'
 import 'vant/es/notify/style'
@@ -209,6 +235,22 @@ const closeFilterPopup = () => {
   showFilterPopup.value = false
 }
 
+// 活跃筛选数量
+const activeFilterCount = computed(() => {
+  let count = 0
+  if (props.business) count++
+  if (props.date) count++
+  if (props.category) count++
+  return count
+})
+
+// 清除全部筛选
+const clearAllFilters = () => {
+  if (props.business) clearBusiness()
+  if (props.date) clearDate()
+  if (props.category) clearCategory()
+}
+
 // 日期选择相关
 const startDate = ref('')
 const endDate = ref('')
@@ -251,17 +293,7 @@ const selectVideoCategory = (item) => {
     categoryText = item.text
   }
 
-  // 打印日志，帮助调试
-  console.log('选择分区:', {
-    item,
-    categoryText,
-    isMainName,
-  })
-
-  // 先更新分类，然后重置页码
   emit('update:category', categoryText)
-
-  // 重置页码到第一页，而不是触发实时更新
   emit('update:page', 1)
 
   showNotify({
@@ -319,8 +351,7 @@ const businessTypeMap = {
 const selectBusiness = (type) => {
   emit('update:business', type)
   emit('update:businessLabel', businessTypeMap[type])
-  // 移除实时更新触发，改为只更新当前数据
-  emit('update:page', 1) // 重置页码到第一页
+  emit('update:page', 1)
 
   showNotify({
     type: 'success',
@@ -333,8 +364,7 @@ const selectBusiness = (type) => {
 const selectBusinessFromPopup = (type) => {
   emit('update:business', type)
   emit('update:businessLabel', businessTypeMap[type])
-  // 移除实时更新触发，改为只更新当前数据
-  emit('update:page', 1) // 重置页码到第一页
+  emit('update:page', 1)
 
   showNotify({
     type: 'success',
@@ -351,9 +381,8 @@ const applyDateFilter = () => {
 
     if (formattedStartDate && formattedEndDate) {
       const dateRange = `${formattedStartDate} 至 ${formattedEndDate}`
-      console.log('设置日期区间:', dateRange)
       emit('update:date', dateRange)
-      emit('update:page', 1) // 重置页码到第一页，而不是触发实时更新
+      emit('update:page', 1)
 
       showNotify({
         type: 'success',
@@ -366,20 +395,16 @@ const applyDateFilter = () => {
         message: '日期格式无效',
         duration: 2000,
       })
-
     }
   } else if (!startDate.value && !endDate.value) {
-    // 如果两个日期都为空，清除筛选
     emit('update:date', '')
-    emit('update:page', 1) // 重置页码到第一页，而不是触发实时更新
+    emit('update:page', 1)
   } else {
-    // 如果只有一个日期，显示提示
     showNotify({
       type: 'warning',
       message: '请同时设置开始和结束日期',
       duration: 2000,
     })
-
   }
 }
 
@@ -390,10 +415,8 @@ const onDateChange = () => {
 
 // 清除分区
 const clearCategory = () => {
-  console.log('清除分区筛选')
-  // 先更新分类，然后重置页码
   emit('update:category', '')
-  emit('update:page', 1) // 重置页码到第一页，而不是触发实时更新
+  emit('update:page', 1)
 
   showNotify({
     type: 'success',
@@ -404,10 +427,8 @@ const clearCategory = () => {
 
 // 清除日期
 const clearDate = () => {
-  console.log('清除日期筛选')
-  // 先更新日期，然后重置页码
   emit('update:date', '')
-  emit('update:page', 1) // 重置页码到第一页，而不是触发实时更新
+  emit('update:page', 1)
 
   showNotify({
     type: 'success',
@@ -418,11 +439,9 @@ const clearDate = () => {
 
 // 清除业务类型
 const clearBusiness = () => {
-  console.log('清除业务类型筛选')
-  // 先更新业务类型，然后重置页码
   emit('update:business', '')
   emit('update:businessLabel', '')
-  emit('update:page', 1) // 重置页码到第一页，而不是触发实时更新
+  emit('update:page', 1)
 
   showNotify({
     type: 'success',
@@ -448,7 +467,6 @@ const handlePageSizeBlur = (event) => {
     value = 100
   }
   emit('update:pageSize', value)
-  // 不调用 refresh-data，因为 pageSize 的 watch 会自动触发 fetchHistoryByDateRange
 }
 
 // 组件挂载时获取视频分类
@@ -464,8 +482,6 @@ defineExpose({
 </script>
 
 <style scoped>
-/* 可以添加自定义样式 */
-
 /* 确保日期输入框在移动设备上正常工作 */
 input[type="date"] {
   -webkit-appearance: none;
@@ -483,5 +499,23 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   height: 100%;
   opacity: 0;
   cursor: pointer;
+}
+
+/* 自定义滚动条 */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>

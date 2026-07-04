@@ -751,7 +751,7 @@ watch(() => props.show, async (isVisible) => {
       streamOptions.value = [
         { label: '自动选择最佳画质', value: null },
         ...props.videoInfo.streams.map(s => ({
-          label: `${s.quality} (${s.ext}) - ${(s.size / 1024 / 1024).toFixed(1)}MB`,
+          label: s.quality,
           value: s.id,
         })),
       ]
@@ -768,7 +768,7 @@ watch(() => props.show, async (isVisible) => {
             streamOptions.value = [
               { label: '自动选择最佳画质', value: null },
               ...data.streams.map(s => ({
-                label: `${s.quality} (${s.ext}) - ${(s.size / 1024 / 1024).toFixed(1)}MB`,
+                label: s.quality,
                 value: s.id,
               })),
             ]

@@ -84,6 +84,50 @@ func codecPriorityStr(codec string) int {
 	return 0
 }
 
+// friendlyCodecName returns a short human-readable codec name
+func friendlyCodecName(codec string) string {
+	if strings.HasPrefix(codec, "av01") {
+		return "AV1"
+	} else if strings.HasPrefix(codec, "hev") {
+		return "HEVC"
+	} else if strings.HasPrefix(codec, "avc") {
+		return "AVC"
+	}
+	return codec
+}
+
+// friendlyQualityLabel returns a readable quality label like "4K · HEVC · 2.2MB"
+func friendlyQualityLabel(codec string, width, height int, bandwidth float64) string {
+	res := resolutionLabel(width, height)
+	codecName := friendlyCodecName(codec)
+	sizeMB := bandwidth / 1024 / 1024
+	return fmt.Sprintf("%s · %s · %.1fMB", res, codecName, sizeMB)
+}
+
+// resolutionLabel returns standard quality name from resolution
+func resolutionLabel(width, height int) string {
+	h := height
+	if width > height {
+		h = width
+	}
+	switch {
+	case h >= 2160:
+		return "4K"
+	case h >= 1440:
+		return "2K"
+	case h >= 1080:
+		return "1080p"
+	case h >= 720:
+		return "720p"
+	case h >= 480:
+		return "480p"
+	case h >= 360:
+		return "360p"
+	default:
+		return fmt.Sprintf("%dp", h)
+	}
+}
+
 // dashVideoStream represents a single video stream from DASH response
 type dashVideoStream struct {
 	ID        float64 `json:"id"`
@@ -184,7 +228,7 @@ func ExtractVideoInfo(url string) (*VideoInfo, error) {
 		qualityID := int(vs.ID)
 		streams = append(streams, StreamInfo{
 			ID:      fmt.Sprintf("%d-%s", qualityID, codec),
-			Quality: fmt.Sprintf("%s (%dx%d)", codec, vs.Width, vs.Height),
+			Quality: friendlyQualityLabel(codec, vs.Width, vs.Height, vs.Bandwidth),
 			Size:    int64(vs.Bandwidth),
 			Ext:     "mp4",
 		})
@@ -289,7 +333,7 @@ func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, 
 	selectedAudio := &audioStreams[bestAudioIdx]
 
 	sizeMB := float64(selectedVideo.Bandwidth) / 1024 / 1024
-	onProgress(fmt.Sprintf("画质: %s, 大小: %.1fMB", selectedVideo.Codecs, sizeMB))
+	onProgress(fmt.Sprintf("画质: %s · %s, 大小: %.1fMB", resolutionLabel(int(selectedVideo.Width), int(selectedVideo.Height)), friendlyCodecName(selectedVideo.Codecs), sizeMB))
 
 	os.MkdirAll(outputDir, 0755)
 

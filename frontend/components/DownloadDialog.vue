@@ -23,17 +23,16 @@
           </svg>
         </button>
 
-        <!-- 页眉区域：包含Lux致谢和FFmpeg状态 -->
+        <!-- 页眉区域：包含bili-dl致谢和FFmpeg状态 -->
         <div
           class="px-3 md:px-6 py-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 space-x-2">
           <div class="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
             <div class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-[#fb7299] font-bold text-lg">👾</div>
             <div class="flex flex-col">
-              <p class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">下载功能基于 <a href="https://github.com/iawia002/lux"
+              <p class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">下载功能基于 <a href="https://github.com/Felix2yu/bili-dl"
                                                                                    target="_blank"
-                                                                                   class="text-[#fb7299] hover:text-[#fb7299]/80 font-medium">Lux</a>
+                                                                                   class="text-[#fb7299] hover:text-[#fb7299]/80 font-medium">bili-dl</a>
               </p>
-              <p class="hidden md:block text-xs text-gray-500 dark:text-gray-400">感谢 Lux 开发团队的开源贡献</p>
             </div>
           </div>
 
@@ -242,23 +241,6 @@
                       <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">多线程下载</span>
                     </label>
 
-                    <!-- 画质选择 -->
-                    <div>
-                      <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-0.5 md:mb-1">
-                        画质选择
-                        <span v-if="loadingStreams" class="text-[#fb7299] ml-1">加载中...</span>
-                      </label>
-                      <CustomDropdown
-                        v-model="advancedOptions.stream_id"
-                        :options="streamOptions"
-                        :selected-text="getStreamText(advancedOptions.stream_id)"
-                        custom-class="w-full text-xs"
-                        :disabled="loadingStreams"
-                      />
-                    </div>
-                  </div>
-                  <div class="text-gray-500 dark:text-gray-400 mt-1.5 md:mt-2 text-[9px] md:text-[10px]">
-                    * 弹窗打开时自动获取可用画质，Lux 会自动选择最佳画质
                   </div>
                 </div>
               </div>
@@ -267,7 +249,7 @@
             <!-- 下载日志 -->
             <div
               class="w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-2 pb-0 font-mono text-[10px] md:text-[11px] overflow-y-auto border border-gray-200 dark:border-gray-700"
-              :class="showAdvancedOptions ? 'h-[calc(100vh-588px)] min-h-[130px]' : 'h-[calc(100vh-418px)] min-h-[180px]'"
+              :class="showAdvancedOptions ? 'h-[120px] min-h-[80px]' : 'h-[120px] min-h-[80px]'"
               ref="logContainer">
               <div v-if="!downloadStarted" class="text-gray-500 dark:text-gray-400 flex items-center justify-center h-full">
                 <div class="text-center">
@@ -1229,7 +1211,7 @@ const getCommandContent = (line) => {
   return line.trim()
 }
 
-// 下拉菜单选项定义 (Lux 兼容)
+// 下拉菜单选项定义
 const streamOptions = ref([
   { label: '自动选择最佳画质', value: null },
 ])

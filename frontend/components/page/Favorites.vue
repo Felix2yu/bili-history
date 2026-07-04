@@ -82,14 +82,19 @@
           <!-- 内容区域 -->
           <div class="transition-all duration-300 p-5">
             <!-- 全局提示信息 -->
-            <div class="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md text-amber-700 dark:text-amber-300 text-sm">
+            <div v-if="showFavoritesTip" class="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md text-amber-700 dark:text-amber-300 text-sm">
               <div class="flex items-start">
                 <svg class="w-5 h-5 text-amber-500 mt-0.5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <div>
+                <div class="flex-1">
                   <p class="mt-1">用户收藏夹往往非常庞大，解析时很容易触发反爬机制。如遇该问题请稍等片刻后重试。（emmm，如果视频太多的话还是建议逐个收藏夹下载……）</p>
                 </div>
+                <button @click="dismissFavoritesTip" class="ml-2 text-amber-500 hover:text-amber-700 flex-shrink-0">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -145,6 +150,16 @@
                       class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                       @click="viewFolderContents(folder)"
                     />
+                    <button
+                      v-if="activeTab !== 'local'"
+                      @click.stop="startDownloadFolder(folder)"
+                      class="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-lg bg-black/40 text-white hover:bg-black/60 transition-colors"
+                      title="下载收藏夹中的视频"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </button>
                     <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                       <p class="text-white text-sm font-medium truncate">{{ folder.title }}</p>
                       <div class="flex items-center mt-1">
@@ -164,35 +179,6 @@
                           {{ folder.title }}
                         </h3>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{{ folder.intro || '无简介' }}</p>
-                      </div>
-                    </div>
-
-                    <div class="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                      <div class="flex items-center">
-                        <img
-                          :src="normalizeImageUrl(folder.upper?.face || folder.creator_face)"
-                          :alt="folder.upper?.name || folder.creator_name"
-                          class="w-5 h-5 rounded-full"
-                        />
-                        <span class="ml-1.5 text-xs text-gray-600 dark:text-gray-400">{{ folder.upper?.name || folder.creator_name }}</span>
-                      </div>
-                      <div class="flex items-center space-x-2">
-                        <button
-                          v-if="activeTab !== 'local'"
-                          @click="startDownloadFolder(folder)"
-                          class="text-xs text-blue-500 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                          title="下载收藏夹中的视频"
-                        >
-                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                        </button>
-                        <button
-                          @click="viewFolderContents(folder)"
-                          class="text-xs text-[#fb7299] hover:bg-[#fb7299]/10 px-2 py-1 rounded transition-colors"
-                        >
-                          查看详情
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -395,6 +381,12 @@ const currentPage = ref(1)
 const pageSize = ref(40)
 const totalItems = ref(0)
 const searchKeyword = ref('')
+const showFavoritesTip = ref(localStorage.getItem('favorites_tip_dismissed') !== 'true')
+
+function dismissFavoritesTip() {
+  showFavoritesTip.value = false
+  localStorage.setItem('favorites_tip_dismissed', 'true')
+}
 
 // 收藏夹内容状态
 const showFolderContents = ref(false)

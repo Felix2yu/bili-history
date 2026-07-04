@@ -633,8 +633,9 @@ func GetWatchLaterVideos(page, size int, sort, order string) ([]map[string]inter
 }
 
 // SaveWatchLaterVideos upserts the given watch later videos into the local DB.
-// Videos are matched by bvid (UNIQUE). It also prunes local rows whose bvid is
-// no longer present in the remote list, so the local cache reflects the remote state.
+// Videos are matched by bvid (UNIQUE). Existing records are updated in place;
+// new records are inserted. Local records not present in the remote list are
+// kept intact (incremental merge, no pruning).
 func SaveWatchLaterVideos(videos []WatchLaterVideo) error {
 	db := GetWatchLaterDB()
 	if db == nil {
@@ -663,7 +664,6 @@ func SaveWatchLaterVideos(videos []WatchLaterVideo) error {
 	}
 	defer stmt.Close()
 
-	liveBvids := make([]string, 0, len(videos))
 	for _, v := range videos {
 		if v.Bvid == "" {
 			continue
@@ -673,27 +673,6 @@ func SaveWatchLaterVideos(videos []WatchLaterVideo) error {
 		if err != nil {
 			utils.LogError("Failed to upsert watchlater %s: %v", v.Bvid, err)
 			continue
-		}
-		liveBvids = append(liveBvids, v.Bvid)
-	}
-
-	// Prune locally-cached entries that are no longer in the remote list so the
-	// local cache stays consistent with what Bilibili reports.
-	if len(liveBvids) > 0 {
-		// Build placeholders (?, ?, ...)
-		placeholders := make([]string, len(liveBvids))
-		args := make([]interface{}, len(liveBvids))
-		for i, b := range liveBvids {
-			placeholders[i] = "?"
-			args[i] = b
-		}
-		query := "DELETE FROM watchlater_videos WHERE bvid NOT IN (" + strings.Join(placeholders, ",") + ")"
-		if _, err := tx.Exec(query, args...); err != nil {
-			utils.LogError("Failed to prune stale watchlater rows: %v", err)
-		}
-	} else {
-		if _, err := tx.Exec("DELETE FROM watchlater_videos"); err != nil {
-			utils.LogError("Failed to clear watchlater rows: %v", err)
 		}
 	}
 

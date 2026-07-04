@@ -76,7 +76,7 @@ func extractBVFromURL(url string) string {
 func codecPriorityStr(codec string) int {
 	if strings.HasPrefix(codec, "av01") {
 		return 3
-	} else if strings.HasPrefix(codec, "hev") {
+	} else if strings.HasPrefix(codec, "hev") || strings.HasPrefix(codec, "hvc") {
 		return 2
 	} else if strings.HasPrefix(codec, "avc") {
 		return 1
@@ -88,7 +88,7 @@ func codecPriorityStr(codec string) int {
 func friendlyCodecName(codec string) string {
 	if strings.HasPrefix(codec, "av01") {
 		return "AV1"
-	} else if strings.HasPrefix(codec, "hev") {
+	} else if strings.HasPrefix(codec, "hev") || strings.HasPrefix(codec, "hvc") {
 		return "HEVC"
 	} else if strings.HasPrefix(codec, "avc") {
 		return "AVC"
@@ -109,7 +109,7 @@ func friendlyQualityLabel(codec string, width, height int, bandwidth float64) st
 func containerForCodec(codec string) string {
 	if strings.HasPrefix(codec, "av01") {
 		return "MKV"
-	} else if strings.HasPrefix(codec, "hev") {
+	} else if strings.HasPrefix(codec, "hev") || strings.HasPrefix(codec, "hvc") {
 		return "MOV"
 	}
 	return "MP4"

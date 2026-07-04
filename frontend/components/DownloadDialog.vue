@@ -12,7 +12,7 @@
 
       <!-- 弹窗内容 -->
       <div
-        class="relative bg-white dark:bg-gray-800 rounded-none md:rounded-lg shadow-xl w-full h-full md:w-[96vw] max-w-5xl md:h-[95vh] z-10 overflow-hidden flex flex-col">
+        class="relative bg-white dark:bg-gray-800 rounded-none md:rounded-lg shadow-xl w-full h-auto md:w-[480px] md:max-h-[80vh] z-10 overflow-hidden flex flex-col">
         <!-- 关闭按钮 -->
         <button
           @click="handleClose"
@@ -129,27 +129,16 @@
 
             <!-- 下载日志 -->
             <div
-              class="w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-2 pb-0 font-mono text-[10px] md:text-[11px] overflow-y-auto border border-gray-200 dark:border-gray-700 h-[80px] min-h-[60px]"
+              v-if="downloadStarted"
+              class="w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-2 pb-0 font-mono text-[10px] md:text-[11px] overflow-y-auto border border-gray-200 dark:border-gray-700 h-[80px]"
               ref="logContainer">
-              <div v-if="!downloadStarted" class="text-gray-500 dark:text-gray-400 flex items-center justify-center h-full">
-                <div class="text-center">
-                  <svg class="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24"
-                       stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <p class="text-[10px] md:text-xs">点击下方按钮开始下载...</p>
-                </div>
-              </div>
-              <div v-else>
-                <div v-for="(log, index) in downloadLogs" :key="index" class="whitespace-pre break-all leading-5 py-0.5 last:pb-0"
-                     :class="{
+              <div v-for="(log, index) in downloadLogs" :key="index" class="whitespace-pre break-all leading-5 py-0.5 last:pb-0"
+                   :class="{
 'text-gray-600 dark:text-gray-300': !log.includes('ERROR') && !log.includes('下载完成') && !log.includes('WARN'),
 'text-red-500 dark:text-red-400': log.includes('ERROR'),
 'text-green-500 dark:text-green-400': log.includes('下载完成'),
 'text-yellow-500 dark:text-yellow-400': log.includes('WARN'),
 }">{{ log }}
-                </div>
               </div>
             </div>
           </div>

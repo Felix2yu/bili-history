@@ -120,6 +120,22 @@
                 <template #actions="{ video: v }">
                   <div
                     class="glass-icon-btn !w-6 !h-6"
+                    :class="{ 'text-yellow-400': isVideoFavorited(v.aid) }"
+                    @click.stop.prevent="handleFavorite(v)"
+                    title="收藏"
+                  >
+                    <svg
+                      class="w-3 h-3"
+                      :fill="isVideoFavorited(v.aid) ? 'currentColor' : 'none'"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                  </div>
+                  <div
+                    class="glass-icon-btn !w-6 !h-6"
                     @click.stop.prevent="handleDownload(v)"
                     title="下载"
                   >
@@ -189,6 +205,12 @@
       :video-info="currentVideo"
       @download-complete="handleDownloadComplete"
     />
+
+    <FavoriteDialog
+      v-model="showFavoriteDialog"
+      :video-info="currentVideo"
+      @favorite-done="handleFavoriteDone"
+    />
   </div>
 </template>
 
@@ -197,11 +219,12 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useAsyncData } from '#imports'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
-import { getWatchLaterList, getWatchLaterLocal, removeFromWatchLater, batchRemoveFromWatchLater } from '~/utils/api'
+import { getWatchLaterList, getWatchLaterLocal, removeFromWatchLater, batchRemoveFromWatchLater, favoriteResource, batchCheckFavoriteStatus } from '~/utils/api'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
 import VideoGridCard from '../VideoGridCard.vue'
 import VideoFilterBar from '../VideoFilterBar.vue'
 import DownloadDialog from '../DownloadDialog.vue'
+import FavoriteDialog from '../FavoriteDialog.vue'
 
 let imageObserver = null
 
@@ -248,7 +271,9 @@ const confirmDialog = ref({ show: false, title: '', message: '', action: null })
 const toast = ref({ show: false, message: '', type: 'success', timer: null })
 
 const showDownloadDialog = ref(false)
+const showFavoriteDialog = ref(false)
 const currentVideo = ref({})
+const favoriteStatus = ref({})
 
 const sortOptions = [
   { key: 'add_at', label: '加入时间' },
@@ -496,6 +521,7 @@ async function fetchLocal() {
   } finally {
     loading.value = false
   }
+  checkFavoriteStatus()
 }
 
 async function syncFromBilibili() {
@@ -510,6 +536,54 @@ async function syncFromBilibili() {
   } finally {
     syncing.value = false
   }
+  checkFavoriteStatus()
+}
+
+function isVideoFavorited(aid) {
+  if (!aid) return false
+  const oidStr = String(aid)
+  return Object.keys(favoriteStatus.value).some(key => {
+    return String(key) === oidStr && favoriteStatus.value[key].is_favorited
+  })
+}
+
+async function checkFavoriteStatus() {
+  try {
+    const aids = videos.value
+      .filter(v => v.aid)
+      .map(v => parseInt(v.aid, 10))
+    if (aids.length === 0) return
+    const response = await batchCheckFavoriteStatus({ aids })
+    if (response.data.status === 'success') {
+      const list = response.data.data || []
+      const statusMap = {}
+      for (const item of list) {
+        statusMap[String(item.aid)] = item
+      }
+      favoriteStatus.value = statusMap
+    }
+  } catch (e) {
+    console.warn('检查收藏状态失败:', e)
+  }
+}
+
+function handleFavorite(video) {
+  const videoId = video.aid
+  if (!videoId) {
+    showNotify({ type: 'warning', message: '无法识别视频ID' })
+    return
+  }
+  currentVideo.value = {
+    id: videoId,
+    title: video.title,
+    cover: video.pic,
+    bvid: video.bvid,
+  }
+  showFavoriteDialog.value = true
+}
+
+function handleFavoriteDone() {
+  checkFavoriteStatus()
 }
 
 function handleDownload(video) {

@@ -95,6 +95,13 @@
           >
             下载视频
           </button>
+          <button
+            v-if="record.business !== 'live'"
+            class="action-btn"
+            @click="handleFavoriteClick"
+          >
+            {{ isVideoFavorited ? '取消收藏' : '收藏视频' }}
+          </button>
           <button class="action-btn danger-btn" @click="handleDelete">删除记录</button>
         </div>
 
@@ -128,6 +135,19 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400">下载</span>
+          </button>
+
+          <button
+            v-if="record.business !== 'live'"
+            class="flex flex-1 flex-col items-center justify-center gap-1 py-2 active:bg-gray-100 dark:active:bg-gray-800 transition-colors rounded-lg"
+            @click="handleFavoriteClick"
+          >
+            <svg class="h-5 w-5" :class="isVideoFavorited ? 'text-[#fb7299] fill-current' : 'text-gray-600 dark:text-gray-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <span class="text-[10px] font-medium" :class="isVideoFavorited ? 'text-[#fb7299]' : 'text-gray-500 dark:text-gray-400'">
+              {{ isVideoFavorited ? '已收藏' : '收藏' }}
+            </span>
           </button>
 
           <button class="flex flex-1 flex-col items-center justify-center gap-1 py-2 active:bg-gray-100 dark:active:bg-gray-800 transition-colors rounded-lg" @click="handleDelete">
@@ -185,6 +205,15 @@
         :is-batch-download="false"
       />
     </Teleport>
+
+    <Teleport to="body">
+      <FavoriteDialog
+        v-if="record"
+        v-model="showFavoriteDialog"
+        :video-info="record"
+        @favoriteDone="handleFavoriteDone"
+      />
+    </Teleport>
   </div>
 </template>
 
@@ -194,11 +223,15 @@ import { useRoute, useRouter } from 'vue-router'
 import { showDialog, showNotify } from 'vant'
 import 'vant/es/dialog/style'
 import DownloadDialog from '../DownloadDialog.vue'
+import FavoriteDialog from '../FavoriteDialog.vue'
 import {
+  batchCheckFavoriteStatus,
   batchDeleteHistory,
   batchGetRemarks,
   checkVideoDownload,
   deleteBilibiliHistory,
+  favoriteResource,
+  localBatchFavoriteResource,
   updateVideoRemark,
 } from '~/utils/api'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
@@ -216,7 +249,15 @@ const remarkContent = ref('')
 const originalRemark = ref('')
 const remarkTime = ref(null)
 const isDownloaded = ref(false)
+const favoriteStatus = ref({})
 const showDownloadDialog = ref(false)
+const showFavoriteDialog = ref(false)
+
+const isVideoFavorited = computed(() => {
+  if (!record.value) return false
+  const videoId = getVideoId(record.value)
+  return !!(videoId && favoriteStatus.value[String(videoId)]?.is_favorited)
+})
 
 const goBack = () => {
   if (window.history.length > 1) {
@@ -224,6 +265,17 @@ const goBack = () => {
   } else {
     router.push('/')
   }
+}
+
+const getVideoId = (videoRecord) => {
+  const id = videoRecord?.aid || videoRecord?.avid || (videoRecord?.business === 'archive' ? videoRecord?.oid : null)
+  return id ? parseInt(id, 10) : null
+}
+
+const getFavoriteFolders = () => {
+  const videoId = getVideoId(record.value)
+  if (!videoId) return []
+  return favoriteStatus.value[String(videoId)]?.favorite_folders || []
 }
 
 const loadRecord = () => {
@@ -282,6 +334,26 @@ const refreshDownloadedState = async () => {
   }
 }
 
+const refreshFavoriteState = async () => {
+  if (!record.value) return
+
+  const videoId = getVideoId(record.value)
+  if (!videoId) return
+
+  try {
+    const response = await batchCheckFavoriteStatus({ oids: [videoId] })
+    const result = response.data?.data?.results?.[0]
+    if (result) {
+      favoriteStatus.value[String(videoId)] = {
+        is_favorited: result.is_favorited,
+        favorite_folders: result.favorite_folders || [],
+      }
+    }
+  } catch (error) {
+    console.error('检查收藏状态失败:', error)
+  }
+}
+
 const handleOpenContent = async () => {
   if (!record.value) return
 
@@ -317,6 +389,56 @@ const handleOpenContent = async () => {
 const handleAuthorClick = async () => {
   if (!record.value?.author_mid) return
   await openInBrowser(`https://space.bilibili.com/${record.value.author_mid}`)
+}
+
+const handleFavoriteDone = async () => {
+  await refreshFavoriteState()
+}
+
+const handleFavoriteClick = async () => {
+  if (!record.value) return
+
+  const videoId = getVideoId(record.value)
+  if (!videoId) {
+    showNotify({ type: 'warning', message: '无法识别视频ID' })
+    return
+  }
+
+  if (isVideoFavorited.value) {
+    try {
+      await showDialog({
+        title: '取消收藏',
+        message: '确定要取消收藏该视频吗？',
+        showCancelButton: true,
+      })
+
+      const folderIds = getFavoriteFolders().map(folder => folder.media_id)
+      const response = await favoriteResource({
+        rid: videoId,
+        del_media_ids: folderIds.join(','),
+      })
+
+      if (response.data.status === 'success') {
+        try {
+          await localBatchFavoriteResource({
+            rids: videoId.toString(),
+            del_media_ids: folderIds.join(','),
+            operation_type: 'local',
+          })
+        } catch (syncError) {
+          console.error('取消收藏本地同步失败:', syncError)
+        }
+
+        showNotify({ type: 'success', message: '已取消收藏' })
+        await refreshFavoriteState()
+      }
+    } catch (error) {
+      if (String(error).includes('cancel')) return
+      showNotify({ type: 'danger', message: '取消收藏失败' })
+    }
+  } else {
+    showFavoriteDialog.value = true
+  }
 }
 
 const handleDelete = async () => {
@@ -381,6 +503,7 @@ onMounted(async () => {
   loadRecord()
   await initRemark()
   await refreshDownloadedState()
+  await refreshFavoriteState()
 })
 </script>
 

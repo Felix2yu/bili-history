@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -96,12 +95,12 @@ func friendlyCodecName(codec string) string {
 	return codec
 }
 
-// friendlyQualityLabel returns a readable quality label like "4K · HEVC · 2.2MB"
+// friendlyQualityLabel returns a readable quality label like "4K · HEVC · MP4 · 2.2MB"
 func friendlyQualityLabel(codec string, width, height int, bandwidth float64) string {
 	res := resolutionLabel(width, height)
 	codecName := friendlyCodecName(codec)
 	sizeMB := bandwidth / 1024 / 1024
-	return fmt.Sprintf("%s · %s · %.1fMB", res, codecName, sizeMB)
+	return fmt.Sprintf("%s · %s · MP4 · %.1fMB", res, codecName, sizeMB)
 }
 
 // resolutionLabel returns standard quality name from resolution
@@ -662,20 +661,4 @@ func GetUserVideos(mid string, pn, ps int) ([]map[string]string, int, error) {
 	}
 
 	return videos, result.Data.Page.Count, nil
-}
-
-func remuxFile(inputPath, targetExt string) error {
-	outputPath := strings.TrimSuffix(inputPath, filepath.Ext(inputPath)) + "." + targetExt
-	args := []string{"-i", inputPath, "-c", "copy", "-y"}
-	if targetExt == "mov" {
-		args = append(args, "-tag:v", "hvc1")
-	}
-	args = append(args, outputPath)
-	cmd := exec.Command("ffmpeg", args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("ffmpeg remux failed: %s: %w", string(output), err)
-	}
-	os.Remove(inputPath)
-	return nil
 }

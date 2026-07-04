@@ -237,6 +237,12 @@ const isDownloading = ref(false)
 const downloadError = ref(false)
 const downloadLogs = ref([])
 
+// 添加日志（过滤掉"下载完成"，由状态栏统一显示）
+const addLog = (content) => {
+  if (content === '下载完成') return
+  downloadLogs.value.push(content)
+}
+
 // 下载状态文本
 const downloadStatus = computed(() => {
   if (!downloadStarted.value) return '准备就绪'
@@ -707,7 +713,7 @@ const startDownload = async () => {
         ...advancedOptions.value,
       }, (content) => {
         console.log('收到用户视频下载消息:', content)
-        downloadLogs.value.push(content)
+        addLog(content)
 
         // 检查是否为视频标题信息 [n/5] 视频标题
         const upVideoTitleMatch = content.match(/\[(\d+)\/(\d+)\]\s+(.+)/)
@@ -790,7 +796,7 @@ const startDownload = async () => {
         ...advancedOptions.value,
       }, (content) => {
         console.log('收到收藏夹下载消息:', content)
-        downloadLogs.value.push(content)
+        addLog(content)
 
         // 检查下载状态
         if (content.includes('下载完成') && !content.includes('INFO')) {
@@ -830,7 +836,7 @@ const startDownload = async () => {
         ...advancedOptions.value,
       }, (content) => {
         console.log('收到批量下载消息:', content)
-        downloadLogs.value.push(content)
+        addLog(content)
 
         // 检查是否包含当前下载的视频信息
         const currentVideoMatch = content.match(/正在下载第\s+(\d+)\/(\d+)\s+个视频:\s+(.+)/)
@@ -891,7 +897,7 @@ const startDownload = async () => {
         ...advancedOptions.value,
       }, (content) => {
         console.log('收到合集下载消息:', content)
-        downloadLogs.value.push(content)
+        addLog(content)
 
         // 检查下载状态
         if (content.includes('下载完成')) {
@@ -916,7 +922,7 @@ const startDownload = async () => {
         null,
         (content) => {
           console.log('收到消息:', content)
-          downloadLogs.value.push(content)
+          addLog(content)
 
           // 检查下载状态
           if (content.includes('下载完成')) {

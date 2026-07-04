@@ -10,10 +10,10 @@ RUN apk add --no-cache gcc musl-dev git
 WORKDIR /app
 
 COPY go.mod go.sum ./
-RUN go mod tidy
 RUN go mod download
 
 COPY . .
+RUN go mod tidy
 
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o bilibili-history-go ./cmd/main.go
 

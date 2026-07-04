@@ -120,22 +120,6 @@
                 <template #actions="{ video: v }">
                   <div
                     class="glass-icon-btn !w-6 !h-6"
-                    :class="{ 'text-yellow-400': isVideoFavorited(v.aid) }"
-                    @click.stop.prevent="handleFavorite(v)"
-                    title="收藏"
-                  >
-                    <svg
-                      class="w-3 h-3"
-                      :fill="isVideoFavorited(v.aid) ? 'currentColor' : 'none'"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                  </div>
-                  <div
-                    class="glass-icon-btn !w-6 !h-6"
                     @click.stop.prevent="handleDownload(v)"
                     title="下载"
                   >
@@ -565,21 +549,6 @@ async function checkFavoriteStatus() {
   } catch (e) {
     console.warn('检查收藏状态失败:', e)
   }
-}
-
-function handleFavorite(video) {
-  const videoId = video.aid
-  if (!videoId) {
-    showNotify({ type: 'warning', message: '无法识别视频ID' })
-    return
-  }
-  currentVideo.value = {
-    id: videoId,
-    title: video.title,
-    cover: video.pic,
-    bvid: video.bvid,
-  }
-  showFavoriteDialog.value = true
 }
 
 function handleFavoriteDone() {

@@ -123,16 +123,6 @@
               </template>
 
               <template #actions="{ video: r }">
-                <div v-if="r.business !== 'live'"
-                     class="glass-icon-btn !w-6 !h-6"
-                     @click.stop.prevent="handleFavoriteGrid(r)">
-                  <svg class="w-3 h-3"
-                       :class="isVideoFavorited(parseInt(r.aid || r.avid || (r.business === 'archive' ? r.oid : 0), 10)) ? 'text-yellow-400' : ''"
-                       :fill="isVideoFavorited(parseInt(r.aid || r.avid || (r.business === 'archive' ? r.oid : 0), 10)) ? 'currentColor' : 'none'"
-                       viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                  </svg>
-                </div>
                 <div v-if="r.business === 'archive'"
                      class="glass-icon-btn !w-6 !h-6"
                      @click.stop.prevent="handleDownloadGrid(r)">
@@ -218,7 +208,6 @@
               @toggle-selection="toggleRecordSelection"
               @refresh-data="fetchHistoryByDateRange"
               @remark-updated="handleRemarkUpdate"
-              @favorite="handleFavorite"
             />
           </template>
         </div>
@@ -1425,78 +1414,6 @@ const handleDownloadComplete = async () => {
 }
 
 // 调试函数，在控制台显示所有视频的CID和下载状态
-// 处理收藏按钮点击（网格布局）
-const handleFavoriteGrid = (record) => {
-  // 获取视频ID，适配不同的属性名（aid或avid）
-  let videoId = record.aid || record.avid || (record.business === 'archive' ? record.oid : null)
-  if (videoId) {
-    videoId = parseInt(videoId, 10)
-  }
-  if (!videoId || isNaN(videoId)) {
-    showNotify({ type: 'warning', message: '无法识别视频ID' })
-    return
-  }
-
-  // 检查是否已收藏
-  if (isVideoFavorited(videoId)) {
-    // 如果已收藏，提示是否取消收藏
-    showDialog({
-      title: '取消收藏',
-      message: '确定要取消收藏该视频吗？',
-      showCancelButton: true,
-    }).then(async () => {
-      // 获取视频的收藏夹列表
-      const folders = getVideoFavoriteFolders(videoId)
-      if (folders.length > 0) {
-        // 获取收藏夹ID
-        const folderIds = folders.map(folder => folder.media_id)
-        try {
-          // 发送取消收藏请求
-          const response = await favoriteResource({
-            rid: videoId,
-            del_media_ids: folderIds.join(','),
-          })
-
-          // 如果远程操作成功，同步本地数据库（不提示用户）
-          if (response.data.status === 'success') {
-            try {
-              await localBatchFavoriteResource({
-                rids: videoId.toString(),
-                del_media_ids: folderIds.join(','),
-                operation_type: 'local', // 只在本地操作
-              })
-            } catch (syncError) {
-              console.error('本地同步取消收藏失败，但不影响用户体验:', syncError)
-            }
-
-            // 更新收藏状态
-            favoriteStatus.value[videoId] = {
-              is_favorited: false,
-              favorite_folders: [],
-            }
-
-            showNotify({ type: 'success', message: '已取消收藏' })
-
-            // 刷新收藏状态
-            await batchCheckFavorites()
-          } else {
-            throw new Error(response.data.message || '取消收藏失败')
-          }
-        } catch (error) {
-          console.error('取消收藏失败:', error)
-          showNotify({ type: 'danger', message: '取消收藏失败: ' + (error.message || '未知错误') })
-        }
-      }
-    }).catch(() => {
-      // 取消操作，不做任何处理
-    })
-  } else {
-    // 如果未收藏，打开收藏夹选择对话框
-    showFavoriteDialog.value = true
-    favoriteVideoInfo.value = record
-  }
-}
-
 // 处理收藏夹选择对话框
 const handleFavoriteDone = async (result) => {
   console.log('handleFavoriteDone - 处理收藏完成', result)
@@ -1839,74 +1756,4 @@ const handleBatchUnfavorite = async () => {
   }
 }
 
-// 处理收藏按钮点击（列表布局）
-const handleFavorite = (record) => {
-  // 获取视频ID，适配不同的属性名（aid或avid）
-  const videoId = record.aid || record.avid || (record.business === 'archive' ? record.oid : null)
-
-  if (!videoId) {
-    showNotify({ type: 'warning', message: '无法识别视频ID' })
-    return
-  }
-
-  // 检查是否已收藏
-  const parsedVideoId = parseInt(videoId, 10)
-  if (isVideoFavorited(parsedVideoId)) {
-    // 如果已收藏，提示是否取消收藏
-    showDialog({
-      title: '取消收藏',
-      message: '确定要取消收藏该视频吗？',
-      showCancelButton: true,
-    }).then(async () => {
-      // 获取视频的收藏夹列表
-      const folders = getVideoFavoriteFolders(parsedVideoId)
-      if (folders.length > 0) {
-        // 获取收藏夹ID
-        const folderIds = folders.map(folder => folder.media_id)
-        try {
-          // 发送取消收藏请求
-          const response = await favoriteResource({
-            rid: parsedVideoId,
-            del_media_ids: folderIds.join(','),
-          })
-
-          // 如果远程操作成功，同步本地数据库（不提示用户）
-          if (response.data.status === 'success') {
-            try {
-              await localBatchFavoriteResource({
-                rids: parsedVideoId.toString(),
-                del_media_ids: folderIds.join(','),
-                operation_type: 'local', // 只在本地操作
-              })
-            } catch (syncError) {
-              console.error('本地同步取消收藏失败，但不影响用户体验:', syncError)
-            }
-
-            // 更新收藏状态
-            favoriteStatus.value[parsedVideoId] = {
-              is_favorited: false,
-              favorite_folders: [],
-            }
-
-            showNotify({ type: 'success', message: '已取消收藏' })
-
-            // 刷新收藏状态
-            await batchCheckFavorites()
-          } else {
-            throw new Error(response.data.message || '取消收藏失败')
-          }
-        } catch (error) {
-          console.error('取消收藏失败:', error)
-          showNotify({ type: 'danger', message: '取消收藏失败: ' + (error.message || '未知错误') })
-        }
-      }
-    }).catch(() => {
-      // 取消操作，不做任何处理
-    })
-  } else {
-    // 如果未收藏，打开收藏夹选择对话框
-    showFavoriteDialog.value = true
-    favoriteVideoInfo.value = record
-  }
-}
 </script>

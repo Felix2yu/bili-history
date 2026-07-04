@@ -182,8 +182,8 @@ const handleConfirm = async () => {
       }
     } else {
       // 单个视频收藏
-      // 获取视频ID，适配不同的属性名（aid/avid/oid）
-      const videoId = props.videoInfo?.aid || props.videoInfo?.avid || props.videoInfo?.oid;
+      // 获取视频ID，适配不同的属性名（aid/avid/oid/id）
+      const videoId = props.videoInfo?.aid || props.videoInfo?.avid || props.videoInfo?.oid || props.videoInfo?.id;
 
       if (!props.videoInfo || videoId == null || videoId === 0) {
         showNotify({ type: 'warning', message: '视频信息不完整，无法收藏' });

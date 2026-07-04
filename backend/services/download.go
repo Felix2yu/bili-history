@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -95,12 +96,23 @@ func friendlyCodecName(codec string) string {
 	return codec
 }
 
-// friendlyQualityLabel returns a readable quality label like "4K · HEVC · MP4 · 2.2MB"
+// friendlyQualityLabel returns a readable quality label like "4K · HEVC · MOV · 2.2MB"
 func friendlyQualityLabel(codec string, width, height int, bandwidth float64) string {
 	res := resolutionLabel(width, height)
 	codecName := friendlyCodecName(codec)
+	ext := containerForCodec(codec)
 	sizeMB := bandwidth / 1024 / 1024
-	return fmt.Sprintf("%s · %s · MP4 · %.1fMB", res, codecName, sizeMB)
+	return fmt.Sprintf("%s · %s · %s · %.1fMB", res, codecName, ext, sizeMB)
+}
+
+// containerForCodec returns the target container extension for a codec
+func containerForCodec(codec string) string {
+	if strings.HasPrefix(codec, "av01") {
+		return "MKV"
+	} else if strings.HasPrefix(codec, "hev") {
+		return "MOV"
+	}
+	return "MP4"
 }
 
 // resolutionLabel returns standard quality name from resolution
@@ -357,6 +369,15 @@ func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, 
 		onProgress("正在合并音视频...")
 		if err := api.Merge(stream); err != nil {
 			onProgress(fmt.Sprintf("合并失败: %v，保留单独文件", err))
+		}
+
+		// Remux to target container based on codec: AV1→MKV, HEVC→MOV, AVC→MP4
+		targetExt := containerForCodec(selectedVideo.Codecs)
+		if targetExt != "MP4" {
+			onProgress(fmt.Sprintf("正在转封装为 %s ...", targetExt))
+			if err := remuxToContainer(outputDir, video.Title, video.BV, targetExt); err != nil {
+				onProgress(fmt.Sprintf("转封装失败: %v，保留 MP4 文件", err))
+			}
 		}
 	}
 
@@ -661,4 +682,29 @@ func GetUserVideos(mid string, pn, ps int) ([]map[string]string, int, error) {
 	}
 
 	return videos, result.Data.Page.Count, nil
+}
+
+func remuxToContainer(outputDir, title, bv, targetExt string) error {
+	inputPath := filepath.Join(outputDir, title+"_"+bv+".mp4")
+	outputPath := filepath.Join(outputDir, title+"_"+bv+"."+strings.ToLower(targetExt))
+
+	if _, err := os.Stat(inputPath); os.IsNotExist(err) {
+		return fmt.Errorf("文件不存在: %s", inputPath)
+	}
+
+	args := []string{"-i", inputPath, "-c", "copy", "-y"}
+	// HEVC in MOV needs hvc1 tag for Apple compatibility
+	if targetExt == "MOV" {
+		args = append(args, "-tag:v", "hvc1")
+	}
+	args = append(args, outputPath)
+
+	cmd := exec.Command("ffmpeg", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("ffmpeg remux failed: %s: %w", string(output), err)
+	}
+
+	os.Remove(inputPath)
+	return nil
 }

@@ -436,6 +436,7 @@ func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, 
 		}
 	}
 
+	onProgress("下载完成")
 	return nil
 }
 
@@ -666,6 +667,7 @@ func DownloadCollectionWithProgress(url, sessdata, outputDir string, onlyAudio b
 		}
 	}
 
+	onProgress("下载完成")
 	return nil
 }
 

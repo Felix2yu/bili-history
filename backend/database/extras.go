@@ -442,6 +442,8 @@ func SaveFavoriteFolders(folders []FavoriteFolder) error {
 }
 
 // SaveFavoriteContents upserts contents for a specific media_id into the local favorites DB.
+// Existing records are updated in place; new records are inserted. Local records
+// not present in the given list are kept (incremental merge, no pruning).
 func SaveFavoriteContents(mediaID int64, contents []FavoriteContent) error {
 	db := GetFavoritesDB()
 	if db == nil {
@@ -473,7 +475,6 @@ func SaveFavoriteContents(mediaID int64, contents []FavoriteContent) error {
 	}
 	defer stmt.Close()
 
-	liveIDs := make([]int64, 0, len(contents))
 	for _, c := range contents {
 		_, err := stmt.Exec(c.MediaID, c.ContentID, c.Type, c.Title, c.Cover, c.Bvid, c.Intro,
 			c.Page, c.Duration, c.UpperMid, c.Attr, c.Ctime, c.Pubtime, c.FavTime, c.Link, now,
@@ -482,25 +483,6 @@ func SaveFavoriteContents(mediaID int64, contents []FavoriteContent) error {
 		if err != nil {
 			utils.LogError("Failed to upsert favorite content %d/%d: %v", c.MediaID, c.ContentID, err)
 			continue
-		}
-		liveIDs = append(liveIDs, c.ContentID)
-	}
-
-	if len(liveIDs) > 0 {
-		placeholders := make([]string, len(liveIDs))
-		args := make([]interface{}, 0, len(liveIDs)+1)
-		args = append(args, mediaID)
-		for i, id := range liveIDs {
-			placeholders[i] = "?"
-			args = append(args, id)
-		}
-		query := "DELETE FROM favorites_content WHERE media_id = ? AND content_id NOT IN (" + strings.Join(placeholders, ",") + ")"
-		if _, err := tx.Exec(query, args...); err != nil {
-			utils.LogError("Failed to prune stale favorite contents: %v", err)
-		}
-	} else {
-		if _, err := tx.Exec("DELETE FROM favorites_content WHERE media_id = ?", mediaID); err != nil {
-			utils.LogError("Failed to clear favorite contents for media %d: %v", mediaID, err)
 		}
 	}
 

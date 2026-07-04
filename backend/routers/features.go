@@ -354,8 +354,51 @@ func syncFavorites(c *gin.Context) {
 			LikeState:  f.LikeState,
 		})
 	}
+	// Update covers for folders that have no cover: use first content item's cover
+	for i := range folders {
+		if folders[i].Cover != "" {
+			continue
+		}
+		if folders[i].MediaCount == 0 {
+			continue
+		}
+		res, err := client.GetFavoriteResources(folders[i].MediaID, 1, 1)
+		if err == nil && len(res.Media) > 0 && res.Media[0].Cover != "" {
+			folders[i].Cover = res.Media[0].Cover
+		}
+	}
 	if err := database.SaveFavoriteFolders(folders); err != nil {
 		_ = err // non-fatal
+	}
+
+	// Diff: delete local folders no longer in remote list
+	remoteMediaIDs := make(map[int64]bool, len(folders))
+	for _, f := range folders {
+		remoteMediaIDs[f.MediaID] = true
+	}
+	db := database.GetFavoritesDB()
+	if db != nil {
+		localRows, err := db.Query("SELECT media_id FROM favorites_folder")
+		if err == nil {
+			defer localRows.Close()
+			var staleIDs []int64
+			for localRows.Next() {
+				var mid int64
+				if localRows.Scan(&mid) == nil && !remoteMediaIDs[mid] {
+					staleIDs = append(staleIDs, mid)
+				}
+			}
+			if len(staleIDs) > 0 {
+				placeholders := make([]string, len(staleIDs))
+				args := make([]interface{}, len(staleIDs))
+				for i, id := range staleIDs {
+					placeholders[i] = "?"
+					args[i] = id
+				}
+				db.Exec("DELETE FROM favorites_folder WHERE media_id IN ("+strings.Join(placeholders, ",")+")", args...)
+				db.Exec("DELETE FROM favorites_content WHERE media_id IN ("+strings.Join(placeholders, ",")+")", args...)
+			}
+		}
 	}
 
 	// Fetch contents for each folder (max 500 items per folder)

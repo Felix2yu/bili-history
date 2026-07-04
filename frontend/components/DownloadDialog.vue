@@ -12,7 +12,7 @@
 
       <!-- 弹窗内容 -->
       <div
-        class="relative bg-white dark:bg-gray-800 rounded-none md:rounded-lg shadow-xl w-full h-full md:w-[96vw] max-w-5xl md:h-[95vh] z-10 overflow-hidden flex flex-col">
+        class="relative bg-white dark:bg-gray-800 rounded-none md:rounded-lg shadow-xl w-full h-auto md:w-[480px] md:max-h-[80vh] z-10 overflow-hidden flex flex-col">
         <!-- 关闭按钮 -->
         <button
           @click="handleClose"
@@ -23,79 +23,31 @@
           </svg>
         </button>
 
-        <!-- 页眉区域：包含Lux致谢和FFmpeg状态 -->
+        <!-- 页眉区域：包含bili-dl致谢和FFmpeg状态 -->
         <div
-          class="px-3 md:px-6 py-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 space-x-2">
+          class="px-3 md:px-6 py-2 flex items-center justify-between bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 space-x-2">
           <div class="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
             <div class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-[#fb7299] font-bold text-lg">👾</div>
             <div class="flex flex-col">
-              <p class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">下载功能基于 <a href="https://github.com/iawia002/lux"
+              <p class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">下载功能基于 <a href="https://github.com/Felix2yu/bili-dl"
                                                                                    target="_blank"
-                                                                                   class="text-[#fb7299] hover:text-[#fb7299]/80 font-medium">Lux</a>
+                                                                                   class="text-[#fb7299] hover:text-[#fb7299]/80 font-medium">bili-dl</a>
               </p>
-              <p class="hidden md:block text-xs text-gray-500 dark:text-gray-400">感谢 Lux 开发团队的开源贡献</p>
             </div>
           </div>
 
           <!-- FFmpeg 状态 -->
-          <div v-if="ffmpegStatus" class="flex-shrink min-w-0 md:flex-shrink-0 ml-1">
-            <div v-if="ffmpegStatus.installed"
-                 class="flex items-center space-x-1 p-1 md:p-1.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-[10px] md:text-xs min-w-0">
-              <svg class="w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <div class="min-w-0 flex-1">
-                <p class="font-medium whitespace-nowrap">FFmpeg 已安装</p>
-                <p class="text-[9px] md:text-xs truncate w-full">{{ ffmpegStatus.version }}</p>
-              </div>
-            </div>
-            <div v-else class="group relative">
-              <div class="flex flex-col space-y-1">
-                <div
-                  class="flex items-center space-x-1 p-1 md:p-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-[10px] md:text-xs">
-                  <svg class="w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  <p class="font-medium">FFmpeg 未安装</p>
-                </div>
-                <div class="text-xs text-gray-600 dark:text-gray-400">
-                  <p>
-                    <a
-                      href="https://ffmpeg.org/download.html"
-                      target="_blank"
-                      class="text-[#fb7299] hover:text-[#fb7299]/80">
-                      点击查看FFmpeg安装说明 →
-                    </a>
-                  </p>
-                </div>
-              </div>
-              <div class="hidden group-hover:block hover:block absolute right-0 top-full h-2 w-full"></div>
-              <div
-                class="hidden group-hover:block hover:block absolute right-0 top-[calc(100%+0.5rem)] w-[500px] p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-30 text-xs">
-                <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">安装指南：</p>
-                <div v-if="ffmpegStatus?.install_guide" class="space-y-1 whitespace-pre-wrap">
-                  <div v-for="(line, index) in installGuideLines" :key="index" class="flex items-start space-x-1">
-                    <template v-if="isCommand(line)">
-                      <div class="flex-1 bg-gray-50 dark:bg-gray-900 p-1.5 rounded break-all">
-                        <code class="text-gray-700 dark:text-gray-300">{{ getCommandContent(line) }}</code>
-                      </div>
-                      <button @click="copyToClipboard(getCommandContent(line))"
-                              class="text-[#fb7299] hover:text-[#fb7299]/80 p-1 rounded-md hover:bg-[#fb7299]/10 flex-shrink-0"
-                              title="点击复制命令">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                        </svg>
-                      </button>
-                    </template>
-                    <template v-else>
-                      <p class="text-gray-600 dark:text-gray-400 break-all">{{ line }}</p>
-                    </template>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div v-if="ffmpegStatus" class="flex-shrink min-w-0 ml-1">
+            <span v-if="ffmpegStatus.installed"
+                  class="inline-flex items-center space-x-1 px-2 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded text-[10px] md:text-xs">
+              <span>FFmpeg</span>
+              <span>✓</span>
+            </span>
+            <a v-else href="https://ffmpeg.org/download.html" target="_blank"
+               class="inline-flex items-center space-x-1 px-2 py-0.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-[10px] md:text-xs hover:underline">
+              <span>FFmpeg</span>
+              <span>✗</span>
+            </a>
           </div>
         </div>
 
@@ -128,166 +80,54 @@
 
             <!-- 视频信息 -->
             <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 md:p-4 mb-3 md:mb-4 shadow-sm">
-              <div class="flex items-start space-x-3 md:space-x-4">
-                <div class="w-24 h-[54px] md:w-32 md:h-20 flex-shrink-0 bg-black overflow-hidden rounded-md md:rounded-lg">
-                  <img :src="normalizeImageUrl(currentVideoCover)" :alt="currentVideoTitle"
-                       class="w-full h-full object-cover transition-transform hover:scale-105">
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p v-if="!isFavoriteFolder" class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                    UP主：{{ props.isBatchDownload ? currentVideoAuthor : props.videoInfo.author || '未知' }}</p>
-                  <p v-if="!isFavoriteFolder" class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                    BV号：{{ props.isBatchDownload ? currentVideoBvid : props.videoInfo.bvid || '未知' }}</p>
-
-                  <!-- 基础下载选项 -->
-                  <div class="flex flex-wrap gap-2 md:gap-4 items-center mt-2 md:mt-3">
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="downloadCover"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                      >
-                      <span class="text-xs md:text-sm text-gray-700 dark:text-gray-300">下载并合成封面</span>
-                    </label>
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="onlyAudio"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                      >
-                      <span class="text-xs md:text-sm text-gray-700 dark:text-gray-300">仅下载音频</span>
-                    </label>
-                  </div>
-                </div>
+              <!-- 封面图 -->
+              <div class="w-full h-32 md:h-40 bg-black overflow-hidden rounded-md md:rounded-lg mb-3">
+                <img :src="normalizeImageUrl(currentVideoCover)" :alt="currentVideoTitle"
+                     class="w-full h-full object-cover transition-transform hover:scale-105">
+              </div>
+              <!-- 视频信息 -->
+              <div class="space-y-1">
+                <p v-if="!isFavoriteFolder" class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate">
+                  UP主：{{ props.isBatchDownload ? currentVideoAuthor : props.videoInfo.author || '未知' }}</p>
+                <p v-if="!isFavoriteFolder" class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate">
+                  BV号：{{ props.isBatchDownload ? currentVideoBvid : props.videoInfo.bvid || '未知' }}</p>
               </div>
             </div>
 
-            <!-- 高级选项切换按钮 -->
-            <div v-if="!showAdvancedOptions" class="mb-2">
-              <button
-                @click="showAdvancedOptions = true"
-                class="w-full flex items-center justify-center py-2 px-3 text-xs md:py-2.5 md:px-4 md:text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group shadow-sm"
-              >
-                <div class="flex items-center space-x-2 md:space-x-3">
-                  <svg class="w-4 h-4 md:w-5 md:h-5 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span class="font-medium text-gray-700 dark:text-gray-300">高级下载选项</span>
-                  <div class="flex-grow"></div>
-                  <div class="flex items-center space-x-1 text-[10px] md:text-xs text-[#fb7299]">
-                    <span>展开</span>
-                    <svg class="w-3.5 h-3.5 md:w-4 md:h-4 transform transition-transform group-hover:translate-y-0.5 duration-300"
-                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              </button>
-            </div>
-
-            <!-- 高级下载选项区域 -->
-            <div
-              class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-2 overflow-hidden shadow-sm transition-all duration-300"
-              :class="{
- 'max-h-[1000px] opacity-100': showAdvancedOptions,
- 'max-h-0 opacity-0 border-0': !showAdvancedOptions
- }"
-            >
-              <!-- 高级选项标题 -->
-              <div class="bg-gray-50 dark:bg-gray-700 p-2 md:p-3 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
-                <div class="flex items-center space-x-1.5 md:space-x-2">
-                  <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <h4 class="text-xs md:text-sm font-medium text-gray-800 dark:text-gray-200">高级下载选项</h4>
-                </div>
-
-                <!-- 隐藏按钮 -->
-                <button
-                  @click="showAdvancedOptions = false"
-                  class="flex items-center space-x-1 px-2 py-1 md:px-2.5 md:py-1.5 rounded-md text-[10px] md:text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-[#fb7299] transition-all duration-200 group"
+            <!-- 下载选项 -->
+            <div class="flex flex-wrap gap-2 md:gap-3 items-center mb-2">
+              <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  v-model="onlyAudio"
+                  class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
                 >
-                  <span>收起选项</span>
-                  <svg class="w-3.5 h-3.5 md:w-4 md:h-4 transition-transform group-hover:-translate-y-0.5 duration-300" fill="none"
-                       viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                  </svg>
-                </button>
-              </div>
+                <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">仅下载音频</span>
+              </label>
 
-              <div class="p-2 md:p-3">
-                <!-- 下载参数区块 -->
-                <div class="mb-3">
-                  <h5 class="text-[10px] md:text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 md:mb-2 uppercase tracking-wide flex items-center">
-                    <svg class="w-3 h-3 mr-1 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    下载设置
-                  </h5>
-                  <div class="grid grid-cols-2 gap-2 md:gap-3">
-                    <!-- 多线程下载 -->
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="advancedOptions.multi_thread"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                      >
-                      <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">多线程下载</span>
-                    </label>
-
-                    <!-- 画质选择 -->
-                    <div>
-                      <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-0.5 md:mb-1">
-                        画质选择
-                        <span v-if="loadingStreams" class="text-[#fb7299] ml-1">加载中...</span>
-                      </label>
-                      <CustomDropdown
-                        v-model="advancedOptions.stream_id"
-                        :options="streamOptions"
-                        :selected-text="getStreamText(advancedOptions.stream_id)"
-                        custom-class="w-full text-xs"
-                        :disabled="loadingStreams"
-                      />
-                    </div>
-                  </div>
-                  <div class="text-gray-500 dark:text-gray-400 mt-1.5 md:mt-2 text-[9px] md:text-[10px]">
-                    * 弹窗打开时自动获取可用画质，Lux 会自动选择最佳画质
-                  </div>
-                </div>
+              <!-- 画质选择 -->
+              <div class="flex-1 min-w-[150px]" v-if="streamOptions.length > 1">
+                <select v-model="selectedStreamId"
+                        class="w-full text-[10px] md:text-xs px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-[#fb7299]">
+                  <option v-for="opt in streamOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
               </div>
             </div>
 
             <!-- 下载日志 -->
             <div
-              class="w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-2 pb-0 font-mono text-[10px] md:text-[11px] overflow-y-auto border border-gray-200 dark:border-gray-700"
-              :class="showAdvancedOptions ? 'h-[calc(100vh-588px)] min-h-[130px]' : 'h-[calc(100vh-418px)] min-h-[180px]'"
+              v-if="downloadStarted"
+              class="w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-2 pb-0 font-mono text-[10px] md:text-[11px] overflow-y-auto border border-gray-200 dark:border-gray-700 h-[80px]"
               ref="logContainer">
-              <div v-if="!downloadStarted" class="text-gray-500 dark:text-gray-400 flex items-center justify-center h-full">
-                <div class="text-center">
-                  <svg class="w-6 h-6 md:w-8 md:h-8 mx-auto mb-1 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24"
-                       stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <p class="text-[10px] md:text-xs">点击下方按钮开始下载...</p>
-                </div>
-              </div>
-              <div v-else>
-                <div v-for="(log, index) in downloadLogs" :key="index" class="whitespace-pre break-all leading-5 py-0.5 last:pb-0"
-                     :class="{
+              <div v-for="(log, index) in downloadLogs" :key="index" class="whitespace-pre break-all leading-5 py-0.5 last:pb-0"
+                   :class="{
 'text-gray-600 dark:text-gray-300': !log.includes('ERROR') && !log.includes('下载完成') && !log.includes('WARN'),
 'text-red-500 dark:text-red-400': log.includes('ERROR'),
 'text-green-500 dark:text-green-400': log.includes('下载完成'),
 'text-yellow-500 dark:text-yellow-400': log.includes('WARN'),
 }">{{ log }}
-                </div>
               </div>
             </div>
           </div>
@@ -396,10 +236,12 @@ const downloadStarted = ref(false)
 const isDownloading = ref(false)
 const downloadError = ref(false)
 const downloadLogs = ref([])
-// 控制高级选项的显示状态
-const showAdvancedOptions = ref(false)
-// 视频流信息加载状态
-const loadingStreams = ref(false)
+
+// 添加日志（过滤掉"下载完成"，由状态栏统一显示）
+const addLog = (content) => {
+  if (content === '下载完成') return
+  downloadLogs.value.push(content)
+}
 
 // 下载状态文本
 const downloadStatus = computed(() => {
@@ -445,15 +287,13 @@ const checkFFmpegStatus = async () => {
 }
 
 // 下载封面选项
-const downloadCover = ref(true)
+const downloadCover = ref(false)
 // 仅下载音频选项
 const onlyAudio = ref(false)
-// 高级选项
-const advancedOptions = ref({
-  multi_thread: true,
-  thread_number: 10,
-  stream_id: null,
-})
+
+// 画质选择
+const streamOptions = ref([])
+const selectedStreamId = ref(null)
 
 // 当前正在下载的视频信息
 const currentVideoTitle = ref('')
@@ -746,19 +586,12 @@ watch(() => props.show, async (isVisible) => {
     currentVideoIndex.value = -1
     favoriteVideos.value = []
 
-    // 如果已有 streams 信息，直接填充
-    if (props.videoInfo.streams && props.videoInfo.streams.length > 0) {
-      streamOptions.value = [
-        { label: '自动选择最佳画质', value: null },
-        ...props.videoInfo.streams.map(s => ({
-          label: `${s.quality} (${s.ext}) - ${(s.size / 1024 / 1024).toFixed(1)}MB`,
-          value: s.id,
-        })),
-      ]
-    }
-    // 单个视频下载时，自动获取视频信息（包含可用画质）
-    else if (props.videoInfo.bvid && !props.videoInfo.is_user_videos && !props.videoInfo.is_collection_download && !props.isBatchDownload && !isFavoriteFolder.value) {
-      loadingStreams.value = true
+    // 重置画质选择
+    streamOptions.value = [{ label: '自动选择最佳画质', value: null }]
+    selectedStreamId.value = null
+
+    // 获取视频流信息
+    if (props.videoInfo.bvid && !props.videoInfo.is_user_videos && !props.videoInfo.is_collection_download && !props.isBatchDownload && !isFavoriteFolder.value) {
       try {
         const url = `https://www.bilibili.com/video/${props.videoInfo.bvid}`
         const response = await getVideoInfo({ url })
@@ -768,7 +601,7 @@ watch(() => props.show, async (isVisible) => {
             streamOptions.value = [
               { label: '自动选择最佳画质', value: null },
               ...data.streams.map(s => ({
-                label: `${s.quality} (${s.ext}) - ${(s.size / 1024 / 1024).toFixed(1)}MB`,
+                label: s.quality,
                 value: s.id,
               })),
             ]
@@ -777,8 +610,6 @@ watch(() => props.show, async (isVisible) => {
         }
       } catch (error) {
         console.error('获取视频流信息失败:', error)
-      } finally {
-        loadingStreams.value = false
       }
     }
 
@@ -803,7 +634,6 @@ const resetState = () => {
   isDownloading.value = false
   downloadError.value = false
   downloadLogs.value = []
-  loadingStreams.value = false
   currentVideoTitle.value = props.videoInfo.title
   currentVideoCover.value = props.videoInfo.pic || props.videoInfo.cover
   currentVideoAuthor.value = props.videoInfo.author || ''
@@ -811,15 +641,10 @@ const resetState = () => {
   videoTitles.value = []
   currentVideoIndex.value = -1
   favoriteVideos.value = []
-  // 重置高级选项的显示状态
-  showAdvancedOptions.value = true
 
-  // 重置高级选项
-  advancedOptions.value = {
-    multi_thread: true,
-    thread_number: 10,
-    stream_id: null,
-  }
+  // 重置画质选择
+  streamOptions.value = [{ label: '自动选择最佳画质', value: null }]
+  selectedStreamId.value = null
 }
 
 // 显示下载完成通知
@@ -848,9 +673,6 @@ const startDownload = async () => {
     isDownloading.value = true
     downloadError.value = false
     downloadLogs.value = []
-
-    // 隐藏高级选项，让日志显示在更靠上的位置
-    showAdvancedOptions.value = false
 
     // 首次显示正在使用预加载的视频
     if (isFavoriteFolder.value && favoriteVideos.value.length > 0) {
@@ -891,7 +713,7 @@ const startDownload = async () => {
         ...advancedOptions.value,
       }, (content) => {
         console.log('收到用户视频下载消息:', content)
-        downloadLogs.value.push(content)
+        addLog(content)
 
         // 检查是否为视频标题信息 [n/5] 视频标题
         const upVideoTitleMatch = content.match(/\[(\d+)\/(\d+)\]\s+(.+)/)
@@ -974,7 +796,7 @@ const startDownload = async () => {
         ...advancedOptions.value,
       }, (content) => {
         console.log('收到收藏夹下载消息:', content)
-        downloadLogs.value.push(content)
+        addLog(content)
 
         // 检查下载状态
         if (content.includes('下载完成') && !content.includes('INFO')) {
@@ -1014,7 +836,7 @@ const startDownload = async () => {
         ...advancedOptions.value,
       }, (content) => {
         console.log('收到批量下载消息:', content)
-        downloadLogs.value.push(content)
+        addLog(content)
 
         // 检查是否包含当前下载的视频信息
         const currentVideoMatch = content.match(/正在下载第\s+(\d+)\/(\d+)\s+个视频:\s+(.+)/)
@@ -1075,7 +897,7 @@ const startDownload = async () => {
         ...advancedOptions.value,
       }, (content) => {
         console.log('收到合集下载消息:', content)
-        downloadLogs.value.push(content)
+        addLog(content)
 
         // 检查下载状态
         if (content.includes('下载完成')) {
@@ -1100,7 +922,7 @@ const startDownload = async () => {
         null,
         (content) => {
           console.log('收到消息:', content)
-          downloadLogs.value.push(content)
+          addLog(content)
 
           // 检查下载状态
           if (content.includes('下载完成')) {
@@ -1121,8 +943,8 @@ const startDownload = async () => {
         downloadCover.value,
         onlyAudio.value,
         props.videoInfo.cid,
-        // 添加高级选项
-        advancedOptions.value,
+        // 画质选择
+        { stream_id: selectedStreamId.value },
       )
     }
   } catch (error) {
@@ -1227,18 +1049,6 @@ const isCommand = (line) => {
 // 获取命令内容
 const getCommandContent = (line) => {
   return line.trim()
-}
-
-// 下拉菜单选项定义 (Lux 兼容)
-const streamOptions = ref([
-  { label: '自动选择最佳画质', value: null },
-])
-
-// 获取选项文本的方法
-const getStreamText = (value) => {
-  if (!value) return '自动选择最佳画质'
-  const option = streamOptions.value.find(opt => opt.value === value)
-  return option ? option.label : value
 }
 </script>
 

@@ -3,10 +3,10 @@ module bilibili-history-go
 go 1.26.0
 
 require (
+	github.com/Felix2yu/bili-dl v1.0.0
 	github.com/containrrr/shoutrrr v0.8.0
 	github.com/gin-contrib/cors v1.7.7
 	github.com/gin-gonic/gin v1.12.0
-	github.com/iawia002/lux v0.24.1
 	github.com/mattn/go-sqlite3 v1.14.47
 	github.com/xuri/excelize/v2 v2.10.1
 	gopkg.in/yaml.v3 v3.0.1

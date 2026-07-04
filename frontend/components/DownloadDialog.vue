@@ -80,51 +80,40 @@
 
             <!-- 视频信息 -->
             <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 md:p-4 mb-3 md:mb-4 shadow-sm">
-              <div class="flex items-start space-x-3 md:space-x-4">
-                <div class="w-24 h-[54px] md:w-32 md:h-20 flex-shrink-0 bg-black overflow-hidden rounded-md md:rounded-lg">
-                  <img :src="normalizeImageUrl(currentVideoCover)" :alt="currentVideoTitle"
-                       class="w-full h-full object-cover transition-transform hover:scale-105">
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p v-if="!isFavoriteFolder" class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                    UP主：{{ props.isBatchDownload ? currentVideoAuthor : props.videoInfo.author || '未知' }}</p>
-                  <p v-if="!isFavoriteFolder" class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                    BV号：{{ props.isBatchDownload ? currentVideoBvid : props.videoInfo.bvid || '未知' }}</p>
-
-                  <!-- 基础下载选项 -->
-                  <div class="flex flex-wrap gap-2 md:gap-4 items-center mt-2 md:mt-3">
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="downloadCover"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                      >
-                      <span class="text-xs md:text-sm text-gray-700 dark:text-gray-300">下载并合成封面</span>
-                    </label>
-                    <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        v-model="onlyAudio"
-                        class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                      >
-                      <span class="text-xs md:text-sm text-gray-700 dark:text-gray-300">仅下载音频</span>
-                    </label>
-                  </div>
-                </div>
+              <!-- 封面图 -->
+              <div class="w-full h-32 md:h-40 bg-black overflow-hidden rounded-md md:rounded-lg mb-3">
+                <img :src="normalizeImageUrl(currentVideoCover)" :alt="currentVideoTitle"
+                     class="w-full h-full object-cover transition-transform hover:scale-105">
+              </div>
+              <!-- 视频信息 -->
+              <div class="space-y-1">
+                <p v-if="!isFavoriteFolder" class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate">
+                  UP主：{{ props.isBatchDownload ? currentVideoAuthor : props.videoInfo.author || '未知' }}</p>
+                <p v-if="!isFavoriteFolder" class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate">
+                  BV号：{{ props.isBatchDownload ? currentVideoBvid : props.videoInfo.bvid || '未知' }}</p>
               </div>
             </div>
 
-            <!-- 画质选择 -->
-            <div class="mb-2" v-if="streamOptions.length > 1">
-              <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-1">
-                画质选择
+            <!-- 下载选项 -->
+            <div class="flex flex-wrap gap-2 md:gap-3 items-center mb-2">
+              <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  v-model="onlyAudio"
+                  class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
+                >
+                <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">仅下载音频</span>
               </label>
-              <select v-model="selectedStreamId"
-                      class="w-full text-xs md:text-sm px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-[#fb7299]">
-                <option v-for="opt in streamOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
+
+              <!-- 画质选择 -->
+              <div class="flex-1 min-w-[150px]" v-if="streamOptions.length > 1">
+                <select v-model="selectedStreamId"
+                        class="w-full text-[10px] md:text-xs px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-[#fb7299]">
+                  <option v-for="opt in streamOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </div>
             </div>
 
             <!-- 下载日志 -->
@@ -292,7 +281,7 @@ const checkFFmpegStatus = async () => {
 }
 
 // 下载封面选项
-const downloadCover = ref(true)
+const downloadCover = ref(false)
 // 仅下载音频选项
 const onlyAudio = ref(false)
 

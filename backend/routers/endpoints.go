@@ -63,7 +63,7 @@ func init() {
 		OperationID: "get_available_years",
 	})
 	RegisterEndpointMeta("GET", "/history/all", EndpointMeta{
-		Summary:     "分页获取历史记录列表",
+		Summary:     "分页查询历史记录（支持按标签/分类/日期/业务类型筛选）",
 		Tags:        tagHistory,
 		OperationID: "get_history_all",
 	})
@@ -73,7 +73,7 @@ func init() {
 		OperationID: "search_history",
 	})
 	RegisterEndpointMeta("POST", "/history/reset-database", EndpointMeta{
-		Summary:     "重置历史数据库",
+		Summary:     "清空并重建所有历史记录表（不可恢复）",
 		Tags:        tagHistory,
 		OperationID: "reset_database",
 	})
@@ -87,8 +87,23 @@ func init() {
 		Tags:        tagHistory,
 		OperationID: "get_video_by_cid",
 	})
+	RegisterEndpointMeta("POST", "/history/batch-remarks", EndpointMeta{
+		Summary:     "批量获取用户备注",
+		Tags:        tagHistory,
+		OperationID: "batch_get_remarks",
+	})
+	RegisterEndpointMeta("POST", "/history/check-deleted", EndpointMeta{
+		Summary:     "检测B站视频是否已删除",
+		Tags:        tagHistory,
+		OperationID: "check_deleted_videos",
+	})
+	RegisterEndpointMeta("POST", "/history/deleted-status", EndpointMeta{
+		Summary:     "获取视频删除状态缓存",
+		Tags:        tagHistory,
+		OperationID: "get_deleted_status",
+	})
 	RegisterEndpointMeta("GET", "/daily/daily-count", EndpointMeta{
-		Summary:     "获取每日观看统计",
+		Summary:     "获取指定日期的观看次数和总时长",
 		Tags:        tagHistory,
 		OperationID: "get_daily_count",
 	})
@@ -122,7 +137,7 @@ func init() {
 		OperationID: "generate_qrcode",
 	})
 	RegisterEndpointMeta("GET", "/login/qrcode/image", EndpointMeta{
-		Summary:     "获取二维码图片",
+		Summary:     "获取二维码图片（暂未实现）",
 		Tags:        tagLogin,
 		OperationID: "get_qrcode_image",
 	})
@@ -142,24 +157,24 @@ func init() {
 		OperationID: "check_login",
 	})
 	RegisterEndpointMeta("GET", "/login/check-and-notify", EndpointMeta{
-		Summary:     "检查登录状态并发送通知",
+		Summary:     "检查登录状态并发送通知（暂未实现）",
 		Tags:        tagLogin,
 		OperationID: "check_and_notify",
 	})
 
 	// ========== 数据分析 ==========
 	RegisterEndpointMeta("POST", "/analysis/analyze", EndpointMeta{
-		Summary:     "执行年度历史数据分析",
+		Summary:     "分析指定年份的完整观看数据（含月度/时段/分类等）",
 		Tags:        tagAnalysis,
 		OperationID: "analyze_history",
 	})
 	RegisterEndpointMeta("GET", "/daily/stats", EndpointMeta{
-		Summary:     "获取每日统计数据",
+		Summary:     "获取指定日期（MMDD格式）的观看详情",
 		Tags:        tagAnalysis,
 		OperationID: "get_daily_stats",
 	})
 	RegisterEndpointMeta("POST", "/heatmap/generate_heatmap", EndpointMeta{
-		Summary:     "生成观看热力图",
+		Summary:     "生成观看热力图（待实现）",
 		Tags:        tagAnalysis,
 		OperationID: "generate_heatmap",
 	})
@@ -169,7 +184,7 @@ func init() {
 		OperationID: "get_heatmap_data",
 	})
 	RegisterEndpointMeta("GET", "/viewing/stats", EndpointMeta{
-		Summary:     "获取观看统计总览（旧版）",
+		Summary:     "获取观看统计概要（旧版）",
 		Tags:        tagAnalysis,
 		OperationID: "get_viewing_stats",
 	})
@@ -232,43 +247,33 @@ func init() {
 		Tags:        tagFavorite,
 		OperationID: "get_favorite_list",
 	})
-	RegisterEndpointMeta("GET", "/favorite/folder/created/list-all", EndpointMeta{
-		Summary:     "获取创建的收藏夹列表",
-		Tags:        tagFavorite,
-		OperationID: "get_favorite_folder_list",
-	})
-	RegisterEndpointMeta("GET", "/favorite/folder/collected/list", EndpointMeta{
+	RegisterEndpointMeta("GET", "/favorite/collected/list", EndpointMeta{
 		Summary:     "获取收藏的收藏夹列表",
 		Tags:        tagFavorite,
 		OperationID: "get_collected_favorite_folders",
 	})
-	RegisterEndpointMeta("GET", "/favorite/folder/resource/list", EndpointMeta{
+	RegisterEndpointMeta("GET", "/favorite/content/list", EndpointMeta{
 		Summary:     "获取收藏夹内容列表",
 		Tags:        tagFavorite,
-		OperationID: "get_favorite_folder_contents",
-	})
-	RegisterEndpointMeta("GET", "/favorite/content/list", EndpointMeta{
-		Summary:     "获取本地收藏内容",
-		Tags:        tagFavorite,
-		OperationID: "get_local_favorite_contents",
+		OperationID: "get_favorite_contents",
 	})
 	RegisterEndpointMeta("POST", "/favorite/sync", EndpointMeta{
-		Summary:     "同步收藏数据",
+		Summary:     "同步收藏数据（待实现）",
 		Tags:        tagFavorite,
 		OperationID: "sync_favorites",
 	})
 	RegisterEndpointMeta("POST", "/favorite/resource/deal", EndpointMeta{
-		Summary:     "收藏/取消收藏单个视频",
+		Summary:     "收藏/取消收藏单个视频（待实现）",
 		Tags:        tagFavorite,
 		OperationID: "favorite_resource",
 	})
 	RegisterEndpointMeta("POST", "/favorite/resource/batch-deal", EndpointMeta{
-		Summary:     "批量收藏/取消收藏视频",
+		Summary:     "批量收藏/取消收藏视频（待实现）",
 		Tags:        tagFavorite,
 		OperationID: "batch_favorite_resource",
 	})
 	RegisterEndpointMeta("POST", "/favorite/resource/local-batch-deal", EndpointMeta{
-		Summary:     "本地批量处理收藏",
+		Summary:     "本地批量处理收藏（待实现）",
 		Tags:        tagFavorite,
 		OperationID: "local_batch_favorite_resource",
 	})
@@ -280,7 +285,7 @@ func init() {
 
 	// ========== 点赞 ==========
 	RegisterEndpointMeta("GET", "/like/list", EndpointMeta{
-		Summary:     "获取点赞列表",
+		Summary:     "获取B站点赞列表",
 		Tags:        tagFavorite,
 		OperationID: "get_like_list",
 	})
@@ -290,14 +295,14 @@ func init() {
 		OperationID: "get_like_local",
 	})
 	RegisterEndpointMeta("POST", "/like/sync", EndpointMeta{
-		Summary:     "同步点赞数据",
+		Summary:     "同步点赞数据（待实现）",
 		Tags:        tagFavorite,
 		OperationID: "sync_likes",
 	})
 
 	// ========== 稍后再看 ==========
 	RegisterEndpointMeta("GET", "/watchlater/list", EndpointMeta{
-		Summary:     "获取稍后再看列表",
+		Summary:     "获取稍后再看列表（同步远程并缓存本地）",
 		Tags:        tagFavorite,
 		OperationID: "get_watchlater_list",
 	})
@@ -354,14 +359,14 @@ func init() {
 		OperationID: "delete_dynamic_space",
 	})
 	RegisterEndpointMeta("GET", "/dynamic/list", EndpointMeta{
-		Summary:     "获取动态列表(旧)",
+		Summary:     "获取动态列表（旧版，已废弃）",
 		Tags:        tagFavorite,
-		OperationID: "get_dynamic_list",
+		OperationID: "get_dynamic_list_legacy",
 	})
 	RegisterEndpointMeta("POST", "/dynamic/sync", EndpointMeta{
-		Summary:     "同步动态数据(旧)",
+		Summary:     "同步动态数据（旧版，已废弃）",
 		Tags:        tagFavorite,
-		OperationID: "sync_dynamic",
+		OperationID: "sync_dynamic_legacy",
 	})
 
 	// ========== 系统配置 ==========
@@ -390,16 +395,129 @@ func init() {
 		Tags:        tagConfig,
 		OperationID: "save_server_config",
 	})
-	// Python 兼容别名
-	RegisterEndpointMeta("GET", "/config/apprise-config", EndpointMeta{
-		Summary:     "获取Shoutrrr配置（Python兼容别名）",
-		Tags:        tagConfig,
-		OperationID: "get_shoutrrr_config_alias",
+
+	// ========== 日志管理 ==========
+	RegisterEndpointMeta("POST", "/log/send", EndpointMeta{
+		Summary:     "发送每日报告（Shoutrrr）",
+		Tags:        tagLog,
+		OperationID: "send_daily_report",
 	})
-	RegisterEndpointMeta("POST", "/config/apprise-config", EndpointMeta{
-		Summary:     "保存Shoutrrr配置（Python兼容别名）",
-		Tags:        tagConfig,
-		OperationID: "save_shoutrrr_config_alias",
+	RegisterEndpointMeta("GET", "/log/list", EndpointMeta{
+		Summary:     "获取日志列表（待实现）",
+		Tags:        tagLog,
+		OperationID: "get_log_list",
+	})
+
+	// ========== 数据导出 ==========
+	RegisterEndpointMeta("POST", "/export/excel", EndpointMeta{
+		Summary:     "导出历史记录到Excel（待实现）",
+		Tags:        tagExport,
+		OperationID: "export_to_excel",
+	})
+
+	// ========== 数据导入 ==========
+	RegisterEndpointMeta("POST", "/importMysql/start", EndpointMeta{
+		Summary:     "从MySQL导入数据（待实现）",
+		Tags:        tagImport,
+		OperationID: "import_from_mysql",
+	})
+	RegisterEndpointMeta("GET", "/importMysql/status", EndpointMeta{
+		Summary:     "获取MySQL导入状态（待实现）",
+		Tags:        tagImport,
+		OperationID: "get_import_mysql_status",
+	})
+	RegisterEndpointMeta("POST", "/importSqlite/start", EndpointMeta{
+		Summary:     "从SQLite导入数据（待实现）",
+		Tags:        tagImport,
+		OperationID: "import_from_sqlite",
+	})
+	RegisterEndpointMeta("GET", "/importSqlite/status", EndpointMeta{
+		Summary:     "获取SQLite导入状态（待实现）",
+		Tags:        tagImport,
+		OperationID: "get_import_sqlite_status",
+	})
+
+	// ========== 数据清理 ==========
+	RegisterEndpointMeta("POST", "/clean/start", EndpointMeta{
+		Summary:     "开始清理无效数据",
+		Tags:        tagClean,
+		OperationID: "clean_data",
+	})
+	RegisterEndpointMeta("GET", "/clean/status", EndpointMeta{
+		Summary:     "获取清理任务状态",
+		Tags:        tagClean,
+		OperationID: "get_clean_status",
+	})
+
+	// ========== 删除操作 ==========
+	RegisterEndpointMeta("POST", "/delete/history", EndpointMeta{
+		Summary:     "删除历史记录（待实现）",
+		Tags:        tagDelete,
+		OperationID: "delete_history_records",
+	})
+	RegisterEndpointMeta("DELETE", "/delete/batch-delete", EndpointMeta{
+		Summary:     "批量删除历史记录（待实现）",
+		Tags:        tagDelete,
+		OperationID: "batch_delete_history",
+	})
+	RegisterEndpointMeta("POST", "/bilibili/history/delete", EndpointMeta{
+		Summary:     "删除B站历史记录（待实现）",
+		Tags:        tagDelete,
+		OperationID: "delete_bili_history",
+	})
+	RegisterEndpointMeta("GET", "/bilibili/history/status", EndpointMeta{
+		Summary:     "获取删除任务状态（待实现）",
+		Tags:        tagDelete,
+		OperationID: "get_delete_bili_status",
+	})
+	RegisterEndpointMeta("DELETE", "/bilibili/history/single", EndpointMeta{
+		Summary:     "删除单条B站历史记录（待实现）",
+		Tags:        tagDelete,
+		OperationID: "delete_single_bili_history",
+	})
+	RegisterEndpointMeta("DELETE", "/bilibili/history/batch", EndpointMeta{
+		Summary:     "批量删除B站历史记录（待实现）",
+		Tags:        tagDelete,
+		OperationID: "delete_batch_bili_history",
+	})
+
+	// ========== 标题分析 ==========
+	RegisterEndpointMeta("GET", "/title/stats", EndpointMeta{
+		Summary:     "标题统计分析（待实现）",
+		Tags:        tagTitle,
+		OperationID: "get_title_stats",
+	})
+	RegisterEndpointMeta("GET", "/title/patterns", EndpointMeta{
+		Summary:     "标题模式分析（待实现）",
+		Tags:        tagTitle,
+		OperationID: "get_title_patterns",
+	})
+	RegisterEndpointMeta("GET", "/title/sentiment", EndpointMeta{
+		Summary:     "标题情感分析（待实现）",
+		Tags:        tagTitle,
+		OperationID: "get_title_sentiment",
+	})
+	RegisterEndpointMeta("GET", "/title/length", EndpointMeta{
+		Summary:     "标题长度分析（待实现）",
+		Tags:        tagTitle,
+		OperationID: "get_title_length_analysis",
+	})
+	RegisterEndpointMeta("GET", "/title/trend", EndpointMeta{
+		Summary:     "标题趋势分析（待实现）",
+		Tags:        tagTitle,
+		OperationID: "get_title_trend",
+	})
+
+	// ========== 互动记录 ==========
+	RegisterEndpointMeta("GET", "/interactions/list", EndpointMeta{
+		Summary:     "获取互动记录列表（待实现）",
+		Tags:        tagInteraction,
+		OperationID: "get_interaction_records",
+	})
+	RegisterEndpointMeta("POST", "/interactions/sync", EndpointMeta{
+		Summary:     "同步互动记录（待实现）",
+		Tags:        tagInteraction,
+		OperationID: "sync_interaction_records",
 	})
 
 	// ========== 计划任务 ==========
@@ -500,78 +618,20 @@ func init() {
 		Tags:        tagDataSync,
 		OperationID: "sync_data",
 	})
-
-	// ========== 数据导出 ==========
-	RegisterEndpointMeta("POST", "/export/excel", EndpointMeta{
-		Summary:     "导出历史记录到Excel",
-		Tags:        tagExport,
-		OperationID: "export_to_excel",
+	RegisterEndpointMeta("GET", "/data_sync/sync/result", EndpointMeta{
+		Summary:     "获取上次同步结果",
+		Tags:        tagDataSync,
+		OperationID: "get_sync_result",
 	})
-
-	// ========== 数据导入 ==========
-	RegisterEndpointMeta("POST", "/importMysql/start", EndpointMeta{
-		Summary:     "从MySQL导入数据",
-		Tags:        tagImport,
-		OperationID: "import_from_mysql",
-	})
-	RegisterEndpointMeta("GET", "/importMysql/status", EndpointMeta{
-		Summary:     "获取MySQL导入状态",
-		Tags:        tagImport,
-		OperationID: "get_import_mysql_status",
-	})
-	RegisterEndpointMeta("POST", "/importSqlite/start", EndpointMeta{
-		Summary:     "从SQLite导入数据",
-		Tags:        tagImport,
-		OperationID: "import_from_sqlite",
-	})
-	RegisterEndpointMeta("GET", "/importSqlite/status", EndpointMeta{
-		Summary:     "获取SQLite导入状态",
-		Tags:        tagImport,
-		OperationID: "get_import_sqlite_status",
-	})
-	RegisterEndpointMeta("POST", "/importSqlite/import_data_sqlite", EndpointMeta{
-		Summary:     "导入SQLite数据（Python兼容）",
-		Tags:        tagImport,
-		OperationID: "import_from_sqlite_alias",
-	})
-
-	// ========== 数据清理 ==========
-	RegisterEndpointMeta("POST", "/clean/start", EndpointMeta{
-		Summary:     "开始清理无效数据",
-		Tags:        tagClean,
-		OperationID: "clean_data",
-	})
-	RegisterEndpointMeta("GET", "/clean/status", EndpointMeta{
-		Summary:     "获取清理任务状态",
-		Tags:        tagClean,
-		OperationID: "get_clean_status",
-	})
-	RegisterEndpointMeta("POST", "/clean/clean_data", EndpointMeta{
-		Summary:     "清理数据（Python兼容）",
-		Tags:        tagClean,
-		OperationID: "clean_data_alias",
-	})
-
-	// ========== 日志管理 ==========
-	RegisterEndpointMeta("POST", "/log/send", EndpointMeta{
-		Summary:     "发送每日报告（Shoutrrr）",
-		Tags:        tagLog,
-		OperationID: "send_daily_report",
-	})
-	RegisterEndpointMeta("GET", "/log/list", EndpointMeta{
-		Summary:     "获取日志列表",
-		Tags:        tagLog,
-		OperationID: "get_log_list",
-	})
-	RegisterEndpointMeta("POST", "/log/send-email", EndpointMeta{
-		Summary:     "发送每日报告（Python兼容）",
-		Tags:        tagLog,
-		OperationID: "send_daily_report_alias",
+	RegisterEndpointMeta("GET", "/data_sync/report", EndpointMeta{
+		Summary:     "获取数据完整性报告",
+		Tags:        tagDataSync,
+		OperationID: "get_integrity_report",
 	})
 
 	// ========== 数据抓取 ==========
 	RegisterEndpointMeta("POST", "/fetch/start", EndpointMeta{
-		Summary:     "开始抓取B站历史记录",
+		Summary:     "开始抓取B站历史记录（旧版）",
 		Tags:        tagFetch,
 		OperationID: "fetch_bili_history",
 	})
@@ -581,17 +641,17 @@ func init() {
 		OperationID: "get_fetch_status",
 	})
 	RegisterEndpointMeta("GET", "/fetch/bili-history-realtime", EndpointMeta{
-		Summary:     "实时获取最新历史记录",
+		Summary:     "增量获取最新观看记录",
 		Tags:        tagFetch,
 		OperationID: "fetch_bili_history_realtime",
 	})
 	RegisterEndpointMeta("GET", "/fetch/bili-history", EndpointMeta{
-		Summary:     "获取完整B站历史记录",
+		Summary:     "全量获取B站历史记录",
 		Tags:        tagFetch,
 		OperationID: "fetch_bili_history_full",
 	})
 	RegisterEndpointMeta("POST", "/fetch/bili-history", EndpointMeta{
-		Summary:     "获取完整B站历史记录（POST）",
+		Summary:     "全量获取B站历史记录（POST）",
 		Tags:        tagFetch,
 		OperationID: "fetch_bili_history_full_post",
 	})
@@ -601,56 +661,24 @@ func init() {
 		OperationID: "get_invalid_videos",
 	})
 
-	// ========== 删除操作 ==========
-	RegisterEndpointMeta("POST", "/delete/history", EndpointMeta{
-		Summary:     "删除历史记录",
-		Tags:        tagDelete,
-		OperationID: "delete_history_records",
-	})
-	RegisterEndpointMeta("DELETE", "/delete/batch-delete", EndpointMeta{
-		Summary:     "批量删除历史记录",
-		Tags:        tagDelete,
-		OperationID: "batch_delete_history",
-	})
-	RegisterEndpointMeta("POST", "/bilibili/history/delete", EndpointMeta{
-		Summary:     "删除B站历史记录",
-		Tags:        tagDelete,
-		OperationID: "delete_bili_history",
-	})
-	RegisterEndpointMeta("GET", "/bilibili/history/status", EndpointMeta{
-		Summary:     "获取删除任务状态",
-		Tags:        tagDelete,
-		OperationID: "get_delete_bili_status",
-	})
-	RegisterEndpointMeta("DELETE", "/bilibili/history/single", EndpointMeta{
-		Summary:     "删除单条B站历史记录",
-		Tags:        tagDelete,
-		OperationID: "delete_single_bili_history",
-	})
-	RegisterEndpointMeta("DELETE", "/bilibili/history/batch", EndpointMeta{
-		Summary:     "批量删除B站历史记录",
-		Tags:        tagDelete,
-		OperationID: "delete_batch_bili_history",
-	})
-
 	// ========== 视频详情 ==========
 	RegisterEndpointMeta("GET", "/video_details/fetch/:bvid", EndpointMeta{
-		Summary:     "抓取单个视频详情",
+		Summary:     "从B站抓取单个视频详情并保存",
 		Tags:        tagVideo,
 		OperationID: "fetch_video_detail",
 	})
 	RegisterEndpointMeta("GET", "/video_details/info/:bvid", EndpointMeta{
-		Summary:     "获取视频详情信息",
+		Summary:     "从数据库获取视频详情",
 		Tags:        tagVideo,
 		OperationID: "get_video_info",
 	})
 	RegisterEndpointMeta("GET", "/video_details/search", EndpointMeta{
-		Summary:     "搜索视频",
+		Summary:     "搜索视频详情",
 		Tags:        tagVideo,
 		OperationID: "search_videos",
 	})
 	RegisterEndpointMeta("POST", "/video_details/batch_fetch", EndpointMeta{
-		Summary:     "批量抓取视频详情",
+		Summary:     "按BVID列表批量抓取视频详情",
 		Tags:        tagVideo,
 		OperationID: "batch_fetch_video_details",
 	})
@@ -660,12 +688,12 @@ func init() {
 		OperationID: "batch_fetch_from_history",
 	})
 	RegisterEndpointMeta("GET", "/video_details/stats", EndpointMeta{
-		Summary:     "视频统计信息",
+		Summary:     "获取视频详情表统计（已抓取数/总数/最近更新）",
 		Tags:        tagVideo,
 		OperationID: "get_video_stats",
 	})
 	RegisterEndpointMeta("GET", "/video_details/database_stats", EndpointMeta{
-		Summary:     "数据库统计信息",
+		Summary:     "获取 video_base_info 表的详细统计",
 		Tags:        tagVideo,
 		OperationID: "get_database_stats",
 	})
@@ -699,6 +727,11 @@ func init() {
 		Tags:        tagVideo,
 		OperationID: "get_video_detail_progress",
 	})
+	RegisterEndpointMeta("POST", "/video_details/sync_tag_names", EndpointMeta{
+		Summary:     "同步历史记录中的分区标签名称",
+		Tags:        tagVideo,
+		OperationID: "sync_history_tag_names",
+	})
 
 	// ========== 图片管理 ==========
 	RegisterEndpointMeta("POST", "/images/start", EndpointMeta{
@@ -730,45 +763,6 @@ func init() {
 		Summary:     "图片代理（转发B站CDN）",
 		Tags:        tagImage,
 		OperationID: "proxy_image",
-	})
-
-	// ========== 标题分析 ==========
-	RegisterEndpointMeta("GET", "/title/stats", EndpointMeta{
-		Summary:     "标题统计分析",
-		Tags:        tagTitle,
-		OperationID: "get_title_stats",
-	})
-	RegisterEndpointMeta("GET", "/title/patterns", EndpointMeta{
-		Summary:     "标题模式分析",
-		Tags:        tagTitle,
-		OperationID: "get_title_patterns",
-	})
-	RegisterEndpointMeta("GET", "/title/sentiment", EndpointMeta{
-		Summary:     "标题情感分析",
-		Tags:        tagTitle,
-		OperationID: "get_title_sentiment",
-	})
-	RegisterEndpointMeta("GET", "/title/length", EndpointMeta{
-		Summary:     "标题长度分析",
-		Tags:        tagTitle,
-		OperationID: "get_title_length_analysis",
-	})
-	RegisterEndpointMeta("GET", "/title/trend", EndpointMeta{
-		Summary:     "标题趋势分析",
-		Tags:        tagTitle,
-		OperationID: "get_title_trend",
-	})
-
-	// ========== 互动记录 ==========
-	RegisterEndpointMeta("GET", "/interactions/list", EndpointMeta{
-		Summary:     "获取互动记录列表",
-		Tags:        tagInteraction,
-		OperationID: "get_interaction_records",
-	})
-	RegisterEndpointMeta("POST", "/interactions/sync", EndpointMeta{
-		Summary:     "同步互动记录",
-		Tags:        tagInteraction,
-		OperationID: "sync_interaction_records",
 	})
 
 	// ========== 视频下载 ==========

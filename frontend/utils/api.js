@@ -1100,7 +1100,7 @@ export const updateAppearanceConfig = (params) => {
  * @returns {Promise<Object>} 收藏夹列表
  */
 export const getCreatedFavoriteFolders = (params = {}) => {
-  return instance.get('/favorite/folder/created/list-all', { params })
+  return instance.get('/favorite/list', { params })
 }
 
 /**
@@ -1114,7 +1114,7 @@ export const getCreatedFavoriteFolders = (params = {}) => {
  * @returns {Promise<Object>} 收藏夹列表
  */
 export const getCollectedFavoriteFolders = (params = {}) => {
-  return instance.get('/favorite/folder/collected/list', { params })
+  return instance.get('/favorite/collected/list', { params })
 }
 
 /**
@@ -1132,7 +1132,7 @@ export const getCollectedFavoriteFolders = (params = {}) => {
  * @returns {Promise<Object>} 收藏夹内容列表
  */
 export const getFavoriteContents = (params = {}) => {
-  return instance.get('/favorite/folder/resource/list', { params })
+  return instance.get('/favorite/content/list', { params })
 }
 
 /**

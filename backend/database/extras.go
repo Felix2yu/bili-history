@@ -75,10 +75,98 @@ CREATE INDEX IF NOT EXISTS idx_wl_tid ON watchlater_videos(tid);
 CREATE INDEX IF NOT EXISTS idx_wl_fetch_time ON watchlater_videos(fetch_time);
 `
 
+const favoritesFolderSchema = `
+CREATE TABLE IF NOT EXISTS favorites_folder (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    media_id INTEGER NOT NULL UNIQUE,
+    fid INTEGER DEFAULT 0,
+    mid INTEGER DEFAULT 0,
+    title TEXT,
+    cover TEXT,
+    attr INTEGER DEFAULT 0,
+    intro TEXT,
+    ctime INTEGER DEFAULT 0,
+    mtime INTEGER DEFAULT 0,
+    state INTEGER DEFAULT 0,
+    media_count INTEGER DEFAULT 0,
+    fav_state INTEGER DEFAULT 0,
+    like_state INTEGER DEFAULT 0,
+    fetch_time INTEGER NOT NULL
+);
+`
+
+const favoritesContentSchema = `
+CREATE TABLE IF NOT EXISTS favorites_content (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    media_id INTEGER NOT NULL,
+    content_id INTEGER DEFAULT 0,
+    type INTEGER DEFAULT 0,
+    title TEXT,
+    cover TEXT,
+    bvid TEXT,
+    intro TEXT,
+    page INTEGER DEFAULT 0,
+    duration INTEGER DEFAULT 0,
+    upper_mid INTEGER DEFAULT 0,
+    attr INTEGER DEFAULT 0,
+    ctime INTEGER DEFAULT 0,
+    pubtime INTEGER DEFAULT 0,
+    fav_time INTEGER DEFAULT 0,
+    link TEXT,
+    fetch_time INTEGER NOT NULL,
+    creator_name TEXT,
+    creator_face TEXT,
+    bv_id TEXT,
+    collect INTEGER DEFAULT 0,
+    play INTEGER DEFAULT 0,
+    danmaku INTEGER DEFAULT 0,
+    play_switch INTEGER DEFAULT 0,
+    reply INTEGER DEFAULT 0,
+    view_text_1 TEXT,
+    first_cid INTEGER DEFAULT 0,
+    media_list_link TEXT,
+    UNIQUE(media_id, content_id)
+);
+CREATE INDEX IF NOT EXISTS idx_fc_media_id ON favorites_content(media_id);
+CREATE INDEX IF NOT EXISTS idx_fc_bvid ON favorites_content(bvid);
+`
+
+const likedVideosSchema = `
+CREATE TABLE IF NOT EXISTS liked_videos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bvid TEXT NOT NULL UNIQUE,
+    aid INTEGER DEFAULT 0,
+    title TEXT,
+    pic TEXT,
+    desc TEXT,
+    duration INTEGER DEFAULT 0,
+    tid INTEGER DEFAULT 0,
+    tname TEXT,
+    owner_name TEXT,
+    owner_mid INTEGER DEFAULT 0,
+    owner_face TEXT,
+    pubdate INTEGER DEFAULT 0,
+    view INTEGER DEFAULT 0,
+    danmaku INTEGER DEFAULT 0,
+    like_count INTEGER DEFAULT 0,
+    link TEXT,
+    fetch_time INTEGER NOT NULL,
+    is_seen INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_lv_bvid ON liked_videos(bvid);
+CREATE INDEX IF NOT EXISTS idx_lv_fetch_time ON liked_videos(fetch_time);
+`
+
 func GetLikesDB() *sql.DB {
 	likesOnce.Do(func() {
+		db := getExtraDB("bilibili_likes.db")
+		if db != nil {
+			if _, err := db.Exec(likedVideosSchema); err != nil {
+				utils.LogError("Failed to ensure likes schema: %v", err)
+			}
+		}
 		likesDB = &ExtraDB{
-			db: getExtraDB("bilibili_likes.db"),
+			db: db,
 		}
 	})
 	if likesDB == nil {
@@ -107,8 +195,17 @@ func GetWatchLaterDB() *sql.DB {
 
 func GetFavoritesDB() *sql.DB {
 	favoritesOnce.Do(func() {
+		db := getExtraDB("bilibili_favorites.db")
+		if db != nil {
+			if _, err := db.Exec(favoritesFolderSchema); err != nil {
+				utils.LogError("Failed to ensure favorites folder schema: %v", err)
+			}
+			if _, err := db.Exec(favoritesContentSchema); err != nil {
+				utils.LogError("Failed to ensure favorites content schema: %v", err)
+			}
+		}
 		favoritesDB = &ExtraDB{
-			db: getExtraDB("bilibili_favorites.db"),
+			db: db,
 		}
 	})
 	if favoritesDB == nil {
@@ -285,6 +382,193 @@ func GetLikedVideos(page, size int, sort, order string) ([]map[string]interface{
 	}
 
 	return results, total, nil
+}
+
+// SaveFavoriteFolders upserts folders into the local favorites DB, matched by media_id.
+func SaveFavoriteFolders(folders []FavoriteFolder) error {
+	db := GetFavoritesDB()
+	if db == nil {
+		return fmt.Errorf("favorites database not available")
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	now := time.Now().Unix()
+	stmt, err := tx.Prepare(`INSERT INTO favorites_folder
+		(media_id, fid, mid, title, cover, attr, intro, ctime, mtime, state, media_count, fav_state, like_state, fetch_time)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(media_id) DO UPDATE SET
+			fid=excluded.fid, mid=excluded.mid, title=excluded.title, cover=excluded.cover,
+			attr=excluded.attr, intro=excluded.intro, ctime=excluded.ctime, mtime=excluded.mtime,
+			state=excluded.state, media_count=excluded.media_count, fav_state=excluded.fav_state,
+			like_state=excluded.like_state, fetch_time=excluded.fetch_time`)
+	if err != nil {
+		return fmt.Errorf("prepare stmt: %w", err)
+	}
+	defer stmt.Close()
+
+	liveIDs := make([]int64, 0, len(folders))
+	for _, f := range folders {
+		_, err := stmt.Exec(f.MediaID, f.Fid, f.Mid, f.Title, f.Cover, f.Attr, f.Intro,
+			f.Ctime, f.Mtime, f.State, f.MediaCount, f.FavState, f.LikeState, now)
+		if err != nil {
+			utils.LogError("Failed to upsert favorite folder %d: %v", f.MediaID, err)
+			continue
+		}
+		liveIDs = append(liveIDs, f.MediaID)
+	}
+
+	if len(liveIDs) > 0 {
+		placeholders := make([]string, len(liveIDs))
+		args := make([]interface{}, len(liveIDs))
+		for i, id := range liveIDs {
+			placeholders[i] = "?"
+			args[i] = id
+		}
+		query := "DELETE FROM favorites_folder WHERE media_id NOT IN (" + strings.Join(placeholders, ",") + ")"
+		if _, err := tx.Exec(query, args...); err != nil {
+			utils.LogError("Failed to prune stale favorite folders: %v", err)
+		}
+	} else {
+		if _, err := tx.Exec("DELETE FROM favorites_folder"); err != nil {
+			utils.LogError("Failed to clear favorite folders: %v", err)
+		}
+	}
+
+	return tx.Commit()
+}
+
+// SaveFavoriteContents upserts contents for a specific media_id into the local favorites DB.
+func SaveFavoriteContents(mediaID int64, contents []FavoriteContent) error {
+	db := GetFavoritesDB()
+	if db == nil {
+		return fmt.Errorf("favorites database not available")
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	now := time.Now().Unix()
+	stmt, err := tx.Prepare(`INSERT INTO favorites_content
+		(media_id, content_id, type, title, cover, bvid, intro, page, duration, upper_mid, attr,
+		 ctime, pubtime, fav_time, link, fetch_time, creator_name, creator_face, bv_id,
+		 collect, play, danmaku, play_switch, reply, view_text_1, first_cid, media_list_link)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(media_id, content_id) DO UPDATE SET
+			type=excluded.type, title=excluded.title, cover=excluded.cover, bvid=excluded.bvid,
+			intro=excluded.intro, page=excluded.page, duration=excluded.duration, upper_mid=excluded.upper_mid,
+			attr=excluded.attr, ctime=excluded.ctime, pubtime=excluded.pubtime, fav_time=excluded.fav_time,
+			link=excluded.link, fetch_time=excluded.fetch_time, creator_name=excluded.creator_name,
+			creator_face=excluded.creator_face, bv_id=excluded.bv_id, collect=excluded.collect,
+			play=excluded.play, danmaku=excluded.danmaku, play_switch=excluded.play_switch,
+			reply=excluded.reply, view_text_1=excluded.view_text_1, first_cid=excluded.first_cid,
+			media_list_link=excluded.media_list_link`)
+	if err != nil {
+		return fmt.Errorf("prepare stmt: %w", err)
+	}
+	defer stmt.Close()
+
+	liveIDs := make([]int64, 0, len(contents))
+	for _, c := range contents {
+		_, err := stmt.Exec(c.MediaID, c.ContentID, c.Type, c.Title, c.Cover, c.Bvid, c.Intro,
+			c.Page, c.Duration, c.UpperMid, c.Attr, c.Ctime, c.Pubtime, c.FavTime, c.Link, now,
+			c.CreatorName, c.CreatorFace, c.BvID, c.Collect, c.Play, c.Danmaku, c.PlaySwitch,
+			c.Reply, c.ViewText1, c.FirstCid, c.MediaListLink)
+		if err != nil {
+			utils.LogError("Failed to upsert favorite content %d/%d: %v", c.MediaID, c.ContentID, err)
+			continue
+		}
+		liveIDs = append(liveIDs, c.ContentID)
+	}
+
+	if len(liveIDs) > 0 {
+		placeholders := make([]string, len(liveIDs))
+		args := make([]interface{}, 0, len(liveIDs)+1)
+		args = append(args, mediaID)
+		for i, id := range liveIDs {
+			placeholders[i] = "?"
+			args = append(args, id)
+		}
+		query := "DELETE FROM favorites_content WHERE media_id = ? AND content_id NOT IN (" + strings.Join(placeholders, ",") + ")"
+		if _, err := tx.Exec(query, args...); err != nil {
+			utils.LogError("Failed to prune stale favorite contents: %v", err)
+		}
+	} else {
+		if _, err := tx.Exec("DELETE FROM favorites_content WHERE media_id = ?", mediaID); err != nil {
+			utils.LogError("Failed to clear favorite contents for media %d: %v", mediaID, err)
+		}
+	}
+
+	return tx.Commit()
+}
+
+// SaveLikedVideos upserts liked videos into the local DB, matched by bvid.
+func SaveLikedVideos(videos []LikeVideo) error {
+	db := GetLikesDB()
+	if db == nil {
+		return fmt.Errorf("likes database not available")
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	now := time.Now().Unix()
+	stmt, err := tx.Prepare(`INSERT INTO liked_videos
+		(bvid, aid, title, pic, desc, duration, tid, tname, owner_name, owner_mid, owner_face,
+		 pubdate, view, danmaku, like_count, link, fetch_time, is_seen)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(bvid) DO UPDATE SET
+			aid=excluded.aid, title=excluded.title, pic=excluded.pic, desc=excluded.desc,
+			duration=excluded.duration, tid=excluded.tid, tname=excluded.tname,
+			owner_name=excluded.owner_name, owner_mid=excluded.owner_mid, owner_face=excluded.owner_face,
+			pubdate=excluded.pubdate, view=excluded.view, danmaku=excluded.danmaku,
+			like_count=excluded.like_count, link=excluded.link, fetch_time=excluded.fetch_time`)
+	if err != nil {
+		return fmt.Errorf("prepare stmt: %w", err)
+	}
+	defer stmt.Close()
+
+	liveBvids := make([]string, 0, len(videos))
+	for _, v := range videos {
+		if v.Bvid == "" {
+			continue
+		}
+		link := "https://www.bilibili.com/video/" + v.Bvid
+		_, err := stmt.Exec(v.Bvid, v.Aid, v.Title, v.Pic, v.Desc, v.Duration, v.Tid, v.Tname,
+			v.OwnerName, v.OwnerMid, v.OwnerFace, v.Pubdate, v.View, v.Danmaku, v.LikeCount,
+			link, now, v.IsSeen)
+		if err != nil {
+			utils.LogError("Failed to upsert liked video %s: %v", v.Bvid, err)
+			continue
+		}
+		liveBvids = append(liveBvids, v.Bvid)
+	}
+
+	if len(liveBvids) > 0 {
+		placeholders := make([]string, len(liveBvids))
+		args := make([]interface{}, len(liveBvids))
+		for i, b := range liveBvids {
+			placeholders[i] = "?"
+			args[i] = b
+		}
+		query := "DELETE FROM liked_videos WHERE bvid NOT IN (" + strings.Join(placeholders, ",") + ")"
+		if _, err := tx.Exec(query, args...); err != nil {
+			utils.LogError("Failed to prune stale liked videos: %v", err)
+		}
+	} else {
+		if _, err := tx.Exec("DELETE FROM liked_videos"); err != nil {
+			utils.LogError("Failed to clear liked videos: %v", err)
+		}
+	}
+
+	return tx.Commit()
 }
 
 func GetWatchLaterVideos(page, size int, sort, order string) ([]map[string]interface{}, int, error) {

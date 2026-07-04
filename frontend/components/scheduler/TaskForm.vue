@@ -314,6 +314,9 @@ const handleApiSelect = (endpoint) => {
   form.endpoint = endpointPath
   form.method = endpoint.method || 'GET'
   form.task_id = endpoint.operationId || endpoint.id || ''
+  if (!form.name.trim()) {
+    form.name = endpoint.name || endpoint.summary || ''
+  }
 }
 
 const loadEndpoints = async () => {

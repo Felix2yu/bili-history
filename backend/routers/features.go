@@ -20,9 +20,7 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 	favorite := r.Group("/favorite")
 	{
 		favorite.GET("/list", getFavoriteList)
-		favorite.GET("/folder/created/list-all", getFavoriteFolderList)
-		favorite.GET("/folder/collected/list", getCollectedFavoriteFolders)
-		favorite.GET("/folder/resource/list", getFavoriteFolderContents)
+		favorite.GET("/collected/list", getCollectedFavoriteFolders)
 		favorite.GET("/content/list", getLocalFavoriteContents)
 		favorite.POST("/sync", syncFavorites)
 		favorite.POST("/resource/deal", favoriteResource)
@@ -125,25 +123,6 @@ func getCollectedFavoriteFolders(c *gin.Context) {
 	}))
 }
 
-func getFavoriteFolderContents(c *gin.Context) {
-	mediaIDStr := c.Query("media_id")
-	mediaID, _ := strconv.ParseInt(mediaIDStr, 10, 64)
-	pn, _ := strconv.Atoi(c.DefaultQuery("pn", "1"))
-	ps, _ := strconv.Atoi(c.DefaultQuery("ps", "20"))
-
-	list, total, err := database.GetFavoriteContents(mediaID, pn, ps)
-	if err != nil {
-		c.JSON(http.StatusOK, models.ErrorResponse("获取收藏夹内容失败: "+err.Error()))
-		return
-	}
-
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":     list,
-		"total":    total,
-		"has_more": total > pn*ps,
-	}))
-}
-
 func getLocalFavoriteContents(c *gin.Context) {
 	mediaIDStr := c.Query("media_id")
 	mediaID, _ := strconv.ParseInt(mediaIDStr, 10, 64)
@@ -165,24 +144,147 @@ func getLocalFavoriteContents(c *gin.Context) {
 }
 
 func favoriteResource(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "收藏操作功能待实现",
-	})
+	cfg := config.GetConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("未配置 SESSDATA，无法操作收藏"))
+		return
+	}
+
+	var body struct {
+		Resources    string `json:"resources"`
+		MediaIDs     string `json:"media_ids"`
+		Type         int    `json:"type"`
+		Rid          int64  `json:"rid"`
+		AddMediaIDs  string `json:"add_media_ids"`
+		DelMediaIDs  string `json:"del_media_ids"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+
+	// Support both formats: resources/media_ids or rid/type/add_media_ids/del_media_ids
+	if body.Resources != "" && body.MediaIDs != "" {
+		if err := client.DealFavoriteResource(body.Resources, body.MediaIDs); err != nil {
+			if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+				c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+				return
+			}
+			c.JSON(http.StatusOK, models.ErrorResponse("收藏操作失败: "+err.Error()))
+			return
+		}
+	} else if body.Rid > 0 && (body.AddMediaIDs != "" || body.DelMediaIDs != "") {
+		resources := fmt.Sprintf("%d:%d", body.Rid, body.Type)
+		mediaIDs := body.AddMediaIDs
+		if mediaIDs == "" {
+			mediaIDs = body.DelMediaIDs
+		}
+		if err := client.DealFavoriteResource(resources, mediaIDs); err != nil {
+			if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+				c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+				return
+			}
+			c.JSON(http.StatusOK, models.ErrorResponse("收藏操作失败: "+err.Error()))
+			return
+		}
+	} else {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("缺少必要参数"))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"message": "操作成功",
+	}))
 }
 
 func batchFavoriteResource(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "批量收藏功能待实现",
-	})
+	cfg := config.GetConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("未配置 SESSDATA，无法操作收藏"))
+		return
+	}
+
+	var body struct {
+		Resources string `json:"resources"`
+		MediaIDs  string `json:"media_ids"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	if body.Resources == "" || body.MediaIDs == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("resources 和 media_ids 不能为空"))
+		return
+	}
+
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+	if err := client.DealFavoriteResource(body.Resources, body.MediaIDs); err != nil {
+		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+			return
+		}
+		c.JSON(http.StatusOK, models.ErrorResponse("批量收藏操作失败: "+err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"message": "操作成功",
+	}))
 }
 
 func localBatchFavoriteResource(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "本地批量收藏功能待实现",
-	})
+	db := database.GetFavoritesDB()
+	if db == nil {
+		c.JSON(http.StatusOK, models.ErrorResponse("收藏数据库不可用"))
+		return
+	}
+
+	var body struct {
+		MediaID int64    `json:"media_id"`
+		Bvids   []string `json:"bvids"`
+		Action  string   `json:"action"` // "add" or "remove"
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	if body.MediaID == 0 || len(body.Bvids) == 0 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("media_id 和 bvids 不能为空"))
+		return
+	}
+
+	affected := 0
+	if body.Action == "remove" {
+		for _, bvid := range body.Bvids {
+			result, err := db.Exec("DELETE FROM favorites_content WHERE media_id = ? AND bvid = ?", body.MediaID, bvid)
+			if err != nil {
+				continue
+			}
+			n, _ := result.RowsAffected()
+			affected += int(n)
+		}
+	} else {
+		// add: insert placeholder entries (user can sync later to fill details)
+		for _, bvid := range body.Bvids {
+			_, err := db.Exec(`INSERT OR IGNORE INTO favorites_content
+				(media_id, content_id, bvid, type, fetch_time)
+				VALUES (?, 0, ?, 2, ?)`,
+				body.MediaID, bvid, time.Now().Unix())
+			if err != nil {
+				continue
+			}
+			affected++
+		}
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"affected": affected,
+		"message":  "操作成功",
+	}))
 }
 
 func getFavoriteList(c *gin.Context) {
@@ -213,25 +315,116 @@ func getFavoriteList(c *gin.Context) {
 	}))
 }
 
-func getFavoriteFolderList(c *gin.Context) {
-	list, count, err := database.GetFavoriteFolders(true)
+func syncFavorites(c *gin.Context) {
+	cfg := config.GetConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("未配置 SESSDATA，无法同步收藏夹"))
+		return
+	}
+
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+
+	// Fetch folder list
+	folderData, err := client.GetFavoriteFolderList()
 	if err != nil {
+		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+			return
+		}
 		c.JSON(http.StatusOK, models.ErrorResponse("获取收藏夹列表失败: "+err.Error()))
 		return
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":   list,
-		"count":  count,
-		"season": []interface{}{},
-	}))
-}
+	// Save folders locally
+	folders := make([]database.FavoriteFolder, 0, len(folderData.List))
+	for _, f := range folderData.List {
+		folders = append(folders, database.FavoriteFolder{
+			MediaID:    f.ID,
+			Fid:        f.Fid,
+			Mid:        f.Mid,
+			Title:      f.Title,
+			Cover:      f.Cover,
+			Attr:       f.Attr,
+			Intro:      f.Intro,
+			Ctime:      f.Ctime,
+			Mtime:      f.Mtime,
+			State:      f.State,
+			MediaCount: f.MediaCount,
+			FavState:   f.FavState,
+			LikeState:  f.LikeState,
+		})
+	}
+	if err := database.SaveFavoriteFolders(folders); err != nil {
+		_ = err // non-fatal
+	}
 
-func syncFavorites(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "收藏夹同步功能待实现",
-	})
+	// Fetch contents for each folder (max 500 items per folder)
+	totalContents := 0
+	for _, folder := range folders {
+		if folder.MediaCount == 0 {
+			continue
+		}
+		maxItems := 500
+		for pn := 1; pn*20 < maxItems; pn++ {
+			res, err := client.GetFavoriteResources(folder.MediaID, pn, 20)
+			if err != nil {
+				break
+			}
+			if len(res.Media) == 0 {
+				break
+			}
+			contents := make([]database.FavoriteContent, 0, len(res.Media))
+			for _, item := range res.Media {
+			bvid := ""
+			if item.UGC != nil {
+				bvid = item.UGC.Bvid
+			}
+			var statView, statDanmaku, statReply, statFavorite int
+			if item.Stat != nil {
+				statView = item.Stat.View
+				statDanmaku = item.Stat.Danmaku
+				statReply = item.Stat.Reply
+				statFavorite = item.Stat.Favorite
+			}
+				contents = append(contents, database.FavoriteContent{
+					MediaID:     folder.MediaID,
+					ContentID:   item.ID,
+					Type:        item.Type,
+					Title:       item.Title,
+					Cover:       item.Cover,
+					Bvid:        bvid,
+					Intro:       item.Intro,
+					Page:        item.Page,
+					Duration:    item.Duration,
+					UpperMid:    item.Upper.Mid,
+					Attr:        item.Attr,
+					Ctime:       item.Ctime,
+					Pubtime:     item.Pubtime,
+					FavTime:     item.FavTime,
+					CreatorName: item.Upper.Name,
+					CreatorFace: item.Upper.Face,
+					BvID:        bvid,
+					Collect:     statFavorite,
+					Play:        statView,
+					Danmaku:     statDanmaku,
+					Reply:       statReply,
+					FirstCid:    item.Cid,
+				})
+			}
+			if err := database.SaveFavoriteContents(folder.MediaID, contents); err != nil {
+				_ = err
+			}
+			totalContents += len(contents)
+			if res.Page.Total <= pn*res.Page.Size {
+				break
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"folders_count":  len(folders),
+		"contents_total": totalContents,
+	}))
 }
 
 func getLikeList(c *gin.Context) {
@@ -276,10 +469,68 @@ func getLikeLocal(c *gin.Context) {
 }
 
 func syncLikes(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "点赞同步功能待实现",
-	})
+	cfg := config.GetConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("未配置 SESSDATA，无法同步点赞"))
+		return
+	}
+
+	vmid, _ := strconv.ParseInt(cfg.DedeUserID, 10, 64)
+	if vmid == 0 {
+		c.JSON(http.StatusOK, models.ErrorResponse("未配置 DedeUserID"))
+		return
+	}
+
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+
+	var allVideos []database.LikeVideo
+	for pn := 1; pn <= 25; pn++ { // max 500 videos (20 per page)
+		res, err := client.GetLikedVideos(vmid, pn, 20)
+		if err != nil {
+			if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+				c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+				return
+			}
+			if pn == 1 {
+				c.JSON(http.StatusOK, models.ErrorResponse("获取点赞列表失败: "+err.Error()))
+				return
+			}
+			break
+		}
+		if len(res.List) == 0 {
+			break
+		}
+		for _, item := range res.List {
+			allVideos = append(allVideos, database.LikeVideo{
+				Bvid:      item.Bvid,
+				Aid:       item.Aid,
+				Title:     item.Title,
+				Pic:       item.Pic,
+				Desc:      item.Desc,
+				Duration:  item.Duration,
+				Tid:       item.Tid,
+				Tname:     item.Tname,
+				OwnerName: item.Owner.Name,
+				OwnerMid:  int64(item.Owner.Mid),
+				OwnerFace: item.Owner.Face,
+				Pubdate:   item.Pubdate,
+				View:      item.Stat.View,
+				Danmaku:   item.Stat.Danmaku,
+				LikeCount: item.Stat.Like,
+			})
+		}
+		if res.Page.Total <= pn*20 {
+			break
+		}
+	}
+
+	if err := database.SaveLikedVideos(allVideos); err != nil {
+		_ = err // non-fatal
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"total": len(allVideos),
+	}))
 }
 
 func getWatchLaterList(c *gin.Context) {

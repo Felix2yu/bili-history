@@ -144,6 +144,10 @@ const props = defineProps({
   searchPlaceholder: {
     type: String,
     default: '搜索...'
+  },
+  descriptionField: {
+    type: String,
+    default: 'description'
   }
 })
 
@@ -159,11 +163,12 @@ watch(() => props.selected, (newVal) => {
 }, { immediate: true })
 
 const formatTaskItem = (task) => {
+  const descField = props.descriptionField
   const formattedTask = {
     id: task.id || task.operationId || task.path,
     path: task.path || '',
     name: task.name || task.summary || task.path,
-    description: task.description || task.path,
+    description: task[descField] || task.description || task.path,
     method: task.method || 'GET',
     tags: Array.isArray(task.tags) ? task.tags : [],
     enabled: task.enabled,
@@ -181,9 +186,10 @@ const filteredGroupedItems = computed(() => {
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(item => 
+    filtered = filtered.filter(item =>
       (item.name && item.name.toLowerCase().includes(query)) ||
-      (item.description && item.description.toLowerCase().includes(query))
+      (item.description && item.description.toLowerCase().includes(query)) ||
+      (item.path && item.path.toLowerCase().includes(query))
     )
   }
 

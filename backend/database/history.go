@@ -887,3 +887,56 @@ func GetDeletedStatus(bvids []string) map[string]bool {
 	}
 	return result
 }
+
+// GetAllHistoryRecords returns all records from a specific year's history table.
+func GetAllHistoryRecords(year int) ([]map[string]interface{}, error) {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
+	tableName := fmt.Sprintf("bilibili_history_%d", year)
+	exists, _ := db.TableExists(tableName)
+	if !exists {
+		return nil, nil
+	}
+
+	rows, err := conn.Query(fmt.Sprintf("SELECT * FROM %s ORDER BY view_at DESC", tableName))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range columns {
+			valuePtrs[i] = &values[i]
+		}
+		if err := rows.Scan(valuePtrs...); err != nil {
+			continue
+		}
+		result := make(map[string]interface{})
+		for i, col := range columns {
+			val := values[i]
+			if val == nil {
+				continue
+			}
+			switch v := val.(type) {
+			case []byte:
+				result[col] = string(v)
+			default:
+				result[col] = v
+			}
+		}
+		results = append(results, result)
+	}
+	return results, nil
+}

@@ -8,6 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/iawia002/lux v0.24.1
 	github.com/mattn/go-sqlite3 v1.14.47
+	github.com/xuri/excelize/v2 v2.10.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 

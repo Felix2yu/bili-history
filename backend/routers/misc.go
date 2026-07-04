@@ -1,16 +1,20 @@
 package routers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"bilibili-history-go/config"
+	"bilibili-history-go/database"
 	"bilibili-history-go/models"
 	"bilibili-history-go/scheduler"
 	"bilibili-history-go/services"
 	"bilibili-history-go/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xuri/excelize/v2"
 )
 
 func RegisterConfigRoutes(r *gin.RouterGroup) {
@@ -678,10 +682,94 @@ func getIntegrityReport(c *gin.Context) {
 }
 
 func exportToExcel(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "Excel导出功能待实现",
-	})
+	var body struct {
+		Years []int `json:"years"`
+	}
+	// Body is optional; if empty, export all years
+	_ = c.ShouldBindJSON(&body)
+
+	db := database.GetSQLiteDB()
+	if db == nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("数据库不可用"))
+		return
+	}
+
+	availableYears, err := db.GetAvailableYears()
+	if err != nil || len(availableYears) == 0 {
+		c.JSON(http.StatusOK, models.ErrorResponse("未找到历史记录数据"))
+		return
+	}
+
+	// Filter to requested years
+	yearSet := make(map[int]bool)
+	if len(body.Years) > 0 {
+		for _, y := range body.Years {
+			yearSet[y] = true
+		}
+	} else {
+		for _, y := range availableYears {
+			yearSet[y] = true
+		}
+	}
+
+	f := excelize.NewFile()
+	defer f.Close()
+
+	firstSheet := true
+	for _, year := range availableYears {
+		if !yearSet[year] {
+			continue
+		}
+
+		sheetName := fmt.Sprintf("%d", year)
+		if firstSheet {
+			f.SetSheetName("Sheet1", sheetName)
+			firstSheet = false
+		} else {
+			f.NewSheet(sheetName)
+		}
+
+		// Header row
+		headers := []string{"日期", "时间", "标题", "UP主", "分区", "时长(秒)", "BVID", "CID", "链接"}
+		for i, h := range headers {
+			cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+			f.SetCellValue(sheetName, cell, h)
+		}
+
+		// Query records
+		records, err := database.GetAllHistoryRecords(year)
+		if err != nil {
+			continue
+		}
+
+		for rowIdx, rec := range records {
+			row := rowIdx + 2
+			viewAt, _ := rec["view_at"].(int64)
+			t := time.Unix(viewAt, 0)
+			dateStr := t.Format("2006-01-02")
+			timeStr := t.Format("15:04:05")
+
+			title, _ := rec["title"].(string)
+			authorName, _ := rec["author_name"].(string)
+			tname, _ := rec["tname"].(string)
+			duration, _ := rec["duration"].(int64)
+			bvid, _ := rec["bvid"].(string)
+			cid, _ := rec["cid"].(int64)
+			link := "https://www.bilibili.com/video/" + bvid
+
+			values := []interface{}{dateStr, timeStr, title, authorName, tname, duration, bvid, cid, link}
+			for i, v := range values {
+				cell, _ := excelize.CoordinatesToCellName(i+1, row)
+				f.SetCellValue(sheetName, cell, v)
+			}
+		}
+	}
+
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Disposition", "attachment; filename=bilibili_history.xlsx")
+	if err := f.Write(c.Writer); err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("导出失败: "+err.Error()))
+	}
 }
 
 func importFromMysql(c *gin.Context) {

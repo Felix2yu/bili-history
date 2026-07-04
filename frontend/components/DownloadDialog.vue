@@ -25,7 +25,7 @@
 
         <!-- 页眉区域：包含bili-dl致谢和FFmpeg状态 -->
         <div
-          class="px-3 md:px-6 py-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 space-x-2">
+          class="px-3 md:px-6 py-2 flex items-center justify-between bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 space-x-2">
           <div class="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
             <div class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-[#fb7299] font-bold text-lg">👾</div>
             <div class="flex flex-col">
@@ -37,64 +37,17 @@
           </div>
 
           <!-- FFmpeg 状态 -->
-          <div v-if="ffmpegStatus" class="flex-shrink min-w-0 md:flex-shrink-0 ml-1">
-            <div v-if="ffmpegStatus.installed"
-                 class="flex items-center space-x-1 p-1 md:p-1.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-[10px] md:text-xs min-w-0">
-              <svg class="w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <div class="min-w-0 flex-1">
-                <p class="font-medium whitespace-nowrap">FFmpeg 已安装</p>
-                <p class="text-[9px] md:text-xs truncate w-full">{{ ffmpegStatus.version }}</p>
-              </div>
-            </div>
-            <div v-else class="group relative">
-              <div class="flex flex-col space-y-1">
-                <div
-                  class="flex items-center space-x-1 p-1 md:p-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-[10px] md:text-xs">
-                  <svg class="w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  <p class="font-medium">FFmpeg 未安装</p>
-                </div>
-                <div class="text-xs text-gray-600 dark:text-gray-400">
-                  <p>
-                    <a
-                      href="https://ffmpeg.org/download.html"
-                      target="_blank"
-                      class="text-[#fb7299] hover:text-[#fb7299]/80">
-                      点击查看FFmpeg安装说明 →
-                    </a>
-                  </p>
-                </div>
-              </div>
-              <div class="hidden group-hover:block hover:block absolute right-0 top-full h-2 w-full"></div>
-              <div
-                class="hidden group-hover:block hover:block absolute right-0 top-[calc(100%+0.5rem)] w-[500px] p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-30 text-xs">
-                <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">安装指南：</p>
-                <div v-if="ffmpegStatus?.install_guide" class="space-y-1 whitespace-pre-wrap">
-                  <div v-for="(line, index) in installGuideLines" :key="index" class="flex items-start space-x-1">
-                    <template v-if="isCommand(line)">
-                      <div class="flex-1 bg-gray-50 dark:bg-gray-900 p-1.5 rounded break-all">
-                        <code class="text-gray-700 dark:text-gray-300">{{ getCommandContent(line) }}</code>
-                      </div>
-                      <button @click="copyToClipboard(getCommandContent(line))"
-                              class="text-[#fb7299] hover:text-[#fb7299]/80 p-1 rounded-md hover:bg-[#fb7299]/10 flex-shrink-0"
-                              title="点击复制命令">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                        </svg>
-                      </button>
-                    </template>
-                    <template v-else>
-                      <p class="text-gray-600 dark:text-gray-400 break-all">{{ line }}</p>
-                    </template>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div v-if="ffmpegStatus" class="flex-shrink min-w-0 ml-1">
+            <span v-if="ffmpegStatus.installed"
+                  class="inline-flex items-center space-x-1 px-2 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded text-[10px] md:text-xs">
+              <span>FFmpeg</span>
+              <span>✓</span>
+            </span>
+            <a v-else href="https://ffmpeg.org/download.html" target="_blank"
+               class="inline-flex items-center space-x-1 px-2 py-0.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-[10px] md:text-xs hover:underline">
+              <span>FFmpeg</span>
+              <span>✗</span>
+            </a>
           </div>
         </div>
 
@@ -161,21 +114,22 @@
               </div>
             </div>
 
-            <!-- 下载设置 -->
-            <div class="mb-2">
-              <label class="flex items-center space-x-1.5 md:space-x-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  v-model="advancedOptions.multi_thread"
-                  class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
-                >
-                <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">多线程下载</span>
+            <!-- 画质选择 -->
+            <div class="mb-2" v-if="streamOptions.length > 1">
+              <label class="block text-[10px] md:text-xs text-gray-600 dark:text-gray-400 mb-1">
+                画质选择
               </label>
+              <select v-model="selectedStreamId"
+                      class="w-full text-xs md:text-sm px-2 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-[#fb7299]">
+                <option v-for="opt in streamOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
             </div>
 
             <!-- 下载日志 -->
             <div
-              class="w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-2 pb-0 font-mono text-[10px] md:text-[11px] overflow-y-auto border border-gray-200 dark:border-gray-700 h-[120px] min-h-[80px]"
+              class="w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-2 pb-0 font-mono text-[10px] md:text-[11px] overflow-y-auto border border-gray-200 dark:border-gray-700 h-[80px] min-h-[60px]"
               ref="logContainer">
               <div v-if="!downloadStarted" class="text-gray-500 dark:text-gray-400 flex items-center justify-center h-full">
                 <div class="text-center">
@@ -352,11 +306,10 @@ const checkFFmpegStatus = async () => {
 const downloadCover = ref(true)
 // 仅下载音频选项
 const onlyAudio = ref(false)
-// 高级选项
-const advancedOptions = ref({
-  multi_thread: true,
-  thread_number: 10,
-})
+
+// 画质选择
+const streamOptions = ref([])
+const selectedStreamId = ref(null)
 
 // 当前正在下载的视频信息
 const currentVideoTitle = ref('')
@@ -649,6 +602,33 @@ watch(() => props.show, async (isVisible) => {
     currentVideoIndex.value = -1
     favoriteVideos.value = []
 
+    // 重置画质选择
+    streamOptions.value = [{ label: '自动选择最佳画质', value: null }]
+    selectedStreamId.value = null
+
+    // 获取视频流信息
+    if (props.videoInfo.bvid && !props.videoInfo.is_user_videos && !props.videoInfo.is_collection_download && !props.isBatchDownload && !isFavoriteFolder.value) {
+      try {
+        const url = `https://www.bilibili.com/video/${props.videoInfo.bvid}`
+        const response = await getVideoInfo({ url })
+        if (response.data && response.data.status === 'success' && response.data.data) {
+          const data = response.data.data
+          if (data.streams && data.streams.length > 0) {
+            streamOptions.value = [
+              { label: '自动选择最佳画质', value: null },
+              ...data.streams.map(s => ({
+                label: s.quality,
+                value: s.id,
+              })),
+            ]
+            if (data.title) currentVideoTitle.value = data.title
+          }
+        }
+      } catch (error) {
+        console.error('获取视频流信息失败:', error)
+      }
+    }
+
     // 如果是收藏夹，预加载收藏夹内容
     if (isFavoriteFolder.value && props.videoInfo.fid) {
       await preloadFavoriteVideos()
@@ -678,11 +658,9 @@ const resetState = () => {
   currentVideoIndex.value = -1
   favoriteVideos.value = []
 
-  // 重置高级选项
-  advancedOptions.value = {
-    multi_thread: true,
-    thread_number: 10,
-  }
+  // 重置画质选择
+  streamOptions.value = [{ label: '自动选择最佳画质', value: null }]
+  selectedStreamId.value = null
 }
 
 // 显示下载完成通知
@@ -981,8 +959,8 @@ const startDownload = async () => {
         downloadCover.value,
         onlyAudio.value,
         props.videoInfo.cid,
-        // 添加高级选项
-        advancedOptions.value,
+        // 画质选择
+        { stream_id: selectedStreamId.value },
       )
     }
   } catch (error) {

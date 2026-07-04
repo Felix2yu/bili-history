@@ -401,14 +401,13 @@ func syncFavorites(c *gin.Context) {
 		}
 	}
 
-	// Fetch contents for each folder (max 500 items per folder)
+	// Fetch contents for each folder
 	totalContents := 0
 	for _, folder := range folders {
 		if folder.MediaCount == 0 {
 			continue
 		}
-		maxItems := 500
-		for pn := 1; pn*20 < maxItems; pn++ {
+		for pn := 1; ; pn++ {
 			res, err := client.GetFavoriteResources(folder.MediaID, pn, 20)
 			if err != nil {
 				break
@@ -458,7 +457,8 @@ func syncFavorites(c *gin.Context) {
 				_ = err
 			}
 			totalContents += len(contents)
-			if res.Page.Total <= pn*res.Page.Size {
+			// Stop when all pages fetched
+			if res.Page.Size > 0 && res.Page.Total > 0 && pn*res.Page.Size >= res.Page.Total {
 				break
 			}
 		}

@@ -176,7 +176,12 @@ func favoriteResource(c *gin.Context) {
 			return
 		}
 	} else if body.Rid > 0 && (body.AddMediaIDs != "" || body.DelMediaIDs != "") {
-		resources := fmt.Sprintf("%d:%d", body.Rid, body.Type)
+		// 默认 type=2（视频），B站 API 要求
+		mediaType := body.Type
+		if mediaType == 0 {
+			mediaType = 2
+		}
+		resources := fmt.Sprintf("%d:%d", body.Rid, mediaType)
 		mediaIDs := body.AddMediaIDs
 		if mediaIDs == "" {
 			mediaIDs = body.DelMediaIDs

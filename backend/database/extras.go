@@ -535,7 +535,6 @@ func SaveLikedVideos(videos []LikeVideo) error {
 	}
 	defer stmt.Close()
 
-	liveBvids := make([]string, 0, len(videos))
 	for _, v := range videos {
 		if v.Bvid == "" {
 			continue
@@ -547,24 +546,6 @@ func SaveLikedVideos(videos []LikeVideo) error {
 		if err != nil {
 			utils.LogError("Failed to upsert liked video %s: %v", v.Bvid, err)
 			continue
-		}
-		liveBvids = append(liveBvids, v.Bvid)
-	}
-
-	if len(liveBvids) > 0 {
-		placeholders := make([]string, len(liveBvids))
-		args := make([]interface{}, len(liveBvids))
-		for i, b := range liveBvids {
-			placeholders[i] = "?"
-			args[i] = b
-		}
-		query := "DELETE FROM liked_videos WHERE bvid NOT IN (" + strings.Join(placeholders, ",") + ")"
-		if _, err := tx.Exec(query, args...); err != nil {
-			utils.LogError("Failed to prune stale liked videos: %v", err)
-		}
-	} else {
-		if _, err := tx.Exec("DELETE FROM liked_videos"); err != nil {
-			utils.LogError("Failed to clear liked videos: %v", err)
 		}
 	}
 

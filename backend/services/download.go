@@ -96,13 +96,13 @@ func friendlyCodecName(codec string) string {
 	return codec
 }
 
-// friendlyQualityLabel returns a readable quality label like "4K · HEVC · MOV · 2.2MB"
+// friendlyQualityLabel returns a readable quality label like "4K · HEVC · MOV · 3.0Mbps"
 func friendlyQualityLabel(codec string, width, height int, bandwidth float64) string {
 	res := resolutionLabel(width, height)
 	codecName := friendlyCodecName(codec)
 	ext := containerForCodec(codec)
-	sizeMB := bandwidth / 1024 / 1024
-	return fmt.Sprintf("%s · %s · %s · %.1fMB", res, codecName, ext, sizeMB)
+	bitrateMbps := bandwidth / 1000000
+	return fmt.Sprintf("%s · %s · %s · %.1fMbps", res, codecName, ext, bitrateMbps)
 }
 
 // containerForCodec returns the target container extension for a codec

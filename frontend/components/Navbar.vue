@@ -123,8 +123,6 @@
 import SearchBar from './SearchBar.vue'
 import FilterDropdown from './FilterDropdown.vue'
 import { ref, watch, computed, inject, onMounted } from 'vue'
-import SearchBar from './SearchBar.vue'
-import FilterDropdown from './FilterDropdown.vue'
 import { showNotify } from 'vant'
 import { usePrivacyStore } from '~/stores/privacy.js'
 import { getSyncConfig } from '~/utils/api'

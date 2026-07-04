@@ -86,6 +86,13 @@ server:
   data_integrity:
     check_on_startup: false
 
+# 同步配置
+sync:
+  # 同步已删除的历史记录（从B站服务器同步已删除的记录到本地）
+  sync_deleted: false
+  # 同步删除到B站（删除本地记录时同时删除B站服务器上的记录）
+  sync_delete_to_bilibili: false
+
 # 热力图配置
 heatmap:
   # 热力图输出目录

@@ -481,7 +481,9 @@ const handleBatchDelete = async () => {
 
   try {
     // 检查是否需要同步删除B站历史记录
-    const syncDeleteToBilibili = localStorage.getItem('syncDeleteToBilibili') === 'true'
+    const { getSyncConfig } = await import('~/utils/api')
+    const syncConfigRes = await getSyncConfig()
+    const syncDeleteToBilibili = syncConfigRes.data?.sync_delete_to_bilibili || false
 
     // 根据是否同步删除B站历史记录，显示不同的确认信息
     await showDialog({
@@ -1022,7 +1024,9 @@ const refreshData = async () => {
     isLoading.value = true
     showNotify({ type: 'success', message: '正在从B站获取历史记录...' })
 
-    const syncDeleted = localStorage.getItem('syncDeleted') === 'true'
+    const { getSyncConfig } = await import('~/utils/api')
+    const syncConfigRes = await getSyncConfig()
+    const syncDeleted = syncConfigRes.data?.sync_deleted || false
     const response = await updateBiliHistoryRealtime(syncDeleted)
     if (response.data.status === 'success') {
       showNotify({ type: 'success', message: response.data.message || '数据获取成功' })
@@ -1209,7 +1213,9 @@ const highlightText = (text) => {
 const handleDelete = async (record) => {
   try {
     // 检查是否需要同步删除B站历史记录
-    const syncDeleteToBilibili = localStorage.getItem('syncDeleteToBilibili') === 'true'
+    const { getSyncConfig } = await import('~/utils/api')
+    const syncConfigRes = await getSyncConfig()
+    const syncDeleteToBilibili = syncConfigRes.data?.sync_delete_to_bilibili || false
 
     await showDialog({
       title: '确认删除',

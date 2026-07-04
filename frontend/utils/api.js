@@ -1054,6 +1054,25 @@ export const updateIntegrityCheckConfig = (checkOnStartup) => {
 }
 
 /**
+ * 获取同步删除配置API
+ * @returns {Promise} - API响应
+ */
+export const getSyncConfig = () => {
+  return instance.get('/data_sync/sync-config')
+}
+
+/**
+ * 更新同步删除配置API
+ * @param {Object} params - 配置参数
+ * @param {boolean} [params.sync_deleted] - 同步已删除记录
+ * @param {boolean} [params.sync_delete_to_bilibili] - 同步删除到B站
+ * @returns {Promise} - API响应
+ */
+export const updateSyncConfig = (params) => {
+  return instance.post('/data_sync/sync-config', params)
+}
+
+/**
  * 获取指定用户创建的所有收藏夹信息
  * @param {Object} params 请求参数
  * @param {number} [params.up_mid] 目标用户mid，不提供则使用当前登录用户

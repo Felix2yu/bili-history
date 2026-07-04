@@ -55,6 +55,8 @@ func RegisterDataSyncRoutes(r *gin.RouterGroup) {
 		dataSync.GET("/status", getDataSyncStatus)
 		dataSync.GET("/config", getDataSyncConfig)
 		dataSync.POST("/config", updateDataSyncConfig)
+		dataSync.GET("/sync-config", getSyncConfig)
+		dataSync.POST("/sync-config", updateSyncConfig)
 		dataSync.POST("/check", checkDataIntegrity)
 		dataSync.POST("/sync", syncData)
 		dataSync.GET("/sync/result", getSyncResult)
@@ -560,6 +562,40 @@ func updateDataSyncConfig(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "配置已更新"})
+}
+
+func getSyncConfig(c *gin.Context) {
+	cfg := config.GetConfig()
+	c.JSON(http.StatusOK, gin.H{
+		"success":                true,
+		"sync_deleted":           cfg.Sync.SyncDeleted,
+		"sync_delete_to_bilibili": cfg.Sync.SyncDeleteToBilibili,
+	})
+}
+
+func updateSyncConfig(c *gin.Context) {
+	var body struct {
+		SyncDeleted           *bool `json:"sync_deleted"`
+		SyncDeleteToBilibili  *bool `json:"sync_delete_to_bilibili"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "参数错误"})
+		return
+	}
+
+	cfg, _ := config.LoadConfig()
+	if body.SyncDeleted != nil {
+		cfg.Sync.SyncDeleted = *body.SyncDeleted
+	}
+	if body.SyncDeleteToBilibili != nil {
+		cfg.Sync.SyncDeleteToBilibili = *body.SyncDeleteToBilibili
+	}
+	if err := config.SaveConfig(cfg); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "保存配置失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "同步配置已更新"})
 }
 
 func checkDataIntegrity(c *gin.Context) {

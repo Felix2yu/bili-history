@@ -274,7 +274,9 @@ const getProgressWidth = (progress, duration) => {
 
 const handleDelete = async () => {
   try {
-    const syncDeleteToBilibili = localStorage.getItem('syncDeleteToBilibili') === 'true'
+    const { getSyncConfig } = await import('~/utils/api')
+    const syncConfigRes = await getSyncConfig()
+    const syncDeleteToBilibili = syncConfigRes.data?.sync_delete_to_bilibili || false
     await showDialog({
       title: '确认删除',
       message: syncDeleteToBilibili

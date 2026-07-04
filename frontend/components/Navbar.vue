@@ -132,10 +132,11 @@
 <script setup>
 import SearchBar from './SearchBar.vue'
 import FilterDropdown from './FilterDropdown.vue'
-import { ref, watch, computed, inject } from 'vue'
+import { ref, watch, computed, inject, onMounted } from 'vue'
 import { showNotify } from 'vant'
 import { usePrivacyStore } from '~/stores/privacy.js'
 import { useDarkMode } from '~/stores/darkMode.js'
+import { getSyncConfig } from '~/utils/api'
 import 'vant/es/notify/style'
 
 const toggleSidebar = inject('toggleSidebar', () => {})
@@ -160,13 +161,21 @@ const emit = defineEmits([
 ])
 
 const isUpdating = ref(false)
-const syncDeleted = ref(localStorage.getItem('syncDeleted') === 'true')
+const syncDeleted = ref(false)
 const filterDropdownRef = ref(null)
 
 const isFilterActive = computed(() => Boolean(props.date || props.category || props.business))
 
-watch(() => localStorage.getItem('syncDeleted'), (newVal) => {
-  syncDeleted.value = newVal === 'true'
+// Fetch sync config from backend on mount
+onMounted(async () => {
+  try {
+    const response = await getSyncConfig()
+    if (response.data && response.data.success) {
+      syncDeleted.value = response.data.sync_deleted
+    }
+  } catch (error) {
+    console.error('获取同步配置失败:', error)
+  }
 })
 
 const openFilterPanel = () => {

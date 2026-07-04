@@ -533,7 +533,9 @@ import {
   getMcpConfig,
   updateMcpConfig,
   getIntegrityCheckConfig,
-  updateIntegrityCheckConfig
+  updateIntegrityCheckConfig,
+  getSyncConfig,
+  updateSyncConfig
 } from '~/utils/api'
 import ShoutrrrSettings from './ShoutrrrSettings.vue'
 import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
@@ -649,27 +651,65 @@ const { isPrivacyMode, setPrivacyMode } = usePrivacyStore()
 const privacyMode = ref(isPrivacyMode.value)
 
 // 同步已删除记录
-const syncDeleted = ref(localStorage.getItem('syncDeleted') === 'true')
+const syncDeleted = ref(false)
 
 // 监听同步已删除记录变化
-watch(syncDeleted, (newVal) => {
-  localStorage.setItem('syncDeleted', newVal.toString())
-  showNotify({
-    type: 'success',
-    message: newVal ? '已开启同步已删除记录' : '已关闭同步已删除记录'
-  })
+watch(syncDeleted, async (newVal) => {
+  try {
+    const response = await updateSyncConfig({ sync_deleted: newVal })
+    if (response.data && response.data.success) {
+      showNotify({
+        type: 'success',
+        message: newVal ? '已开启同步已删除记录' : '已关闭同步已删除记录'
+      })
+    } else {
+      throw new Error(response.data?.message || '更新配置失败')
+    }
+  } catch (error) {
+    console.error('更新同步配置失败:', error)
+    showNotify({
+      type: 'danger',
+      message: `更新配置失败: ${error.message}`
+    })
+    // 恢复原值
+    syncDeleted.value = !newVal
+  }
 })
 
 // 同步删除B站历史记录
-const syncDeleteToBilibili = ref(localStorage.getItem('syncDeleteToBilibili') === 'true')
+const syncDeleteToBilibili = ref(false)
 
 // 处理同步删除B站历史记录变更
-const handleSyncDeleteToBilibiliChange = () => {
-  localStorage.setItem('syncDeleteToBilibili', syncDeleteToBilibili.value.toString())
-  showNotify({
-    type: 'success',
-    message: syncDeleteToBilibili.value ? '已开启同步删除B站历史记录' : '已关闭同步删除B站历史记录'
-  })
+const handleSyncDeleteToBilibiliChange = async () => {
+  try {
+    const response = await updateSyncConfig({ sync_delete_to_bilibili: syncDeleteToBilibili.value })
+    if (response.data && response.data.success) {
+      showNotify({
+        type: 'success',
+        message: syncDeleteToBilibili.value ? '已开启同步删除B站历史记录' : '已关闭同步删除B站历史记录'
+      })
+    } else {
+      throw new Error(response.data?.message || '更新配置失败')
+    }
+  } catch (error) {
+    console.error('更新同步配置失败:', error)
+    showNotify({
+      type: 'danger',
+      message: `更新配置失败: ${error.message}`
+    })
+    // 恢复原值
+    syncDeleteToBilibili.value = !syncDeleteToBilibili.value
+  }
+}
+  } catch (error) {
+    console.error('更新同步配置失败:', error)
+    showNotify({
+      type: 'danger',
+      message: `更新配置失败: ${error.message}`
+    })
+    // 恢复原值
+    syncDeleteToBilibili.value = !syncDeleteToBilibili.value
+  }
 }
 
 // 启动时数据完整性校验
@@ -868,6 +908,25 @@ onMounted(async () => {
           checkIntegrityOnStartup.value = true
         }
         console.log('数据完整性校验配置获取完成')
+      })(),
+      (async () => {
+        console.log('开始获取同步删除配置')
+        try {
+          const response = await getSyncConfig()
+          if (response.data && response.data.success) {
+            syncDeleted.value = response.data.sync_deleted
+            syncDeleteToBilibili.value = response.data.sync_delete_to_bilibili
+            console.log('同步删除配置获取成功:', response.data)
+          } else {
+            throw new Error(response.data?.message || '获取配置失败')
+          }
+        } catch (error) {
+          console.error('获取同步删除配置失败:', error)
+          // 使用默认值
+          syncDeleted.value = false
+          syncDeleteToBilibili.value = false
+        }
+        console.log('同步删除配置获取完成')
       })()
     ])
     console.log('Settings组件初始化完成')

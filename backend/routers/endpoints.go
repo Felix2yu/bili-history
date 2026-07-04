@@ -470,6 +470,16 @@ func init() {
 		Tags:        tagDataSync,
 		OperationID: "update_data_sync_config",
 	})
+	RegisterEndpointMeta("GET", "/data_sync/sync-config", EndpointMeta{
+		Summary:     "获取同步删除配置",
+		Tags:        tagDataSync,
+		OperationID: "get_sync_config",
+	})
+	RegisterEndpointMeta("POST", "/data_sync/sync-config", EndpointMeta{
+		Summary:     "更新同步删除配置",
+		Tags:        tagDataSync,
+		OperationID: "update_sync_config",
+	})
 	RegisterEndpointMeta("POST", "/data_sync/check", EndpointMeta{
 		Summary:     "检查数据完整性",
 		Tags:        tagDataSync,

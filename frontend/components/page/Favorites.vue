@@ -619,7 +619,7 @@ async function preloadFirstVideoCover(folder) {
     // 如果没有获取到详细信息或是本地收藏夹，则使用第一个视频的封面
     if (response.data.status === 'success') {
       let contents = []
-      if (activeTab.value === 'local') {
+      if (response.data.data && response.data.data.list) {
         contents = response.data.data.list || []
       } else if (response.data.data && response.data.data.medias) {
         contents = response.data.data.medias || []
@@ -717,12 +717,13 @@ async function loadContents() {
         }
 
         // 确保我们能够正确处理不同的数据结构
-        if (response.data.data && response.data.data.medias) {
-          console.log('找到媒体数据，数量:', response.data.data.medias.length)
+        if (response.data.data && response.data.data.list) {
+          folderContents.value = response.data.data.list
+          contentsTotalItems.value = response.data.data.total || currentFolder.value.media_count || 0
+        } else if (response.data.data && response.data.data.medias) {
           folderContents.value = response.data.data.medias
           contentsTotalItems.value = currentFolder.value.media_count || 0
         } else if (response.data.data && Array.isArray(response.data.data)) {
-          console.log('找到数组数据，数量:', response.data.data.length)
           folderContents.value = response.data.data
           contentsTotalItems.value = response.data.total || currentFolder.value.media_count || 0
         } else {
@@ -917,8 +918,12 @@ async function fetchAllContents() {
           }
 
           // 处理多种可能的数据结构
-          if (response.data.data && response.data.data.medias) {
-            console.log(`第${page}页: 找到媒体数据，数量:`, response.data.data.medias.length)
+          if (response.data.data && response.data.data.list) {
+            return {
+              contents: response.data.data.list,
+              total: response.data.data.total || currentFolder.value.media_count || 0
+            }
+          } else if (response.data.data && response.data.data.medias) {
             return {
               contents: response.data.data.medias,
               total: currentFolder.value.media_count || 0

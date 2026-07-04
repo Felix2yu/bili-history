@@ -145,10 +145,10 @@ func (s *SQLiteDB) EnsureTableForYear(year int) error {
 		return err
 	}
 
-	if !exists {
-		s.mu.Lock()
-		defer s.mu.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
+	if !exists {
 		createSQL := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 			id INTEGER PRIMARY KEY,
@@ -210,17 +210,50 @@ func (s *SQLiteDB) EnsureTableForYear(year int) error {
 		return nil
 	}
 
-	// Table exists — ensure status column exists (for tables created before this feature)
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	var colExists bool
-	err = s.db.QueryRow("SELECT EXISTS(SELECT 1 FROM pragma_table_info(?) WHERE name='status')", tableName).Scan(&colExists)
-	if err == nil && !colExists {
-		_, _ = s.db.Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN status INTEGER DEFAULT 0", tableName))
+	// Table exists — ensure status column (ALTER TABLE for old tables)
+	var colCount int
+	_ = s.db.QueryRow("SELECT COUNT(*) FROM pragma_table_info(?) WHERE name='status'", tableName).Scan(&colCount)
+	if colCount == 0 {
+		_, err = s.db.Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN status INTEGER DEFAULT 0", tableName))
+		if err != nil {
+			utils.LogWarning("Failed to add status column to %s: %v", tableName, err)
+		}
 	}
 
 	return nil
+}
+
+// MigrateStatusColumn ensures all year tables have the status column.
+// Called at startup to prevent UNION ALL failures from mismatched schemas.
+func MigrateStatusColumn() {
+	db := GetSQLiteDB()
+	if db == nil {
+		return
+	}
+
+	years, err := db.GetAvailableYears()
+	if err != nil {
+		return
+	}
+
+	for _, year := range years {
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			continue
+		}
+
+		var colCount int
+		_ = db.GetDB().QueryRow("SELECT COUNT(*) FROM pragma_table_info(?) WHERE name='status'", tableName).Scan(&colCount)
+		if colCount == 0 {
+			_, err := db.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN status INTEGER DEFAULT 0", tableName))
+			if err != nil {
+				utils.LogWarning("Migration: failed to add status column to %s: %v", tableName, err)
+			} else {
+				utils.LogInfo("Migration: added status column to %s", tableName)
+			}
+		}
+	}
 }
 
 func (s *SQLiteDB) ResetDatabase() error {

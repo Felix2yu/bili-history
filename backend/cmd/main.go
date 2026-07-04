@@ -37,6 +37,9 @@ func main() {
 	}
 	utils.LogSuccess("数据库初始化完成")
 
+	// Ensure all year tables have the status column
+	database.MigrateStatusColumn()
+
 	database.InitCategories()
 	utils.LogSuccess("分类表初始化完成")
 

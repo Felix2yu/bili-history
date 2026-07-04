@@ -439,7 +439,7 @@ async function executeConfirmedDelete() {
 
 const { data: initialData } = await useAsyncData('watchlater-initial', async () => {
   try {
-    const response = await getWatchLaterLocal({ size: 500 })
+    const response = await getWatchLaterList()
     if (response.data.status === 'success') {
       return { videos: response.data.data.list || [] }
     }

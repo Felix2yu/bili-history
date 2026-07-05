@@ -119,8 +119,12 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
+          <!-- 加载动画 -->
+          <div v-if="previewLoading" class="absolute inset-0 flex items-center justify-center">
+            <div class="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+          </div>
           <!-- 图片 -->
-          <img v-if="previewType==='image'" :src="previewSrc" class="max-w-[95vw] max-h-[90vh] object-contain rounded-md" />
+          <img v-if="previewType==='image'" :src="previewSrc" class="max-w-[95vw] max-h-[90vh] object-contain rounded-md transition-opacity duration-200" :class="{'opacity-0': previewLoading}" @load="previewLoading = false" />
           <video v-else :src="previewSrc" :poster="previewPoster" controls autoplay loop muted class="max-w-[95vw] max-h-[90vh] rounded-md"></video>
           <!-- 右切换按钮 -->
           <button
@@ -336,10 +340,12 @@ const previewSrc = ref('')
 const previewPoster = ref('')
 const previewImages = ref([])
 const previewIndex = ref(0)
+const previewLoading = ref(false)
 
 const openPreview = (type, src, poster = '') => {
   previewType.value = type
   previewPoster.value = poster
+  previewLoading.value = true
 
   // 收集所有图片用于切换
   if (type === 'image') {
@@ -359,16 +365,23 @@ const openPreview = (type, src, poster = '') => {
   showPreview.value = true
 }
 
+const switchImage = (newSrc) => {
+  previewLoading.value = true
+  previewSrc.value = newSrc
+}
+
 const prevImage = () => {
   if (previewImages.value.length <= 1) return
-  previewIndex.value = (previewIndex.value - 1 + previewImages.value.length) % previewImages.value.length
-  previewSrc.value = previewImages.value[previewIndex.value]
+  const newIndex = (previewIndex.value - 1 + previewImages.value.length) % previewImages.value.length
+  previewIndex.value = newIndex
+  switchImage(previewImages.value[newIndex])
 }
 
 const nextImage = () => {
   if (previewImages.value.length <= 1) return
-  previewIndex.value = (previewIndex.value + 1) % previewImages.value.length
-  previewSrc.value = previewImages.value[previewIndex.value]
+  const newIndex = (previewIndex.value + 1) % previewImages.value.length
+  previewIndex.value = newIndex
+  switchImage(previewImages.value[newIndex])
 }
 
 const closePreview = () => { showPreview.value = false }

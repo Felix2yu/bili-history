@@ -229,29 +229,30 @@ const fetchHostInfo = async (mid) => {
   const list = res?.data?.data || []
   const found = list.find(x => String(x.host_mid) === String(mid))
 
-  if (found) {
+  if (found && found.face_path) {
     hostInfo.value = found
-  } else {
-    // 数据库没有，从B站API获取用户信息
-    try {
-      const cardRes = await getDynamicUserCard(mid)
-      if (cardRes?.data?.success && cardRes.data.data) {
-        const card = cardRes.data.data
-        hostInfo.value = {
-          host_mid: String(mid),
-          up_name: card.name || '',
-          face_path: card.face || '',
-          item_count: 0,
-          core_count: 0,
-          last_publish_ts: 0,
-          last_fetch_time: 0
-        }
-      } else {
-        hostInfo.value = { host_mid: String(mid) }
+    return
+  }
+
+  // 数据库没有或头像为空，从B站API获取用户信息
+  try {
+    const cardRes = await getDynamicUserCard(mid)
+    if (cardRes?.data?.success && cardRes.data.data) {
+      const card = cardRes.data.data
+      hostInfo.value = {
+        host_mid: String(mid),
+        up_name: card.name || found?.up_name || '',
+        face_path: card.face || '',
+        item_count: found?.item_count || 0,
+        core_count: found?.core_count || 0,
+        last_publish_ts: found?.last_publish_ts || 0,
+        last_fetch_time: found?.last_fetch_time || 0
       }
-    } catch {
-      hostInfo.value = { host_mid: String(mid) }
+    } else {
+      hostInfo.value = found || { host_mid: String(mid) }
     }
+  } catch {
+    hostInfo.value = found || { host_mid: String(mid) }
   }
 }
 

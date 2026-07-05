@@ -69,15 +69,16 @@ func getImageDownloadStatus(c *gin.Context) {
 	coversTotal, coversDownloaded := countLocalImages(coversDir)
 	avatarsTotal, avatarsDownloaded := countLocalImages(avatarsDir)
 
-	utils.LogWarning("[图片状态] outputPath=%s covers=%d avatars=%d is_running=%d total_planned=%d",
-		outputPath, coversTotal, avatarsTotal, boolToInt(status.IsRunning), status.TotalImages)
+	// 统计动态图片
+	dynamicDir := utils.GetOutputPath("dynamic")
+	dynamicTotal, dynamicDownloaded := countAllDynamicImages(dynamicDir)
 
 	c.JSON(http.StatusOK, models.SuccessResponse(gin.H{
 		"is_downloading": status.IsRunning,
 		"last_update":    status.StartTime,
 		"covers": gin.H{
-			"total":         coversTotal,
-			"downloaded":    coversDownloaded,
+			"total":         coversTotal + dynamicTotal,
+			"downloaded":    coversDownloaded + dynamicDownloaded,
 			"failed":        0,
 			"total_planned": status.TotalImages / 2,
 			"failed_urls":   []interface{}{},
@@ -101,7 +102,6 @@ func boolToInt(b bool) int {
 
 func countLocalImages(dir string) (total int, downloaded int) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		utils.LogWarning("[图片计数] 目录不存在: %s", dir)
 		return 0, 0
 	}
 
@@ -118,6 +118,29 @@ func countLocalImages(dir string) (total int, downloaded int) {
 	if err != nil {
 		utils.LogWarning("[图片计数] Walk 失败 %s: %v", dir, err)
 		return 0, 0
+	}
+	return total, downloaded
+}
+
+// countAllDynamicImages 统计所有动态目录下的图片
+func countAllDynamicImages(dynamicDir string) (total int, downloaded int) {
+	if _, err := os.Stat(dynamicDir); os.IsNotExist(err) {
+		return 0, 0
+	}
+
+	// 遍历 dynamic 目录下的所有子目录
+	entries, err := os.ReadDir(dynamicDir)
+	if err != nil {
+		return 0, 0
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			imagesDir := filepath.Join(dynamicDir, entry.Name(), "images")
+			t, d := countLocalImages(imagesDir)
+			total += t
+			downloaded += d
+		}
 	}
 	return total, downloaded
 }

@@ -356,8 +356,15 @@ func SaveDynamics(hostMid string, items []DynamicItem) (int, error) {
 
 		var upName, facePath string
 		db.QueryRow("SELECT up_name, face_path FROM dynamic_hosts WHERE host_mid = ?", hostMid).Scan(&upName, &facePath)
-		if len(items) > 0 && items[0].AuthorName != "" {
-			upName = items[0].AuthorName
+
+		// 从动态中获取作者信息
+		for _, item := range items {
+			if item.AuthorName != "" {
+				upName = item.AuthorName
+			}
+			if item.AuthorFace != "" && facePath == "" {
+				facePath = item.AuthorFace
+			}
 		}
 
 		SaveDynamicHost(DynamicHost{

@@ -224,7 +224,9 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 				Type string `json:"type"`
 				Draw struct {
 					Items []struct {
-						Src string `json:"src"`
+						Src    string `json:"src"`
+						Width  int    `json:"width"`
+						Height int    `json:"height"`
 					} `json:"items"`
 				} `json:"draw"`
 				Archive struct {
@@ -236,7 +238,10 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 					Bvid string `json:"bvid"`
 				} `json:"archive"`
 				Opus struct {
-					Title   string `json:"title"`
+					Title string `json:"title"`
+					Pics  []struct {
+						Url string `json:"url"`
+					} `json:"pics"`
 					Summary struct {
 						Text string `json:"text"`
 					} `json:"summary"`
@@ -256,15 +261,30 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 			item.Title = dyn.Major.Archive.Title
 			item.Desc = dyn.Major.Archive.Desc
 			item.Cover = dyn.Major.Archive.Cover.Src
+			if item.Cover != "" {
+				item.MediaLocals = append(item.MediaLocals, item.Cover)
+			}
 		case "MAJOR_TYPE_DRAW":
 			item.OpusTitle = dyn.Major.Opus.Title
 			item.OpusSummaryText = dyn.Major.Opus.Summary.Text
 			if item.OpusSummaryText == "" {
 				item.OpusSummaryText = dyn.Desc.Text
 			}
+			// 收集图片
+			for _, img := range dyn.Major.Draw.Items {
+				if img.Src != "" {
+					item.MediaLocals = append(item.MediaLocals, img.Src)
+				}
+			}
 		case "MAJOR_TYPE_OPUS":
 			item.OpusTitle = dyn.Major.Opus.Title
 			item.OpusSummaryText = dyn.Major.Opus.Summary.Text
+			// 收集 opus 图片
+			for _, pic := range dyn.Major.Opus.Pics {
+				if pic.Url != "" {
+					item.MediaLocals = append(item.MediaLocals, pic.Url)
+				}
+			}
 		}
 	}
 

@@ -200,6 +200,12 @@ const parsedSummary = computed(() => {
 
 const parsedTxt = computed(() => parseWithEmoji(props.item?.txt || ''))
 
+// 判断是否为完整URL
+const isFullUrl = (p) => p && (p.startsWith('http://') || p.startsWith('https://'))
+
+// 获取图片URL（完整URL直接使用，否则转换为本地静态URL）
+const getImageUrl = (p) => isFullUrl(p) ? p : toStaticUrl(p)
+
 // 构造展示媒体：普通图片 + 实况照片（由 live_media_locals 配对 png+mp4）
 const displayMedias = computed(() => {
   const medias = []
@@ -209,7 +215,7 @@ const displayMedias = computed(() => {
       const name = getNameFromPath(p)
       // 过滤掉作为emoji使用的图片
       if (!allEmojiNames.value.has(name)) {
-        medias.push({ kind: 'image', url: toStaticUrl(p) })
+        medias.push({ kind: 'image', url: getImageUrl(p) })
       }
     }
   }
@@ -220,7 +226,7 @@ const displayMedias = computed(() => {
     const videos = live.filter(isVideoPath)
     const n = Math.min(covers.length, videos.length, 9)
     for (let i = 0; i < n; i++) {
-      medias.push({ kind: 'live', coverUrl: toStaticUrl(covers[i]), videoUrl: toStaticUrl(videos[i]) })
+      medias.push({ kind: 'live', coverUrl: getImageUrl(covers[i]), videoUrl: getImageUrl(videos[i]) })
     }
   }
 

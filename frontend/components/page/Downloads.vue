@@ -418,7 +418,7 @@ if (initialData.value?.downloads) {
 
 // 组件挂载时加载数据
 onMounted(() => {
-  if (downloads.value.videos.length === 0) {
+  if (!downloads.value?.videos || downloads.value.videos.length === 0) {
     loadDownloadedVideos()
   }
 })

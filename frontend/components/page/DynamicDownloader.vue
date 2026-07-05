@@ -260,19 +260,18 @@ const loadHosts = async () => {
   try {
     hostsLoading.value = true
     const res = await getDynamicDbHosts(50, 0)
-    const list = res?.data?.data || []
+    let list = res?.data?.data || []
 
-    // 对于没有头像的UP，尝试从B站API获取
+    // 对于没有头像的UP，从动态数据中获取作者头像
     const hostsToFetch = list.filter(h => !h.face_path)
-    if (hostsToFetch.length > 0) {
-      for (const h of hostsToFetch.slice(0, 5)) { // 限制最多5个
-        try {
-          const cardRes = await getDynamicUserCard(h.host_mid)
-          if (cardRes?.data?.success && cardRes.data.data?.face) {
-            h.face_path = cardRes.data.data.face
-          }
-        } catch {}
-      }
+    for (const h of hostsToFetch.slice(0, 10)) {
+      try {
+        const spaceRes = await getDynamicDbSpace(h.host_mid, 1, 0)
+        const items = spaceRes?.data?.items || []
+        if (items.length > 0 && items[0].author_face) {
+          h.face_path = items[0].author_face
+        }
+      } catch {}
     }
 
     hosts.value = list

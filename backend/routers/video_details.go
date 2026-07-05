@@ -198,7 +198,22 @@ func getVideoStats(c *gin.Context) {
 		stats.TotalVideos = int64(len(historyBvids))
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse(stats))
+	// 计算待获取视频数
+	pendingVideos := stats.TotalVideos - stats.FetchedVideos
+	if pendingVideos < 0 {
+		pendingVideos = 0
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(gin.H{
+		"total_videos":           stats.TotalVideos,
+		"fetched_videos":         stats.FetchedVideos,
+		"videos_with_details":    stats.FetchedVideos,
+		"pending_videos_count":   pendingVideos,
+		"videos_without_details": pendingVideos,
+		"invalid_videos_count":   0,
+		"total_uploaders":        stats.TotalUploaders,
+		"total_tags":             stats.TotalTags,
+	}))
 }
 
 // getDatabaseStats 获取数据库详细统计

@@ -2,11 +2,14 @@ package biliapi
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 )
@@ -23,7 +26,89 @@ const (
 	FavoriteDealURL         = "https://api.bilibili.com/x/v3/fav/resource/deal"
 	LikedVideoURL           = "https://api.bilibili.com/x/space/like/video"
 	LikeURL                 = "https://api.bilibili.com/x/web-interface/archive/like"
+	WbiNavURL               = "https://api.bilibili.com/x/web-interface/nav"
 )
+
+// WBI mixin key 的混淆表
+var mixinKeyEncTab = []int{
+	46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49,
+	33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40,
+	61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11,
+	36, 20, 34, 44, 52,
+}
+
+// WBI 签名
+func getMixinKey(orig string) string {
+	var buf strings.Builder
+	for _, v := range mixinKeyEncTab {
+		if v < len(orig) {
+			buf.WriteByte(orig[v])
+		}
+	}
+	return buf.String()[:32]
+}
+
+// WbiSign 对参数进行 wbi 签名
+func wbiSign(params map[string]string, imgKey, subKey string) string {
+	mixinKey := getMixinKey(imgKey + subKey)
+	currTime := fmt.Sprintf("%d", time.Now().Unix())
+	params["wts"] = currTime
+
+	// 按 key 排序
+	keys := make([]string, 0, len(params))
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// 过滤特殊字符并拼接
+	var buf strings.Builder
+	for i, k := range keys {
+		v := params[k]
+		v = strings.ReplaceAll(v, "'", "")
+		v = strings.ReplaceAll(v, "(", "")
+		v = strings.ReplaceAll(v, ")", "")
+		v = strings.ReplaceAll(v, "!", "")
+		if i > 0 {
+			buf.WriteByte('&')
+		}
+		buf.WriteString(url.QueryEscape(k))
+		buf.WriteByte('=')
+		buf.WriteString(url.QueryEscape(v))
+	}
+
+	// 计算 md5
+	hash := md5.Sum([]byte(buf.String() + mixinKey))
+	return fmt.Sprintf("%x", hash)
+}
+
+// generateDmImgList 生成 dm_img_list 参数
+func generateDmImgList() string {
+	x := 1245 + rand.Intn(10) - 5
+	if x < 0 {
+		x = 0
+	}
+	y := 1285 + rand.Intn(10) - 5
+	if y < 0 {
+		y = 0
+	}
+	timestamp := 30 + rand.Intn(10) - 5
+	if timestamp < 0 {
+		timestamp = 0
+	}
+	return fmt.Sprintf(`[{"x":%d,"y":%d,"z":0,"timestamp":%d,"type":0}]`,
+		3*x+2*y, 4*x-5*y, timestamp)
+}
+
+// addDmVerifyInfo 添加反爬验证参数
+func addDmVerifyInfo(params string) string {
+	dmImgList := generateDmImgList()
+	// base64 编码 "no webgl"
+	dmImgStr := "bm8gd2ViZ2w"
+	dmCoverImgStr := "bm8gd2ViZ2w"
+	return fmt.Sprintf("%s&dm_img_list=%s&dm_img_str=%s&dm_cover_img_str=%s",
+		params, url.QueryEscape(dmImgList), dmImgStr, dmCoverImgStr)
+}
 
 type Client struct {
 	SESSDATA   string
@@ -31,6 +116,8 @@ type Client struct {
 	DedeUserID string
 	Buvid3     string
 	UserAgent  string
+	ImgKey     string
+	SubKey     string
 	client     *http.Client
 }
 
@@ -127,7 +214,7 @@ type VideoRights struct {
 	IsCooperation int `json:"is_cooperation"`
 }
 
-// generateBuvid3 生成 buvid3 UUID
+// generateBuvid3 生成 buvid3 UUID (格式: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
 func generateBuvid3() string {
 	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
 		time.Now().UnixNano()%0x100000000,
@@ -138,9 +225,10 @@ func generateBuvid3() string {
 }
 
 func NewClient(sessdata string) *Client {
+	buvid3 := generateBuvid3()
 	return &Client{
 		SESSDATA:  sessdata,
-		Buvid3:    generateBuvid3(),
+		Buvid3:    buvid3,
 		UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
 		client: &http.Client{
 			Timeout: 30 * time.Second,
@@ -157,22 +245,85 @@ func NewClientWithConfig(sessdata, biliJct, dedeUserID string) *Client {
 	return c
 }
 
+// FetchWbiKeys 从B站获取 wbi 签名所需的 img_key 和 sub_key
+func (c *Client) FetchWbiKeys() error {
+	body, err := c.Get(WbiNavURL, nil)
+	if err != nil {
+		return fmt.Errorf("fetch wbi keys error: %w", err)
+	}
+
+	var resp struct {
+		Code int `json:"code"`
+		Data struct {
+			WbiImg struct {
+				ImgURL string `json:"img_url"`
+				SubURL string `json:"sub_url"`
+			} `json:"wbi_img"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return fmt.Errorf("unmarshal wbi keys error: %w", err)
+	}
+	if resp.Code != 0 {
+		return fmt.Errorf("fetch wbi keys failed: code=%d", resp.Code)
+	}
+
+	// 从 URL 中提取 key (格式: https://i0.hdslb.com/bfs/wbi/xxx.png -> xxx)
+	imgURL := resp.Data.WbiImg.ImgURL
+	subURL := resp.Data.WbiImg.SubURL
+
+	// 提取文件名（去掉扩展名）作为 key
+	imgKey := imgURL[strings.LastIndex(imgURL, "/")+1:]
+	imgKey = imgKey[:strings.LastIndex(imgKey, ".")]
+	subKey := subURL[strings.LastIndex(subURL, "/")+1:]
+	subKey = subKey[:strings.LastIndex(subKey, ".")]
+
+	c.ImgKey = imgKey
+	c.SubKey = subKey
+	return nil
+}
+
+// SignWbi 对参数进行 wbi 签名（如果已获取到 keys）
+func (c *Client) SignWbi(params map[string]string) string {
+	if c.ImgKey == "" || c.SubKey == "" {
+		// 尝试获取 keys
+		c.FetchWbiKeys()
+	}
+	if c.ImgKey != "" && c.SubKey != "" {
+		return wbiSign(params, c.ImgKey, c.SubKey)
+	}
+	return ""
+}
+
 func (c *Client) getHeaders() map[string]string {
 	headers := map[string]string{
-		"User-Agent": c.UserAgent,
-		"Referer":    "https://www.bilibili.com",
-		"Origin":     "https://www.bilibili.com",
-		"Accept":     "application/json, text/plain, */*",
+		"User-Agent":         c.UserAgent,
+		"Referer":            "https://www.bilibili.com",
+		"Origin":             "https://www.bilibili.com",
+		"Accept":             "application/json, text/plain, */*",
+		"Accept-Language":    "zh-CN,zh;q=0.9,en;q=0.8",
+		"Accept-Encoding":    "gzip, deflate, br",
+		"Connection":         "keep-alive",
+		"Sec-Ch-Ua":          `"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"`,
+		"Sec-Ch-Ua-Mobile":   "?0",
+		"Sec-Ch-Ua-Platform": `"Windows"`,
+		"Sec-Fetch-Dest":     "empty",
+		"Sec-Fetch-Mode":     "cors",
+		"Sec-Fetch-Site":     "same-site",
 	}
 	if c.SESSDATA != "" {
 		// 生成 buvid4
 		buvid4 := generateBuvid3()
+		// 生成 b_lsid
+		blsid := fmt.Sprintf("%08x_%010x", time.Now().UnixNano()%0x100000000, time.Now().UnixNano()%0x10000000000)
 		cookies := []string{
 			fmt.Sprintf("SESSDATA=%s", c.SESSDATA),
 			fmt.Sprintf("buvid3=%s", c.Buvid3),
 			fmt.Sprintf("buvid4=%s", buvid4),
+			fmt.Sprintf("b_lsid=%s", blsid),
 			"b_nut=1234567890",
-			"b_lsid=12345678_1234567890",
+			"bili_ticket=",
+			"bili_ticket_mid=",
 		}
 		if c.BiliJct != "" {
 			cookies = append(cookies, fmt.Sprintf("bili_jct=%s", c.BiliJct))
@@ -198,6 +349,50 @@ func (c *Client) Get(urlStr string, params map[string]string) ([]byte, error) {
 		}
 		u.RawQuery = q.Encode()
 	}
+
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request error: %w", err)
+	}
+
+	headers := c.getHeaders()
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read body error: %w", err)
+	}
+
+	return body, nil
+}
+
+// GetWithDm 发送 GET 请求并添加 dm 反爬验证参数
+func (c *Client) GetWithDm(urlStr string, params map[string]string) ([]byte, error) {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return nil, fmt.Errorf("parse url error: %w", err)
+	}
+
+	// 构建查询字符串
+	queryParts := []string{}
+	if params != nil {
+		for k, v := range params {
+			queryParts = append(queryParts, fmt.Sprintf("%s=%s", url.QueryEscape(k), url.QueryEscape(v)))
+		}
+	}
+	queryStr := strings.Join(queryParts, "&")
+
+	// 添加 dm 验证参数
+	queryStr = addDmVerifyInfo(queryStr)
+	u.RawQuery = queryStr
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
@@ -491,7 +686,7 @@ func (c *Client) GetDynamicList(hostMid string, offset string, ps int) (*Dynamic
 		params["offset"] = offset
 	}
 
-	body, err := c.Get(DynamicSpaceURL, params)
+	body, err := c.GetWithDm(DynamicSpaceURL, params)
 	if err != nil {
 		return nil, err
 	}

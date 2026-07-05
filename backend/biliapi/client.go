@@ -2,6 +2,7 @@ package biliapi
 
 import (
 	"bytes"
+	"compress/gzip"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
@@ -366,7 +367,18 @@ func (c *Client) Get(urlStr string, params map[string]string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	// 处理 gzip 压缩
+	var reader io.Reader = resp.Body
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		gz, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("gzip reader error: %w", err)
+		}
+		defer gz.Close()
+		reader = gz
+	}
+
+	body, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, fmt.Errorf("read body error: %w", err)
 	}
@@ -410,7 +422,18 @@ func (c *Client) GetWithDm(urlStr string, params map[string]string) ([]byte, err
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	// 处理 gzip 压缩
+	var reader io.Reader = resp.Body
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		gz, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("gzip reader error: %w", err)
+		}
+		defer gz.Close()
+		reader = gz
+	}
+
+	body, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, fmt.Errorf("read body error: %w", err)
 	}

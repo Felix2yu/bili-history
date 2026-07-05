@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"bilibili-history-go/config"
 	"bilibili-history-go/models"
 	"bilibili-history-go/services"
 	"bilibili-history-go/utils"
@@ -62,15 +63,33 @@ func stopImageDownload(c *gin.Context) {
 func getImageDownloadStatus(c *gin.Context) {
 	status := services.GetImageDownloadStatus()
 
-	// Count local files for covers and avatars
-	outputPath := utils.GetOutputPath("images")
-	coversDir := filepath.Join(outputPath, "covers")
-	avatarsDir := filepath.Join(outputPath, "avatars")
+	// 使用 config 中的 output_folder 或默认路径
+	cfg := config.GetConfig()
+	outputFolder := "output"
+	if cfg != nil && cfg.OutputFolder != "" {
+		outputFolder = cfg.OutputFolder
+	}
+
+	// 尝试多个可能的路径
+	possiblePaths := []string{
+		filepath.Join("/app", outputFolder),
+		outputFolder,
+		utils.GetOutputPath(),
+	}
+
+	var coversDir, avatarsDir, dynamicDir string
+	for _, basePath := range possiblePaths {
+		testCovers := filepath.Join(basePath, "images", "covers")
+		if _, err := os.Stat(testCovers); err == nil {
+			coversDir = testCovers
+			avatarsDir = filepath.Join(basePath, "images", "avatars")
+			dynamicDir = filepath.Join(basePath, "dynamic")
+			break
+		}
+	}
+
 	coversTotal, coversDownloaded := countLocalImages(coversDir)
 	avatarsTotal, avatarsDownloaded := countLocalImages(avatarsDir)
-
-	// 统计动态图片
-	dynamicDir := utils.GetOutputPath("dynamic")
 	dynamicTotal, dynamicDownloaded := countAllDynamicImages(dynamicDir)
 
 	c.JSON(http.StatusOK, models.SuccessResponse(gin.H{

@@ -260,7 +260,22 @@ const loadHosts = async () => {
   try {
     hostsLoading.value = true
     const res = await getDynamicDbHosts(50, 0)
-    hosts.value = res?.data?.data || []
+    const list = res?.data?.data || []
+
+    // 对于没有头像的UP，尝试从B站API获取
+    const hostsToFetch = list.filter(h => !h.face_path)
+    if (hostsToFetch.length > 0) {
+      for (const h of hostsToFetch.slice(0, 5)) { // 限制最多5个
+        try {
+          const cardRes = await getDynamicUserCard(h.host_mid)
+          if (cardRes?.data?.success && cardRes.data.data?.face) {
+            h.face_path = cardRes.data.data.face
+          }
+        } catch {}
+      }
+    }
+
+    hosts.value = list
   } catch (e) {
     // 忽略错误
   } finally {

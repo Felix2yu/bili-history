@@ -98,6 +98,14 @@ func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool, dynami
 		totalSkipped := 0
 		totalPages := 0
 		maxPages := 100
+		isIncremental := false
+
+		// 检查是否为增量获取（数据库中已有数据）
+		existingCount, _ := database.GetDynamicCount(hostMid)
+		if existingCount > 0 {
+			isIncremental = true
+			sendDynamicProgress(fmt.Sprintf("[增量模式] 数据库已有 %d 条动态，仅获取新增内容", existingCount))
+		}
 
 		for {
 			if shouldStop, _ := dynamicStopFlags.Load(hostMid); shouldStop == true {
@@ -133,7 +141,14 @@ func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool, dynami
 
 			// Parse and optionally download media
 			var dbItems []database.DynamicItem
+			foundExisting := false
 			for _, rawItem := range result.Items {
+				// 增量模式：遇到已存在的动态就停止
+				if isIncremental && database.IsDynamicExists(rawItem.IDStr) {
+					foundExisting = true
+					break
+				}
+
 				item := parseDynamicItem(rawItem, hostMid)
 
 				// 应用类型过滤
@@ -147,6 +162,16 @@ func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool, dynami
 				}
 
 				dbItems = append(dbItems, item)
+			}
+
+			// 增量模式：遇到已存在的动态，完成获取
+			if isIncremental && foundExisting {
+				if len(dbItems) > 0 && saveToDB {
+					database.SaveDynamics(hostMid, dbItems)
+					totalFetched += len(dbItems)
+				}
+				sendDynamicProgress(fmt.Sprintf("[增量完成] 已获取全部新增动态，共 %d 条", totalFetched))
+				break
 			}
 
 			if saveToDB && len(dbItems) > 0 {

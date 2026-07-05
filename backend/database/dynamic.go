@@ -18,6 +18,7 @@ type DynamicHost struct {
 	CoreCount     int    `json:"core_count"`
 	LastPublishTS int64  `json:"last_publish_ts"`
 	LastFetchTime int64  `json:"last_fetch_time"`
+	LastDynamicID string `json:"last_dynamic_id"`
 }
 
 type DynamicItem struct {
@@ -52,7 +53,8 @@ CREATE TABLE IF NOT EXISTS dynamic_hosts (
     item_count INTEGER DEFAULT 0,
     core_count INTEGER DEFAULT 0,
     last_publish_ts INTEGER DEFAULT 0,
-    last_fetch_time INTEGER DEFAULT 0
+    last_fetch_time INTEGER DEFAULT 0,
+    last_dynamic_id TEXT DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS dynamics (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -185,17 +187,57 @@ func SaveDynamicHost(host DynamicHost) error {
 	}
 
 	_, err := db.Exec(`
-		INSERT INTO dynamic_hosts (host_mid, up_name, face_path, item_count, core_count, last_publish_ts, last_fetch_time)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO dynamic_hosts (host_mid, up_name, face_path, item_count, core_count, last_publish_ts, last_fetch_time, last_dynamic_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(host_mid) DO UPDATE SET
 			up_name = excluded.up_name,
 			face_path = CASE WHEN excluded.face_path != '' THEN excluded.face_path ELSE dynamic_hosts.face_path END,
 			item_count = excluded.item_count,
 			core_count = excluded.core_count,
 			last_publish_ts = excluded.last_publish_ts,
-			last_fetch_time = excluded.last_fetch_time
-	`, host.HostMid, host.UpName, host.FacePath, host.ItemCount, host.CoreCount, host.LastPublishTS, host.LastFetchTime)
+			last_fetch_time = excluded.last_fetch_time,
+			last_dynamic_id = CASE WHEN excluded.last_dynamic_id != '' THEN excluded.last_dynamic_id ELSE dynamic_hosts.last_dynamic_id END
+	`, host.HostMid, host.UpName, host.FacePath, host.ItemCount, host.CoreCount, host.LastPublishTS, host.LastFetchTime, host.LastDynamicID)
 	return err
+}
+
+// GetLatestDynamicID 获取指定用户最新的动态ID
+func GetLatestDynamicID(hostMid string) string {
+	db := GetDynamicDB()
+	if db == nil {
+		return ""
+	}
+
+	var idStr string
+	err := db.QueryRow("SELECT id_str FROM dynamics WHERE host_mid = ? ORDER BY publish_ts DESC LIMIT 1", hostMid).Scan(&idStr)
+	if err != nil {
+		return ""
+	}
+	return idStr
+}
+
+// IsDynamicExists 检查动态是否已存在
+func IsDynamicExists(idStr string) bool {
+	db := GetDynamicDB()
+	if db == nil {
+		return false
+	}
+
+	var exists bool
+	db.QueryRow("SELECT EXISTS(SELECT 1 FROM dynamics WHERE id_str = ?)", idStr).Scan(&exists)
+	return exists
+}
+
+// GetDynamicCount 获取指定用户的动态总数
+func GetDynamicCount(hostMid string) (int, error) {
+	db := GetDynamicDB()
+	if db == nil {
+		return 0, fmt.Errorf("dynamic database not initialized")
+	}
+
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM dynamics WHERE host_mid = ?", hostMid).Scan(&count)
+	return count, err
 }
 
 func SaveDynamics(hostMid string, items []DynamicItem) (int, error) {

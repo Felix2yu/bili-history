@@ -247,7 +247,7 @@ func NewClientWithConfig(sessdata, biliJct, dedeUserID string) *Client {
 
 // FetchWbiKeys 从B站获取 wbi 签名所需的 img_key 和 sub_key
 func (c *Client) FetchWbiKeys() error {
-	body, err := c.Get(WbiNavURL, nil)
+	body, err := c.GetWithDm(WbiNavURL, nil)
 	if err != nil {
 		return fmt.Errorf("fetch wbi keys error: %w", err)
 	}
@@ -654,7 +654,7 @@ func (c *Client) GetUserCard(mid string) (*UserCardInfo, error) {
 		"mid": mid,
 	}
 
-	body, err := c.Get(UserCardURL, params)
+	body, err := c.GetWithDm(UserCardURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -677,13 +677,25 @@ func (c *Client) GetUserCard(mid string) (*UserCardInfo, error) {
 }
 
 func (c *Client) GetDynamicList(hostMid string, offset string, ps int) (*DynamicSpaceResponse, error) {
+	// 先确保获取 wbi keys
+	if c.ImgKey == "" || c.SubKey == "" {
+		c.FetchWbiKeys()
+	}
+
 	params := map[string]string{
 		"host_mid": hostMid,
 		"ps":       fmt.Sprintf("%d", ps),
 		"features": "itemOpusStyle,listOnlyfans,opusBigCover,onlyfansVote,decorationCard,onlyfansAssetsV2,forwardListHidden,ugcDelete,commentsNewVersion",
+		"platform": "web",
 	}
 	if offset != "" {
 		params["offset"] = offset
+	}
+
+	// 如果有 wbi keys，添加签名
+	if c.ImgKey != "" && c.SubKey != "" {
+		w_rid := wbiSign(params, c.ImgKey, c.SubKey)
+		params["w_rid"] = w_rid
 	}
 
 	body, err := c.GetWithDm(DynamicSpaceURL, params)

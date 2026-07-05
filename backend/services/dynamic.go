@@ -206,7 +206,10 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 	}
 
 	var modules map[string]json.RawMessage
-	json.Unmarshal(raw.Modules, &modules)
+	if err := json.Unmarshal(raw.Modules, &modules); err != nil {
+		utils.LogWarning("解析动态模块失败 %s: %v", raw.IDStr, err)
+		return item
+	}
 
 	// Parse module_author for author info
 	if authorRaw, ok := modules["module_author"]; ok {
@@ -251,9 +254,15 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 				Text string `json:"text"`
 			} `json:"desc"`
 		}
-		json.Unmarshal(dynRaw, &dyn)
+		if err := json.Unmarshal(dynRaw, &dyn); err != nil {
+			utils.LogWarning("解析动态内容失败 %s: %v", raw.IDStr, err)
+		}
 
 		item.Txt = dyn.Desc.Text
+
+		// 调试日志
+		utils.LogInfo("动态 %s 类型: %s, draw图片数: %d, opus图片数: %d",
+			raw.IDStr, dyn.Major.Type, len(dyn.Major.Draw.Items), len(dyn.Major.Opus.Pics))
 
 		switch dyn.Major.Type {
 		case "MAJOR_TYPE_ARCHIVE":
@@ -270,10 +279,11 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 			if item.OpusSummaryText == "" {
 				item.OpusSummaryText = dyn.Desc.Text
 			}
-			// 收集图片
+			// 收集 draw 图片
 			for _, img := range dyn.Major.Draw.Items {
 				if img.Src != "" {
 					item.MediaLocals = append(item.MediaLocals, img.Src)
+					utils.LogInfo("添加 draw 图片: %s", img.Src)
 				}
 			}
 		case "MAJOR_TYPE_OPUS":
@@ -283,6 +293,7 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 			for _, pic := range dyn.Major.Opus.Pics {
 				if pic.Url != "" {
 					item.MediaLocals = append(item.MediaLocals, pic.Url)
+					utils.LogInfo("添加 opus 图片: %s", pic.Url)
 				}
 			}
 		}

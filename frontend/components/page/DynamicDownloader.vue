@@ -95,17 +95,41 @@
 
     <!-- 已下载动态（数据库读取） -->
     <div v-if="hostMid && items.length" class="glass-card p-4">
-      <div class="text-sm font-medium mb-3">已下载动态</div>
-      <div class="space-y-3">
-        <div v-for="it in items" :key="it.id_str">
-          <component
-            :is="isVideoDynamic(it) ? DynamicCardVideo : DynamicCardNormal"
-            :item="it"
-            :face-url="hostFaceUrl"
-            @deleted="handleDynamicDeleted"
-          />
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-sm font-medium">已下载动态 ({{ items.length }}/{{ total }})</div>
+        <div class="flex items-center space-x-2">
+          <button
+            v-if="!noMore"
+            class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+            @click="loadAll"
+          >显示全部</button>
+          <label class="flex items-center space-x-1 cursor-pointer">
+            <input type="checkbox" v-model="selectAll" @change="toggleSelectAll"
+              class="w-3.5 h-3.5 text-red-600 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded" />
+            <span class="text-xs text-gray-600 dark:text-gray-400">全选</span>
+          </label>
+          <button
+            v-if="selectedIds.length > 0"
+            class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+            @click="batchDelete"
+          >删除选中 ({{ selectedIds.length }})</button>
         </div>
       </div>
+      <div class="space-y-3">
+        <div v-for="it in items" :key="it.id_str" class="flex items-start">
+          <input type="checkbox" v-model="selectedIds" :value="it.id_str"
+            class="mt-3 mr-2 w-4 h-4 text-red-600 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded cursor-pointer" />
+          <div class="flex-1 min-w-0">
+            <component
+              :is="isVideoDynamic(it) ? DynamicCardVideo : DynamicCardNormal"
+              :item="it"
+              :face-url="hostFaceUrl"
+              @deleted="handleDynamicDeleted"
+            />
+          </div>
+        </div>
+      </div>
+      <div v-if="loadingAll" class="mt-3 text-center text-xs text-gray-500">加载中，请稍候...</div>
       <div class="mt-3 flex justify-center">
         <button class="px-3 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50" :disabled="loadingMore || noMore" @click="loadMore">
           {{ noMore ? '没有更多了' : (loadingMore ? '加载中...' : '加载更多') }}
@@ -130,7 +154,8 @@ import {
   startDynamicAutoFetch,
   createDynamicProgressSSE,
   stopDynamicAutoFetch,
-  deleteDynamicSpace
+  deleteDynamicSpace,
+  deleteDynamicItem
 } from '~/utils/api'
 
 // 输入 mid
@@ -170,7 +195,12 @@ const limit = ref(20)
 const offset = ref(0)
 const total = ref(0)
 const loadingMore = ref(false)
+const loadingAll = ref(false)
 const noMore = ref(false)
+
+// 多选删除
+const selectedIds = ref([])
+const selectAll = ref(false)
 
 // 下载状态与 SSE
 const downloading = ref(false)
@@ -436,6 +466,7 @@ const isVideoDynamic = (it) => {
 const handleDynamicDeleted = (idStr) => {
   // 从列表中移除已删除的动态
   items.value = items.value.filter(it => it.id_str !== idStr)
+  selectedIds.value = selectedIds.value.filter(id => id !== idStr)
   total.value = Math.max(0, total.value - 1)
   addLog(`已删除动态 ${idStr}`)
 }
@@ -448,6 +479,55 @@ const loadMore = async () => {
   } finally {
     loadingMore.value = false
   }
+}
+
+const loadAll = async () => {
+  if (loadingAll.value || noMore.value) return
+  loadingAll.value = true
+  try {
+    while (!noMore.value) {
+      await refreshList(false)
+      // 防止请求过快
+      await new Promise(r => setTimeout(r, 100))
+    }
+  } finally {
+    loadingAll.value = false
+  }
+}
+
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    selectedIds.value = items.value.map(it => it.id_str)
+  } else {
+    selectedIds.value = []
+  }
+}
+
+const batchDelete = async () => {
+  if (selectedIds.value.length === 0) return
+  if (!confirm(`确定要删除选中的 ${selectedIds.value.length} 条动态吗？`)) return
+
+  addLog(`开始批量删除 ${selectedIds.value.length} 条动态...`)
+  let deletedCount = 0
+  let failedCount = 0
+
+  for (const idStr of selectedIds.value) {
+    try {
+      await deleteDynamicItem(idStr)
+      deletedCount++
+    } catch (e) {
+      failedCount++
+    }
+  }
+
+  // 从列表中移除已删除的动态
+  const deletedSet = new Set(selectedIds.value)
+  items.value = items.value.filter(it => !deletedSet.has(it.id_str))
+  total.value = Math.max(0, total.value - deletedCount)
+  selectedIds.value = []
+  selectAll.value = false
+
+  addLog(`批量删除完成：成功 ${deletedCount} 条${failedCount > 0 ? `，失败 ${failedCount} 条` : ''}`)
 }
 
 onUnmounted(() => {

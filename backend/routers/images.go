@@ -75,18 +75,25 @@ func getImageDownloadStatus(c *gin.Context) {
 		filepath.Join("/app", outputFolder),
 		outputFolder,
 		utils.GetOutputPath(),
+		filepath.Join(utils.GetBasePath(), "output"),
 	}
+
+	utils.LogWarning("[图片状态] 尝试路径: %v", possiblePaths)
 
 	var coversDir, avatarsDir, dynamicDir string
 	for _, basePath := range possiblePaths {
 		testCovers := filepath.Join(basePath, "images", "covers")
+		utils.LogWarning("[图片状态] 检查路径: %s", testCovers)
 		if _, err := os.Stat(testCovers); err == nil {
 			coversDir = testCovers
 			avatarsDir = filepath.Join(basePath, "images", "avatars")
 			dynamicDir = filepath.Join(basePath, "dynamic")
+			utils.LogWarning("[图片状态] 找到路径: %s", coversDir)
 			break
 		}
 	}
+
+	utils.LogWarning("[图片状态] coversDir=%s avatarsDir=%s dynamicDir=%s", coversDir, avatarsDir, dynamicDir)
 
 	coversTotal, coversDownloaded := countLocalImages(coversDir)
 	avatarsTotal, avatarsDownloaded := countLocalImages(avatarsDir)
@@ -120,7 +127,9 @@ func boolToInt(b bool) int {
 }
 
 func countLocalImages(dir string) (total int, downloaded int) {
+	utils.LogWarning("[图片计数] 检查目录: %s", dir)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		utils.LogWarning("[图片计数] 目录不存在: %s", dir)
 		return 0, 0
 	}
 
@@ -139,8 +148,10 @@ func countLocalImages(dir string) (total int, downloaded int) {
 		return nil
 	})
 	if err != nil {
+		utils.LogWarning("[图片计数] Walk 失败: %v", err)
 		return 0, 0
 	}
+	utils.LogWarning("[图片计数] 目录 %s 找到 %d 张图片", dir, total)
 	return total, downloaded
 }
 

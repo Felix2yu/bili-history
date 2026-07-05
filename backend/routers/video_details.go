@@ -1,9 +1,11 @@
 package routers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"bilibili-history-go/database"
 	"bilibili-history-go/models"
@@ -334,10 +336,39 @@ func resetVideoDetailProgress(c *gin.Context) {
 	}))
 }
 
-// getVideoDetailProgress 获取进度
+// getVideoDetailProgress 获取进度（SSE）
 func getVideoDetailProgress(c *gin.Context) {
-	progress := services.GetVideoDetailProgress()
-	c.JSON(http.StatusOK, models.SuccessResponse(progress))
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+
+	flusher, ok := c.Writer.(http.Flusher)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "不支持流式传输"})
+		return
+	}
+
+	ch := services.GetVideoDetailProgressChan()
+	timeout := time.After(30 * time.Minute)
+
+	for {
+		select {
+		case progress, ok := <-ch:
+			if !ok {
+				return
+			}
+			data, _ := json.Marshal(progress)
+			fmt.Fprintf(c.Writer, "data: %s\n\n", data)
+			flusher.Flush()
+			if progress.IsComplete || progress.Status == "stopped" || progress.Status == "error" {
+				return
+			}
+		case <-timeout:
+			return
+		case <-c.Request.Context().Done():
+			return
+		}
+	}
 }
 
 func syncHistoryTagNames(c *gin.Context) {

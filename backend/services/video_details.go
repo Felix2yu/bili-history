@@ -19,8 +19,17 @@ var (
 		IsStopped:    false,
 		Status:       "idle",
 	}
-	videoDetailMutex sync.Mutex
+	videoDetailMutex    sync.Mutex
+	videoDetailProgressChan chan models.VideoDetailProgress
 )
+
+// GetVideoDetailProgressChan 获取视频详情进度的channel
+func GetVideoDetailProgressChan() chan models.VideoDetailProgress {
+	if videoDetailProgressChan == nil {
+		videoDetailProgressChan = make(chan models.VideoDetailProgress, 100)
+	}
+	return videoDetailProgressChan
+}
 
 // GetVideoDetailProgress 获取视频详情获取进度
 func GetVideoDetailProgress() models.VideoDetailProgress {
@@ -228,6 +237,8 @@ func BatchFetchFromHistory(skipExisting bool) (map[string]interface{}, error) {
 }
 
 func processBatchFetch(bvids []string, sessdata string) {
+	ch := GetVideoDetailProgressChan()
+
 	defer func() {
 		progress := GetVideoDetailProgress()
 		progress.IsProcessing = false
@@ -247,6 +258,11 @@ func processBatchFetch(bvids []string, sessdata string) {
 		}
 
 		setVideoDetailProgress(progress)
+		// Send final progress
+		select {
+		case ch <- progress:
+		default:
+		}
 	}()
 
 	client := biliapi.NewClient(sessdata)
@@ -308,6 +324,12 @@ func processBatchFetch(bvids []string, sessdata string) {
 		progress.FailedCount = failedCount
 		progress.LastUpdateTime = time.Now().Unix()
 		setVideoDetailProgress(progress)
+
+		// Send progress to channel for SSE
+		select {
+		case ch <- progress:
+		default:
+		}
 
 		time.Sleep(200 * time.Millisecond)
 	}

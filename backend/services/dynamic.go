@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -406,6 +407,36 @@ func downloadFile(url, path, sessdata string) error {
 	// Use the existing image download function
 	_, err := DownloadImage(url, "dynamic", filepath.Base(path))
 	return err
+}
+
+// DeleteDynamicMedia 删除动态的本地图片文件
+func DeleteDynamicMedia(item *database.DynamicItem) {
+	if item == nil {
+		return
+	}
+
+	// 删除 media_locals 中的图片
+	for _, mediaPath := range item.MediaLocals {
+		// 跳过远程URL
+		if strings.HasPrefix(mediaPath, "http://") || strings.HasPrefix(mediaPath, "https://") {
+			continue
+		}
+		fullPath := utils.GetOutputPath(mediaPath)
+		if fullPath != "" {
+			os.Remove(fullPath)
+		}
+	}
+
+	// 删除 live_media_locals 中的图片和视频
+	for _, mediaPath := range item.LiveMediaLocals {
+		if strings.HasPrefix(mediaPath, "http://") || strings.HasPrefix(mediaPath, "https://") {
+			continue
+		}
+		fullPath := utils.GetOutputPath(mediaPath)
+		if fullPath != "" {
+			os.Remove(fullPath)
+		}
+	}
 }
 
 func extractExt(url string) string {

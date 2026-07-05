@@ -53,6 +53,7 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 		dynamic.GET("/space/auto/:host_mid/progress", dynamicProgressSSE)
 		dynamic.POST("/space/auto/:host_mid/stop", stopDynamicAutoFetch)
 		dynamic.DELETE("/space/:host_mid", deleteDynamicSpace)
+		dynamic.DELETE("/item/:id_str", deleteDynamicItem)
 		dynamic.GET("/user_card/:mid", getDynamicUserCard)
 		// Legacy stubs
 		dynamic.GET("/list", getDynamicListLegacy)
@@ -981,5 +982,36 @@ func deleteDynamicSpace(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
 		return
 	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "已删除"})
+}
+
+func deleteDynamicItem(c *gin.Context) {
+	idStr := c.Param("id_str")
+	if idStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "id_str 不能为空"})
+		return
+	}
+
+	// 获取动态详情（用于删除本地图片）
+	item, err := database.GetDynamicByID(idStr)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": "动态不存在"})
+		return
+	}
+
+	// 删除本地图片文件
+	if item != nil {
+		services.DeleteDynamicMedia(item)
+	}
+
+	// 删除数据库记录
+	if err := database.DeleteDynamic(idStr); err != nil {
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	// 更新UP主统计
+	database.UpdateDynamicHostStats(item.HostMid)
+
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "已删除"})
 }

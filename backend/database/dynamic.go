@@ -240,6 +240,64 @@ func GetDynamicCount(hostMid string) (int, error) {
 	return count, err
 }
 
+// GetDynamicByID 根据ID获取动态详情
+func GetDynamicByID(idStr string) (*DynamicItem, error) {
+	db := GetDynamicDB()
+	if db == nil {
+		return nil, fmt.Errorf("dynamic database not initialized")
+	}
+
+	var item DynamicItem
+	var mediaLocalsJSON, liveMediaLocalsJSON string
+	err := db.QueryRow(`
+		SELECT id_str, type, host_mid, author_name, txt, opus_title, opus_summary_text,
+		       bvid, title, desc, cover, publish_ts, media_locals, live_media_locals
+		FROM dynamics WHERE id_str = ?
+	`, idStr).Scan(&item.ID, &item.Type, &item.HostMid, &item.AuthorName, &item.Txt,
+		&item.OpusTitle, &item.OpusSummaryText, &item.Bvid, &item.Title, &item.Desc,
+		&item.Cover, &item.PublishTS, &mediaLocalsJSON, &liveMediaLocalsJSON)
+	if err != nil {
+		return nil, err
+	}
+	json.Unmarshal([]byte(mediaLocalsJSON), &item.MediaLocals)
+	json.Unmarshal([]byte(liveMediaLocalsJSON), &item.LiveMediaLocals)
+	return &item, nil
+}
+
+// DeleteDynamic 删除指定动态
+func DeleteDynamic(idStr string) error {
+	db := GetDynamicDB()
+	if db == nil {
+		return fmt.Errorf("dynamic database not initialized")
+	}
+
+	_, err := db.Exec("DELETE FROM dynamics WHERE id_str = ?", idStr)
+	return err
+}
+
+// UpdateDynamicHostStats 更新UP主统计信息
+func UpdateDynamicHostStats(hostMid string) error {
+	db := GetDynamicDB()
+	if db == nil {
+		return fmt.Errorf("dynamic database not initialized")
+	}
+
+	var totalCount int
+	db.QueryRow("SELECT COUNT(*) FROM dynamics WHERE host_mid = ?", hostMid).Scan(&totalCount)
+
+	var maxPublishTS int64
+	db.QueryRow("SELECT COALESCE(MAX(publish_ts), 0) FROM dynamics WHERE host_mid = ?", hostMid).Scan(&maxPublishTS)
+
+	coreCount := 0
+	db.QueryRow("SELECT COUNT(*) FROM dynamics WHERE host_mid = ? AND (type = 'DYNAMIC_TYPE_AV' OR type = 'DYNAMIC_TYPE_DRAW')", hostMid).Scan(&coreCount)
+
+	_, err := db.Exec(`
+		UPDATE dynamic_hosts SET item_count = ?, core_count = ?, last_publish_ts = ?
+		WHERE host_mid = ?
+	`, totalCount, coreCount, maxPublishTS, hostMid)
+	return err
+}
+
 func SaveDynamics(hostMid string, items []DynamicItem) (int, error) {
 	db := GetDynamicDB()
 	if db == nil {

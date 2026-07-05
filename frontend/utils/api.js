@@ -1708,6 +1708,16 @@ export const stopDynamicAutoFetch = (hostMid) => {
 export const deleteDynamicSpace = (hostMid) => {
   return instance.delete(`/dynamic/space/${hostMid}`)
 }
+
+/**
+ * 删除单条动态及其媒体文件
+ * DELETE /dynamic/item/{id_str}
+ * @param {string} idStr - 动态 ID
+ * @returns {Promise<any>}
+ */
+export const deleteDynamicItem = (idStr) => {
+  return instance.delete(`/dynamic/item/${idStr}`)
+}
 // =============================
 // 稍后再看接口（/watchlater）
 // =============================

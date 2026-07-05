@@ -102,6 +102,7 @@
             :is="isVideoDynamic(it) ? DynamicCardVideo : DynamicCardNormal"
             :item="it"
             :face-url="hostFaceUrl"
+            @deleted="handleDynamicDeleted"
           />
         </div>
       </div>
@@ -430,6 +431,13 @@ const isVideoDynamic = (it) => {
   if (it?.bvid) return true
   const t = String(it?.type || '')
   return t.includes('VIDEO') || t.includes('AV')
+}
+
+const handleDynamicDeleted = (idStr) => {
+  // 从列表中移除已删除的动态
+  items.value = items.value.filter(it => it.id_str !== idStr)
+  total.value = Math.max(0, total.value - 1)
+  addLog(`已删除动态 ${idStr}`)
 }
 
 const loadMore = async () => {

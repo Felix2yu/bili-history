@@ -49,11 +49,28 @@ func GetDynamicProgressChan() chan string {
 	return dynamicProgressCh
 }
 
-func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool) {
+// DynamicType 表示动态类型常量
+const (
+	DynamicTypeVideo   = "DYNAMIC_TYPE_AV"      // 视频动态
+	DynamicTypeDraw    = "DYNAMIC_TYPE_DRAW"    // 图文动态
+	DynamicTypeOpus    = "DYNAMIC_TYPE_OPUS"    // 文章动态
+	DynamicTypeForward = "DYNAMIC_TYPE_FORWARD" // 转发动态
+	DynamicTypeNone    = "DYNAMIC_TYPE_NONE"    // 纯文本动态
+)
+
+func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool, dynamicTypes []string) {
 	cfg := config.GetConfig()
 	if cfg == nil || cfg.SESSDATA == "" {
 		setDynamicFetchStatus(DynamicFetchStatus{Message: "SESSDATA 未配置"})
 		return
+	}
+
+	// 构建类型过滤映射
+	typeFilter := make(map[string]bool)
+	if len(dynamicTypes) > 0 {
+		for _, t := range dynamicTypes {
+			typeFilter[t] = true
+		}
 	}
 
 	setDynamicFetchStatus(DynamicFetchStatus{
@@ -78,6 +95,7 @@ func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool) {
 		client := biliapi.NewClient(cfg.SESSDATA)
 		offset := ""
 		totalFetched := 0
+		totalSkipped := 0
 		totalPages := 0
 		maxPages := 100
 
@@ -118,6 +136,12 @@ func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool) {
 			for _, rawItem := range result.Items {
 				item := parseDynamicItem(rawItem, hostMid)
 
+				// 应用类型过滤
+				if len(typeFilter) > 0 && !typeFilter[item.Type] {
+					totalSkipped++
+					continue
+				}
+
 				if saveMedia {
 					downloadDynamicMedia(&item, hostMid)
 				}
@@ -132,7 +156,7 @@ func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool) {
 				} else {
 					sendDynamicProgress(fmt.Sprintf("[第 %d 页] 获取 %d 条，新增 %d 条", totalPages, len(dbItems), inserted))
 				}
-			} else {
+			} else if len(dbItems) > 0 {
 				sendDynamicProgress(fmt.Sprintf("[第 %d 页] 获取 %d 条", totalPages, len(dbItems)))
 			}
 
@@ -153,12 +177,16 @@ func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool) {
 			time.Sleep(500 * time.Millisecond)
 		}
 
-		sendDynamicProgress(fmt.Sprintf("[全部抓取完毕] 抓取完成！共获取 %d 条动态，总计 %d 页", totalFetched, totalPages))
+		skipMsg := ""
+		if totalSkipped > 0 {
+			skipMsg = fmt.Sprintf("，跳过 %d 条", totalSkipped)
+		}
+		sendDynamicProgress(fmt.Sprintf("[全部抓取完毕] 抓取完成！共获取 %d 条动态%s，总计 %d 页", totalFetched, skipMsg, totalPages))
 		setDynamicFetchStatus(DynamicFetchStatus{
 			HostMid:      hostMid,
 			TotalFetched: totalFetched,
 			TotalPages:   totalPages,
-			Message:      fmt.Sprintf("抓取完成，共 %d 条动态", totalFetched),
+			Message:      fmt.Sprintf("抓取完成，共 %d 条动态%s", totalFetched, skipMsg),
 		})
 	}()
 }

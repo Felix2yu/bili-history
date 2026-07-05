@@ -19,7 +19,7 @@ var (
 		IsStopped:    false,
 		Status:       "idle",
 	}
-	videoDetailMutex    sync.Mutex
+	videoDetailMutex        sync.Mutex
 	videoDetailProgressChan chan models.VideoDetailProgress
 )
 
@@ -150,6 +150,8 @@ func BatchFetchVideoDetails(bvids []string) (map[string]interface{}, error) {
 		FailedCount:     0,
 		StartTime:       now,
 		LastUpdateTime:  now,
+		ElapsedSeconds:  0,
+		ProgressPercent: 0,
 		Status:          "running",
 	}
 	setVideoDetailProgress(newProgress)
@@ -223,6 +225,8 @@ func BatchFetchFromHistory(skipExisting bool) (map[string]interface{}, error) {
 		FailedCount:     0,
 		StartTime:       now,
 		LastUpdateTime:  now,
+		ElapsedSeconds:  0,
+		ProgressPercent: 0,
 		Status:          "running",
 	}
 	setVideoDetailProgress(newProgress)
@@ -230,9 +234,9 @@ func BatchFetchFromHistory(skipExisting bool) (map[string]interface{}, error) {
 	go processBatchFetch(bvidsToFetch, cfg.SESSDATA)
 
 	return map[string]interface{}{
-		"status":       "success",
-		"message":      "开始从历史记录批量获取视频详情",
-		"total":        len(bvidsToFetch),
+		"status":        "success",
+		"message":       "开始从历史记录批量获取视频详情",
+		"total":         len(bvidsToFetch),
 		"history_total": len(allBvids),
 	}, nil
 }
@@ -326,6 +330,10 @@ func processBatchFetch(bvids []string, sessdata string) {
 		progress.SuccessCount = successCount
 		progress.FailedCount = failedCount
 		progress.LastUpdateTime = time.Now().Unix()
+		if progress.TotalVideos > 0 {
+			progress.ProgressPercent = float64(progress.ProcessedVideos) / float64(progress.TotalVideos) * 100
+		}
+		progress.ElapsedSeconds = time.Since(time.Unix(progress.StartTime, 0)).Seconds()
 		setVideoDetailProgress(progress)
 
 		// Send progress to channel for SSE

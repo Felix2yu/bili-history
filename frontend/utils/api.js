@@ -1621,7 +1621,7 @@ export const downloadCollection = async (params, onMessage) => {
 // =============================
 
 /**
- * 列出数据库中已有动态的 UP 列表（含名称与头像）
+ * 列出已抓取的 UP（来自数据库）
  * GET /dynamic/db/hosts
  * @param {number} [limit=50] - 每页数量（1-200）
  * @param {number} [offset=0] - 偏移量（>=0）
@@ -1630,6 +1630,15 @@ export const getDynamicDbHosts = (limit = 50, offset = 0) => {
   return instance.get('/dynamic/db/hosts', {
     params: { limit, offset }
   })
+}
+
+/**
+ * 从B站获取用户卡片信息
+ * GET /dynamic/user_card/{mid}
+ * @param {string|number} mid - 用户 MID
+ */
+export const getDynamicUserCard = (mid) => {
+  return instance.get(`/dynamic/user_card/${mid}`)
 }
 
 /**
@@ -1645,22 +1654,24 @@ export const getDynamicDbSpace = (hostMid, limit = 20, offset = 0) => {
   })
 }
 /**
- * 自动从上次位置继续抓取（页级延迟 3-5 秒，支持“页级停止”）
+ * 自动从上次位置继续抓取（页级延迟 3-5 秒，支持"页级停止"）
  * GET /dynamic/space/auto/{host_mid}
  * @param {string|number} hostMid - UP 的 mid
  * @param {Object} params - 查询参数
  * @param {boolean} [params.need_top=false]
  * @param {boolean} [params.save_to_db=true]
  * @param {boolean} [params.save_media=true]
+ * @param {string[]} [params.dynamic_types=[]] - 要获取的动态类型
  */
 export const startDynamicAutoFetch = (hostMid, params = {}) => {
   const {
     need_top = false,
     save_to_db = true,
-    save_media = true
+    save_media = true,
+    dynamic_types = []
   } = params
   return instance.get(`/dynamic/space/auto/${hostMid}`, {
-    params: { need_top, save_to_db, save_media }
+    params: { need_top, save_to_db, save_media, dynamic_types: dynamic_types.join(',') }
   })
 }
 

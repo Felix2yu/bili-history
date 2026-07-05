@@ -22,6 +22,19 @@
           @click="handleStop"
         >停止</button>
       </div>
+
+      <!-- 动态类型选择 -->
+      <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+        <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">获取动态类型（不选则全部获取）</div>
+        <div class="flex flex-wrap gap-2">
+          <label v-for="dt in dynamicTypeOptions" :key="dt.value" class="flex items-center space-x-1 cursor-pointer">
+            <input type="checkbox" v-model="selectedDynamicTypes" :value="dt.value"
+              class="w-3.5 h-3.5 text-green-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500"
+              :disabled="downloading" />
+            <span class="text-xs text-gray-700 dark:text-gray-300">{{ dt.label }}</span>
+          </label>
+        </div>
+      </div>
     </div>
 
     <!-- 用户信息卡片 -->
@@ -55,7 +68,7 @@
         <div v-if="hosts.length" class="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           <div v-for="h in hosts" :key="h.host_mid" class="group border rounded-md p-2 flex items-center space-x-2 hover:border-[#fb7299] cursor-pointer dark:border-gray-700"
                @click="selectHost(h.host_mid)">
-            <img :src="h.face_path ? toStaticUrl(h.face_path) : ''" class="w-9 h-9 rounded-full object-cover border" alt="face" />
+            <img :src="h.face_path ? (h.face_path.startsWith('http') ? h.face_path : toStaticUrl(h.face_path)) : ''" class="w-9 h-9 rounded-full object-cover border" alt="face" />
             <div class="min-w-0 flex-1">
               <div class="text-xs font-medium truncate">{{ h.up_name || h.host_mid }}</div>
               <div class="text-[11px] text-gray-500 truncate">动态：{{ h.item_count }} · 抓取：{{ formatTs(h.last_fetch_time) }}</div>
@@ -112,6 +125,7 @@ import SimpleSearchBar from '~/components/SimpleSearchBar'
 import {
   getDynamicDbHosts,
   getDynamicDbSpace,
+  getDynamicUserCard,
   startDynamicAutoFetch,
   createDynamicProgressSSE,
   stopDynamicAutoFetch,
@@ -122,9 +136,28 @@ import {
 const inputMid = ref('')
 const hostMid = ref('')
 
+// 动态类型选项
+const dynamicTypeOptions = [
+  { value: 'DYNAMIC_TYPE_AV', label: '视频' },
+  { value: 'DYNAMIC_TYPE_DRAW', label: '图文' },
+  { value: 'DYNAMIC_TYPE_OPUS', label: '文章' },
+  { value: 'DYNAMIC_TYPE_FORWARD', label: '转发' },
+  { value: 'DYNAMIC_TYPE_NONE', label: '纯文本' }
+]
+const selectedDynamicTypes = ref([])
+
 // 主机信息与头像
 const hostInfo = ref(null)
-const hostFaceUrl = computed(() => hostInfo.value?.face_path ? toStaticUrl(hostInfo.value.face_path) : '')
+const hostFaceUrl = computed(() => {
+  const face = hostInfo.value?.face_path
+  if (!face) return ''
+  // 如果已经是完整URL（从B站API获取的），直接使用
+  if (face.startsWith('http://') || face.startsWith('https://')) {
+    return face
+  }
+  // 否则转换为本地静态URL
+  return toStaticUrl(face)
+})
 
 // UP 列表
 const hosts = ref([])
@@ -158,12 +191,37 @@ const formatTs = (ts) => {
   }
 }
 
-// 从 hosts 里尝试读取基本信息（face/up_name）
+// 从 hosts 里尝试读取基本信息（face/up_name），如果没有则从B站API获取
 const fetchHostInfo = async (mid) => {
+  // 先从数据库获取
   const res = await getDynamicDbHosts(200, 0)
   const list = res?.data?.data || []
   const found = list.find(x => String(x.host_mid) === String(mid))
-  hostInfo.value = found || { host_mid: String(mid) }
+
+  if (found) {
+    hostInfo.value = found
+  } else {
+    // 数据库没有，从B站API获取用户信息
+    try {
+      const cardRes = await getDynamicUserCard(mid)
+      if (cardRes?.data?.success && cardRes.data.data) {
+        const card = cardRes.data.data
+        hostInfo.value = {
+          host_mid: String(mid),
+          up_name: card.name || '',
+          face_path: card.face || '',
+          item_count: 0,
+          core_count: 0,
+          last_publish_ts: 0,
+          last_fetch_time: 0
+        }
+      } else {
+        hostInfo.value = { host_mid: String(mid) }
+      }
+    } catch {
+      hostInfo.value = { host_mid: String(mid) }
+    }
+  }
 }
 
 const loadHosts = async () => {
@@ -223,8 +281,8 @@ const openSSE = (mid) => {
     sse.onopen = () => {
       addLog(`[SSE] connected for ${mid}`)
     }
-    // 仅识别最终完成格式："抓取完成！共获取 xx 条动态，总计 xx 页"
-    const FINAL_DONE_RE = /\[全部抓取完毕\]\s*抓取完成！共获取\s+\d+\s*条动态，\s*总计\s+\d+\s*页/
+    // 仅识别最终完成格式："抓取完成！共获取 xx 条动态(，跳过 xx 条)，总计 xx 页"
+    const FINAL_DONE_RE = /\[全部抓取完毕\]\s*抓取完成！共获取\s+\d+\s*条动态(，跳过\s+\d+\s*条)?，\s*总计\s+\d+\s*页/
     // 显式监听 progress 事件名（后端事件名: progress）
     sse.addEventListener('progress', (evt) => {
       try {
@@ -271,13 +329,17 @@ const closeSSE = () => {
 const handleStartDownload = async () => {
   if (!hostMid.value || downloading.value) return
   downloading.value = true
-  logs.value.push(`Start auto fetch for MID ${hostMid.value}`)
+  const typesMsg = selectedDynamicTypes.value.length > 0
+    ? ` types: ${selectedDynamicTypes.value.join(', ')}`
+    : ' all types'
+  logs.value.push(`Start auto fetch for MID ${hostMid.value}${typesMsg}`)
   openSSE(hostMid.value)
   try {
     await startDynamicAutoFetch(hostMid.value, {
       need_top: false,
       save_to_db: true,
-      save_media: true
+      save_media: true,
+      dynamic_types: selectedDynamicTypes.value
     })
   } catch (e) {
     logs.value.push(`start error: ${e?.message || e}`)

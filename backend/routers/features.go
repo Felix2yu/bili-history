@@ -53,6 +53,7 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 		dynamic.GET("/space/auto/:host_mid/progress", dynamicProgressSSE)
 		dynamic.POST("/space/auto/:host_mid/stop", stopDynamicAutoFetch)
 		dynamic.DELETE("/space/:host_mid", deleteDynamicSpace)
+		dynamic.GET("/user_card/:mid", getDynamicUserCard)
 		// Legacy stubs
 		dynamic.GET("/list", getDynamicListLegacy)
 		dynamic.POST("/sync", syncDynamicLegacy)
@@ -117,8 +118,8 @@ func batchCheckFavoriteStatus(c *gin.Context) {
 
 func getCollectedFavoriteFolders(c *gin.Context) {
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":  []interface{}{},
-		"count": 0,
+		"list":     []interface{}{},
+		"count":    0,
 		"has_more": false,
 	}))
 }
@@ -151,12 +152,12 @@ func favoriteResource(c *gin.Context) {
 	}
 
 	var body struct {
-		Resources    string `json:"resources"`
-		MediaIDs     string `json:"media_ids"`
-		Type         int    `json:"type"`
-		Rid          int64  `json:"rid"`
-		AddMediaIDs  string `json:"add_media_ids"`
-		DelMediaIDs  string `json:"del_media_ids"`
+		Resources   string `json:"resources"`
+		MediaIDs    string `json:"media_ids"`
+		Type        int    `json:"type"`
+		Rid         int64  `json:"rid"`
+		AddMediaIDs string `json:"add_media_ids"`
+		DelMediaIDs string `json:"del_media_ids"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
@@ -428,17 +429,17 @@ func syncFavorites(c *gin.Context) {
 			}
 			contents := make([]database.FavoriteContent, 0, len(res.Media))
 			for _, item := range res.Media {
-			bvid := ""
-			if item.UGC != nil {
-				bvid = item.UGC.Bvid
-			}
-			var statView, statDanmaku, statReply, statFavorite int
-			if item.Stat != nil {
-				statView = item.Stat.View
-				statDanmaku = item.Stat.Danmaku
-				statReply = item.Stat.Reply
-				statFavorite = item.Stat.Favorite
-			}
+				bvid := ""
+				if item.UGC != nil {
+					bvid = item.UGC.Bvid
+				}
+				var statView, statDanmaku, statReply, statFavorite int
+				if item.Stat != nil {
+					statView = item.Stat.View
+					statDanmaku = item.Stat.Danmaku
+					statReply = item.Stat.Reply
+					statFavorite = item.Stat.Favorite
+				}
 				contents = append(contents, database.FavoriteContent{
 					MediaID:     folder.MediaID,
 					ContentID:   item.ID,
@@ -599,22 +600,22 @@ func getWatchLaterList(c *gin.Context) {
 	localVideos := make([]database.WatchLaterVideo, 0, len(data.List))
 	for _, item := range data.List {
 		localVideos = append(localVideos, database.WatchLaterVideo{
-			Bvid:       item.Bvid,
-			Aid:        item.Aid,
-			Title:      item.Title,
-			Pic:        item.Pic,
-			Desc:       item.Desc,
-			Duration:   item.Duration,
-			Tid:        item.Tid,
-			Tname:      item.Tname,
-			OwnerName:  item.Owner.Name,
-			OwnerMid:   int64(item.Owner.Mid),
-			OwnerFace:  item.Owner.Face,
-			AddAt:      item.AddAt,
-			Pubdate:    item.Pubdate,
-			View:       item.Stat.View,
-			Danmaku:    item.Stat.Danmaku,
-			Link:       "https://www.bilibili.com/video/" + item.Bvid,
+			Bvid:      item.Bvid,
+			Aid:       item.Aid,
+			Title:     item.Title,
+			Pic:       item.Pic,
+			Desc:      item.Desc,
+			Duration:  item.Duration,
+			Tid:       item.Tid,
+			Tname:     item.Tname,
+			OwnerName: item.Owner.Name,
+			OwnerMid:  int64(item.Owner.Mid),
+			OwnerFace: item.Owner.Face,
+			AddAt:     item.AddAt,
+			Pubdate:   item.Pubdate,
+			View:      item.Stat.View,
+			Danmaku:   item.Stat.Danmaku,
+			Link:      "https://www.bilibili.com/video/" + item.Bvid,
 		})
 	}
 	if saveErr := database.SaveWatchLaterVideos(localVideos); saveErr != nil {
@@ -672,22 +673,22 @@ func syncWatchLater(c *gin.Context) {
 	localVideos := make([]database.WatchLaterVideo, 0, len(data.List))
 	for _, item := range data.List {
 		localVideos = append(localVideos, database.WatchLaterVideo{
-			Bvid:       item.Bvid,
-			Aid:        item.Aid,
-			Title:      item.Title,
-			Pic:        item.Pic,
-			Desc:       item.Desc,
-			Duration:   item.Duration,
-			Tid:        item.Tid,
-			Tname:      item.Tname,
-			OwnerName:  item.Owner.Name,
-			OwnerMid:   int64(item.Owner.Mid),
-			OwnerFace:  item.Owner.Face,
-			AddAt:      item.AddAt,
-			Pubdate:    item.Pubdate,
-			View:       item.Stat.View,
-			Danmaku:    item.Stat.Danmaku,
-			Link:       "https://www.bilibili.com/video/" + item.Bvid,
+			Bvid:      item.Bvid,
+			Aid:       item.Aid,
+			Title:     item.Title,
+			Pic:       item.Pic,
+			Desc:      item.Desc,
+			Duration:  item.Duration,
+			Tid:       item.Tid,
+			Tname:     item.Tname,
+			OwnerName: item.Owner.Name,
+			OwnerMid:  int64(item.Owner.Mid),
+			OwnerFace: item.Owner.Face,
+			AddAt:     item.AddAt,
+			Pubdate:   item.Pubdate,
+			View:      item.Stat.View,
+			Danmaku:   item.Stat.Danmaku,
+			Link:      "https://www.bilibili.com/video/" + item.Bvid,
 		})
 	}
 	if saveErr := database.SaveWatchLaterVideos(localVideos); saveErr != nil {
@@ -741,8 +742,8 @@ func deleteWatchLaterVideo(c *gin.Context) {
 	_ = database.DeleteWatchLaterVideo(bvid)
 
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"bvid":  bvid,
-		"aid":   local.Aid,
+		"bvid": bvid,
+		"aid":  local.Aid,
 	}))
 }
 
@@ -844,6 +845,29 @@ func syncDynamicLegacy(c *gin.Context) {
 	})
 }
 
+func getDynamicUserCard(c *gin.Context) {
+	mid := c.Param("mid")
+	if mid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "mid 不能为空"})
+		return
+	}
+
+	cfg := config.GetConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": "SESSDATA 未配置"})
+		return
+	}
+
+	client := biliapi.NewClient(cfg.SESSDATA)
+	card, err := client.GetUserCard(mid)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": card})
+}
+
 func getDynamicDbHosts(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -886,13 +910,25 @@ func startDynamicAutoFetch(c *gin.Context) {
 	saveToDB := c.DefaultQuery("save_to_db", "true") == "true"
 	saveMedia := c.DefaultQuery("save_media", "true") == "true"
 
+	// 解析动态类型过滤参数，格式: DYNAMIC_TYPE_AV,DYNAMIC_TYPE_DRAW
+	var dynamicTypes []string
+	typesStr := c.DefaultQuery("dynamic_types", "")
+	if typesStr != "" {
+		for _, t := range strings.Split(typesStr, ",") {
+			t = strings.TrimSpace(t)
+			if t != "" {
+				dynamicTypes = append(dynamicTypes, t)
+			}
+		}
+	}
+
 	status := services.GetDynamicFetchStatus(hostMid)
 	if status.IsRunning {
 		c.JSON(http.StatusOK, gin.H{"success": false, "message": "该 UP 的动态抓取正在进行中"})
 		return
 	}
 
-	go services.FetchDynamicSpace(hostMid, needTop, saveToDB, saveMedia)
+	go services.FetchDynamicSpace(hostMid, needTop, saveToDB, saveMedia, dynamicTypes)
 
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "开始抓取动态"})
 }
@@ -947,5 +983,3 @@ func deleteDynamicSpace(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "已删除"})
 }
-
-

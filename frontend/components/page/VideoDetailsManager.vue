@@ -375,6 +375,8 @@ const startProgressStream = () => {
         // 更新进度，映射API文档中的字段
         progress.value = {
           isProcessing: data.is_processing,
+          isComplete: data.is_complete,
+          isStopped: data.is_stopped,
           totalVideos: data.total_videos,
           processedVideos: data.processed_videos,
           successCount: data.success_count,
@@ -382,8 +384,7 @@ const startProgressStream = () => {
           errorVideos: data.error_videos || [],
           skippedInvalidCount: data.skipped_invalid_count || 0,
           progressPercentage: data.progress_percentage,
-          elapsedTime: data.elapsed_time,
-          isComplete: data.is_complete
+          elapsedTime: typeof data.elapsed_time === 'number' ? `${data.elapsed_time.toFixed(2)}秒` : '0.00秒'
         }
 
         // 处理完成
@@ -401,8 +402,14 @@ const startProgressStream = () => {
 
     // 错误处理
     progressSource.value.onerror = (event) => {
-      console.error('视频详情进度流错误:', event)
       closeProgressStream()
+
+      // 如果任务已完成或已停止，不显示错误
+      if (progress.value.isComplete || progress.value.isStopped) {
+        return
+      }
+
+      console.error('视频详情进度流错误:', event)
 
       // 如果正在获取中，显示错误消息
       if (isFetching.value) {

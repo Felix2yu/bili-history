@@ -17,6 +17,7 @@ const (
 	WatchLaterURL           = "https://api.bilibili.com/x/v2/history/toview"
 	WatchLaterDelURL        = "https://api.bilibili.com/x/v2/history/toview/del"
 	DynamicSpaceURL         = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
+	UserCardURL             = "https://api.bilibili.com/x/web-interface/card"
 	FavoriteFolderListURL   = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"
 	FavoriteResourceListURL = "https://api.bilibili.com/x/v3/fav/resource/list"
 	FavoriteDealURL         = "https://api.bilibili.com/x/v3/fav/resource/deal"
@@ -40,61 +41,61 @@ type BiliResponse struct {
 }
 
 type HistoryEntry struct {
-	Title      string `json:"title"`
-	LongTitle  string `json:"long_title"`
-	Cover      string `json:"cover"`
-	URI        string `json:"uri"`
+	Title      string      `json:"title"`
+	LongTitle  string      `json:"long_title"`
+	Cover      string      `json:"cover"`
+	URI        string      `json:"uri"`
 	History    HistoryInfo `json:"history"`
-	ViewAt     int64  `json:"view_at"`
-	Progress   int    `json:"progress"`
-	Badge      string `json:"badge"`
-	ShowTitle  string `json:"show_title"`
-	Icon       string `json:"icon"`
-	Business   string `json:"business"`
-	Bvid       string `json:"bvid"`
-	DTotal     int    `json:"duration"`
-	AuthorName string `json:"author_name"`
-	AuthorFace string `json:"author_face"`
-	AuthorMid  int64  `json:"author_mid"`
+	ViewAt     int64       `json:"view_at"`
+	Progress   int         `json:"progress"`
+	Badge      string      `json:"badge"`
+	ShowTitle  string      `json:"show_title"`
+	Icon       string      `json:"icon"`
+	Business   string      `json:"business"`
+	Bvid       string      `json:"bvid"`
+	DTotal     int         `json:"duration"`
+	AuthorName string      `json:"author_name"`
+	AuthorFace string      `json:"author_face"`
+	AuthorMid  int64       `json:"author_mid"`
 }
 
 type HistoryInfo struct {
-	Bvid  string `json:"bvid"`
-	Page  int    `json:"page"`
-	Cid   int    `json:"cid"`
-	Part  string `json:"part"`
+	Bvid     string `json:"bvid"`
+	Page     int    `json:"page"`
+	Cid      int    `json:"cid"`
+	Part     string `json:"part"`
 	Business string `json:"business"`
-	Dt    int    `json:"dt"`
+	Dt       int    `json:"dt"`
 }
 
 type HistoryCursorData struct {
-	Cursor HistoryCursor `json:"cursor"`
+	Cursor HistoryCursor  `json:"cursor"`
 	List   []HistoryEntry `json:"list"`
 }
 
 type HistoryCursor struct {
-	Max    int64 `json:"max"`
-	ViewAt int64 `json:"view_at"`
+	Max      int64  `json:"max"`
+	ViewAt   int64  `json:"view_at"`
 	Business string `json:"business"`
-	Ps     int   `json:"ps"`
+	Ps       int    `json:"ps"`
 }
 
 type VideoInfo struct {
-	Bvid     string  `json:"bvid"`
-	Aid      int     `json:"aid"`
-	Videos   int     `json:"videos"`
-	Tid      int     `json:"tid"`
-	Tname    string  `json:"tname"`
-	Copyright int    `json:"copyright"`
-	Pic      string  `json:"pic"`
-	Title    string  `json:"title"`
-	Pubdate  int64   `json:"pubdate"`
-	Ctime    int64   `json:"ctime"`
-	Desc     string  `json:"desc"`
-	Duration int     `json:"duration"`
-	Owner    VideoOwner `json:"owner"`
-	Stat     VideoStat  `json:"stat"`
-	Rights   VideoRights `json:"rights"`
+	Bvid      string      `json:"bvid"`
+	Aid       int         `json:"aid"`
+	Videos    int         `json:"videos"`
+	Tid       int         `json:"tid"`
+	Tname     string      `json:"tname"`
+	Copyright int         `json:"copyright"`
+	Pic       string      `json:"pic"`
+	Title     string      `json:"title"`
+	Pubdate   int64       `json:"pubdate"`
+	Ctime     int64       `json:"ctime"`
+	Desc      string      `json:"desc"`
+	Duration  int         `json:"duration"`
+	Owner     VideoOwner  `json:"owner"`
+	Stat      VideoStat   `json:"stat"`
+	Rights    VideoRights `json:"rights"`
 }
 
 type VideoOwner struct {
@@ -114,15 +115,15 @@ type VideoStat struct {
 }
 
 type VideoRights struct {
-	Bp          int `json:"bp"`
-	Elec        int `json:"elec"`
-	Download    int `json:"download"`
-	Movie       int `json:"movie"`
-	Pay         int `json:"pay"`
-	Hd5         int `json:"hd5"`
-	NoReprint   int `json:"no_reprint"`
-	Autoplay    int `json:"autoplay"`
-	UgcPay      int `json:"ugc_pay"`
+	Bp            int `json:"bp"`
+	Elec          int `json:"elec"`
+	Download      int `json:"download"`
+	Movie         int `json:"movie"`
+	Pay           int `json:"pay"`
+	Hd5           int `json:"hd5"`
+	NoReprint     int `json:"no_reprint"`
+	Autoplay      int `json:"autoplay"`
+	UgcPay        int `json:"ugc_pay"`
 	IsCooperation int `json:"is_cooperation"`
 }
 
@@ -309,24 +310,24 @@ func (c *Client) GetVideoInfo(bvid string) (*VideoInfo, error) {
 
 // WatchLaterItem represents a single entry in the Bilibili watch later list.
 type WatchLaterItem struct {
-	Aid      int64           `json:"aid"`
-	Bvid     string          `json:"bvid"`
-	Title    string          `json:"title"`
-	Pic      string          `json:"pic"`
-	Desc     string          `json:"desc"`
-	Duration int             `json:"duration"`
-	Tid      int             `json:"tid"`
-	Tname    string          `json:"tname"`
-	Owner    VideoOwner      `json:"owner"`
-	Stat     VideoStat       `json:"stat"`
-	AddAt    int64           `json:"add_at"`
-	Pubdate  int64           `json:"pubdate"`
+	Aid      int64      `json:"aid"`
+	Bvid     string     `json:"bvid"`
+	Title    string     `json:"title"`
+	Pic      string     `json:"pic"`
+	Desc     string     `json:"desc"`
+	Duration int        `json:"duration"`
+	Tid      int        `json:"tid"`
+	Tname    string     `json:"tname"`
+	Owner    VideoOwner `json:"owner"`
+	Stat     VideoStat  `json:"stat"`
+	AddAt    int64      `json:"add_at"`
+	Pubdate  int64      `json:"pubdate"`
 }
 
 // WatchLaterData is the raw payload returned by /x/v2/history/toview.
 type WatchLaterData struct {
-	Count int               `json:"count"`
-	List  []WatchLaterItem  `json:"list"`
+	Count int              `json:"count"`
+	List  []WatchLaterItem `json:"list"`
 }
 
 // GetWatchLaterList fetches the user's full watch later list from Bilibili.
@@ -425,6 +426,48 @@ type DynamicSpaceResponse struct {
 	Items   []DynamicRawItem `json:"items"`
 }
 
+type UserCardInfo struct {
+	Mid       string `json:"mid"`
+	Name      string `json:"name"`
+	Face      string `json:"face"`
+	Sign      string `json:"sign"`
+	Level     int    `json:"level"`
+	Fans      int    `json:"fans"`
+	Attention int    `json:"attention"`
+	Archive   int    `json:"archive"`
+}
+
+type UserCardResponse struct {
+	Card UserCardInfo `json:"card"`
+}
+
+func (c *Client) GetUserCard(mid string) (*UserCardInfo, error) {
+	params := map[string]string{
+		"mid": mid,
+	}
+
+	body, err := c.Get(UserCardURL, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp BiliResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return nil, fmt.Errorf("unmarshal response error: %w", err)
+	}
+
+	if resp.Code != 0 {
+		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+	}
+
+	var result UserCardResponse
+	if err := json.Unmarshal(resp.Data, &result); err != nil {
+		return nil, fmt.Errorf("unmarshal data error: %w", err)
+	}
+
+	return &result.Card, nil
+}
+
 func (c *Client) GetDynamicList(hostMid string, offset string, ps int) (*DynamicSpaceResponse, error) {
 	params := map[string]string{
 		"host_mid": hostMid,
@@ -475,8 +518,8 @@ type FavFolderInfo struct {
 }
 
 type FavFolderListData struct {
-	Count  int             `json:"count"`
-	List   []FavFolderInfo `json:"list"`
+	Count int             `json:"count"`
+	List  []FavFolderInfo `json:"list"`
 }
 
 func (c *Client) GetFavoriteFolderList() (*FavFolderListData, error) {
@@ -502,21 +545,21 @@ func (c *Client) GetFavoriteFolderList() (*FavFolderListData, error) {
 }
 
 type FavResourceItem struct {
-	ID       int64  `json:"id"`
-	Type     int    `json:"type"`
-	Title    string `json:"title"`
-	Cover    string `json:"cover"`
-	Intro    string `json:"intro"`
-	Page     int    `json:"page"`
-	Duration int    `json:"duration"`
-	Upper    FavUpper  `json:"upper"`
-	Ctime    int64  `json:"ctime"`
-	Pubtime  int64  `json:"pubtime"`
-	FavTime  int64  `json:"fav_time"`
-	Attr     int    `json:"attr"`
-	UGC      *FavUGC `json:"ugc,omitempty"`
+	ID       int64    `json:"id"`
+	Type     int      `json:"type"`
+	Title    string   `json:"title"`
+	Cover    string   `json:"cover"`
+	Intro    string   `json:"intro"`
+	Page     int      `json:"page"`
+	Duration int      `json:"duration"`
+	Upper    FavUpper `json:"upper"`
+	Ctime    int64    `json:"ctime"`
+	Pubtime  int64    `json:"pubtime"`
+	FavTime  int64    `json:"fav_time"`
+	Attr     int      `json:"attr"`
+	UGC      *FavUGC  `json:"ugc,omitempty"`
 	Stat     *FavStat `json:"stat,omitempty"`
-	Cid      int64  `json:"cid"`
+	Cid      int64    `json:"cid"`
 }
 
 type FavUpper struct {
@@ -547,9 +590,9 @@ type FavResourcePage struct {
 }
 
 type FavResourceData struct {
-	Info   *FavFolderInfo    `json:"info"`
-	Media  []FavResourceItem `json:"medias"`
-	Page   FavResourcePage   `json:"page"`
+	Info  *FavFolderInfo    `json:"info"`
+	Media []FavResourceItem `json:"medias"`
+	Page  FavResourcePage   `json:"page"`
 }
 
 func (c *Client) GetFavoriteResources(mediaID int64, pn, ps int) (*FavResourceData, error) {
@@ -603,21 +646,21 @@ func (c *Client) DealFavoriteResource(resources string, mediaIDs string) error {
 // ===== Likes =====
 
 type LikedVideoItem struct {
-	Aid      int64       `json:"aid"`
-	Title    string      `json:"title"`
-	Pic      string      `json:"pic"`
-	Desc     string      `json:"desc"`
-	Duration int         `json:"duration"`
-	Tid      int         `json:"tid"`
-	Tname    string      `json:"tname"`
-	Owner    VideoOwner  `json:"owner"`
-	Stat     VideoStat   `json:"stat"`
-	Pubdate  int64       `json:"pubdate"`
-	Bvid     string      `json:"bvid"`
+	Aid      int64      `json:"aid"`
+	Title    string     `json:"title"`
+	Pic      string     `json:"pic"`
+	Desc     string     `json:"desc"`
+	Duration int        `json:"duration"`
+	Tid      int        `json:"tid"`
+	Tname    string     `json:"tname"`
+	Owner    VideoOwner `json:"owner"`
+	Stat     VideoStat  `json:"stat"`
+	Pubdate  int64      `json:"pubdate"`
+	Bvid     string     `json:"bvid"`
 }
 
 type LikedVideoData struct {
-	List  []LikedVideoItem `json:"list"`
+	List []LikedVideoItem `json:"list"`
 }
 
 func (c *Client) GetLikedVideos(vmid int64) (*LikedVideoData, error) {

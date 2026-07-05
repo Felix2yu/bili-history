@@ -7,12 +7,20 @@
         <div class="text-sm font-medium truncate">{{ item.author_name || `UID ${item.host_mid || ''}` }}</div>
         <div class="text-[11px] text-gray-500 truncate">{{ formattedTime }}</div>
       </div>
-      <button
-        v-if="item.id_str"
-        type="button"
-        class="ml-auto text-[11px] text-[#fb7299] hover:underline"
-        @click="openLink(opusUrl)"
-      >查看动态</button>
+      <div class="ml-auto flex items-center space-x-2">
+        <button
+          v-if="item.id_str"
+          type="button"
+          class="text-[11px] text-[#fb7299] hover:underline"
+          @click="openLink(opusUrl)"
+        >查看动态</button>
+        <button
+          v-if="item.id_str"
+          type="button"
+          class="text-[11px] text-red-500 hover:underline"
+          @click.stop="handleDelete"
+        >删除</button>
+      </div>
     </div>
 
     <!-- 主体：封面（更小） + 文本，封面/标题可跳转视频 -->
@@ -52,11 +60,25 @@
 import { computed } from 'vue'
 import { openInBrowser } from '~/utils/openUrl'
 import { toStaticUrl } from '~/utils/imageUrl'
+import { deleteDynamicItem } from '~/utils/api'
 
 const props = defineProps({
   item: { type: Object, required: true },
   faceUrl: { type: String, default: '' }
 })
+
+const emit = defineEmits(['deleted'])
+
+const handleDelete = async () => {
+  if (!props.item?.id_str) return
+  if (!confirm('确定要删除这条动态吗？')) return
+  try {
+    await deleteDynamicItem(props.item.id_str)
+    emit('deleted', props.item.id_str)
+  } catch (e) {
+    alert('删除失败: ' + (e.message || e))
+  }
+}
 
 const coverUrl = computed(() => {
   const it = props.item || {}

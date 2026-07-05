@@ -200,8 +200,9 @@ func getVideoStats(c *gin.Context) {
 		stats.TotalVideos = int64(len(historyBvids))
 	}
 
-	// 计算待获取视频数
-	pendingVideos := stats.TotalVideos - stats.FetchedVideos
+	// 计算待获取视频数（排除已获取和失效视频）
+	invalidCount := database.GetInvalidVideoCount()
+	pendingVideos := stats.TotalVideos - stats.FetchedVideos - invalidCount
 	if pendingVideos < 0 {
 		pendingVideos = 0
 	}
@@ -212,7 +213,7 @@ func getVideoStats(c *gin.Context) {
 		"videos_with_details":    stats.FetchedVideos,
 		"pending_videos_count":   pendingVideos,
 		"videos_without_details": pendingVideos,
-		"invalid_videos_count":   0,
+		"invalid_videos_count":   invalidCount,
 		"total_uploaders":        stats.TotalUploaders,
 		"total_tags":             stats.TotalTags,
 	}))

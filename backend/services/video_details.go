@@ -194,8 +194,9 @@ func BatchFetchFromHistory(skipExisting bool) (map[string]interface{}, error) {
 		if err != nil {
 			return nil, fmt.Errorf("获取已获取视频列表失败: %v", err)
 		}
+		invalidBvids, _ := database.GetInvalidBvids()
 		for _, bvid := range allBvids {
-			if !fetchedBvids[bvid] {
+			if !fetchedBvids[bvid] && !invalidBvids[bvid] {
 				bvidsToFetch = append(bvidsToFetch, bvid)
 			}
 		}
@@ -279,6 +280,8 @@ func processBatchFetch(bvids []string, sessdata string) {
 		if err != nil {
 			failedCount++
 			utils.LogWarning("获取视频详情失败 %s: %v", bvid, err)
+			// 记录为失效视频
+			database.RecordInvalidVideo(bvid, err.Error(), 0)
 		} else {
 			now := time.Now().Unix()
 			video := &models.VideoBaseInfo{

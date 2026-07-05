@@ -80,18 +80,29 @@ func EnsureVideoDetailsTables() error {
 		update_time INTEGER DEFAULT 0
 	);`
 
+	createInvalidVideosTableSQL := `
+	CREATE TABLE IF NOT EXISTS invalid_videos (
+		id INTEGER PRIMARY KEY,
+		bvid TEXT NOT NULL UNIQUE,
+		error_message TEXT,
+		error_code INTEGER DEFAULT 0,
+		fetch_time INTEGER NOT NULL
+	);`
+
 	indexSQLs := []string{
 		"CREATE INDEX IF NOT EXISTS idx_video_base_info_owner_mid ON video_base_info (owner_mid);",
 		"CREATE INDEX IF NOT EXISTS idx_video_base_info_title ON video_base_info (title);",
 		"CREATE INDEX IF NOT EXISTS idx_video_base_info_fetch_time ON video_base_info (fetch_time);",
 		"CREATE INDEX IF NOT EXISTS idx_video_tags_bvid ON video_tags (bvid);",
 		"CREATE INDEX IF NOT EXISTS idx_video_tags_tag_name ON video_tags (tag_name);",
+		"CREATE INDEX IF NOT EXISTS idx_invalid_videos_bvid ON invalid_videos (bvid);",
 	}
 
 	statements := []string{
 		createVideoBaseInfoTableSQL,
 		createVideoTagsTableSQL,
 		createUploaderInfoTableSQL,
+		createInvalidVideosTableSQL,
 	}
 	statements = append(statements, indexSQLs...)
 
@@ -686,6 +697,141 @@ func GetFetchedBvids() (map[string]bool, error) {
 	}
 
 	return bvidSet, nil
+}
+
+// RecordInvalidVideo 记录失效视频
+func RecordInvalidVideo(bvid, errorMessage string, errorCode int) error {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return fmt.Errorf("database not initialized")
+	}
+
+	if err := EnsureVideoDetailsTables(); err != nil {
+		return err
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	_, err := conn.Exec(`
+		INSERT OR IGNORE INTO invalid_videos (bvid, error_message, error_code, fetch_time)
+		VALUES (?, ?, ?, ?)
+	`, bvid, errorMessage, errorCode, time.Now().Unix())
+	return err
+}
+
+// GetInvalidBvids 获取所有失效视频的bvid集合
+func GetInvalidBvids() (map[string]bool, error) {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
+	exists, _ := db.TableExists("invalid_videos")
+	if !exists {
+		return make(map[string]bool), nil
+	}
+
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	bvidSet := make(map[string]bool)
+	rows, err := conn.Query("SELECT bvid FROM invalid_videos")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var bvid string
+		if err := rows.Scan(&bvid); err == nil {
+			bvidSet[bvid] = true
+		}
+	}
+
+	return bvidSet, nil
+}
+
+// GetInvalidVideoList 获取失效视频列表（分页）
+func GetInvalidVideoList(page, size int) (*models.PagedResponse, error) {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
+	exists, _ := db.TableExists("invalid_videos")
+	if !exists {
+		return &models.PagedResponse{
+			Records: []interface{}{},
+			Total:   0,
+			Size:    size,
+			Current: page,
+		}, nil
+	}
+
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	var total int64
+	conn.QueryRow("SELECT COUNT(*) FROM invalid_videos").Scan(&total)
+
+	rows, err := conn.Query(`
+		SELECT bvid, error_message, error_code, fetch_time
+		FROM invalid_videos
+		ORDER BY fetch_time DESC
+		LIMIT ? OFFSET ?
+	`, size, (page-1)*size)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var videos []map[string]interface{}
+	for rows.Next() {
+		var bvid, errorMessage string
+		var errorCode int
+		var fetchTime int64
+		if err := rows.Scan(&bvid, &errorMessage, &errorCode, &fetchTime); err != nil {
+			continue
+		}
+		videos = append(videos, map[string]interface{}{
+			"bvid":          bvid,
+			"error_message": errorMessage,
+			"error_code":    errorCode,
+			"fetch_time":    fetchTime,
+		})
+	}
+
+	return &models.PagedResponse{
+		Records: videos,
+		Total:   total,
+		Size:    size,
+		Current: page,
+	}, nil
+}
+
+// GetInvalidVideoCount 获取失效视频数量
+func GetInvalidVideoCount() int64 {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return 0
+	}
+
+	exists, _ := db.TableExists("invalid_videos")
+	if !exists {
+		return 0
+	}
+
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	var count int64
+	conn.QueryRow("SELECT COUNT(*) FROM invalid_videos").Scan(&count)
+	return count
 }
 
 func videoBaseInfoToMap(video *models.VideoBaseInfo) map[string]interface{} {

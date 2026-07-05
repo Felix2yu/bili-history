@@ -180,10 +180,22 @@ func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool, dynami
 				if err != nil {
 					sendDynamicProgress(fmt.Sprintf("[错误] 保存失败: %v", err))
 				} else {
-					sendDynamicProgress(fmt.Sprintf("[第 %d 页] 获取 %d 条，新增 %d 条", totalPages, len(dbItems), inserted))
+					skipMsg := ""
+					if totalSkipped > 0 {
+						skipMsg = fmt.Sprintf("，跳过 %d 条", totalSkipped)
+						totalSkipped = 0
+					}
+					sendDynamicProgress(fmt.Sprintf("[第 %d 页] 新增 %d 条%s", totalPages, inserted, skipMsg))
 				}
-			} else if len(dbItems) > 0 {
-				sendDynamicProgress(fmt.Sprintf("[第 %d 页] 获取 %d 条", totalPages, len(dbItems)))
+			} else if len(result.Items) > 0 {
+				// 有数据但都被过滤了
+				if len(typeFilter) > 0 {
+					sendDynamicProgress(fmt.Sprintf("[第 %d 页] 该页 %d 条动态均不符合筛选条件", totalPages, len(result.Items)))
+				} else {
+					sendDynamicProgress(fmt.Sprintf("[第 %d 页] 获取 %d 条", totalPages, len(result.Items)))
+				}
+			} else {
+				sendDynamicProgress(fmt.Sprintf("[第 %d 页] 无数据", totalPages))
 			}
 
 			totalFetched += len(dbItems)

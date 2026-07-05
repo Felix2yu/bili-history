@@ -92,7 +92,7 @@ func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool, dynami
 			dynamicStopFlags.Delete(hostMid)
 		}()
 
-		client := biliapi.NewClient(cfg.SESSDATA)
+		client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 		offset := ""
 		totalFetched := 0
 		totalSkipped := 0

@@ -858,7 +858,7 @@ func getDynamicUserCard(c *gin.Context) {
 		return
 	}
 
-	client := biliapi.NewClient(cfg.SESSDATA)
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 	card, err := client.GetUserCard(mid)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})

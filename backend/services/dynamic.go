@@ -241,9 +241,11 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 	if authorRaw, ok := modules["module_author"]; ok {
 		var author struct {
 			Name string `json:"name"`
+			Face string `json:"face"`
 		}
 		json.Unmarshal(authorRaw, &author)
 		item.AuthorName = author.Name
+		item.AuthorFace = author.Face
 	}
 
 	// Parse module_dynamic for content

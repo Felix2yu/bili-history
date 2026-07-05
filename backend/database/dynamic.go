@@ -26,6 +26,7 @@ type DynamicItem struct {
 	Type            string   `json:"type"`
 	HostMid         string   `json:"host_mid"`
 	AuthorName      string   `json:"author_name"`
+	AuthorFace      string   `json:"author_face"`
 	Txt             string   `json:"txt"`
 	OpusTitle       string   `json:"opus_title"`
 	OpusSummaryText string   `json:"opus_summary_text"`
@@ -62,6 +63,7 @@ CREATE TABLE IF NOT EXISTS dynamics (
     type TEXT DEFAULT '',
     host_mid TEXT NOT NULL,
     author_name TEXT DEFAULT '',
+    author_face TEXT DEFAULT '',
     txt TEXT DEFAULT '',
     opus_title TEXT DEFAULT '',
     opus_summary_text TEXT DEFAULT '',
@@ -151,7 +153,7 @@ func GetDynamicSpace(hostMid string, limit, offset int) (int, []DynamicItem, err
 	}
 
 	rows, err := db.Query(`
-		SELECT id_str, type, host_mid, author_name, txt, opus_title, opus_summary_text,
+		SELECT id_str, type, host_mid, author_name, author_face, txt, opus_title, opus_summary_text,
 		       bvid, title, desc, cover, publish_ts, media_locals, live_media_locals
 		FROM dynamics
 		WHERE host_mid = ?
@@ -167,7 +169,7 @@ func GetDynamicSpace(hostMid string, limit, offset int) (int, []DynamicItem, err
 	for rows.Next() {
 		var item DynamicItem
 		var mediaLocalsJSON, liveMediaLocalsJSON string
-		if err := rows.Scan(&item.ID, &item.Type, &item.HostMid, &item.AuthorName, &item.Txt,
+		if err := rows.Scan(&item.ID, &item.Type, &item.HostMid, &item.AuthorName, &item.AuthorFace, &item.Txt,
 			&item.OpusTitle, &item.OpusSummaryText, &item.Bvid, &item.Title, &item.Desc,
 			&item.Cover, &item.PublishTS, &mediaLocalsJSON, &liveMediaLocalsJSON); err != nil {
 			continue
@@ -250,10 +252,10 @@ func GetDynamicByID(idStr string) (*DynamicItem, error) {
 	var item DynamicItem
 	var mediaLocalsJSON, liveMediaLocalsJSON string
 	err := db.QueryRow(`
-		SELECT id_str, type, host_mid, author_name, txt, opus_title, opus_summary_text,
+		SELECT id_str, type, host_mid, author_name, author_face, txt, opus_title, opus_summary_text,
 		       bvid, title, desc, cover, publish_ts, media_locals, live_media_locals
 		FROM dynamics WHERE id_str = ?
-	`, idStr).Scan(&item.ID, &item.Type, &item.HostMid, &item.AuthorName, &item.Txt,
+	`, idStr).Scan(&item.ID, &item.Type, &item.HostMid, &item.AuthorName, &item.AuthorFace, &item.Txt,
 		&item.OpusTitle, &item.OpusSummaryText, &item.Bvid, &item.Title, &item.Desc,
 		&item.Cover, &item.PublishTS, &mediaLocalsJSON, &liveMediaLocalsJSON)
 	if err != nil {
@@ -312,14 +314,15 @@ func SaveDynamics(hostMid string, items []DynamicItem) (int, error) {
 		liveMediaJSON, _ := json.Marshal(item.LiveMediaLocals)
 
 		result, err := db.Exec(`
-			INSERT INTO dynamics (id_str, type, host_mid, author_name, txt, opus_title, opus_summary_text,
+			INSERT INTO dynamics (id_str, type, host_mid, author_name, author_face, txt, opus_title, opus_summary_text,
 			                      bvid, title, desc, cover, publish_ts, media_locals, live_media_locals, raw_json, fetch_time)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT(id_str) DO UPDATE SET
 				txt = excluded.txt,
+				author_face = CASE WHEN excluded.author_face != '' THEN excluded.author_face ELSE dynamics.author_face END,
 				media_locals = excluded.media_locals,
 				live_media_locals = excluded.live_media_locals
-		`, item.ID, item.Type, hostMid, item.AuthorName, item.Txt, item.OpusTitle, item.OpusSummaryText,
+		`, item.ID, item.Type, hostMid, item.AuthorName, item.AuthorFace, item.Txt, item.OpusTitle, item.OpusSummaryText,
 			item.Bvid, item.Title, item.Desc, item.Cover, item.PublishTS,
 			string(mediaJSON), string(liveMediaJSON), item.RawJSON, now)
 		if err != nil {

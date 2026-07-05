@@ -2,10 +2,10 @@
   <div class="border rounded-lg bg-white overflow-hidden">
     <!-- 头部：头像 + 名称 + 时间 + 动态链接 -->
     <div class="flex items-center px-3 py-2">
-      <img v-if="faceUrl" :src="faceUrl" class="w-6 h-6 rounded-full object-cover border" alt="face" />
+      <img v-if="displayFaceUrl" :src="displayFaceUrl" class="w-6 h-6 rounded-full object-cover border" alt="face" />
       <div class="ml-2 min-w-0">
         <div class="text-sm font-medium truncate">{{ item.author_name || `UID ${item.host_mid || ''}` }}</div>
-        <div class="text-[11px] text-gray-500 truncate">{{ formattedTime }}</div>
+        <div v-if="formattedTime !== '-'" class="text-[11px] text-gray-500 truncate">{{ formattedTime }}</div>
       </div>
       <div class="ml-auto flex items-center space-x-2">
         <button
@@ -67,18 +67,13 @@ const props = defineProps({
   faceUrl: { type: String, default: '' }
 })
 
-const emit = defineEmits(['deleted'])
-
-const handleDelete = async () => {
-  if (!props.item?.id_str) return
-  if (!confirm('确定要删除这条动态吗？')) return
-  try {
-    await deleteDynamicItem(props.item.id_str)
-    emit('deleted', props.item.id_str)
-  } catch (e) {
-    alert('删除失败: ' + (e.message || e))
-  }
-}
+// 优先使用动态中的作者头像，其次使用传入的 faceUrl
+const displayFaceUrl = computed(() => {
+  const face = props.item?.author_face || props.faceUrl || ''
+  if (!face) return ''
+  if (face.startsWith('http://') || face.startsWith('https://')) return face
+  return toStaticUrl(face)
+})
 
 const coverUrl = computed(() => {
   const it = props.item || {}

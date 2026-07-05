@@ -127,11 +127,21 @@ type VideoRights struct {
 	IsCooperation int `json:"is_cooperation"`
 }
 
+// generateBuvid3 生成 buvid3 UUID
+func generateBuvid3() string {
+	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
+		time.Now().UnixNano()%0x100000000,
+		time.Now().UnixNano()%0x10000,
+		time.Now().UnixNano()%0x10000,
+		time.Now().UnixNano()%0x10000,
+		time.Now().UnixNano()%0x100000000000)
+}
+
 func NewClient(sessdata string) *Client {
 	return &Client{
 		SESSDATA:  sessdata,
-		Buvid3:    "random_string",
-		UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+		Buvid3:    generateBuvid3(),
+		UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -155,11 +165,14 @@ func (c *Client) getHeaders() map[string]string {
 		"Accept":     "application/json, text/plain, */*",
 	}
 	if c.SESSDATA != "" {
+		// 生成 buvid4
+		buvid4 := generateBuvid3()
 		cookies := []string{
 			fmt.Sprintf("SESSDATA=%s", c.SESSDATA),
 			fmt.Sprintf("buvid3=%s", c.Buvid3),
+			fmt.Sprintf("buvid4=%s", buvid4),
 			"b_nut=1234567890",
-			"buvid4=random_string",
+			"b_lsid=12345678_1234567890",
 		}
 		if c.BiliJct != "" {
 			cookies = append(cookies, fmt.Sprintf("bili_jct=%s", c.BiliJct))
@@ -472,6 +485,7 @@ func (c *Client) GetDynamicList(hostMid string, offset string, ps int) (*Dynamic
 	params := map[string]string{
 		"host_mid": hostMid,
 		"ps":       fmt.Sprintf("%d", ps),
+		"features": "itemOpusStyle,listOnlyfans,opusBigCover,onlyfansVote,decorationCard,onlyfansAssetsV2,forwardListHidden,ugcDelete,commentsNewVersion",
 	}
 	if offset != "" {
 		params["offset"] = offset

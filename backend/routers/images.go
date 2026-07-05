@@ -77,15 +77,15 @@ func getImageDownloadStatus(c *gin.Context) {
 		"is_downloading": status.IsRunning,
 		"last_update":    status.StartTime,
 		"covers": gin.H{
-			"total":         coversTotal + dynamicTotal,
-			"downloaded":    coversDownloaded + dynamicDownloaded,
+			"total":         coversTotal,
+			"downloaded":    coversDownloaded,
 			"failed":        0,
 			"total_planned": status.TotalImages / 2,
 			"failed_urls":   []interface{}{},
 		},
 		"avatars": gin.H{
-			"total":         avatarsTotal,
-			"downloaded":    avatarsDownloaded,
+			"total":         avatarsTotal + dynamicTotal,
+			"downloaded":    avatarsDownloaded + dynamicDownloaded,
 			"failed":        0,
 			"total_planned": status.TotalImages / 2,
 			"failed_urls":   []interface{}{},
@@ -109,14 +109,17 @@ func countLocalImages(dir string) (total int, downloaded int) {
 		if err != nil {
 			return nil
 		}
+		// 统计所有图片文件（jpg, png, webp, gif）
 		if !info.IsDir() {
-			total++
-			downloaded++
+			ext := strings.ToLower(filepath.Ext(path))
+			if ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".webp" || ext == ".gif" {
+				total++
+				downloaded++
+			}
 		}
 		return nil
 	})
 	if err != nil {
-		utils.LogWarning("[图片计数] Walk 失败 %s: %v", dir, err)
 		return 0, 0
 	}
 	return total, downloaded

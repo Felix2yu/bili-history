@@ -89,6 +89,10 @@ func GetDynamicDB() *sql.DB {
 			if _, err := db.Exec(dynamicSchema); err != nil {
 				utils.LogError("Failed to ensure dynamic schema: %v", err)
 			}
+			// 迁移：添加 author_face 列
+			db.Exec("ALTER TABLE dynamics ADD COLUMN author_face TEXT DEFAULT ''")
+			// 迁移：添加 last_dynamic_id 列
+			db.Exec("ALTER TABLE dynamic_hosts ADD COLUMN last_dynamic_id TEXT DEFAULT ''")
 		}
 		dynamicDB = &ExtraDB{db: db}
 	})
@@ -326,6 +330,7 @@ func SaveDynamics(hostMid string, items []DynamicItem) (int, error) {
 			item.Bvid, item.Title, item.Desc, item.Cover, item.PublishTS,
 			string(mediaJSON), string(liveMediaJSON), item.RawJSON, now)
 		if err != nil {
+			utils.LogWarning("保存动态失败 %s: %v", item.ID, err)
 			continue
 		}
 		aff, _ := result.RowsAffected()

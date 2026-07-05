@@ -67,15 +67,31 @@ export default defineEventHandler(async (event) => {
           }
         }
 
+        const ct = (proxyRes.headers['content-type'] || 'application/json') as string
+        setResponseHeader(event, 'content-type', ct)
+        setResponseStatus(event, proxyRes.statusCode || 200)
+
+        // SSE: stream data directly to client without buffering
+        if (ct.includes('text/event-stream')) {
+          const nodeRes = event.node.res
+          proxyRes.on('data', (chunk) => {
+            nodeRes.write(chunk)
+          })
+          proxyRes.on('end', () => {
+            nodeRes.end()
+            resolve(undefined as any)
+          })
+          proxyRes.on('error', (err) => {
+            reject(err)
+          })
+          return
+        }
+
+        // Non-SSE: buffer entire response (original behavior)
         const chunks: Buffer[] = []
         proxyRes.on('data', (chunk) => chunks.push(chunk))
         proxyRes.on('end', () => {
           const body = Buffer.concat(chunks)
-          const ct = (proxyRes.headers['content-type'] || 'application/json') as string
-          setResponseHeader(event, 'content-type', ct)
-          // Forward the backend's HTTP status code so the client can
-          // properly distinguish success (2xx) from errors (4xx/5xx).
-          setResponseStatus(event, proxyRes.statusCode || 200)
           resolve(body)
         })
         proxyRes.on('error', (err) => {
@@ -93,7 +109,7 @@ export default defineEventHandler(async (event) => {
         reject(err)
       })
 
-      proxyReq.setTimeout(30000, () => {
+      proxyReq.setTimeout(300000, () => {
         proxyReq.destroy(new Error('Request timeout'))
       })
 

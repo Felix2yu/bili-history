@@ -109,9 +109,35 @@
     <Teleport to="body">
       <div v-if="showPreview" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center" @click="closePreview">
         <div class="max-w-[95vw] max-h-[90vh] relative" @click.stop>
+          <!-- 左切换按钮 -->
+          <button
+            v-if="previewType==='image' && previewImages.length > 1"
+            class="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition z-10"
+            @click="prevImage"
+          >
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <!-- 图片 -->
           <img v-if="previewType==='image'" :src="previewSrc" class="max-w-[95vw] max-h-[90vh] object-contain rounded-md" />
           <video v-else :src="previewSrc" :poster="previewPoster" controls autoplay loop muted class="max-w-[95vw] max-h-[90vh] rounded-md"></video>
-          <button class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center" @click="closePreview">×</button>
+          <!-- 右切换按钮 -->
+          <button
+            v-if="previewType==='image' && previewImages.length > 1"
+            class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition z-10"
+            @click="nextImage"
+          >
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          <!-- 关闭按钮 -->
+          <button class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black/90" @click="closePreview">×</button>
+          <!-- 图片计数 -->
+          <div v-if="previewType==='image' && previewImages.length > 1" class="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 rounded-full text-white text-xs">
+            {{ previewIndex + 1 }} / {{ previewImages.length }}
+          </div>
         </div>
       </div>
     </Teleport>
@@ -119,7 +145,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { openInBrowser } from '~/utils/openUrl'
 import { toStaticUrl } from '~/utils/imageUrl'
 import { deleteDynamicItem } from '~/utils/api'
@@ -308,13 +334,60 @@ const showPreview = ref(false)
 const previewType = ref('image')
 const previewSrc = ref('')
 const previewPoster = ref('')
+const previewImages = ref([])
+const previewIndex = ref(0)
+
 const openPreview = (type, src, poster = '') => {
   previewType.value = type
-  previewSrc.value = src
   previewPoster.value = poster
+
+  // 收集所有图片用于切换
+  if (type === 'image') {
+    const allImages = displayMedias.value
+      .filter(m => m.kind === 'image')
+      .map(m => m.url)
+    previewImages.value = allImages
+    previewIndex.value = allImages.indexOf(src)
+    if (previewIndex.value === -1) previewIndex.value = 0
+    previewSrc.value = allImages[previewIndex.value] || src
+  } else {
+    previewImages.value = []
+    previewIndex.value = 0
+    previewSrc.value = src
+  }
+
   showPreview.value = true
 }
+
+const prevImage = () => {
+  if (previewImages.value.length <= 1) return
+  previewIndex.value = (previewIndex.value - 1 + previewImages.value.length) % previewImages.value.length
+  previewSrc.value = previewImages.value[previewIndex.value]
+}
+
+const nextImage = () => {
+  if (previewImages.value.length <= 1) return
+  previewIndex.value = (previewIndex.value + 1) % previewImages.value.length
+  previewSrc.value = previewImages.value[previewIndex.value]
+}
+
 const closePreview = () => { showPreview.value = false }
+
+// 键盘左右键切换图片
+const handleKeydown = (e) => {
+  if (!showPreview.value) return
+  if (e.key === 'ArrowLeft') prevImage()
+  else if (e.key === 'ArrowRight') nextImage()
+  else if (e.key === 'Escape') closePreview()
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <style scoped>

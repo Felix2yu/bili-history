@@ -11,7 +11,6 @@ export default defineNuxtConfig({
 
   css: [
     '~/assets/css/main.css',
-    'animate.css',
     'vant/lib/index.css',
   ],
 

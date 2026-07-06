@@ -460,7 +460,22 @@ export const exportHistory = (options = {}) => {
   console.log('导出参数:', params)
 
   return instance.post('/export/export_history', null, {
-    params
+    params,
+    responseType: 'blob'
+  }).then(response => {
+    // 创建blob链接并下载
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'bilibili_history.xlsx')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    return { success: true }
   })
 }
 

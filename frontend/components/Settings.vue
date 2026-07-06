@@ -534,7 +534,6 @@ import 'vant/es/toast/style'
 import 'vant/es/dialog/style'
 import {
   exportHistory,
-  downloadExcelFile,
   downloadDatabase,
   resetDatabase,
   getAvailableYears,
@@ -1022,24 +1021,15 @@ const exportAndDownloadExcel = async () => {
 
     console.log('导出选项:', exportParams)
     const response = await exportHistory(exportParams)
-    console.log('导出响应:', response.data)
+    console.log('导出响应:', response)
 
-    if (response.data.status === 'success') {
+    if (response.success) {
       showNotify({
         type: 'success',
-        message: '导出成功，准备下载...'
-      })
-
-      // 使用响应中的文件名
-      const filename = response.data.filename
-      console.log('准备下载文件:', filename)
-      await downloadExcelFile(filename)
-      showNotify({
-        type: 'success',
-        message: '下载完成'
+        message: '导出成功，下载已开始'
       })
     } else {
-      throw new Error(response.data.message)
+      throw new Error('导出失败')
     }
   } catch (error) {
     console.error('导出错误:', error)

@@ -209,13 +209,15 @@ func registerMCPResources(s *server.MCPServer) {
 	s.AddResource(toolGuideResource, func(ctx context.Context, req mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 		content := `# MCP 工具使用指南
 
-## search_history - 搜索历史记录
+## 观看历史
+
+### search_history - 搜索历史记录
 - keyword: 搜索关键词（匹配标题、UP主、分区、备注）
 - year: 年份（可选，默认最新年份）
 - page: 页码（默认 1）
 - page_size: 每页数量（默认 20，最大 100）
 
-## get_history - 获取历史记录列表
+### get_history - 获取历史记录列表
 - year: 年份（可选）
 - month: 月份（可选，1-12）
 - day: 日期（可选，1-31）
@@ -223,29 +225,52 @@ func registerMCPResources(s *server.MCPServer) {
 - page: 页码（默认 1）
 - page_size: 每页数量（默认 20）
 
-## get_daily_stats - 获取每日统计
+### get_daily_stats - 获取每日统计
 - year: 年份（可选，默认今年）
 - month: 月份（可选）
 - day: 日期（可选）
 
-## get_yearly_analysis - 获取年度分析
+### get_yearly_analysis - 获取年度分析
 - year: 年份（必填）
 
-## get_video_info - 获取视频详情
+### get_video_info - 获取视频详情
 - bvid: 视频 BV 号（必填）
 
-## get_categories - 获取分类列表
+### get_categories - 获取分类列表
 - 无需参数
 
-## get_overview - 获取总览统计
+### get_overview - 获取总览统计
 - year: 年份（可选，默认最新年份）
+
+## 点赞/收藏/稍后再看
+
+### get_liked_videos - 获取点赞视频列表
+- page: 页码（默认 1）
+- page_size: 每页数量（默认 20）
+- sort: 排序字段（pubdate/fetch_time/duration/view）
+- order: 排序方向（desc/asc）
+
+### get_watch_later - 获取稍后再看列表
+- page: 页码（默认 1）
+- page_size: 每页数量（默认 20）
+- sort: 排序字段（add_at/pubdate/fetch_time/duration/view）
+- order: 排序方向（desc/asc）
+
+### get_favorite_folders - 获取收藏夹列表
+- 无需参数
+
+### get_favorite_contents - 获取收藏夹内容
+- media_id: 收藏夹 ID（必填，从 get_favorite_folders 获取）
+- page: 页码（默认 1）
+- page_size: 每页数量（默认 20）
 
 ## 使用建议
 1. 先用 get_overview 了解整体数据情况
 2. 用 get_yearly_analysis 获取详细分析
 3. 用 search_history 搜索特定内容
 4. 用 get_video_info 查看单个视频详情
-5. 所有分页查询请控制 page_size 不超过 50`
+5. 用 get_favorite_folders + get_favorite_contents 浏览收藏夹
+6. 所有分页查询请控制 page_size 不超过 50`
 		return []mcp.ResourceContents{
 			mcp.TextResourceContents{
 				URI:      "bili://project/tool-guide",
@@ -479,6 +504,138 @@ func registerMCPTools(s *server.MCPServer, cfg *config.Config) {
 		result := map[string]interface{}{
 			"available_years": years,
 			"overview":        overview,
+		}
+
+		jsonData, _ := json.MarshalIndent(result, "", "  ")
+		return mcp.NewToolResultText(string(jsonData)), nil
+	})
+
+	// get_liked_videos
+	likedTool := mcp.NewTool("get_liked_videos",
+		mcp.WithDescription("获取点赞视频列表"),
+		mcp.WithNumber("page", mcp.Description("页码，默认 1")),
+		mcp.WithNumber("page_size", mcp.Description(fmt.Sprintf("每页数量，默认 20，最大 %d", maxPageSize))),
+		mcp.WithString("sort", mcp.Description("排序字段：pubdate(发布时间)、fetch_time(同步时间)、duration(时长)、view(播放量)")),
+		mcp.WithString("order", mcp.Description("排序方向：desc(默认)、asc")),
+	)
+	s.AddTool(likedTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		page := int(req.GetFloat("page", 1))
+		pageSize := int(req.GetFloat("page_size", 20))
+		sort := req.GetString("sort", "fetch_time")
+		order := req.GetString("order", "desc")
+
+		if pageSize > maxPageSize {
+			pageSize = maxPageSize
+		}
+		if page < 1 {
+			page = 1
+		}
+
+		results, total, err := database.GetLikedVideos(page, pageSize, sort, order)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("获取点赞列表失败: %v", err)), nil
+		}
+
+		result := map[string]interface{}{
+			"total": total,
+			"page":  page,
+			"size":  pageSize,
+			"data":  results,
+		}
+
+		jsonData, _ := json.MarshalIndent(result, "", "  ")
+		return mcp.NewToolResultText(string(jsonData)), nil
+	})
+
+	// get_watch_later
+	watchLaterTool := mcp.NewTool("get_watch_later",
+		mcp.WithDescription("获取稍后再看视频列表"),
+		mcp.WithNumber("page", mcp.Description("页码，默认 1")),
+		mcp.WithNumber("page_size", mcp.Description(fmt.Sprintf("每页数量，默认 20，最大 %d", maxPageSize))),
+		mcp.WithString("sort", mcp.Description("排序字段：add_at(添加时间)、pubdate(发布时间)、fetch_time(同步时间)、duration(时长)、view(播放量)")),
+		mcp.WithString("order", mcp.Description("排序方向：desc(默认)、asc")),
+	)
+	s.AddTool(watchLaterTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		page := int(req.GetFloat("page", 1))
+		pageSize := int(req.GetFloat("page_size", 20))
+		sort := req.GetString("sort", "add_at")
+		order := req.GetString("order", "desc")
+
+		if pageSize > maxPageSize {
+			pageSize = maxPageSize
+		}
+		if page < 1 {
+			page = 1
+		}
+
+		results, total, err := database.GetWatchLaterVideos(page, pageSize, sort, order)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("获取稍后再看列表失败: %v", err)), nil
+		}
+
+		result := map[string]interface{}{
+			"total": total,
+			"page":  page,
+			"size":  pageSize,
+			"data":  results,
+		}
+
+		jsonData, _ := json.MarshalIndent(result, "", "  ")
+		return mcp.NewToolResultText(string(jsonData)), nil
+	})
+
+	// get_favorite_folders
+	favFoldersTool := mcp.NewTool("get_favorite_folders",
+		mcp.WithDescription("获取收藏夹列表"),
+	)
+	s.AddTool(favFoldersTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		results, total, err := database.GetFavoriteFolders(true)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("获取收藏夹列表失败: %v", err)), nil
+		}
+
+		result := map[string]interface{}{
+			"total": total,
+			"data":  results,
+		}
+
+		jsonData, _ := json.MarshalIndent(result, "", "  ")
+		return mcp.NewToolResultText(string(jsonData)), nil
+	})
+
+	// get_favorite_contents
+	favContentsTool := mcp.NewTool("get_favorite_contents",
+		mcp.WithDescription("获取指定收藏夹内的视频列表"),
+		mcp.WithNumber("media_id", mcp.Required(), mcp.Description("收藏夹 ID（从 get_favorite_folders 获取）")),
+		mcp.WithNumber("page", mcp.Description("页码，默认 1")),
+		mcp.WithNumber("page_size", mcp.Description(fmt.Sprintf("每页数量，默认 20，最大 %d", maxPageSize))),
+	)
+	s.AddTool(favContentsTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		mediaID := int64(req.GetFloat("media_id", 0))
+		page := int(req.GetFloat("page", 1))
+		pageSize := int(req.GetFloat("page_size", 20))
+
+		if mediaID == 0 {
+			return mcp.NewToolResultError("media_id 不能为空"), nil
+		}
+		if pageSize > maxPageSize {
+			pageSize = maxPageSize
+		}
+		if page < 1 {
+			page = 1
+		}
+
+		results, total, err := database.GetFavoriteContents(mediaID, page, pageSize)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("获取收藏夹内容失败: %v", err)), nil
+		}
+
+		result := map[string]interface{}{
+			"total":   total,
+			"media_id": mediaID,
+			"page":    page,
+			"size":    pageSize,
+			"data":    results,
 		}
 
 		jsonData, _ := json.MarshalIndent(result, "", "  ")

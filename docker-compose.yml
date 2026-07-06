@@ -6,8 +6,8 @@ services:
     volumes:
       - ./backend/config:/app/config
       - ./output:/app/output
-    expose:
-      - "8899"
+    ports:
+      - "8899:8899"
     environment:
       - TZ=Asia/Shanghai
     healthcheck:

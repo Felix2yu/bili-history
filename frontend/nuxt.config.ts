@@ -36,10 +36,6 @@ export default defineNuxtConfig({
         changeOrigin: true,
         pathRewrite: { '^/api': '' },
       },
-      '/mcp': {
-        target: process.env.NUXT_BACKEND_URL || 'http://localhost:8899',
-        changeOrigin: true,
-      },
     },
   },
 
@@ -110,20 +106,13 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: '/',
-      navigateFallbackDenylist: [/^\/api\//, /^\/mcp/, /^\/_nuxt\//],
+      navigateFallbackDenylist: [/^\/api\//, /^\/_nuxt\//],
       runtimeCaching: [
         {
           urlPattern: /^\/api\/.*/i,
           handler: 'NetworkOnly',
           options: {
             cacheName: 'api-cache',
-          },
-        },
-        {
-          urlPattern: /^\/mcp/i,
-          handler: 'NetworkOnly',
-          options: {
-            cacheName: 'mcp-cache',
           },
         },
         {

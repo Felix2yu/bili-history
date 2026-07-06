@@ -1018,10 +1018,39 @@ var (
 )
 
 func importFromSqlite(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "数据已直接写入数据库，无需额外导入",
-	})
+	db := database.GetSQLiteDB()
+	years, err := db.GetAvailableYears()
+	if err != nil || len(years) == 0 {
+		c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+			"message": "暂无数据",
+			"years":   []interface{}{},
+			"total":   0,
+		}))
+		return
+	}
+
+	conn := db.GetDB()
+	yearStats := make(map[string]int)
+	total := 0
+	for _, year := range years {
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			continue
+		}
+		var count int
+		if err := conn.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)).Scan(&count); err == nil {
+			yearStats[fmt.Sprintf("%d", year)] = count
+			total += count
+		}
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"message":    "数据已直接写入数据库",
+		"years":      yearStats,
+		"total":      total,
+		"year_count": len(years),
+	}))
 }
 
 func getImportSqliteStatus(c *gin.Context) {

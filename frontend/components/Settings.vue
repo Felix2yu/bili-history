@@ -32,18 +32,18 @@
               <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
                 <div class="flex items-start justify-between gap-3">
                   <div class="min-w-0 flex-1">
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">MCP局域网只读服务</h3>
-                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">允许其他AI客户端通过MCP读取本地历史记录，开关保存后立即生效</p>
+                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">MCP服务</h3>
+                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">允许AI客户端通过MCP协议读取本地历史记录，开关保存后需重启后端生效</p>
                   </div>
                   <label
                     class="relative inline-flex shrink-0 items-center"
-                    :class="(isMcpConfigLoading || isMcpConfigSaving || !mcpConfigAvailable) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'"
+                    :class="(isMcpConfigLoading || isMcpConfigSaving) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'"
                   >
                     <input
                       type="checkbox"
                       v-model="mcpConfig.enabled"
                       class="peer sr-only"
-                      :disabled="isMcpConfigLoading || isMcpConfigSaving || !mcpConfigAvailable"
+                      :disabled="isMcpConfigLoading || isMcpConfigSaving"
                       @change="handleMcpEnabledChange"
                     >
                     <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
@@ -142,7 +142,7 @@
                 </div>
 
                 <p v-else-if="!isMcpConfigLoading" class="mt-2 text-[10px] text-amber-600 dark:text-amber-300 md:text-sm">
-                  当前后端暂不支持MCP配置接口，请更新并重启后端后再使用。
+                  配置详情加载失败，请确保后端已更新并重启。
                 </p>
               </div>
 

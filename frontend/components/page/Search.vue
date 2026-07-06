@@ -82,13 +82,7 @@ const handleSearch = ({ keyword: searchKeyword, type }) => {
     keyword.value = searchKeyword.trim()
     searchType.value = type
     page.value = 1
-    router.push({
-      name: 'Search',
-      params: { keyword: searchKeyword.trim() },
-      query: {
-        type: type
-      }
-    })
+    router.push(`/search/${encodeURIComponent(searchKeyword.trim())}?type=${type}`)
     fetchSearchResults()
   }
 }
@@ -101,21 +95,9 @@ const handlePageChange = async (newPage) => {
     records.value = []
     // 更新路由
     if (newPage === 1) {
-      await router.push({
-        name: 'Search',
-        params: { keyword: keyword.value },
-        query: {
-          type: searchType.value
-        }
-      })
+      await router.push(`/search/${encodeURIComponent(keyword.value)}?type=${searchType.value}`)
     } else {
-      await router.push({
-        name: 'Search',
-        params: { keyword: keyword.value, pageNumber: newPage },
-        query: {
-          type: searchType.value
-        }
-      })
+      await router.push(`/search/${encodeURIComponent(keyword.value)}/page/${newPage}?type=${searchType.value}`)
     }
     await fetchSearchResults()
   }
@@ -259,13 +241,7 @@ watch(
     console.log('Search - 搜索类型变化:', newType)
     if (keyword.value) {  // 只有在有搜索关键词时才重新搜索
       records.value = [] // 清空当前记录
-      router.push({
-        name: 'Search',
-        params: { keyword: keyword.value },
-        query: {
-          type: newType
-        }
-      })
+      router.push(`/search/${encodeURIComponent(keyword.value)}?type=${newType}`)
       fetchSearchResults()
     }
   }

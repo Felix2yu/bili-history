@@ -93,7 +93,7 @@ const getTypeLabel = (value) => {
 const onSearchTypeChange = (value) => {
   searchType.value = value
   showTypeDropdown.value = false
-  if (route.name === 'Search' && searchQuery.value.trim()) {
+  if (route.path.startsWith('/search/') && searchQuery.value.trim()) {
     handleSearch()
   }
 }
@@ -128,14 +128,10 @@ const fetchAvailableYears = async () => {
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    if (route.name === 'Search') {
+    if (route.path.startsWith('/search/')) {
       emit('search', { keyword: searchQuery.value.trim(), type: searchType.value })
     } else {
-      router.push({
-        name: 'Search',
-        params: { keyword: searchQuery.value.trim() },
-        query: { type: searchType.value }
-      })
+      router.push(`/search/${encodeURIComponent(searchQuery.value.trim())}?type=${searchType.value}`)
       searchQuery.value = ''
     }
   }

@@ -10,6 +10,7 @@ import (
 
 	"bilibili-history-go/config"
 	"bilibili-history-go/models"
+	"bilibili-history-go/services"
 	"bilibili-history-go/utils"
 
 	"github.com/gin-gonic/gin"
@@ -279,13 +280,93 @@ func checkLoginStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+type navResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    *struct {
+		IsLoggedIn bool   `json:"isLogin"`
+		Username    string `json:"uname"`
+	} `json:"data"`
+}
+
 func checkAndNotify(c *gin.Context) {
+	cfg, _ := config.LoadConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "success",
+			"message": "SESSDATA 未配置",
+			"data": map[string]interface{}{
+				"valid":    false,
+				"notified": false,
+			},
+		})
+		return
+	}
+
+	req, err := http.NewRequest("GET", "https://api.bilibili.com/x/web-interface/nav", nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("请求失败: "+err.Error()))
+		return
+	}
+
+	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("Cookie", fmt.Sprintf("SESSDATA=%s", cfg.SESSDATA))
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("网络请求失败: "+err.Error()))
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("读取响应失败: "+err.Error()))
+		return
+	}
+
+	var nav navResponse
+	if err := json.Unmarshal(body, &nav); err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("解析响应失败: "+err.Error()))
+		return
+	}
+
+	// code 0 = 登录有效, -101 = 未登录/过期, -6 = cookie 过期
+	if nav.Code == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "success",
+			"message": "SESSDATA 有效",
+			"data": map[string]interface{}{
+				"valid":    true,
+				"notified": false,
+				"username": nav.Data.Username,
+			},
+		})
+		return
+	}
+
+	// SESSDATA 失效，尝试发送通知
+	var username string
+	if nav.Data != nil {
+		username = nav.Data.Username
+	}
+
+	sendErr := services.SendSessdataExpiredNotification(username)
+	wasNotified := sendErr == nil
+	if sendErr != nil {
+		utils.LogWarning("SESSDATA 过期通知发送失败: %v", sendErr)
+	}
+
+	utils.LogWarning("SESSDATA 已失效 (code=%d)，已触发通知: %v", nav.Code, wasNotified)
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "检查功能暂未完全实现",
+		"message": "SESSDATA 已失效",
 		"data": map[string]interface{}{
-			"valid":   false,
-			"notified": false,
+			"valid":    false,
+			"notified": wasNotified,
+			"username": username,
 		},
 	})
 }

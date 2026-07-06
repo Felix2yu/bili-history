@@ -259,7 +259,7 @@ func (s *Scheduler) initDefaultTasks() {
 	s.mu.Unlock()
 
 	defaults := []database.MainTask{
-		{TaskID: "sessdata_health_check", Name: "SESSDATA 健康检查", Endpoint: "/login/check-and-notify", Method: "GET", ScheduleType: "interval", IntervalValue: 10, IntervalUnit: "minutes", Enabled: 0, TaskType: "main"},
+		{TaskID: "sessdata_health_check", Name: "SESSDATA 健康检查", Endpoint: "/login/check-and-notify", Method: "GET", ScheduleType: "interval", IntervalValue: 10, IntervalUnit: "minutes", Enabled: 1, TaskType: "main"},
 		{TaskID: "sync_likes", Name: "同步点赞列表", Endpoint: "/like/list", Method: "GET", ScheduleType: "interval", IntervalValue: 1, IntervalUnit: "hours", Enabled: 0, TaskType: "main"},
 		{TaskID: "fetch_history", Name: "获取B站历史记录", Endpoint: "/fetch/bili-history", Method: "GET", ScheduleType: "daily", ScheduleTime: "00:00", Enabled: 0, TaskType: "main"},
 		{TaskID: "import_data", Name: "导入数据", Endpoint: "/importSqlite/import_data_sqlite", Method: "POST", ScheduleType: "chain", DependsOn: "fetch_history", Enabled: 0, TaskType: "main"},

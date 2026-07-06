@@ -103,6 +103,16 @@ func SendDailyReport(stats map[string]interface{}) error {
 	return SendShoutrrrNotification(title, message)
 }
 
+func SendSessdataExpiredNotification(username string) error {
+	title := "⚠️ Bilibili历史记录管理 - SESSDATA 已过期"
+	message := "您的 SESSDATA 已失效，请重新登录。\n"
+	if username != "" {
+		message += fmt.Sprintf("上次登录用户：%s\n", username)
+	}
+	message += "请在前端设置页面重新扫码登录，否则历史记录同步等功能将无法正常使用。"
+	return SendShoutrrrNotification(title, message)
+}
+
 func ResetShoutrrrRouter() {
 	shoutrrrRouter = nil
 }

@@ -90,6 +90,20 @@ func main() {
 		routers.RegisterDownloadRoutes(api)
 	}
 
+	// MCP 服务
+	if cfg.Mcp.Enabled {
+		services.SetupMCPServer(cfg)
+		mcpHandler := services.GetMCPHandler()
+		mcpHandler = services.WrapWithAuth(cfg, mcpHandler)
+		mcpPath := cfg.Mcp.Path
+		if mcpPath == "" {
+			mcpPath = "/mcp"
+		}
+		r.Any(mcpPath+"/*path", gin.WrapH(mcpHandler))
+		r.Any(mcpPath, gin.WrapH(mcpHandler))
+		utils.LogSuccess("MCP 服务已启用，路径: %s", mcpPath)
+	}
+
 	r.GET("/health", func(c *gin.Context) {
 		schedStatus := sched.GetStatus()
 		c.JSON(200, gin.H{

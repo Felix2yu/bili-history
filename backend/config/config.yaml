@@ -135,6 +135,14 @@ scheduler:
   retry_delay: 300   # 重试延迟时间（秒）
   max_retries: 3     # 最大重试次数
 
+# MCP局域网只读服务配置
+mcp:
+  enabled: false
+  path: "/mcp"
+  auth_enabled: true
+  token: ""
+  max_page_size: 100
+
 bili_jct: "你的bili_jct"
 DedeUserID: "你的DedeUserID"
 DedeUserID__ckMd5: "你的DedeUserID__ckMd5"

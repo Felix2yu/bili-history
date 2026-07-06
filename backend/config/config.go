@@ -57,6 +57,14 @@ type HeatmapConfig struct {
 	Colors       []ColorPiece `yaml:"colors" json:"colors"`
 }
 
+type McpConfig struct {
+	Enabled     bool   `yaml:"enabled" json:"enabled"`
+	Path        string `yaml:"path" json:"path"`
+	AuthEnabled bool   `yaml:"auth_enabled" json:"auth_enabled"`
+	Token       string `yaml:"token" json:"token"`
+	MaxPageSize int    `yaml:"max_page_size" json:"max_page_size"`
+}
+
 type Config struct {
 	SESSDATA         string          `yaml:"SESSDATA" json:"SESSDATA"`
 	OutputFolder     string          `yaml:"output_folder" json:"output_folder"`
@@ -71,6 +79,7 @@ type Config struct {
 	Sync             SyncConfig      `yaml:"sync" json:"sync"`
 	Appearance       AppearanceConfig `yaml:"appearance" json:"appearance"`
 	Heatmap          HeatmapConfig   `yaml:"heatmap" json:"heatmap"`
+	Mcp              McpConfig       `yaml:"mcp" json:"mcp"`
 	BiliJct          string          `yaml:"bili_jct" json:"bili_jct"`
 	DedeUserID       string          `yaml:"DedeUserID" json:"DedeUserID"`
 	DedeUserIDCkMd5  string          `yaml:"DedeUserID__ckMd5" json:"DedeUserID__ckMd5"`
@@ -282,6 +291,8 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 			updateAppearanceNode(valueNode, &cfg.Appearance)
 		case "heatmap":
 			updateHeatmapNode(valueNode, &cfg.Heatmap)
+		case "mcp":
+			updateMcpNode(valueNode, &cfg.Mcp)
 		}
 	}
 
@@ -304,6 +315,10 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 	if _, ok := existingKeys["heatmap"]; !ok {
 		node := getOrAddNode("heatmap")
 		updateHeatmapNode(node, &cfg.Heatmap)
+	}
+	if _, ok := existingKeys["mcp"]; !ok {
+		node := getOrAddNode("mcp")
+		updateMcpNode(node, &cfg.Mcp)
 	}
 }
 
@@ -531,6 +546,73 @@ func updateHeatmapNode(node *yaml.Node, heatmap *HeatmapConfig) {
 	getOrAddString("output_dir", heatmap.OutputDir)
 	getOrAddString("template_file", heatmap.TemplateFile)
 	getOrAddString("title", heatmap.Title)
+}
+
+func updateMcpNode(node *yaml.Node, mcp *McpConfig) {
+	if node.Kind != yaml.MappingNode {
+		return
+	}
+	existingKeys := make(map[string]int)
+	for i := 0; i < len(node.Content); i += 2 {
+		existingKeys[node.Content[i].Value] = i
+	}
+
+	getOrAddBool := func(key string, val bool) *yaml.Node {
+		if idx, ok := existingKeys[key]; ok {
+			n := node.Content[idx+1]
+			if n.Kind != yaml.ScalarNode {
+				n.Kind = yaml.ScalarNode
+				n.Tag = "!!bool"
+				n.Content = nil
+			}
+			n.Value = fmt.Sprintf("%t", val)
+			return n
+		}
+		keyNode := &yaml.Node{Kind: yaml.ScalarNode, Value: key, Tag: "!!str"}
+		valNode := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!bool", Value: fmt.Sprintf("%t", val)}
+		node.Content = append(node.Content, keyNode, valNode)
+		return valNode
+	}
+
+	getOrAddString := func(key string, val string) *yaml.Node {
+		if idx, ok := existingKeys[key]; ok {
+			n := node.Content[idx+1]
+			if n.Kind != yaml.ScalarNode {
+				n.Kind = yaml.ScalarNode
+				n.Tag = "!!str"
+				n.Content = nil
+			}
+			n.Value = val
+			return n
+		}
+		keyNode := &yaml.Node{Kind: yaml.ScalarNode, Value: key, Tag: "!!str"}
+		valNode := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: val}
+		node.Content = append(node.Content, keyNode, valNode)
+		return valNode
+	}
+
+	getOrAddInt := func(key string, val int) *yaml.Node {
+		if idx, ok := existingKeys[key]; ok {
+			n := node.Content[idx+1]
+			if n.Kind != yaml.ScalarNode {
+				n.Kind = yaml.ScalarNode
+				n.Tag = "!!int"
+				n.Content = nil
+			}
+			n.Value = fmt.Sprintf("%d", val)
+			return n
+		}
+		keyNode := &yaml.Node{Kind: yaml.ScalarNode, Value: key, Tag: "!!str"}
+		valNode := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: fmt.Sprintf("%d", val)}
+		node.Content = append(node.Content, keyNode, valNode)
+		return valNode
+	}
+
+	getOrAddBool("enabled", mcp.Enabled)
+	getOrAddString("path", mcp.Path)
+	getOrAddBool("auth_enabled", mcp.AuthEnabled)
+	getOrAddString("token", mcp.Token)
+	getOrAddInt("max_page_size", mcp.MaxPageSize)
 }
 
 func applyEnvOverrides(cfg *Config) {

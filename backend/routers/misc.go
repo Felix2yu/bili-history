@@ -26,6 +26,8 @@ func RegisterConfigRoutes(r *gin.RouterGroup) {
 		configGroup.POST("/shoutrrr/test", testShoutrrrConfig)
 		configGroup.GET("/server", getServerConfig)
 		configGroup.POST("/server", saveServerConfig)
+		configGroup.GET("/mcp-config", getMcpConfig)
+		configGroup.POST("/mcp-config", saveMcpConfig)
 		// Python-compatible aliases
 		configGroup.GET("/apprise-config", getShoutrrrConfig)
 		configGroup.POST("/apprise-config", saveShoutrrrConfig)
@@ -320,6 +322,113 @@ func saveServerConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "服务器配置已保存",
+	})
+}
+
+func getMcpConfig(c *gin.Context) {
+	cfg, _ := config.LoadConfig()
+	if cfg == nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("配置加载失败"))
+		return
+	}
+
+	host := "127.0.0.1"
+	port := 8899
+	if cfg.Server.Host == "0.0.0.0" || cfg.Server.Host == "::" || cfg.Server.Host == "" {
+		host = "127.0.0.1"
+	} else {
+		host = cfg.Server.Host
+	}
+	if cfg.Server.Port > 0 {
+		port = cfg.Server.Port
+	}
+	serverURL := fmt.Sprintf("http://%s:%d", host, port)
+
+	mcpPath := cfg.Mcp.Path
+	if mcpPath == "" {
+		mcpPath = "/mcp"
+	}
+	mcpURL := serverURL + mcpPath + "/"
+
+	tokenConfigured := cfg.Mcp.Token != ""
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":          "success",
+		"enabled":         cfg.Mcp.Enabled,
+		"path":            mcpPath,
+		"auth_enabled":    cfg.Mcp.AuthEnabled,
+		"token":           cfg.Mcp.Token,
+		"token_configured": tokenConfigured,
+		"max_page_size":   cfg.Mcp.MaxPageSize,
+		"server_url":      serverURL,
+		"mcp_url":         mcpURL,
+		"skill_content":   services.GetMCPSkillContent(cfg),
+	})
+}
+
+func saveMcpConfig(c *gin.Context) {
+	var body struct {
+		Enabled *bool `json:"enabled"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	cfg, _ := config.LoadConfig()
+	if cfg == nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("配置加载失败"))
+		return
+	}
+
+	if body.Enabled != nil {
+		cfg.Mcp.Enabled = *body.Enabled
+	}
+
+	// 首次启用时自动生成 Token
+	if cfg.Mcp.Enabled && cfg.Mcp.Token == "" {
+		cfg.Mcp.Token = services.GenerateToken()
+	}
+
+	// 设置默认值
+	if cfg.Mcp.Path == "" {
+		cfg.Mcp.Path = "/mcp"
+	}
+	if cfg.Mcp.MaxPageSize == 0 {
+		cfg.Mcp.MaxPageSize = 100
+	}
+
+	if err := config.SaveConfig(cfg); err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("保存失败: "+err.Error()))
+		return
+	}
+
+	host := "127.0.0.1"
+	port := 8899
+	if cfg.Server.Host == "0.0.0.0" || cfg.Server.Host == "::" || cfg.Server.Host == "" {
+		host = "127.0.0.1"
+	} else {
+		host = cfg.Server.Host
+	}
+	if cfg.Server.Port > 0 {
+		port = cfg.Server.Port
+	}
+	serverURL := fmt.Sprintf("http://%s:%d", host, port)
+	mcpURL := serverURL + cfg.Mcp.Path + "/"
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":          "success",
+		"message":         "MCP配置已保存",
+		"enabled":         cfg.Mcp.Enabled,
+		"path":            cfg.Mcp.Path,
+		"auth_enabled":    cfg.Mcp.AuthEnabled,
+		"token":           cfg.Mcp.Token,
+		"token_configured": cfg.Mcp.Token != "",
+		"max_page_size":   cfg.Mcp.MaxPageSize,
+		"server_url":      serverURL,
+		"mcp_url":         mcpURL,
+		"skill_content":   services.GetMCPSkillContent(cfg),
+		"restart_required": true,
 	})
 }
 

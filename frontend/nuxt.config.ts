@@ -110,13 +110,20 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: '/',
-      navigateFallbackDenylist: [/^\/api\//, /^\/_nuxt\//],
+      navigateFallbackDenylist: [/^\/api\//, /^\/mcp/, /^\/_nuxt\//],
       runtimeCaching: [
         {
           urlPattern: /^\/api\/.*/i,
           handler: 'NetworkOnly',
           options: {
             cacheName: 'api-cache',
+          },
+        },
+        {
+          urlPattern: /^\/mcp/i,
+          handler: 'NetworkOnly',
+          options: {
+            cacheName: 'mcp-cache',
           },
         },
         {

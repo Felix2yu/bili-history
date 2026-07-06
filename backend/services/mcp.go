@@ -80,16 +80,9 @@ func SetupMCPServer(cfg *config.Config) {
 	registerMCPResources(mcpSrv)
 	registerMCPTools(mcpSrv, cfg)
 
-	path := cfg.Mcp.Path
-	if path == "" {
-		path = "/mcp"
-	}
+	mcpServer = server.NewStreamableHTTPServer(mcpSrv)
 
-	mcpServer = server.NewStreamableHTTPServer(mcpSrv,
-		server.WithEndpointPath(path),
-	)
-
-	utils.LogSuccess("MCP 服务器已初始化，路径: %s", path)
+	utils.LogSuccess("MCP 服务器已初始化")
 }
 
 func GetMCPHandler() http.Handler {

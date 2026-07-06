@@ -99,6 +99,8 @@ func main() {
 		if mcpPath == "" {
 			mcpPath = "/mcp"
 		}
+		// Strip the path prefix before passing to the MCP handler
+		mcpHandler = http.StripPrefix(mcpPath, mcpHandler)
 		r.Any(mcpPath+"/*path", gin.WrapH(mcpHandler))
 		r.Any(mcpPath, gin.WrapH(mcpHandler))
 		utils.LogSuccess("MCP 服务已启用，路径: %s", mcpPath)

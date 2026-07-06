@@ -136,9 +136,9 @@ scheduler:
 
 # MCP局域网只读服务配置
 mcp:
-  enabled: false
+  enabled: true
   path: "/mcp"
-  auth_enabled: true
+  auth_enabled: false
   token: ""
   max_page_size: 100
 

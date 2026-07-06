@@ -30,9 +30,6 @@ func RegisterConfigRoutes(r *gin.RouterGroup) {
 		configGroup.POST("/server", saveServerConfig)
 		configGroup.GET("/mcp-config", getMcpConfig)
 		configGroup.POST("/mcp-config", saveMcpConfig)
-		// Python-compatible aliases
-		configGroup.GET("/apprise-config", getShoutrrrConfig)
-		configGroup.POST("/apprise-config", saveShoutrrrConfig)
 	}
 }
 
@@ -102,8 +99,6 @@ func RegisterCleanRoutes(r *gin.RouterGroup) {
 	{
 		clean.POST("/start", cleanData)
 		clean.GET("/status", getCleanStatus)
-		// Python-compatible alias
-		clean.POST("/clean_data", cleanData)
 	}
 }
 
@@ -112,8 +107,6 @@ func RegisterLogRoutes(r *gin.RouterGroup) {
 	{
 		log.POST("/send", sendDailyReport)
 		log.GET("/list", getLogList)
-		// Python-compatible alias
-		log.POST("/send-email", sendDailyReport)
 	}
 }
 

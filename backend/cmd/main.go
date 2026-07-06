@@ -49,12 +49,10 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
-	// task_id may contain "/" (Python uses endpoint paths like
-	// "/fetch/bili-history" as IDs). The frontend URL-encodes these slashes
-	// as %2F. With UseRawPath=true Gin matches routes against the raw
-	// (still-encoded) path, so %2F is treated as a single path segment and
-	// ":id" route params work correctly. UnescapePathValues=true (default)
-	// then gives handlers the decoded value (e.g. "/fetch/bili-history").
+	// task_id may contain "/" (e.g., "/fetch/bili-history").
+	// The frontend URL-encodes slashes as %2F. With UseRawPath=true Gin
+	// matches routes against the raw path, so %2F is treated as a single
+	// segment and ":id" params work correctly.
 	r.UseRawPath = true
 	r.UnescapePathValues = true
 

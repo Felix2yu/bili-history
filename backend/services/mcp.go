@@ -274,7 +274,6 @@ func registerMCPTools(s *server.MCPServer, cfg *config.Config) {
 	)
 	s.AddTool(searchTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		keyword, _ := req.RequireString("keyword")
-		year := int(req.GetFloat("year", 0))
 		page := int(req.GetFloat("page", 1))
 		pageSize := int(req.GetFloat("page_size", 20))
 
@@ -316,7 +315,7 @@ func registerMCPTools(s *server.MCPServer, cfg *config.Config) {
 		year := int(req.GetFloat("year", 0))
 		month := int(req.GetFloat("month", 0))
 		day := int(req.GetFloat("day", 0))
-		category, _ := req.GetString("category", "")
+		category := req.GetString("category", "")
 		page := int(req.GetFloat("page", 1))
 		pageSize := int(req.GetFloat("page_size", 20))
 

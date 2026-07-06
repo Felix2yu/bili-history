@@ -327,7 +327,7 @@ func DeleteMainTask(taskID string) error {
 	}
 	defer tx.Rollback()
 
-	// Collect sub-task IDs before deleting (for Python sub_tasks table)
+	// Collect sub-task IDs before deleting
 	var subTaskIDs []string
 	rows, _ := tx.Query("SELECT task_id FROM main_tasks WHERE parent_id = ?", taskID)
 	if rows != nil {

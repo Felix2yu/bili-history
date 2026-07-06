@@ -40,7 +40,7 @@ shoutrrr:
   urls:
 
 # 日志文件夹
-log_folder: "/www/wwwroot/python/logs"
+log_folder: "logs"
 
 # yutto 下载器配置
 yutto:

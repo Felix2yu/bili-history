@@ -36,6 +36,10 @@ export default defineNuxtConfig({
         changeOrigin: true,
         pathRewrite: { '^/api': '' },
       },
+      '/mcp': {
+        target: process.env.NUXT_BACKEND_URL || 'http://localhost:8899',
+        changeOrigin: true,
+      },
     },
   },
 

@@ -357,14 +357,260 @@ var digitBitmap = [10][96]bool{
 		false, false, false, false, false, false, false, false},
 }
 
+// CJK bitmap patterns for characters used in heatmap labels
+// Each pattern is a 10x10 grid (10 rows x 10 cols)
+var cjkPatterns = map[rune][100]bool{
+	// 月 (month)
+	'月': {
+		false, false, true, true, true, true, true, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, true, true, true, true, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, true, true, true, true, true, false, false},
+	// 日 (day)
+	'日': {
+		false, true, true, true, true, true, true, true, true, false,
+		false, true, false, false, false, false, false, false, true, false,
+		false, true, false, false, false, false, false, false, true, false,
+		false, true, false, false, false, false, false, false, true, false,
+		false, true, true, true, true, true, true, true, true, false,
+		false, true, false, false, false, false, false, false, true, false,
+		false, true, false, false, false, false, false, false, true, false,
+		false, true, false, false, false, false, false, false, true, false,
+		false, true, false, false, false, false, false, false, true, false,
+		false, true, true, true, true, true, true, true, true, false},
+	// 年 (year)
+	'年': {
+		false, false, false, false, true, false, false, false, false, false,
+		false, false, true, true, true, true, true, false, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, true, true, true, true, true, true, true, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, false, true, false, false, false, false, false, false},
+	// 一 (one)
+	'一': {
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, true, true, true, true, true, true, true, true, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false},
+	// 二 (two)
+	'二': {
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, true, true, true, true, true, true, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, true, true, true, true, true, true, true, true, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false},
+	// 三 (three)
+	'三': {
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, true, true, true, true, true, true, true, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, true, true, true, true, true, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, true, true, true, true, true, true, true, true, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false},
+	// 四 (four)
+	'四': {
+		false, false, true, true, true, true, true, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, true, false, false, true, false, false,
+		false, false, true, false, false, true, false, true, false, false,
+		false, false, true, false, false, false, true, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, false, true, true, true, true, false, false, false,
+		false, false, false, false, false, false, false, false, false, false},
+	// 五 (five)
+	'五': {
+		false, true, true, true, true, true, true, true, false, false,
+		false, true, false, false, false, false, false, false, false, false,
+		false, true, false, false, false, false, false, false, false, false,
+		false, true, true, true, true, true, true, false, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, true, false, false, false, false, false, true, false, false,
+		false, false, true, true, true, true, true, false, false, false,
+		false, false, false, false, false, false, false, false, false, false},
+	// 六 (six)
+	'六': {
+		false, false, false, false, true, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, true, true, true, true, true, false, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, true, false, true, false, false, false, false, false,
+		false, false, true, false, false, true, false, false, false, false,
+		false, true, true, false, false, false, true, true, false, false,
+		false, true, false, false, false, false, false, true, false, false,
+		false, false, true, true, true, true, true, false, false, false},
+	// 共 (total)
+	'共': {
+		false, false, false, false, true, false, false, false, false, false,
+		false, true, true, true, true, true, true, true, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, true, true, true, true, true, true, true, true, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, true, false, false, true, false, false, false, false,
+		false, true, false, false, false, false, true, false, false, false,
+		true, false, false, false, false, false, false, false, true, false,
+		false, false, false, false, false, false, false, false, false, false},
+	// 有 (have)
+	'有': {
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, true, true, true, true, true, false, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, true, true, true, true, true, true, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, false, true, true, true, true, false, false, false,
+		false, false, false, false, false, false, false, false, false, false},
+	// 观 (watch)
+	'观': {
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, true, true, true, false, true, false, false,
+		false, false, true, false, false, true, false, true, false, false,
+		false, false, false, false, false, false, true, false, false, false,
+		false, false, false, false, false, false, true, false, false, false,
+		false, false, false, false, false, true, false, true, false, false,
+		false, false, false, false, true, false, false, false, true, false,
+		false, false, false, true, false, false, false, false, false, true,
+		false, false, false, false, false, false, false, false, false, false},
+	// 看 (watch/look)
+	'看': {
+		false, false, false, true, true, true, false, false, false, false,
+		false, false, false, false, true, false, false, false, false, false,
+		false, true, true, true, true, true, true, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, true, true, true, true, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, false, true, true, true, true, false, false, false},
+	// 记 (record)
+	'记': {
+		false, false, false, false, false, false, true, false, false, false,
+		false, false, true, true, true, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, true, true, true, true, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, true, true, false, false, false,
+		false, false, false, false, false, false, false, false, false, false},
+	// 录 (record)
+	'录': {
+		false, false, true, true, true, true, true, false, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, true, true, true, true, true, false, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, true, true, true, true, true, true, true, false, false,
+		false, false, false, true, false, false, false, false, false, false,
+		false, false, true, false, true, false, true, false, false, false,
+		false, true, false, false, false, false, false, true, false, false,
+		true, false, false, false, false, false, false, false, true, false,
+		false, false, false, false, false, false, false, false, false, false},
+	// 总 (total)
+	'总': {
+		false, false, false, false, true, false, false, false, false, false,
+		false, false, false, true, false, true, false, false, false, false,
+		false, true, true, true, true, true, true, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, false, true, true, true, true, false, false, false,
+		false, false, false, false, true, false, false, false, false, false,
+		false, false, false, true, false, true, false, false, false, false,
+		false, false, true, false, false, false, true, false, false, false,
+		false, true, false, false, false, false, false, true, false, false,
+		false, false, true, true, false, true, true, false, false, false},
+	// 计 (count)
+	'计': {
+		false, false, false, false, false, false, true, false, false, false,
+		false, false, true, true, true, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false,
+		false, false, false, false, false, false, false, true, false, false},
+	// 个 (unit)
+	'个': {
+		false, false, false, false, true, false, false, false, false, false,
+		false, false, false, true, false, true, false, false, false, false,
+		false, false, true, false, false, false, true, false, false, false,
+		false, true, false, false, false, false, false, true, false, false,
+		true, false, false, false, false, false, false, false, true, false,
+		false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, true, false, false, false, false, false,
+		false, false, false, false, true, false, false, false, false, false,
+		false, false, false, false, true, false, false, false, false, false,
+		false, false, false, false, true, false, false, false, false, false},
+	// 视 (video)
+	'视': {
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, false, false, false, false, true, false, false,
+		false, false, true, true, true, true, false, true, false, false,
+		false, false, true, false, false, true, false, true, false, false,
+		false, false, false, false, false, false, true, false, false, false,
+		false, false, false, false, false, false, true, false, false, false,
+		false, false, false, false, false, true, false, true, false, false,
+		false, false, false, false, true, false, false, false, true, false,
+		false, false, false, true, false, false, false, false, false, true,
+		false, false, false, false, false, false, false, false, false, false},
+	// 频 (video/frequent)
+	'频': {
+		false, false, true, true, true, false, false, true, false, false,
+		false, false, false, true, false, false, false, true, false, false,
+		false, false, true, true, true, true, false, true, false, false,
+		false, false, true, false, false, true, false, true, false, false,
+		false, false, false, false, false, false, true, false, false, false,
+		false, false, false, false, false, false, true, false, false, false,
+		false, false, false, false, false, true, false, true, false, false,
+		false, false, false, false, true, false, false, false, true, false,
+		false, false, false, true, false, false, false, false, false, true,
+		false, false, false, false, false, false, false, false, false, false},
+}
+
 func isCJKPixel(ch rune, x, y int) bool {
-	// Simplified CJK rendering: draw a solid block in the center
-	// This is a placeholder; real CJK rendering would need font files
-	r := int(ch)
-	// Use character code as seed for a simple pattern
-	seed := r * 7
-	if x >= 2 && x < 12 && y >= 2 && y < 12 {
-		return (seed+x*3+y*5)%3 != 0
+	if pattern, ok := cjkPatterns[ch]; ok {
+		if x >= 0 && x < 10 && y >= 0 && y < 10 {
+			return pattern[y*10+x]
+		}
+	}
+	// Fallback: draw a solid block for unknown CJK characters
+	if x >= 2 && x < 8 && y >= 2 && y < 8 {
+		return true
 	}
 	return false
 }

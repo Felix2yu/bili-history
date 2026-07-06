@@ -103,12 +103,41 @@ func batchCheckFavoriteStatus(c *gin.Context) {
 		}
 	}
 
+	// 查询本地收藏夹数据库，匹配 bvid
+	favDB := database.GetFavoritesDB()
 	results := make([]map[string]interface{}, 0, len(oids))
+
 	for _, oid := range oids {
+		isFavorited := false
+		folders := []interface{}{}
+
+		if favDB != nil {
+			rows, err := favDB.Query(`
+				SELECT DISTINCT fc.media_id, ff.title
+				FROM favorites_content fc
+				LEFT JOIN favorites_folder ff ON fc.media_id = ff.id
+				WHERE CAST(fc.bvid AS INTEGER) = ?
+			`, oid)
+			if err == nil {
+				defer rows.Close()
+				for rows.Next() {
+					var mediaID int64
+					var title string
+					if rows.Scan(&mediaID, &title) == nil {
+						isFavorited = true
+						folders = append(folders, map[string]interface{}{
+							"media_id": mediaID,
+							"title":    title,
+						})
+					}
+				}
+			}
+		}
+
 		results = append(results, map[string]interface{}{
 			"oid":              oid,
-			"is_favorited":     false,
-			"favorite_folders": []interface{}{},
+			"is_favorited":     isFavorited,
+			"favorite_folders": folders,
 		})
 	}
 
@@ -118,9 +147,15 @@ func batchCheckFavoriteStatus(c *gin.Context) {
 }
 
 func getCollectedFavoriteFolders(c *gin.Context) {
+	list, total, err := database.GetFavoriteFolders(true)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("获取收藏夹失败: "+err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":     []interface{}{},
-		"count":    0,
+		"list":     list,
+		"count":    total,
 		"has_more": false,
 	}))
 }

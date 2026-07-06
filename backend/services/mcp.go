@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"bilibili-history-go/config"
 	"bilibili-history-go/database"
@@ -381,8 +382,7 @@ func registerMCPTools(s *server.MCPServer, cfg *config.Config) {
 		day := int(req.GetFloat("day", 0))
 
 		if year == 0 {
-			// TODO: use current year from time.Now()
-			year = 2024
+			year = time.Now().Year()
 		}
 
 		years, err := database.GetSQLiteDB().GetAvailableYears()

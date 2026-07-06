@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
+	"bilibili-history-go/biliapi"
 	"bilibili-history-go/config"
 	"bilibili-history-go/database"
 	"bilibili-history-go/models"
@@ -197,24 +199,116 @@ func RegisterDeleteRoutes(r *gin.RouterGroup) {
 }
 
 func batchDeleteHistory(c *gin.Context) {
+	var req struct {
+		Bvids []string `json:"bvids"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	if len(req.Bvids) == 0 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("bvids 不能为空"))
+		return
+	}
+
+	deletedCount := 0
+	for _, bvid := range req.Bvids {
+		if err := database.MarkVideoDeleted(bvid); err == nil {
+			deletedCount++
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "批量删除功能待实现",
-		"data":    map[string]interface{}{"deleted_count": 0},
+		"message": fmt.Sprintf("已软删除 %d 条记录", deletedCount),
+		"data":    map[string]interface{}{"deleted_count": deletedCount},
 	})
 }
 
 func deleteSingleBiliHistory(c *gin.Context) {
+	var req struct {
+		Bvid string `json:"bvid"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	if req.Bvid == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("bvid 不能为空"))
+		return
+	}
+
+	cfg, _ := config.LoadConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("SESSDATA 未配置"))
+		return
+	}
+
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+	if err := client.DeleteBiliHistory([]string{req.Bvid}); err != nil {
+		if apiErr, ok := err.(*biliapi.ApiError); ok {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  "error",
+				"message": fmt.Sprintf("删除失败: code=%d, %s", apiErr.Code, apiErr.Message),
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("删除失败: "+err.Error()))
+		return
+	}
+
+	// 同步软删除本地记录
+	_ = database.MarkVideoDeleted(req.Bvid)
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "删除B站历史记录功能待实现",
+		"message": "已删除B站历史记录",
 	})
 }
 
 func deleteBatchBiliHistory(c *gin.Context) {
+	var req struct {
+		Bvids []string `json:"bvids"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	if len(req.Bvids) == 0 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("bvids 不能为空"))
+		return
+	}
+
+	cfg, _ := config.LoadConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("SESSDATA 未配置"))
+		return
+	}
+
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+	if err := client.DeleteBiliHistory(req.Bvids); err != nil {
+		if apiErr, ok := err.(*biliapi.ApiError); ok {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  "error",
+				"message": fmt.Sprintf("删除失败: code=%d, %s", apiErr.Code, apiErr.Message),
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("删除失败: "+err.Error()))
+		return
+	}
+
+	// 同步软删除本地记录
+	for _, bvid := range req.Bvids {
+		_ = database.MarkVideoDeleted(bvid)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "批量删除B站历史记录功能待实现",
+		"message": fmt.Sprintf("已删除 %d 条B站历史记录", len(req.Bvids)),
 	})
 }
 
@@ -1074,38 +1168,456 @@ func syncInteractionRecords(c *gin.Context) {
 }
 
 func getTitleStats(c *gin.Context) {
+	yearStr := c.Query("year")
+	db := database.GetSQLiteDB()
+	years, err := db.GetAvailableYears()
+	if err != nil || len(years) == 0 {
+		c.JSON(http.StatusOK, models.ErrorResponse("无可用数据"))
+		return
+	}
+
+	year := years[0]
+	if yearStr != "" {
+		if y, err := strconv.Atoi(yearStr); err == nil {
+			year = y
+		}
+	}
+
+	tableName := fmt.Sprintf("bilibili_history_%d", year)
+	exists, _ := db.TableExists(tableName)
+	if !exists {
+		c.JSON(http.StatusOK, models.ErrorResponse(fmt.Sprintf("未找到 %d 年数据", year)))
+		return
+	}
+
+	conn := db.GetDB()
+	var totalTitles int
+	var totalLength int
+	var minLength, maxLength int
+	var minLengthTitle, maxLengthTitle string
+
+	rows, err := conn.Query(fmt.Sprintf(`
+		SELECT title, LENGTH(title) as len
+		FROM %s
+		WHERE title != '' AND title IS NOT NULL
+		ORDER BY len ASC
+	`, tableName))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("查询失败: "+err.Error()))
+		return
+	}
+	defer rows.Close()
+
+	first := true
+	for rows.Next() {
+		var title string
+		var length int
+		if rows.Scan(&title, &length) == nil {
+			totalTitles++
+			totalLength += length
+			if first {
+				minLength = length
+				minLengthTitle = title
+				first = false
+			}
+			maxLength = length
+			maxLengthTitle = title
+		}
+	}
+
+	avgLength := 0.0
+	if totalTitles > 0 {
+		avgLength = float64(totalLength) / float64(totalTitles)
+	}
+
+	// 字数分布
+分布 := map[string]int{
+		"1-10":  0,
+		"11-20": 0,
+		"21-30": 0,
+		"31-50": 0,
+		"51+":   0,
+	}
+
+	rows2, err := conn.Query(fmt.Sprintf(`
+		SELECT LENGTH(title) as len
+		FROM %s
+		WHERE title != '' AND title IS NOT NULL
+	`, tableName))
+	if err == nil {
+		defer rows2.Close()
+		for rows2.Next() {
+			var length int
+			if rows2.Scan(&length) == nil {
+				switch {
+				case length <= 10:
+					分布["1-10"]++
+				case length <= 20:
+					分布["11-20"]++
+				case length <= 30:
+					分布["21-30"]++
+				case length <= 50:
+					分布["31-50"]++
+				default:
+					分布["51+"]++
+				}
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"stats":   map[string]interface{}{},
-		"message": "标题统计功能待实现",
+		"year":             year,
+		"total_titles":     totalTitles,
+		"avg_length":       avgLength,
+		"min_length":       minLength,
+		"min_length_title": minLengthTitle,
+		"max_length":       maxLength,
+		"max_length_title": maxLengthTitle,
+		"length_distribution": 分布,
 	}))
 }
 
 func getTitlePatterns(c *gin.Context) {
+	yearStr := c.Query("year")
+	db := database.GetSQLiteDB()
+	years, err := db.GetAvailableYears()
+	if err != nil || len(years) == 0 {
+		c.JSON(http.StatusOK, models.ErrorResponse("无可用数据"))
+		return
+	}
+
+	year := years[0]
+	if yearStr != "" {
+		if y, err := strconv.Atoi(yearStr); err == nil {
+			year = y
+		}
+	}
+
+	tableName := fmt.Sprintf("bilibili_history_%d", year)
+	exists, _ := db.TableExists(tableName)
+	if !exists {
+		c.JSON(http.StatusOK, models.ErrorResponse(fmt.Sprintf("未找到 %d 年数据", year)))
+		return
+	}
+
+	conn := db.GetDB()
+
+	// 统计标题中包含的特殊字符模式
+	patterns := map[string]int{
+		"含问号":    0,
+		"含感叹号":   0,
+		"含数字":    0,
+		"含英文":    0,
+		"含【】":   0,
+		"含「」":   0,
+		"全大写英文":  0,
+		"纯数字标题":  0,
+	}
+
+	rows, err := conn.Query(fmt.Sprintf(`
+		SELECT title FROM %s
+		WHERE title != '' AND title IS NOT NULL
+	`, tableName))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("查询失败: "+err.Error()))
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var title string
+		if rows.Scan(&title) != nil {
+			continue
+		}
+		if strings.ContainsAny(title, "?？") {
+			patterns["含问号"]++
+		}
+		if strings.ContainsAny(title, "!！") {
+			patterns["含感叹号"]++
+		}
+		if containsDigit(title) {
+			patterns["含数字"]++
+		}
+		if containsAlpha(title) {
+			patterns["含英文"]++
+		}
+		if strings.Contains(title, "【") || strings.Contains(title, "】") {
+			patterns["含【】"]++
+		}
+		if strings.Contains(title, "「") || strings.Contains(title, "」") {
+			patterns["含「」"]++
+		}
+		if isAllAlpha(title) {
+			patterns["全大写英文"]++
+		}
+		if isAllDigit(title) {
+			patterns["纯数字标题"]++
+		}
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"patterns": []interface{}{},
-		"message": "标题模式发现功能待实现",
+		"year":     year,
+		"patterns": patterns,
 	}))
 }
 
 func getTitleSentiment(c *gin.Context) {
+	yearStr := c.Query("year")
+	db := database.GetSQLiteDB()
+	years, err := db.GetAvailableYears()
+	if err != nil || len(years) == 0 {
+		c.JSON(http.StatusOK, models.ErrorResponse("无可用数据"))
+		return
+	}
+
+	year := years[0]
+	if yearStr != "" {
+		if y, err := strconv.Atoi(yearStr); err == nil {
+			year = y
+		}
+	}
+
+	tableName := fmt.Sprintf("bilibili_history_%d", year)
+	exists, _ := db.TableExists(tableName)
+	if !exists {
+		c.JSON(http.StatusOK, models.ErrorResponse(fmt.Sprintf("未找到 %d 年数据", year)))
+		return
+	}
+
+	conn := db.GetDB()
+
+	positive := []string{"好看", "精彩", "有趣", "搞笑", "感动", "震撼", "推荐", "必看", "神作", "经典", "优秀", "完美", "厉害", "牛逼", "绝了", "爱了", "宝藏", "惊喜", "治愈", "温暖", "开心", "快乐", "爽", "赞", "棒"}
+	negative := []string{"难看", "无聊", "垃圾", "差评", "失望", "浪费", "尴尬", "恶心", "愤怒", "讨厌", "失败", "错误", "翻车", "塌房", "退钱"}
+
+	positiveCount := 0
+	negativeCount := 0
+	neutralCount := 0
+
+	rows, err := conn.Query(fmt.Sprintf(`
+		SELECT title FROM %s
+		WHERE title != '' AND title IS NOT NULL
+	`, tableName))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("查询失败: "+err.Error()))
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var title string
+		if rows.Scan(&title) != nil {
+			continue
+		}
+		isPositive := false
+		isNegative := false
+		for _, word := range positive {
+			if strings.Contains(title, word) {
+				isPositive = true
+				break
+			}
+		}
+		for _, word := range negative {
+			if strings.Contains(title, word) {
+				isNegative = true
+				break
+			}
+		}
+		switch {
+		case isPositive && !isNegative:
+			positiveCount++
+		case isNegative && !isPositive:
+			negativeCount++
+		default:
+			neutralCount++
+		}
+	}
+
+	total := positiveCount + negativeCount + neutralCount
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"sentiment": map[string]interface{}{},
-		"message": "标题情感分析功能待实现",
+		"year":           year,
+		"total":          total,
+		"positive":       positiveCount,
+		"negative":       negativeCount,
+		"neutral":        neutralCount,
+		"positive_ratio": float64(positiveCount) / float64(total),
+		"negative_ratio": float64(negativeCount) / float64(total),
 	}))
 }
 
 func getTitleLengthAnalysis(c *gin.Context) {
+	yearStr := c.Query("year")
+	db := database.GetSQLiteDB()
+	years, err := db.GetAvailableYears()
+	if err != nil || len(years) == 0 {
+		c.JSON(http.StatusOK, models.ErrorResponse("无可用数据"))
+		return
+	}
+
+	year := years[0]
+	if yearStr != "" {
+		if y, err := strconv.Atoi(yearStr); err == nil {
+			year = y
+		}
+	}
+
+	tableName := fmt.Sprintf("bilibili_history_%d", year)
+	exists, _ := db.TableExists(tableName)
+	if !exists {
+		c.JSON(http.StatusOK, models.ErrorResponse(fmt.Sprintf("未找到 %d 年数据", year)))
+		return
+	}
+
+	conn := db.GetDB()
+
+	buckets := []map[string]interface{}{
+		{"range": "1-10", "min": 1, "max": 10, "count": 0, "avg_duration": 0, "total_duration": 0},
+		{"range": "11-20", "min": 11, "max": 20, "count": 0, "avg_duration": 0, "total_duration": 0},
+		{"range": "21-30", "min": 21, "max": 30, "count": 0, "avg_duration": 0, "total_duration": 0},
+		{"range": "31-50", "min": 31, "max": 50, "count": 0, "avg_duration": 0, "total_duration": 0},
+		{"range": "51+", "min": 51, "max": 9999, "count": 0, "avg_duration": 0, "total_duration": 0},
+	}
+
+	rows, err := conn.Query(fmt.Sprintf(`
+		SELECT LENGTH(title) as len, COALESCE(duration, 0) as dur
+		FROM %s
+		WHERE title != '' AND title IS NOT NULL
+	`, tableName))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("查询失败: "+err.Error()))
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var length, duration int
+		if rows.Scan(&length, &duration) != nil {
+			continue
+		}
+		for _, b := range buckets {
+			if length >= b["min"].(int) && length <= b["max"].(int) {
+				b["count"] = b["count"].(int) + 1
+				b["total_duration"] = b["total_duration"].(int) + duration
+			}
+		}
+	}
+
+	for _, b := range buckets {
+		count := b["count"].(int)
+		if count > 0 {
+			b["avg_duration"] = b["total_duration"].(int) / count
+		}
+		delete(b, "min")
+		delete(b, "max")
+		delete(b, "total_duration")
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"analysis": map[string]interface{}{},
-		"message": "标题长度分析功能待实现",
+		"year":     year,
+		"analysis": buckets,
 	}))
 }
 
 func getTitleTrend(c *gin.Context) {
+	db := database.GetSQLiteDB()
+	years, err := db.GetAvailableYears()
+	if err != nil || len(years) == 0 {
+		c.JSON(http.StatusOK, models.ErrorResponse("无可用数据"))
+		return
+	}
+
+	conn := db.GetDB()
+	type monthData struct {
+		Month     string  `json:"month"`
+		AvgLength float64 `json:"avg_length"`
+		Count     int     `json:"count"`
+	}
+
+	var trend []monthData
+
+	for _, year := range years {
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			continue
+		}
+
+		for month := 1; month <= 12; month++ {
+			rows, err := conn.Query(fmt.Sprintf(`
+				SELECT LENGTH(title) as len
+				FROM %s
+				WHERE title != '' AND title IS NOT NULL
+				AND CAST(strftime('%%m', view_at, 'unixepoch', 'localtime') AS INTEGER) = ?
+			`, tableName), month)
+			if err != nil {
+				continue
+			}
+
+			totalLen := 0
+			count := 0
+			for rows.Next() {
+				var length int
+				if rows.Scan(&length) == nil {
+					totalLen += length
+					count++
+				}
+			}
+			rows.Close()
+
+			if count > 0 {
+				trend = append(trend, monthData{
+					Month:     fmt.Sprintf("%d-%02d", year, month),
+					AvgLength: float64(totalLen) / float64(count),
+					Count:     count,
+				})
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"trend":   []interface{}{},
-		"message": "标题趋势分析功能待实现",
+		"trend": trend,
 	}))
+}
+
+func containsDigit(s string) bool {
+	for _, r := range s {
+		if r >= '0' && r <= '9' {
+			return true
+		}
+	}
+	return false
+}
+
+func containsAlpha(s string) bool {
+	for _, r := range s {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') {
+			return true
+		}
+	}
+	return false
+}
+
+func isAllAlpha(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r == ' ') {
+			return false
+		}
+	}
+	return true
+}
+
+func isAllDigit(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 

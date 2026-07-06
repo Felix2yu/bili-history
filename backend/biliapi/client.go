@@ -17,6 +17,7 @@ import (
 
 const (
 	HistoryURL              = "https://api.bilibili.com/x/web-interface/history/cursor"
+	HistoryDelURL           = "https://api.bilibili.com/x/web-interface/history/del"
 	VideoInfoURL            = "https://api.bilibili.com/x/web-interface/view"
 	WatchLaterURL           = "https://api.bilibili.com/x/v2/history/toview"
 	WatchLaterDelURL        = "https://api.bilibili.com/x/v2/history/toview/del"
@@ -622,6 +623,34 @@ func (c *Client) RemoveFromWatchLater(aid int64) error {
 	form.Set("csrf", c.BiliJct)
 
 	body, err := c.PostForm(WatchLaterDelURL, form)
+	if err != nil {
+		return err
+	}
+	var resp BiliResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return fmt.Errorf("unmarshal response error: %w", err)
+	}
+	if resp.Code != 0 {
+		return &ApiError{Code: resp.Code, Message: resp.Message}
+	}
+	return nil
+}
+
+// DeleteBiliHistory 删除B站观看历史记录
+// bvids: 要删除的视频 BV 号列表
+func (c *Client) DeleteBiliHistory(bvids []string) error {
+	if c.BiliJct == "" {
+		return fmt.Errorf("bili_jct (csrf) is required to delete history")
+	}
+	if len(bvids) == 0 {
+		return fmt.Errorf("bvids is empty")
+	}
+
+	form := url.Values{}
+	form.Set("bvid", strings.Join(bvids, ","))
+	form.Set("csrf", c.BiliJct)
+
+	body, err := c.PostForm(HistoryDelURL, form)
 	if err != nil {
 		return err
 	}

@@ -87,7 +87,6 @@
               :cover-key="'cover'"
               :progress="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live' ? record.progress : null"
               :total-duration="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live' ? record.duration : null"
-              :is-blurred="isPrivacyMode"
               card-style="glass"
               @click="handleVideoClick(record)"
               @toggle-select="toggleRecordSelection"
@@ -139,8 +138,7 @@
               </template>
 
               <template #title="{ video: r }">
-                <span v-if="isPrivacyMode">******</span>
-                <span v-else v-html="highlightText(r.title)"></span>
+                <span v-html="highlightText(r.title)"></span>
               </template>
 
               <template #meta-top="{ video: r }">
@@ -344,7 +342,6 @@ import {
 import { showNotify, showDialog } from 'vant'
 import 'vant/es/dialog/style'
 import VideoRecord from './VideoRecord.vue'
-import { usePrivacyStore } from '~/stores/privacy.js'
 import LoginDialog from './LoginDialog.vue'
 import DownloadDialog from './DownloadDialog.vue'
 import FavoriteDialog from './FavoriteDialog.vue'
@@ -352,8 +349,6 @@ import { openInBrowser } from '~/utils/openUrl.js'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
 import { formatDuration, formatTimestamp, getBusinessType } from '~/utils/format'
 import VideoGridCard from './VideoGridCard.vue'
-
-const { isPrivacyMode } = usePrivacyStore()
 
 const props = defineProps({
   selectedYear: {

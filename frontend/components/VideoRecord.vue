@@ -16,8 +16,7 @@
     <div v-if="record.business === 'article-list' || record.business === 'article'">
       <div class="mb-2">
         <div class="line-clamp-2 text-gray-900 dark:text-gray-100 text-sm font-medium"
-          v-html="isPrivacyMode ? '******' : highlightedTitle"
-          :class="{ 'blur-sm': isPrivacyMode }"></div>
+          v-html="highlightedTitle"></div>
       </div>
       <div class="relative h-28 w-full overflow-hidden rounded-xl">
         <!-- Action buttons -->
@@ -52,12 +51,12 @@
         <div v-if="record.tag_name || record.tname" class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]" :class="isBatchMode ? 'ml-6' : ''">
           {{ record.tag_name || record.tname }}
         </div>
-        <img :src="normalizeImageUrl(record.cover || record.covers[0])" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
+        <img :src="normalizeImageUrl(record.cover || record.covers[0])" class="h-full w-full object-cover" alt="" />
       </div>
       <div class="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <div v-if="record.business !== 'cheese' && record.business !== 'pgc'" class="flex items-center gap-2" @click.stop>
-          <img :src="normalizeImageUrl(record.author_face)" class="w-4 h-4 rounded-full" :class="{ 'blur-md': isPrivacyMode }" @click="handleAuthorClick" />
-          <span class="cursor-pointer hover:text-accent transition-colors" @click="handleAuthorClick" v-html="isPrivacyMode ? '******' : highlightedAuthorName"></span>
+          <img :src="normalizeImageUrl(record.author_face)" class="w-4 h-4 rounded-full" @click="handleAuthorClick" />
+          <span class="cursor-pointer hover:text-accent transition-colors" @click="handleAuthorClick" v-html="highlightedAuthorName"></span>
         </div>
         <div class="flex items-center gap-2">
           <span v-if="record.dt === 1 || record.dt === 3 || record.dt === 5 || record.dt === 7" class="text-[10px]">📱</span>
@@ -89,9 +88,9 @@
             <span>已收藏</span>
           </div>
         </div>
-        <img v-if="record.cover" :src="normalizeImageUrl(record.cover)" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
+        <img v-if="record.cover" :src="normalizeImageUrl(record.cover)" class="h-full w-full object-cover" alt="" />
         <div v-else v-for="(cover, index) in record.covers" :key="index" class="mb-1">
-          <img :src="normalizeImageUrl(cover)" class="h-full w-full object-cover" :class="{ 'blur-md': isPrivacyMode }" alt="" />
+          <img :src="normalizeImageUrl(cover)" class="h-full w-full object-cover" alt="" />
         </div>
         <!-- Tag badge on cover -->
         <div v-if="record.tag_name || record.tname"
@@ -126,8 +125,7 @@
 
         <div>
           <div class="line-clamp-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-            v-html="isPrivacyMode ? '******' : highlightedTitle"
-            :class="{ 'blur-sm': isPrivacyMode }"></div>
+            v-html="highlightedTitle"></div>
         </div>
 
         <div class="flex items-center gap-2 mt-1">
@@ -136,9 +134,8 @@
             <div class="flex items-center gap-1">
               <span class="text-[10px] text-accent">备注:</span>
               <input type="text" v-model="remarkContent" @focus="handleRemarkFocus" @blur="handleRemarkBlur"
-                placeholder="添加备注..." :disabled="isPrivacyMode"
-                class="flex-1 min-w-0 px-1.5 py-0.5 text-[10px] text-accent bg-transparent border-b border-transparent hover:border-gray-200 dark:hover:border-gray-600 focus:border-accent focus:ring-0 transition-colors placeholder-accent/40"
-                :class="{ 'blur-sm': isPrivacyMode }" />
+                placeholder="添加备注..."
+                class="flex-1 min-w-0 px-1.5 py-0.5 text-[10px] text-accent bg-transparent border-b border-transparent hover:border-gray-200 dark:hover:border-gray-600 focus:border-accent focus:ring-0 transition-colors placeholder-accent/40" />
               <span v-if="remarkTime" class="text-[10px] text-gray-400">{{ formatRemarkTime(remarkTime) }}</span>
             </div>
           </div>
@@ -147,8 +144,8 @@
         <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
           <div v-if="record.business === 'pgc'" class="text-gray-500 dark:text-gray-400 truncate">{{ record.long_title }}</div>
           <div v-else class="flex items-center gap-2 min-w-0" @click.stop>
-            <img :src="normalizeImageUrl(record.author_face)" class="w-4 h-4 rounded-full flex-shrink-0" :class="{ 'blur-md': isPrivacyMode }" @click="handleAuthorClick" />
-            <span class="cursor-pointer hover:text-accent transition-colors truncate" @click="handleAuthorClick" v-html="isPrivacyMode ? '******' : highlightedAuthorName"></span>
+            <img :src="normalizeImageUrl(record.author_face)" class="w-4 h-4 rounded-full flex-shrink-0" @click="handleAuthorClick" />
+            <span class="cursor-pointer hover:text-accent transition-colors truncate" @click="handleAuthorClick" v-html="highlightedAuthorName"></span>
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <span v-if="record.dt === 1 || record.dt === 3 || record.dt === 5 || record.dt === 7" class="text-[10px]">📱</span>
@@ -171,7 +168,6 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
-import { usePrivacyStore } from '~/stores/privacy'
 import { showDialog, showNotify } from 'vant'
 import { batchDeleteHistory, updateVideoRemark, deleteBilibiliHistory } from '~/utils/api'
 import 'vant/es/dialog/style'
@@ -183,7 +179,6 @@ import { normalizeImageUrl } from '~/utils/imageUrl.js'
 import { saveHistoryRecord } from '~/utils/historyRecordStore.js'
 import { formatDuration, formatTimestamp } from '~/utils/format'
 
-const { isPrivacyMode } = usePrivacyStore()
 const router = useRouter()
 const isSmallScreen = useMediaQuery('(max-width: 639px)')
 

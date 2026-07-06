@@ -25,7 +25,6 @@
             <div class="relative w-full aspect-video overflow-hidden rounded-lg mb-3">
               <img
                 :src="normalizeImageUrl(record.cover)"
-                :class="{ 'blur-md': isPrivacyMode }"
                 class="w-full h-full object-cover"
                 alt=""
               />
@@ -44,21 +43,18 @@
 
             <!-- 视频标题 -->
             <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2 line-clamp-2 hover:line-clamp-none"
-                :class="{ 'blur-sm': isPrivacyMode }"
-                v-html="isPrivacyMode ? '******' : record.title">
+                v-html="record.title">
             </h3>
 
             <!-- UP主信息和时间 -->
             <div class="flex items-center space-x-2 mb-2">
               <img
                 :src="normalizeImageUrl(record.author_face)"
-                :class="{ 'blur-md': isPrivacyMode }"
                 class="w-4 h-4 rounded-full"
                 alt=""
               />
               <span class="text-xs text-gray-600 dark:text-gray-300"
-                    :class="{ 'blur-sm': isPrivacyMode }"
-                    v-text="isPrivacyMode ? '******' : record.author_name">
+                    v-text="record.author_name">
               </span>
             </div>
             <div class="flex items-center justify-between text-xs text-gray-400 dark:text-gray-400">
@@ -80,7 +76,6 @@
           <div class="flex-1 min-w-0 relative">
             <van-field
               v-model="record.remark"
-              :disabled="isPrivacyMode"
               @blur="handleRemarkUpdate(record)"
               type="textarea"
               rows="8"
@@ -127,14 +122,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { usePrivacyStore } from '~/stores/privacy'
 import { getAllRemarks, updateVideoRemark, batchGetRemarks } from '~/utils/api'
 import { showNotify } from 'vant'
 import Pagination from '../Pagination.vue'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
 import { formatDuration, formatTimestamp } from '~/utils/format'
-
-const { isPrivacyMode } = usePrivacyStore()
 
 // 状态管理
 const page = ref(1)

@@ -107,7 +107,7 @@
       >
         <div class="relative flex-shrink-0">
           <img v-if="isLoggedIn && userInfo?.face" :src="userInfo.face" alt="avatar"
-            class="w-6 h-6 rounded-full object-cover" :class="{ 'blur-md': isPrivacyMode }"
+            class="w-6 h-6 rounded-full object-cover"
             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
           />
           <div v-if="!isLoggedIn || !userInfo?.face" class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
@@ -118,7 +118,7 @@
           <span v-if="isLoggedIn" class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-green-400 border-2 border-white dark:border-gray-800"></span>
         </div>
         <span class="truncate" :class="{ 'text-green-500': isLoggedIn }">
-          {{ isLoggedIn ? (isPrivacyMode ? '已登录' : (userInfo?.uname || '已登录')) : '未登录' }}
+          {{ isLoggedIn ? (userInfo?.uname || '已登录') : '未登录' }}
         </span>
       </button>
 
@@ -143,7 +143,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { usePrivacyStore } from '~/stores/privacy.js'
 import { useDarkMode } from '~/stores/darkMode.js'
 import { getLoginStatus, logout, checkServerHealth, checkDataIntegrity, getIntegrityCheckConfig } from '~/utils/api'
 import { showNotify, showDialog } from 'vant'
@@ -154,36 +153,6 @@ import LoginDialog from './LoginDialog.vue'
 const emit = defineEmits(['navigate'])
 const route = useRoute()
 const router = useRouter()
-const { isDarkMode } = useDarkMode()
-const { isPrivacyMode } = usePrivacyStore()
-
-const currentContent = computed(() => {
-  const p = route.path
-  if (p.startsWith('/search')) return 'search'
-  if (p.startsWith('/analytics')) return 'analytics'
-  if (p.startsWith('/settings')) return 'settings'
-  if (p.startsWith('/images')) return 'images'
-  if (p.startsWith('/scheduler')) return 'scheduler'
-  if (p.startsWith('/downloads')) return 'downloads'
-  if (p.startsWith('/media')) return 'media'
-  if (p.startsWith('/favorites')) return 'favorites'
-  if (p.startsWith('/watchlater')) return 'watchlater'
-  if (p.startsWith('/likes')) return 'likes'
-  return 'history'
-})
-
-const changeContent = (content) => {
-  emit('navigate')
-  if (content === 'history') {
-    if (route.path !== '/' && !route.path.startsWith('/page/')) router.push('/')
-  } else if (content === 'settings') {
-    router.push('/settings')
-  }
-}
-
-const openAnalytics = () => {
-  window.open(router.resolve({ path: '/analytics' }).href, '_blank')
-}
 
 const isLoggedIn = ref(false)
 const userInfo = ref(null)

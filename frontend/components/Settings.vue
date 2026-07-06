@@ -160,20 +160,6 @@
                 </div>
               </div>
 
-              <!-- 隐私模式 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex-1">
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">隐私模式</h3>
-                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">开启后将模糊显示标题、封面、UP主名称等敏感信息</p>
-                  </div>
-                  <label class="relative inline-flex shrink-0 cursor-pointer items-center">
-                    <input type="checkbox" v-model="privacyMode" class="peer sr-only">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
-                  </label>
-                </div>
-              </div>
-
               <!-- 深色模式 -->
               <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
                 <div class="flex items-center justify-between gap-3">
@@ -564,10 +550,8 @@ import {
 } from '~/utils/api'
 import ShoutrrrSettings from './ShoutrrrSettings.vue'
 import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
-import { usePrivacyStore } from '~/stores/privacy'
 import { showDialog } from 'vant'
 import { useRoute } from 'vue-router'
-import privacyManager from '~/utils/privacyManager'
 
 // 设置选项卡
 const settingTabs = [
@@ -670,10 +654,6 @@ const mcpConnectionPrompt = computed(() => {
     '- 观看历史属于隐私数据，只在当前任务需要时读取。'
   ].join('\n')
 })
-
-// 隐私模式
-const { isPrivacyMode, setPrivacyMode } = usePrivacyStore()
-const privacyMode = ref(isPrivacyMode.value)
 
 // 同步已删除记录
 const syncDeleted = ref(false)
@@ -822,20 +802,6 @@ const handleLayoutChange = () => {
   })
 }
 
-// 监听隐私模式变化
-watch(privacyMode, (newVal) => {
-  // 更新store中的隐私模式状态
-  setPrivacyMode(newVal)
-
-  // 更新localStorage中的隐私模式状态并触发自定义事件
-  if (newVal) {
-    privacyManager.enable()
-
-  } else {
-    privacyManager.disable()
-  }
-})
-
 // 侧边栏显示设置
 const showSidebar = ref(localStorage.getItem('showSidebar') !== 'false') // 默认为true
 
@@ -863,24 +829,6 @@ const handleSidebarChange = () => {
 // 初始化服务器地址
 onMounted(async () => {
   console.log('Settings组件开始挂载')
-
-  // 添加隐私模式监听器
-  privacyManager.addListener((isEnabled) => {
-    console.log('Settings组件接收到隐私模式变化:', isEnabled)
-
-    // 更新组件内的隐私模式状态
-    if (privacyMode.value !== isEnabled) {
-      privacyMode.value = isEnabled
-    }
-
-  })
-
-  // 同步当前隐私模式状态
-  const currentPrivacyMode = privacyManager.isEnabled()
-  if (privacyMode.value !== currentPrivacyMode) {
-    privacyMode.value = currentPrivacyMode
-  }
-
 
   try {
     serverUrl.value = getCurrentBaseUrl()

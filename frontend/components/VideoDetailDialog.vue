@@ -17,7 +17,6 @@
             <img
               :src="normalizeImageUrl(video.cover || video.covers?.[0])"
               class="w-full h-full object-cover"
-              :class="{ 'blur-md': isPrivacyMode }"
               alt="视频封面"
             />
             <!-- 视频时长 -->
@@ -67,17 +66,16 @@
                   :src="normalizeImageUrl(video.author_face)"
                   alt="author"
                   class="h-7 w-7 cursor-pointer rounded-full transition-all duration-300 hover:scale-110"
-                  :class="{ 'blur-md': isPrivacyMode }"
                   @click="openAuthorPage"
-                  :title="isPrivacyMode ? '隐私模式已开启' : `访问 ${video.author_name} 的个人空间`"
+                  :title="`访问 ${video.author_name} 的个人空间`"
                 />
               </div>
               <div class="flex-1 min-w-0">
                 <p
                   class="cursor-pointer text-gray-800 dark:text-gray-200 transition-colors hover:text-[#FF6699]"
                   @click="openAuthorPage"
-                  :title="isPrivacyMode ? '隐私模式已开启' : `访问 ${video.author_name} 的个人空间`"
-                  v-html="isPrivacyMode ? '******' : video.author_name"
+                  :title="`访问 ${video.author_name} 的个人空间`"
+                  v-html="video.author_name"
                 ></p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">UP主</p>
               </div>
@@ -91,11 +89,9 @@
               <textarea
                 v-model="remarkContent"
                 @blur="handleRemarkBlur"
-                :disabled="isPrivacyMode"
                 placeholder="添加备注..."
                 rows="2"
                 class="w-full flex-1 resize-none px-2 py-1.5 text-xs text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 focus:border-[#fb7299] focus:ring-[#fb7299] transition-colors duration-200"
-                :class="{ 'blur-sm': isPrivacyMode }"
               ></textarea>
               <div v-if="remarkTime" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
                 上次编辑: {{ formatRemarkTime(remarkTime) }}
@@ -118,7 +114,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { showNotify } from 'vant'
-import { usePrivacyStore } from '~/stores/privacy'
 import 'vant/es/notify/style'
 import 'vant/es/dialog/style'
 import {
@@ -152,8 +147,6 @@ const dialogVisible = computed(() => props.modelValue)
 const updateVisible = (value) => {
   emit('update:modelValue', value)
 }
-
-const { isPrivacyMode } = usePrivacyStore()
 
 // 备注相关
 const remarkContent = ref('')

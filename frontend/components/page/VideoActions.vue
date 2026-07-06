@@ -27,7 +27,6 @@
             <img
               :src="normalizeImageUrl(record.cover || record.covers?.[0])"
               class="absolute left-0 top-0 h-full w-full object-cover"
-              :class="{ 'blur-md': isPrivacyMode }"
               alt=""
             />
           </div>
@@ -43,8 +42,7 @@
         <div class="p-3 pb-2 md:p-5">
           <div
             class="text-[15px] font-bold leading-snug text-gray-900 line-clamp-2 dark:text-gray-100 md:text-lg md:leading-6"
-            v-html="isPrivacyMode ? '******' : record.title"
-            :class="{ 'blur-sm': isPrivacyMode }"
+            v-html="record.title"
           ></div>
 
           <!-- Denser single line for Avatar, Name, Time, and Type -->
@@ -54,11 +52,10 @@
                 v-if="record.business !== 'cheese' && record.business !== 'pgc'"
                 :src="normalizeImageUrl(record.author_face)"
                 class="h-4 w-4 rounded-full md:h-6 md:w-6"
-                :class="{ 'blur-md': isPrivacyMode }"
                 alt=""
               />
-              <span class="truncate font-medium text-gray-700 dark:text-gray-300 md:font-normal" :class="{ 'blur-sm': isPrivacyMode }">
-                {{ isPrivacyMode ? '******' : record.author_name }}
+              <span class="truncate font-medium text-gray-700 dark:text-gray-300 md:font-normal">
+                {{ record.author_name }}
               </span>
               <span class="opacity-80">·</span>
               <span class="opacity-80">{{ formatTimestamp(record.view_at) }}</span>
@@ -151,11 +148,9 @@
           <textarea
             v-model="remarkContent"
             @blur="handleRemarkBlur"
-            :disabled="isPrivacyMode"
             rows="4"
             placeholder="写点属于你自己的学习记录或吐槽吧..."
             class="w-full resize-none border-none bg-transparent p-0 text-[13px] leading-relaxed text-gray-800 outline-none focus:ring-0 dark:text-gray-100 md:text-sm"
-            :class="{ 'blur-sm': isPrivacyMode }"
           ></textarea>
         </div>
         <div v-if="remarkTime" class="mt-2 text-right text-[10px] text-gray-400 md:text-xs">
@@ -217,12 +212,10 @@ import {
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
 import { openInBrowser } from '~/utils/openUrl.js'
 import { getHistoryRecord } from '~/utils/historyRecordStore'
-import { usePrivacyStore } from '~/stores/privacy'
 import { formatDuration, formatTimestamp, getBusinessType } from '~/utils/format'
 
 const route = useRoute()
 const router = useRouter()
-const { isPrivacyMode } = usePrivacyStore()
 
 const record = ref(null)
 const remarkContent = ref('')

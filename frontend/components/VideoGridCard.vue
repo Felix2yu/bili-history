@@ -22,7 +22,6 @@
         class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 bg-gray-200 dark:bg-gray-700"
         loading="lazy"
         :onerror="errorImageUrl"
-        :class="{ 'blur-md': isBlurred }"
       />
 
       <slot name="cover-top-left" :video="video">
@@ -77,7 +76,6 @@
           class="w-3.5 h-3.5 rounded-full object-cover cursor-pointer"
           loading="lazy"
           :onerror="ownerErrorUrl"
-          :class="{ 'blur-md': isBlurred }"
           @click.stop="handleOwnerClick"
         />
         <span
@@ -121,7 +119,6 @@ const props = defineProps({
   totalDuration: { type: Number, default: null },
   timeField: { type: String, default: 'add_at' },
   timeFormat: { type: String, default: 'date' },
-  isBlurred: { type: Boolean, default: false },
   cardStyle: { type: String, default: 'default' },
   titleKey: { type: String, default: 'title' },
   ownerKey: { type: String, default: 'owner_name' },

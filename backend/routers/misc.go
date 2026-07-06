@@ -3,6 +3,7 @@ package routers
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -851,7 +852,10 @@ func sendDailyReport(c *gin.Context) {
 		stats = make(map[string]interface{})
 	}
 
-	err := services.SendDailyReport(stats)
+	// 查找最新年份的热力图文件，构造附件 URL
+	attachURL := findHeatmapAttachURL()
+
+	err := services.SendDailyReport(stats, attachURL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("发送每日报告失败: "+err.Error()))
 		return
@@ -861,6 +865,40 @@ func sendDailyReport(c *gin.Context) {
 		"status":  "success",
 		"message": "每日报告已发送",
 	})
+}
+
+func findHeatmapAttachURL() string {
+	cfg, _ := config.LoadConfig()
+
+	outputDir := "output/heatmap"
+	if cfg != nil && cfg.Heatmap.OutputDir != "" {
+		outputDir = cfg.Heatmap.OutputDir
+	} else if cfg != nil && cfg.OutputFolder != "" {
+		outputDir = cfg.OutputFolder + "/heatmap"
+	}
+
+	// 从当前年份往前查找存在的热力图文件
+	year := time.Now().Year()
+	for y := year; y >= year-2; y-- {
+		filePath := fmt.Sprintf("%s/heatmap_%d.png", outputDir, y)
+		if _, err := os.Stat(filePath); err == nil {
+			host := "127.0.0.1"
+			port := 8899
+			if cfg != nil {
+				if cfg.Server.Host == "0.0.0.0" || cfg.Server.Host == "::" || cfg.Server.Host == "" {
+					host = "127.0.0.1"
+				} else {
+					host = cfg.Server.Host
+				}
+				if cfg.Server.Port > 0 {
+					port = cfg.Server.Port
+				}
+			}
+			return fmt.Sprintf("http://%s:%d/api/heatmap/image?year=%d", host, port, y)
+		}
+	}
+
+	return ""
 }
 
 func getLogList(c *gin.Context) {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/containrrr/shoutrrr"
 	"github.com/containrrr/shoutrrr/pkg/router"
+	"github.com/containrrr/shoutrrr/pkg/types"
 )
 
 var shoutrrrRouter *router.ServiceRouter
@@ -50,6 +51,10 @@ func getShoutrrrRouter() (*router.ServiceRouter, error) {
 }
 
 func SendShoutrrrNotification(title, message string) error {
+	return SendShoutrrrNotificationWithParams(title, message, nil)
+}
+
+func SendShoutrrrNotificationWithParams(title, message string, params *types.Params) error {
 	r, err := getShoutrrrRouter()
 	if err != nil {
 		return err
@@ -60,7 +65,7 @@ func SendShoutrrrNotification(title, message string) error {
 		body = title + "\n" + message
 	}
 
-	errors := r.Send(body, nil)
+	errors := r.Send(body, params)
 	if len(errors) > 0 {
 		var errMsgs []string
 		for i, e := range errors {
@@ -83,7 +88,7 @@ func SendTestShoutrrr() error {
 	return SendShoutrrrNotification(title, message)
 }
 
-func SendDailyReport(stats map[string]interface{}) error {
+func SendDailyReport(stats map[string]interface{}, attachURL string) error {
 	title := "📊 Bilibili历史记录每日报告"
 
 	var message string
@@ -98,6 +103,11 @@ func SendDailyReport(stats map[string]interface{}) error {
 	}
 	if mostActiveDay, ok := stats["most_active_day"]; ok {
 		message += fmt.Sprintf("最活跃日期：%v\n", mostActiveDay)
+	}
+
+	if attachURL != "" {
+		params := &types.Params{"Attach": attachURL}
+		return SendShoutrrrNotificationWithParams(title, message, params)
 	}
 
 	return SendShoutrrrNotification(title, message)

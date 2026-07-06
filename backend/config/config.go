@@ -44,6 +44,19 @@ type SchedulerConfig struct {
 	MaxRetries  int `yaml:"max_retries" json:"max_retries"`
 }
 
+type ColorPiece struct {
+	Min   int    `yaml:"min" json:"min"`
+	Max   int    `yaml:"max" json:"max"`
+	Color string `yaml:"color" json:"color"`
+}
+
+type HeatmapConfig struct {
+	OutputDir    string       `yaml:"output_dir" json:"output_dir"`
+	TemplateFile string       `yaml:"template_file" json:"template_file"`
+	Title        string       `yaml:"title" json:"title"`
+	Colors       []ColorPiece `yaml:"colors" json:"colors"`
+}
+
 type Config struct {
 	SESSDATA         string          `yaml:"SESSDATA" json:"SESSDATA"`
 	OutputFolder     string          `yaml:"output_folder" json:"output_folder"`
@@ -57,6 +70,7 @@ type Config struct {
 	Scheduler        SchedulerConfig `yaml:"scheduler" json:"scheduler"`
 	Sync             SyncConfig      `yaml:"sync" json:"sync"`
 	Appearance       AppearanceConfig `yaml:"appearance" json:"appearance"`
+	Heatmap          HeatmapConfig   `yaml:"heatmap" json:"heatmap"`
 	BiliJct          string          `yaml:"bili_jct" json:"bili_jct"`
 	DedeUserID       string          `yaml:"DedeUserID" json:"DedeUserID"`
 	DedeUserIDCkMd5  string          `yaml:"DedeUserID__ckMd5" json:"DedeUserID__ckMd5"`
@@ -266,6 +280,8 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 			updateSyncNode(valueNode, &cfg.Sync)
 		case "appearance":
 			updateAppearanceNode(valueNode, &cfg.Appearance)
+		case "heatmap":
+			updateHeatmapNode(valueNode, &cfg.Heatmap)
 		}
 	}
 
@@ -284,6 +300,10 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 	if _, ok := existingKeys["appearance"]; !ok {
 		node := getOrAddNode("appearance")
 		updateAppearanceNode(node, &cfg.Appearance)
+	}
+	if _, ok := existingKeys["heatmap"]; !ok {
+		node := getOrAddNode("heatmap")
+		updateHeatmapNode(node, &cfg.Heatmap)
 	}
 }
 
@@ -480,6 +500,37 @@ func updateAppearanceNode(node *yaml.Node, appearance *AppearanceConfig) {
 	}
 
 	getOrAddString("dark_mode", appearance.DarkMode)
+}
+
+func updateHeatmapNode(node *yaml.Node, heatmap *HeatmapConfig) {
+	if node.Kind != yaml.MappingNode {
+		return
+	}
+	existingKeys := make(map[string]int)
+	for i := 0; i < len(node.Content); i += 2 {
+		existingKeys[node.Content[i].Value] = i
+	}
+
+	getOrAddString := func(key string, val string) *yaml.Node {
+		if idx, ok := existingKeys[key]; ok {
+			n := node.Content[idx+1]
+			if n.Kind != yaml.ScalarNode {
+				n.Kind = yaml.ScalarNode
+				n.Tag = "!!str"
+				n.Content = nil
+			}
+			n.Value = val
+			return n
+		}
+		keyNode := &yaml.Node{Kind: yaml.ScalarNode, Value: key, Tag: "!!str"}
+		valNode := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: val}
+		node.Content = append(node.Content, keyNode, valNode)
+		return valNode
+	}
+
+	getOrAddString("output_dir", heatmap.OutputDir)
+	getOrAddString("template_file", heatmap.TemplateFile)
+	getOrAddString("title", heatmap.Title)
 }
 
 func applyEnvOverrides(cfg *Config) {

@@ -10,6 +10,8 @@ services:
       - "8899"
     environment:
       - TZ=Asia/Shanghai
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8899/health"]
       interval: 10s
@@ -28,6 +30,8 @@ services:
         condition: service_healthy
     environment:
       - TZ=Asia/Shanghai
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
       - NUXT_BACKEND_URL=http://backend:8899
       - NUXT_PUBLIC_DEFAULT_BACKEND_URL=/api
       - NODE_ENV=production

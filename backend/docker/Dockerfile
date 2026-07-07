@@ -32,7 +32,7 @@ ENV DEDE_USER_ID_CKMD5=""
 ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=8899
 
-RUN apk add --no-cache tzdata ca-certificates tini ffmpeg
+RUN apk add --no-cache tzdata ca-certificates tini ffmpeg shadow su-exec
 
 WORKDIR /app
 
@@ -41,7 +41,9 @@ COPY --from=builder /app/config /app/config
 
 RUN mkdir -p /app/output
 
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 8899
 
-ENTRYPOINT ["tini", "--"]
-CMD ["/app/bilibili-history-go"]
+ENTRYPOINT ["/entrypoint.sh"]

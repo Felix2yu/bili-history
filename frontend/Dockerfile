@@ -14,8 +14,11 @@ ENV NUXT_PUBLIC_DEFAULT_BACKEND_URL=/api
 RUN bun run build
 
 FROM node:26-alpine AS release
+RUN apk add --no-cache shadow su-exec
 WORKDIR /app
 COPY --from=build /app/.output ./.output
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 ENV HOST=0.0.0.0
 ENV PORT=3000
@@ -25,4 +28,4 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
-CMD ["node", ".output/server/index.mjs"]
+ENTRYPOINT ["/entrypoint.sh"]

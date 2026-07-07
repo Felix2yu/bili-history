@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -554,6 +555,11 @@ func (s *Scheduler) GetTasks() []map[string]interface{} {
 		}
 		result = append(result, s.toFrontendFormat(task))
 	}
+	sort.Slice(result, func(i, j int) bool {
+		ci, _ := result[i]["created_at"].(string)
+		cj, _ := result[j]["created_at"].(string)
+		return ci < cj
+	})
 	return result
 }
 
@@ -600,6 +606,11 @@ func (s *Scheduler) toFrontendFormat(task *ScheduleTask) map[string]interface{} 
 		out["depends_on"] = task.DependsOn
 	}
 	if len(subTasks) > 0 {
+		sort.Slice(subTasks, func(i, j int) bool {
+			ci, _ := subTasks[i]["created_at"].(string)
+			cj, _ := subTasks[j]["created_at"].(string)
+			return ci < cj
+		})
 		out["sub_tasks"] = subTasks
 	} else {
 		out["sub_tasks"] = []interface{}{}

@@ -656,9 +656,11 @@ const mcpConnectionPrompt = computed(() => {
 
 // 同步已删除记录
 const syncDeleted = ref(false)
+const syncDeletedInitialized = ref(false)
 
 // 监听同步已删除记录变化
 watch(syncDeleted, async (newVal) => {
+  if (!syncDeletedInitialized.value) return
   try {
     const response = await updateSyncConfig({ sync_deleted: newVal })
     if (response.data && response.data.success) {
@@ -928,6 +930,7 @@ onMounted(async () => {
           syncDeleteToBilibili.value = false
         }
         console.log('同步删除配置获取完成')
+        syncDeletedInitialized.value = true
       })(),
       (async () => {
         console.log('开始获取外观配置')

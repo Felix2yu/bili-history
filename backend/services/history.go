@@ -329,7 +329,7 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 	maxConsecutiveErrors := 3
 	consecutiveErrors := 0
 	var lastErrMsg string
-	requestInterval := 500 * time.Millisecond
+	requestInterval := 1500 * time.Millisecond
 
 	for {
 		pageCount++

@@ -215,8 +215,7 @@ func (s *Scheduler) initDefaultTasks() {
 		{TaskID: "fetch_history", Name: "获取B站历史记录", Endpoint: "/fetch/bili-history", Method: "GET", ScheduleType: "daily", ScheduleTime: "00:00", Enabled: 0, TaskType: "main"},
 		{TaskID: "import_data", Name: "导入数据", Endpoint: "/importSqlite/import_data_sqlite", Method: "POST", ScheduleType: "chain", DependsOn: "fetch_history", Enabled: 0, TaskType: "main"},
 		{TaskID: "analyze_data", Name: "分析数据", Endpoint: "/analysis/analyze", Method: "POST", ScheduleType: "chain", DependsOn: "import_data", Enabled: 0, TaskType: "main"},
-		{TaskID: "generate_heatmap", Name: "生成热力图", Endpoint: "/heatmap/generate_heatmap", Method: "POST", ScheduleType: "chain", DependsOn: "analyze_data", Enabled: 0, TaskType: "main"},
-		{TaskID: "send_daily_report", Name: "发送每日报告", Endpoint: "/log/send", Method: "POST", ScheduleType: "chain", DependsOn: "generate_heatmap", Enabled: 0, TaskType: "main"},
+		{TaskID: "send_daily_report", Name: "发送每日报告", Endpoint: "/log/send", Method: "POST", ScheduleType: "chain", DependsOn: "analyze_data", Enabled: 0, TaskType: "main"},
 	}
 
 	addedCount := 0
@@ -469,11 +468,7 @@ func (s *Scheduler) callEndpoint(method, endpoint, params string) (string, error
 	if err != nil {
 		return "", err
 	}
-	if params != "" && strings.HasPrefix(strings.TrimSpace(params), "{") {
-		req.Header.Set("Content-Type", "application/json")
-	} else {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	}
+	req.Header.Set("Content-Type", "application/json")
 	return s.doRequest(req)
 }
 

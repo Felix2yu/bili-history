@@ -310,6 +310,13 @@ export const getYearlyAnalysis = async (year) => {
   })
 }
 
+// 获取热力图数据（日期 -> 观看数量）
+export const getHeatmapData = async (year) => {
+  return instance.get(`/heatmap/data`, {
+    params: { year }
+  })
+}
+
 // 获取热门视频命中率分析
 export const getPopularHitRate = async (year, useCache = true) => {
   return instance.get(`/popular/popular-hit-rate`, {

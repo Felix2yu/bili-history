@@ -88,7 +88,7 @@ func SendTestShoutrrr() error {
 	return SendShoutrrrNotification(title, message)
 }
 
-func SendDailyReport(stats map[string]interface{}, attachURL string) error {
+func SendDailyReport(stats map[string]interface{}) error {
 	title := "📊 Bilibili历史记录每日报告"
 
 	var message string
@@ -103,11 +103,6 @@ func SendDailyReport(stats map[string]interface{}, attachURL string) error {
 	}
 	if mostActiveDay, ok := stats["most_active_day"]; ok {
 		message += fmt.Sprintf("最活跃日期：%v\n", mostActiveDay)
-	}
-
-	if attachURL != "" {
-		params := &types.Params{"Attach": attachURL}
-		return SendShoutrrrNotificationWithParams(title, message, params)
 	}
 
 	return SendShoutrrrNotification(title, message)

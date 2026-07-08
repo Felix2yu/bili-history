@@ -329,9 +329,15 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 	maxConsecutiveErrors := 3
 	consecutiveErrors := 0
 	var lastErrMsg string
+	requestInterval := 500 * time.Millisecond
 
 	for {
 		pageCount++
+
+		// 成功获取一页后等待间隔，避免触发B站限流
+		if pageCount > 1 {
+			time.Sleep(requestInterval)
+		}
 
 		data, err := client.GetHistory(max, viewAt, ps)
 		if err != nil {

@@ -93,7 +93,7 @@ export const updateInstanceBaseUrl = (newBaseUrl) => {
 }
 
 // 历史记录相关接口
-export const getBiliHistory2024 = (page, size, sortOrder, tagName, mainCategory, dateRange, useLocalImages = false, business = '') => {
+export const getBiliHistory2024 = (page, size, sortOrder, tagName, mainCategory, dateRange, useLocalImages = false, business = '', signal) => {
   return instance.get(`/history/all`, {
     params: {
       page,
@@ -105,6 +105,7 @@ export const getBiliHistory2024 = (page, size, sortOrder, tagName, mainCategory,
       use_local_images: useLocalImages,
       business: business,
     },
+    signal,
   })
 }
 

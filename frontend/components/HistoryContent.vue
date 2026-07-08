@@ -803,7 +803,7 @@ const fetchHistoryByDateRange = async () => {
       }
     }
   } catch (error) {
-    if (error.name === 'AbortError') return
+    if (error.name === 'AbortError' || error.name === 'CanceledError' || error.__CANCEL__) return
     console.error('数据获取失败:', error)
     records.value = []
     total.value = 0

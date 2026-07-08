@@ -2,6 +2,7 @@ package routers
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -1070,10 +1071,17 @@ func getCleanStatus(c *gin.Context) {
 }
 
 func sendDailyReport(c *gin.Context) {
+	// 读取原始 body 用于调试
+	bodyBytes, _ := io.ReadAll(c.Request.Body)
+	c.Request.Body = io.NopCloser(strings.NewReader(string(bodyBytes)))
+	utils.LogInfo("收到 /log/send 请求: body=%s, content-type=%s", string(bodyBytes), c.GetHeader("Content-Type"))
+
 	stats := make(map[string]interface{})
 	if err := c.ShouldBindJSON(&stats); err != nil {
+		utils.LogWarning("ShouldBindJSON 失败: %v, 使用空 stats", err)
 		stats = make(map[string]interface{})
 	}
+	utils.LogInfo("解析后的 stats: %v", stats)
 
 	err := services.SendDailyReport(stats)
 	if err != nil {

@@ -105,7 +105,22 @@ func SendDailyReport(stats map[string]interface{}) error {
 		message += fmt.Sprintf("最活跃日期：%v\n", mostActiveDay)
 	}
 
-	return SendShoutrrrNotification(title, message)
+	utils.LogInfo("发送每日报告: title=%s, message=%q, stats_keys=%v", title, message, getMapKeys(stats))
+	err := SendShoutrrrNotification(title, message)
+	if err != nil {
+		utils.LogError("发送每日报告失败: %v", err)
+	} else {
+		utils.LogSuccess("每日报告发送成功")
+	}
+	return err
+}
+
+func getMapKeys(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 func SendSessdataExpiredNotification(username string) error {

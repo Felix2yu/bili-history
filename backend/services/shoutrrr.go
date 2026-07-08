@@ -91,33 +91,31 @@ func SendTestShoutrrr() error {
 }
 
 func SendDailyReport(stats map[string]interface{}) error {
-	title := "📊 Bilibili历史记录每日报告"
-
-	// 如果 stats 为空，自动从数据库获取数据
-	if len(stats) == 0 {
+	// 如果 stats 为空或只有 report_date，自动从数据库获取数据
+	if len(stats) <= 1 {
 		stats = gatherDailyReportData()
 	}
 
-	var message string
-	if totalRecords, ok := stats["total_records"]; ok {
-		message += fmt.Sprintf("总记录数：%v\n", totalRecords)
+	reportDate, _ := stats["report_date"].(string)
+	if reportDate == "" {
+		reportDate = time.Now().Format("2006-01-02")
 	}
+	title := fmt.Sprintf("📊 Bilibili日报 %s", reportDate)
+
+	var message string
 	if todayRecords, ok := stats["today_records"]; ok {
 		message += fmt.Sprintf("今日观看：%v 条\n", todayRecords)
 	}
-	if totalWatchingTime, ok := stats["total_watching_time"]; ok {
-		message += fmt.Sprintf("总观看时长：%v\n", totalWatchingTime)
-	}
-	if mostActiveDay, ok := stats["most_active_day"]; ok {
-		message += fmt.Sprintf("最活跃日期：%v\n", mostActiveDay)
+	if watchingTime, ok := stats["total_watching_time"]; ok {
+		message += fmt.Sprintf("观看时长：%v\n", watchingTime)
 	}
 
-	utils.LogInfo("发送每日报告: title=%s, message=%q, stats_keys=%v", title, message, getMapKeys(stats))
+	utils.LogInfo("发送每日报告: title=%s, message=%q", title, message)
 	err := SendShoutrrrNotification(title, message)
 	if err != nil {
 		utils.LogError("发送每日报告失败: %v", err)
 	} else {
-		utils.LogSuccess("每日报告发送发送成功")
+		utils.LogSuccess("每日报告发送成功")
 	}
 	return err
 }
@@ -125,7 +123,6 @@ func SendDailyReport(stats map[string]interface{}) error {
 func gatherDailyReportData() map[string]interface{} {
 	data := make(map[string]interface{})
 	now := time.Now()
-	today := now.Format("2006-01-02")
 	year := now.Format("2006")
 
 	db := database.GetSQLiteDB()
@@ -137,44 +134,34 @@ func gatherDailyReportData() map[string]interface{} {
 		return data
 	}
 
-	// 获取总记录数
-	var totalCount int
 	tableName := fmt.Sprintf("bilibili_history_%s", year)
 	exists, _ := db.TableExists(tableName)
-	if exists {
-		conn.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)).Scan(&totalCount)
+	if !exists {
+		data["today_records"] = 0
+		data["total_watching_time"] = "0分钟"
+		data["report_date"] = now.Format("2006-01-02")
+		return data
 	}
-	data["total_records"] = totalCount
 
-	// 获取今日观看数
+	// 今日观看数
 	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).Unix()
 	todayEnd := todayStart + 86400
 	var todayCount int
-	if exists {
-		conn.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE view_at >= ? AND view_at < ?", tableName), todayStart, todayEnd).Scan(&todayCount)
-	}
+	conn.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE view_at >= ? AND view_at < ?", tableName), todayStart, todayEnd).Scan(&todayCount)
 	data["today_records"] = todayCount
 
-	// 获取总观看时长（秒）
-	var totalDuration int
-	if exists {
-		conn.QueryRow(fmt.Sprintf("SELECT COALESCE(SUM(duration), 0) FROM %s", tableName)).Scan(&totalDuration)
-	}
-	hours := totalDuration / 3600
-	minutes := (totalDuration % 3600) / 60
-	data["total_watching_time"] = fmt.Sprintf("%d小时%d分钟", hours, minutes)
-
-	// 获取最活跃日期
-	if exists {
-		var mostActiveDate string
-		var mostActiveCount int
-		conn.QueryRow(fmt.Sprintf("SELECT DATE(view_at, 'unixepoch', 'localtime') as d, COUNT(*) as c FROM %s GROUP BY d ORDER BY c DESC LIMIT 1", tableName)).Scan(&mostActiveDate, &mostActiveCount)
-		if mostActiveDate != "" {
-			data["most_active_day"] = fmt.Sprintf("%s（%d条）", mostActiveDate, mostActiveCount)
-		}
+	// 今日观看时长
+	var todayDuration int
+	conn.QueryRow(fmt.Sprintf("SELECT COALESCE(SUM(duration), 0) FROM %s WHERE view_at >= ? AND view_at < ?", tableName), todayStart, todayEnd).Scan(&todayDuration)
+	hours := todayDuration / 3600
+	minutes := (todayDuration % 3600) / 60
+	if hours > 0 {
+		data["total_watching_time"] = fmt.Sprintf("%d小时%d分钟", hours, minutes)
+	} else {
+		data["total_watching_time"] = fmt.Sprintf("%d分钟", minutes)
 	}
 
-	data["report_date"] = today
+	data["report_date"] = now.Format("2006-01-02")
 	return data
 }
 

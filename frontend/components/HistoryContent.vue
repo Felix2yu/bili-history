@@ -1050,7 +1050,7 @@ const refreshData = async () => {
 }
 
 // SSR: 初始数据在服务端获取
-const { data: initialData } = await useAsyncData('history-initial', async () => {
+const { data: initialData } = await useAsyncData(`history-initial-${props.page}-${props.pageSize}-${props.business}`, async () => {
   try {
     const loginResponse = await getLoginStatus()
     const loggedIn = loginResponse.data && loginResponse.data.code === 0 && loginResponse.data.data.isLogin

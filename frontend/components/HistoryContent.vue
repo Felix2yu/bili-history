@@ -421,6 +421,7 @@ const sortOrder = ref(0)
 const size = ref(props.pageSize)
 const remarkData = ref({}) // 存储备注数据
 let abortController = null // 用于取消过期请求
+let fetchId = 0 // 请求序列号，防止旧响应覆盖新数据
 const downloadedVideos = ref(new Set()) // 存储已下载视频的CID集合
 const favoriteStatus = ref({}) // 存储视频收藏状态信息
 
@@ -757,6 +758,7 @@ const fetchHistoryByDateRange = async () => {
     abortController.abort()
   }
   abortController = new AbortController()
+  const currentFetchId = ++fetchId
 
   try {
     isLoading.value = true
@@ -772,6 +774,9 @@ const fetchHistoryByDateRange = async () => {
       props.business,
       abortController.signal,
     )
+
+    // 如果已有更新的请求在进行中，丢弃本次结果
+    if (currentFetchId !== fetchId) return
 
     if (response.data && response.data.data) {
       total.value = response.data.data.total
@@ -798,6 +803,7 @@ const fetchHistoryByDateRange = async () => {
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') return
     console.error('数据获取失败:', error)
     records.value = []
     total.value = 0

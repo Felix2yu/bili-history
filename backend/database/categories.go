@@ -136,9 +136,6 @@ func InitCategories() error {
 		{"生活", "宠物", "宠物", 175, ""},
 		{"生活", "三农", "三农", 176, ""},
 		{"生活", "家居房产", "家居房产", 177, ""},
-		{"生活", "手工", "生活手工", 178, ""},
-		{"生活", "绘画", "生活绘画", 179, ""},
-		{"生活", "日常", "生活日常", 21, ""},
 		{"美食制作", "美食制作", "美食制作", 211, ""},
 		{"美食侦探", "美食侦探", "美食侦探", 212, ""},
 		{"美食测评", "美食测评", "美食测评", 213, ""},
@@ -192,7 +189,6 @@ func InitCategories() error {
 		{"搞笑视频", "搞笑视频", "搞笑视频", 252, ""},
 		{"搞笑日常", "搞笑日常", "搞笑日常", 253, ""},
 		{"搞笑脑洞", "搞笑脑洞", "搞笑脑洞", 254, ""},
-		{"动物圈", "动物圈", "动物圈", 217, ""},
 	}
 
 	insertSQL := `INSERT OR IGNORE INTO video_categories (main_category, sub_category, alias, tid, image) VALUES (?, ?, ?, ?, ?)`
@@ -241,6 +237,7 @@ func GetCategories() ([]models.CategoryNode, error) {
 	defer rows.Close()
 
 	categoryMap := make(map[string]*models.CategoryNode)
+	subCatSeen := make(map[string]map[string]bool) // mainCat -> set of subCat names
 
 	for rows.Next() {
 		var mainCat, subCat, alias string
@@ -257,9 +254,15 @@ func GetCategories() ([]models.CategoryNode, error) {
 				Image:        image.String,
 				SubCategories: []models.SubCategory{},
 			}
+			subCatSeen[mainCat] = make(map[string]bool)
 		}
 
 		if subCat != mainCat {
+			// 跳过重复的子分区名称
+			if subCatSeen[mainCat][subCat] {
+				continue
+			}
+			subCatSeen[mainCat][subCat] = true
 			categoryMap[mainCat].SubCategories = append(categoryMap[mainCat].SubCategories, models.SubCategory{
 				Name:  subCat,
 				Alias: alias,
@@ -336,12 +339,18 @@ func GetSubCategories(mainCategory string) ([]models.SubCategory, error) {
 	defer rows.Close()
 
 	var categories []models.SubCategory
+	seen := make(map[string]bool)
 	for rows.Next() {
 		var name, alias string
 		var tid int
 		if err := rows.Scan(&name, &alias, &tid); err != nil {
 			continue
 		}
+		// 跳过重复的子分区名称
+		if seen[name] {
+			continue
+		}
+		seen[name] = true
 		categories = append(categories, models.SubCategory{
 			Name:  name,
 			Alias: alias,

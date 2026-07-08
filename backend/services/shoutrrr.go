@@ -109,6 +109,23 @@ func SendDailyReport(stats map[string]interface{}) error {
 	if watchingTime, ok := stats["total_watching_time"]; ok {
 		message += fmt.Sprintf("观看时长：%v\n", watchingTime)
 	}
+	if topAuthor, ok := stats["top_author"]; ok {
+		message += fmt.Sprintf("最常看UP主：%v\n", topAuthor)
+	}
+	if topCategory, ok := stats["top_category"]; ok {
+		message += fmt.Sprintf("最常看分区：%v\n", topCategory)
+	}
+	if topTag, ok := stats["top_tag"]; ok {
+		message += fmt.Sprintf("最常看标签：%v\n", topTag)
+	}
+	if peakHour, ok := stats["peak_hour"]; ok {
+		message += fmt.Sprintf("观看高峰时段：%v\n", peakHour)
+	}
+
+	// 如果仍然没有内容，显示默认提示
+	if message == "" {
+		message = "今日暂无观看记录\n"
+	}
 
 	utils.LogInfo("发送每日报告: title=%s, message=%q", title, message)
 	err := SendShoutrrrNotification(title, message)
@@ -127,10 +144,14 @@ func gatherDailyReportData() map[string]interface{} {
 
 	db := database.GetSQLiteDB()
 	if db == nil {
+		utils.LogWarning("每日报告: 数据库不可用")
+		data["report_date"] = now.Format("2006-01-02")
 		return data
 	}
 	conn := db.GetDB()
 	if conn == nil {
+		utils.LogWarning("每日报告: 数据库连接不可用")
+		data["report_date"] = now.Format("2006-01-02")
 		return data
 	}
 
@@ -140,19 +161,29 @@ func gatherDailyReportData() map[string]interface{} {
 		data["today_records"] = 0
 		data["total_watching_time"] = "0分钟"
 		data["report_date"] = now.Format("2006-01-02")
+		utils.LogInfo("每日报告: 表 %s 不存在", tableName)
 		return data
 	}
 
-	// 今日观看数
 	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).Unix()
 	todayEnd := todayStart + 86400
+
+	// 今日观看数
 	var todayCount int
-	conn.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE view_at >= ? AND view_at < ?", tableName), todayStart, todayEnd).Scan(&todayCount)
+	err := conn.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE view_at >= ? AND view_at < ?", tableName), todayStart, todayEnd).Scan(&todayCount)
+	if err != nil {
+		utils.LogWarning("每日报告: 查询今日观看数失败: %v", err)
+		todayCount = 0
+	}
 	data["today_records"] = todayCount
 
 	// 今日观看时长
 	var todayDuration int
-	conn.QueryRow(fmt.Sprintf("SELECT COALESCE(SUM(duration), 0) FROM %s WHERE view_at >= ? AND view_at < ?", tableName), todayStart, todayEnd).Scan(&todayDuration)
+	err = conn.QueryRow(fmt.Sprintf("SELECT COALESCE(SUM(duration), 0) FROM %s WHERE view_at >= ? AND view_at < ?", tableName), todayStart, todayEnd).Scan(&todayDuration)
+	if err != nil {
+		utils.LogWarning("每日报告: 查询今日观看时长失败: %v", err)
+		todayDuration = 0
+	}
 	hours := todayDuration / 3600
 	minutes := (todayDuration % 3600) / 60
 	if hours > 0 {
@@ -161,7 +192,36 @@ func gatherDailyReportData() map[string]interface{} {
 		data["total_watching_time"] = fmt.Sprintf("%d分钟", minutes)
 	}
 
+	// 今日最常看UP主
+	var topAuthor string
+	err = conn.QueryRow(fmt.Sprintf("SELECT author_name FROM %s WHERE view_at >= ? AND view_at < ? AND author_name != '' GROUP BY author_mid ORDER BY COUNT(*) DESC LIMIT 1", tableName), todayStart, todayEnd).Scan(&topAuthor)
+	if err == nil && topAuthor != "" {
+		data["top_author"] = topAuthor
+	}
+
+	// 今日最常看分区
+	var topCategory string
+	err = conn.QueryRow(fmt.Sprintf("SELECT main_category FROM %s WHERE view_at >= ? AND view_at < ? AND main_category IS NOT NULL AND main_category != '' GROUP BY main_category ORDER BY COUNT(*) DESC LIMIT 1", tableName), todayStart, todayEnd).Scan(&topCategory)
+	if err == nil && topCategory != "" {
+		data["top_category"] = topCategory
+	}
+
+	// 今日最常看标签
+	var topTag string
+	err = conn.QueryRow(fmt.Sprintf("SELECT tag_name FROM %s WHERE view_at >= ? AND view_at < ? AND tag_name IS NOT NULL AND tag_name != '' GROUP BY tag_name ORDER BY COUNT(*) DESC LIMIT 1", tableName), todayStart, todayEnd).Scan(&topTag)
+	if err == nil && topTag != "" {
+		data["top_tag"] = topTag
+	}
+
+	// 今日观看高峰时段
+	var peakHour int
+	err = conn.QueryRow(fmt.Sprintf("SELECT CAST(strftime('%%H', view_at, 'unixepoch', 'localtime') AS INTEGER) as hour FROM %s WHERE view_at >= ? AND view_at < ? GROUP BY hour ORDER BY COUNT(*) DESC LIMIT 1", tableName), todayStart, todayEnd).Scan(&peakHour)
+	if err == nil {
+		data["peak_hour"] = fmt.Sprintf("%d:00-%d:59", peakHour, peakHour)
+	}
+
 	data["report_date"] = now.Format("2006-01-02")
+	utils.LogInfo("每日报告: 今日观看 %d 条, 时长 %d 分钟", todayCount, todayDuration)
 	return data
 }
 

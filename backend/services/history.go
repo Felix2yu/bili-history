@@ -133,16 +133,26 @@ func FetchHistory(skipExists bool) (map[string]interface{}, error) {
 		maxEmptyPages := 3
 		ps := 30
 
+		maxConsecutiveErrors := 3
+		consecutiveErrors := 0
+
 		for {
 			pageCount++
 
 			data, err := client.GetHistory(max, viewAt, ps)
 			if err != nil {
-				status := GetFetchStatus()
-				status.ErrorMessage = err.Error()
-				setFetchStatus(status)
-				return
+				consecutiveErrors++
+				utils.LogWarning("获取历史记录第 %d 页失败: %v (连续失败 %d/%d)", pageCount, err, consecutiveErrors, maxConsecutiveErrors)
+				if consecutiveErrors >= maxConsecutiveErrors {
+					status := GetFetchStatus()
+					status.ErrorMessage = fmt.Sprintf("连续 %d 页失败，停止抓取: %v", consecutiveErrors, err)
+					setFetchStatus(status)
+					break
+				}
+				time.Sleep(2 * time.Second)
+				continue
 			}
+			consecutiveErrors = 0
 
 			status := GetFetchStatus()
 			status.CurrentPage = pageCount
@@ -312,18 +322,26 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 	maxEmptyPages := 3
 	ps := 30
 
+	maxConsecutiveErrors := 3
+	consecutiveErrors := 0
+
 	for {
 		pageCount++
 
 		data, err := client.GetHistory(max, viewAt, ps)
 		if err != nil {
-			s := GetFetchStatus()
-			s.ErrorMessage = err.Error()
-			s.IsRunning = false
-			s.Status = "error"
-			setFetchStatus(s)
-			return nil, fmt.Errorf("fetch page %d failed: %w", pageCount, err)
+			consecutiveErrors++
+			utils.LogWarning("获取历史记录第 %d 页失败: %v (连续失败 %d/%d)", pageCount, err, consecutiveErrors, maxConsecutiveErrors)
+			if consecutiveErrors >= maxConsecutiveErrors {
+				s := GetFetchStatus()
+				s.ErrorMessage = fmt.Sprintf("连续 %d 页失败，停止抓取: %v", consecutiveErrors, err)
+				setFetchStatus(s)
+				break
+			}
+			time.Sleep(2 * time.Second)
+			continue
 		}
+		consecutiveErrors = 0
 
 		s := GetFetchStatus()
 		s.CurrentPage = pageCount

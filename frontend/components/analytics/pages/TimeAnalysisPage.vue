@@ -1,6 +1,6 @@
 <!-- 时间分析页组件 -->
 <template>
-  <div class="space-y-4 h-screen overflow-hidden">
+  <div class="space-y-4 h-screen overflow-hidden" v-if="viewingData">
     <h3 class="text-2xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
       观看时间分析
     </h3>

@@ -1,6 +1,6 @@
 <!-- 标签分析页组件 -->
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6" v-if="viewingData">
     <h3 class="text-4xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
       标签分析
     </h3>

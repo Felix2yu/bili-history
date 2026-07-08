@@ -1,6 +1,6 @@
 <!-- 视频整体完成率分析页组件 -->
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4" v-if="viewingData">
     <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
       视频完成率分析
     </h3>

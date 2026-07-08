@@ -1,6 +1,6 @@
 <!-- 最爱重温页组件 -->
 <template>
-  <div class="absolute inset-0">
+  <div class="absolute inset-0" v-if="viewingData">
     <div class="h-full flex items-center justify-center">
       <div class="max-w-7xl w-full mx-auto px-2 py-6 overflow-y-auto">
         <div class="space-y-4">

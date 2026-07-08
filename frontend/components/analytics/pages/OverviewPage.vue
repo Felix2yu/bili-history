@@ -1,6 +1,6 @@
 <!-- 数据概览页组件 -->
 <template>
-  <div class="space-y-12">
+  <div class="space-y-12" v-if="viewingData">
     <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
       年度观看数据
     </h3>

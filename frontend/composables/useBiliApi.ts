@@ -21,10 +21,12 @@ export const useBiliApi = () => {
     mainCategory: string = '',
     dateRange: string = '',
     useLocalImages: boolean = false,
-    business: string = ''
+    business: string = '',
+    signal?: AbortSignal
   ) => {
     return apiFetch('/history/all', {
       method: 'GET',
+      signal,
       params: {
         page,
         size,

@@ -420,6 +420,7 @@ const total = ref(0)
 const sortOrder = ref(0)
 const size = ref(props.pageSize)
 const remarkData = ref({}) // 存储备注数据
+let abortController: AbortController | null = null // 用于取消过期请求
 const downloadedVideos = ref(new Set()) // 存储已下载视频的CID集合
 const favoriteStatus = ref({}) // 存储视频收藏状态信息
 
@@ -751,6 +752,11 @@ const batchCheckFavorites = async () => {
 
 // 数据获取函数
 const fetchHistoryByDateRange = async () => {
+  // 取消上一次未完成的请求
+  if (abortController) {
+    abortController.abort()
+  }
+  abortController = new AbortController()
 
   try {
     isLoading.value = true
@@ -764,6 +770,7 @@ const fetchHistoryByDateRange = async () => {
       dateRange.value || '',
       localStorage.getItem('useLocalImages') === 'true',
       props.business,
+      abortController.signal,
     )
 
     if (response.data && response.data.data) {

@@ -217,6 +217,22 @@ func FetchHistory(skipExists bool) (map[string]interface{}, error) {
 			return
 		}
 
+		// Deduplicate: keep only the latest entry per bvid+view_at combination
+		seen := make(map[string]bool)
+		var deduped []biliapi.HistoryEntry
+		for _, entry := range allEntries {
+			bv := entry.Bvid
+			if bv == "" {
+				bv = entry.History.Bvid
+			}
+			key := fmt.Sprintf("%s_%d", bv, entry.ViewAt)
+			if !seen[key] {
+				seen[key] = true
+				deduped = append(deduped, entry)
+			}
+		}
+		allEntries = deduped
+
 		insertedCount := 0
 		for _, entry := range allEntries {
 			business := entry.Business
@@ -419,6 +435,22 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 		setFetchStatus(s)
 		return nil, fmt.Errorf("database not initialized")
 	}
+
+	// Deduplicate: keep only the latest entry per bvid+view_at combination
+	seen := make(map[string]bool)
+	var deduped []biliapi.HistoryEntry
+	for _, entry := range allEntries {
+		bv := entry.Bvid
+		if bv == "" {
+			bv = entry.History.Bvid
+		}
+		key := fmt.Sprintf("%s_%d", bv, entry.ViewAt)
+		if !seen[key] {
+			seen[key] = true
+			deduped = append(deduped, entry)
+		}
+	}
+	allEntries = deduped
 
 	insertedCount := 0
 	for _, entry := range allEntries {

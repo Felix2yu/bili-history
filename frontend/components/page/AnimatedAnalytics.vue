@@ -101,21 +101,26 @@
       </div>
 
       <!-- 所有分析页面 -->
-      <div class="space-y-10">
-        <OverviewPage :viewing-data="monthlyStatsData" />
-        <TimeAnalysisPage :viewing-data="timeSlotsData" :selected-year="selectedYear" />
-        <TimeDistributionPage :viewing-data="weeklyStatsData" />
-        <MonthlyPage :viewing-data="monthlyStatsData" />
-        <StreakPage :viewing-data="continuityData" :selected-year="selectedYear" />
-        <RewatchPage :viewing-data="watchCountsData" />
-        <OverallCompletionPage :viewing-data="completionRatesData" />
-        <AuthorCompletionPage :viewing-data="authorCompletionData" />
-        <TagsPage :viewing-data="tagAnalysisData" />
-        <DurationAnalysisPage :viewing-data="durationAnalysisData" />
-        <LikesAnalysisPage :viewing-data="likesAnalysisData" />
-        <FavoritesAnalysisPage :viewing-data="favoritesAnalysisData" />
-        <WatchLaterAnalysisPage :viewing-data="watchLaterAnalysisData" />
-      </div>
+      <ClientOnly>
+        <div class="space-y-10">
+          <OverviewPage :viewing-data="monthlyStatsData" />
+          <TimeAnalysisPage :viewing-data="timeSlotsData" :selected-year="selectedYear" />
+          <TimeDistributionPage :viewing-data="weeklyStatsData" />
+          <MonthlyPage :viewing-data="monthlyStatsData" />
+          <StreakPage :viewing-data="continuityData" :selected-year="selectedYear" />
+          <RewatchPage :viewing-data="watchCountsData" />
+          <OverallCompletionPage :viewing-data="completionRatesData" />
+          <AuthorCompletionPage :viewing-data="authorCompletionData" />
+          <TagsPage :viewing-data="tagAnalysisData" />
+          <DurationAnalysisPage :viewing-data="durationAnalysisData" />
+          <LikesAnalysisPage :viewing-data="likesAnalysisData" />
+          <FavoritesAnalysisPage :viewing-data="favoritesAnalysisData" />
+          <WatchLaterAnalysisPage :viewing-data="watchLaterAnalysisData" />
+        </div>
+        <template #fallback>
+          <div class="text-center py-12 text-gray-500 dark:text-gray-400">加载中...</div>
+        </template>
+      </ClientOnly>
     </analytics-layout>
   </div>
 </template>

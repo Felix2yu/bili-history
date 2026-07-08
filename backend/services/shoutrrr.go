@@ -3,8 +3,10 @@ package services
 import (
 	"fmt"
 	"net/url"
+	"time"
 
 	"bilibili-history-go/config"
+	"bilibili-history-go/database"
 	"bilibili-history-go/utils"
 
 	"github.com/containrrr/shoutrrr"
@@ -91,6 +93,11 @@ func SendTestShoutrrr() error {
 func SendDailyReport(stats map[string]interface{}) error {
 	title := "📊 Bilibili历史记录每日报告"
 
+	// 如果 stats 为空，自动从数据库获取数据
+	if len(stats) == 0 {
+		stats = gatherDailyReportData()
+	}
+
 	var message string
 	if totalRecords, ok := stats["total_records"]; ok {
 		message += fmt.Sprintf("总记录数：%v\n", totalRecords)
@@ -110,9 +117,65 @@ func SendDailyReport(stats map[string]interface{}) error {
 	if err != nil {
 		utils.LogError("发送每日报告失败: %v", err)
 	} else {
-		utils.LogSuccess("每日报告发送成功")
+		utils.LogSuccess("每日报告发送发送成功")
 	}
 	return err
+}
+
+func gatherDailyReportData() map[string]interface{} {
+	data := make(map[string]interface{})
+	now := time.Now()
+	today := now.Format("2006-01-02")
+	year := now.Format("2006")
+
+	db := database.GetSQLiteDB()
+	if db == nil {
+		return data
+	}
+	conn := db.GetDB()
+	if conn == nil {
+		return data
+	}
+
+	// 获取总记录数
+	var totalCount int
+	tableName := fmt.Sprintf("bilibili_history_%s", year)
+	exists, _ := db.TableExists(tableName)
+	if exists {
+		conn.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)).Scan(&totalCount)
+	}
+	data["total_records"] = totalCount
+
+	// 获取今日观看数
+	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).Unix()
+	todayEnd := todayStart + 86400
+	var todayCount int
+	if exists {
+		conn.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE view_at >= ? AND view_at < ?", tableName), todayStart, todayEnd).Scan(&todayCount)
+	}
+	data["today_records"] = todayCount
+
+	// 获取总观看时长（秒）
+	var totalDuration int
+	if exists {
+		conn.QueryRow(fmt.Sprintf("SELECT COALESCE(SUM(duration), 0) FROM %s", tableName)).Scan(&totalDuration)
+	}
+	hours := totalDuration / 3600
+	minutes := (totalDuration % 3600) / 60
+	data["total_watching_time"] = fmt.Sprintf("%d小时%d分钟", hours, minutes)
+
+	// 获取最活跃日期
+	if exists {
+		var mostActiveDate string
+		var mostActiveCount int
+		conn.QueryRow(fmt.Sprintf("SELECT DATE(view_at, 'unixepoch', 'localtime') as d, COUNT(*) as c FROM %s GROUP BY d ORDER BY c DESC LIMIT 1", tableName)).Scan(&mostActiveDate, &mostActiveCount)
+		if mostActiveDate != "" {
+			data["most_active_day"] = fmt.Sprintf("%s（%d条）", mostActiveDate, mostActiveCount)
+		}
+	}
+
+	data["report_date"] = today
+	return data
 }
 
 func getMapKeys(m map[string]interface{}) []string {

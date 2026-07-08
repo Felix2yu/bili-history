@@ -1,6 +1,9 @@
 services:
   backend:
-    image: ghcr.io/felix2yu/bili-history-fetcher:latest
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+    image: bili-history-backend:local
     container_name: bili-history-backend
     restart: unless-stopped
     volumes:

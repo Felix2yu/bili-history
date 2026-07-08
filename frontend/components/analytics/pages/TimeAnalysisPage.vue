@@ -1,6 +1,6 @@
 <!-- 时间分析页组件 -->
 <template>
-  <div class="space-y-4 h-screen overflow-hidden" v-if="viewingData">
+  <div class="space-y-4" v-if="viewingData">
     <h3 class="text-2xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
       观看时间分析
     </h3>
@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import gsap from 'gsap'
 import { useDarkMode } from '~/stores/darkMode'
@@ -266,7 +266,9 @@ const initBarChart = () => {
 
 
 onMounted(() => {
-  initBarChart()
+  nextTick(() => {
+    initBarChart()
+  })
 
   // 监听窗口大小变化
   window.addEventListener('resize', () => {

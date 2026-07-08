@@ -59,8 +59,8 @@ const tagDistributionOption = computed(() => {
   const tooltipText = isDark ? '#ffffff' : '#111111'
 
   if (!props.viewingData?.watch_counts?.tag_distribution) return {}
-  
-  const data = Object.entries(props.viewingData.watch_counts.tag_distribution)
+
+  const data = Object.entries(props.viewingData.watch_counts.tag_distribution || {})
     .sort((a, b) => b[1] - a[1])
     .map(([tag, count]) => ({
       name: tag,
@@ -129,8 +129,8 @@ const tagCompletionOption = computed(() => {
   const tooltipText = isDark ? '#ffffff' : '#111111'
 
   if (!props.viewingData?.completion_rates?.tag_completion_rates) return {}
-  
-  const data = Object.entries(props.viewingData.completion_rates.tag_completion_rates)
+
+  const data = Object.entries(props.viewingData.completion_rates.tag_completion_rates || {})
     .map(([tag, stats]) => ({
       tag,
       completion: stats.average_completion_rate,

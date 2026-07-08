@@ -1,9 +1,8 @@
 <!-- 最爱重温页组件 -->
 <template>
-  <div class="absolute inset-0" v-if="viewingData">
-    <div class="h-full flex items-center justify-center">
-      <div class="max-w-7xl w-full mx-auto px-2 py-6 overflow-y-auto">
-        <div class="space-y-4">
+  <div class="space-y-4" v-if="viewingData">
+    <div class="max-w-7xl w-full mx-auto px-2 py-6">
+      <div class="space-y-4">
           <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
             最爱重温的视频
           </h3>

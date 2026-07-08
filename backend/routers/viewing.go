@@ -24,6 +24,11 @@ func RegisterViewingRoutes(r *gin.RouterGroup) {
 		viewing.GET("/author-completion", getAuthorCompletion)
 		viewing.GET("/tag-analysis", getTagAnalysis)
 		viewing.GET("/duration-analysis", getDurationAnalysis)
+		// 额外模块分析
+		viewing.GET("/likes-analysis", getLikesAnalysis)
+		viewing.GET("/favorites-analysis", getFavoritesAnalysis)
+		viewing.GET("/watchlater-analysis", getWatchLaterAnalysis)
+		viewing.GET("/extra-overview", getExtraOverview)
 	}
 }
 
@@ -292,4 +297,43 @@ func getDurationAnalysis(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(data))
+}
+
+// getLikesAnalysis 获取点赞分析
+func getLikesAnalysis(c *gin.Context) {
+	result, err := database.AnalyzeLikes()
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(result))
+}
+
+// getFavoritesAnalysis 获取收藏分析
+func getFavoritesAnalysis(c *gin.Context) {
+	result, err := database.AnalyzeFavorites()
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(result))
+}
+
+// getWatchLaterAnalysis 获取稍后再看分析
+func getWatchLaterAnalysis(c *gin.Context) {
+	result, err := database.AnalyzeWatchLater()
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(result))
+}
+
+// getExtraOverview 获取额外模块概览
+func getExtraOverview(c *gin.Context) {
+	result := database.GetExtraStatsOverview()
+	c.JSON(http.StatusOK, models.SuccessResponse(result))
 }

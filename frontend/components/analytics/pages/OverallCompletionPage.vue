@@ -154,10 +154,7 @@ const completionDistributionOption = computed(() => {
       data: data.map((item, index) => ({
         ...item,
         itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: `rgba(251, 114, 153, ${Math.max(0.4, 0.9 - index * 0.1)})` },
-            { offset: 1, color: `rgba(252, 155, 122, ${Math.max(0.4, 0.9 - index * 0.1)})` }
-          ])
+          color: ['#fb7299', '#fc9b7a', '#ff6b6b', '#ffa07a', '#ff8c94', '#ffb3ba', '#ffc3a0'][index % 7]
         }
       }))
     }]
@@ -202,8 +199,8 @@ const durationCompletionOption = computed(() => {
         const count = params.find(p => p.seriesName === '视频数量')
         const fully = params.find(p => p.seriesName === '完整观看率')
         return `${params[0].name}<br/>
-                完成率：${completion.value}%<br/>
-                完整观看率：${fully.value}%<br/>
+                完成率：${Number(completion.value).toFixed(1)}%<br/>
+                完整观看率：${Number(fully.value).toFixed(1)}%<br/>
                 视频数量：${count.value}个`
       }
     },

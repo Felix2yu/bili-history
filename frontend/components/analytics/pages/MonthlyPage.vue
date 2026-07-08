@@ -47,9 +47,15 @@ const monthlyOption = computed(() => {
   const tooltipText = isDark ? '#ffffff' : '#111111'
 
   if (!props.viewingData?.monthly_stats) return {}
-  
-  const data = Object.entries(props.viewingData.monthly_stats)
-    .sort(([a], [b]) => a.localeCompare(b))
+
+  // 处理数组格式的 monthly_stats
+  const statsArray = Array.isArray(props.viewingData.monthly_stats)
+    ? props.viewingData.monthly_stats
+    : Object.entries(props.viewingData.monthly_stats).map(([month, count]) => ({ month, total_count: count }))
+
+  const data = statsArray
+    .sort((a, b) => (a.month || '').localeCompare(b.month || ''))
+    .map(item => [item.month, item.total_count || 0])
   
   return {
     tooltip: {

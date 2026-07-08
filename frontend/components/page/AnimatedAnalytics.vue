@@ -1,11 +1,11 @@
 <template>
-  <div class="h-screen">
+  <div>
     <analytics-layout>
-      <!-- 固定在顶部的导航 -->
-      <div class="fixed top-0 left-0 right-0 z-50">
-        <div class="bg-white/5 backdrop-blur-md border-b border-white/10 dark:bg-black/5 dark:border-gray-800/50">
+      <!-- 导航栏 -->
+      <div class="mb-4">
+        <div class="bg-white/5 backdrop-blur-md border-b border-white/10 dark:bg-black/5 dark:border-gray-800/50 rounded-t-xl">
           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+            <div class="flex justify-between items-center h-14">
               <!-- 添加返回按钮 -->
               <div class="flex items-center">
                 <button
@@ -31,6 +31,20 @@
                     {{ year }}年
                   </option>
                 </select>
+
+                <!-- 全部显示切换按钮 -->
+                <button
+                  @click="toggleShowAll"
+                  class="inline-flex items-center text-gray-600 dark:text-gray-300 hover:text-[#fb7299] dark:hover:text-[#fb7299] transition-colors duration-200"
+                  :class="{ 'text-[#fb7299]': showAllPages }"
+                  title="切换显示模式"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path v-if="!showAllPages" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <span class="ml-1 text-sm">{{ showAllPages ? '单页' : '全部' }}</span>
+                </button>
 
                 <!-- 强制刷新按钮 -->
                 <button
@@ -79,13 +93,12 @@
       </div>
 
       <!-- 主要内容区域 -->
-      <div class="relative h-full pt-16">
+      <div class="relative">
         <!-- 页面容器 -->
-        <div class="h-full">
+        <div>
           <!-- 加载状态 -->
           <div v-if="loading"
-            class="fixed inset-0 flex items-center justify-center z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm"
-            style="min-height: 100vh"
+            class="absolute inset-0 flex items-center justify-center z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-xl"
           >
             <div class="text-center">
               <svg
@@ -118,7 +131,8 @@
           </div>
 
           <!-- 内容页面 -->
-          <Transition mode="out-in" name="fade">
+          <!-- 单页模式 -->
+          <Transition mode="out-in" name="fade" v-if="!showAllPages">
             <!-- 开场页 -->
             <HeroPage v-if="currentPage === 0" key="hero" :year="selectedYear" />
 
@@ -152,36 +166,33 @@
             <!-- 视频时长分析页 -->
             <DurationAnalysisPage v-else-if="currentPage === 10" key="duration-analysis" :viewing-data="durationAnalysisData" />
 
-            <!-- 标题分析页 -->
-            <TitleAnalysisPage v-else-if="currentPage === 11" key="title-analysis" :title-analytics="keywordAnalyticsData" />
+            <!-- 点赞分析页 -->
+            <LikesAnalysisPage v-else-if="currentPage === 11" key="likes-analysis" :viewing-data="likesAnalysisData" />
 
-            <!-- 标题趋势分析页 -->
-            <TitleTrendAnalysisPage v-else-if="currentPage === 12" key="title-trend-analysis" :title-analytics="trendAnalyticsData" />
+            <!-- 收藏分析页 -->
+            <FavoritesAnalysisPage v-else-if="currentPage === 12" key="favorites-analysis" :viewing-data="favoritesAnalysisData" />
 
-            <!-- 标题长度分析页 -->
-            <TitleLengthAnalysisPage v-else-if="currentPage === 13" key="title-length-analysis" :title-analytics="lengthAnalyticsData" />
-
-            <!-- 标题情感分析页 -->
-            <TitleSentimentAnalysisPage v-else-if="currentPage === 14" key="title-sentiment-analysis" :title-analytics="sentimentAnalyticsData" />
-
-            <!-- 标题互动分析页 -->
-            <TitleInteractionAnalysisPage v-else-if="currentPage === 15" key="title-interaction-analysis" :title-analytics="interactionAnalyticsData" />
-
-            <!-- 热门命中率分析页 -->
-            <PopularHitRatePage v-else-if="currentPage === 16" key="popular-hit-rate" :selected-year="selectedYear" :hit-rate-data="popularHitRateData" />
-
-            <!-- 热门预测能力分析页 -->
-            <PopularPredictionPage v-else-if="currentPage === 17" key="popular-prediction" :data="popularPredictionData?.prediction_analysis" />
-
-            <!-- UP主热门关联分析页 -->
-            <AuthorPopularAssociationPage v-else-if="currentPage === 18" key="author-popular-association" :data="authorPopularAssociationData?.association_analysis" />
-
-            <!-- 热门视频分区分布分析页 -->
-            <CategoryPopularDistributionPage v-else-if="currentPage === 19" key="category-popular-distribution" :selected-year="selectedYear" :distribution-data="categoryPopularDistributionData" />
-
-            <!-- 热门视频时长分布分析页 -->
-            <DurationPopularDistributionPage v-else-if="currentPage === 20" key="duration-popular-distribution" :selected-year="selectedYear" :duration-data="durationPopularDistributionData" />
+            <!-- 稍后再看分析页 -->
+            <WatchLaterAnalysisPage v-else-if="currentPage === 13" key="watchlater-analysis" :viewing-data="watchLaterAnalysisData" />
           </Transition>
+
+          <!-- 全部显示模式 -->
+          <div v-else class="space-y-12 pb-20">
+            <HeroPage :year="selectedYear" />
+            <OverviewPage :viewing-data="monthlyStatsData" />
+            <TimeAnalysisPage :viewing-data="timeSlotsData" :selected-year="selectedYear" />
+            <TimeDistributionPage :viewing-data="weeklyStatsData" />
+            <MonthlyPage :viewing-data="monthlyStatsData" />
+            <StreakPage :viewing-data="continuityData" :selected-year="selectedYear" />
+            <RewatchPage :viewing-data="watchCountsData" />
+            <OverallCompletionPage :viewing-data="completionRatesData" />
+            <AuthorCompletionPage :viewing-data="authorCompletionData" />
+            <TagsPage :viewing-data="tagAnalysisData" />
+            <DurationAnalysisPage :viewing-data="durationAnalysisData" />
+            <LikesAnalysisPage :viewing-data="likesAnalysisData" />
+            <FavoritesAnalysisPage :viewing-data="favoritesAnalysisData" />
+            <WatchLaterAnalysisPage :viewing-data="watchLaterAnalysisData" />
+          </div>
         </div>
       </div>
     </analytics-layout>
@@ -190,7 +201,7 @@
 
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { getTitleKeywordAnalysis, getTitleLengthAnalysis, getTitleSentimentAnalysis, getTitleTrendAnalysis, getTitleInteractionAnalysis, getViewingMonthlyStats, getViewingWeeklyStats, getViewingTimeSlots, getViewingContinuity, getViewingWatchCounts, getViewingCompletionRates, getViewingAuthorCompletion, getViewingTagAnalysis, getViewingDurationAnalysis, getPopularHitRate, getPopularPredictionAbility, getAuthorPopularAssociation, getCategoryPopularDistribution, getDurationPopularDistribution } from '~/utils/api'
+import { getViewingMonthlyStats, getViewingWeeklyStats, getViewingTimeSlots, getViewingContinuity, getViewingWatchCounts, getViewingCompletionRates, getViewingAuthorCompletion, getViewingTagAnalysis, getViewingDurationAnalysis, getLikesAnalysis, getFavoritesAnalysis, getWatchLaterAnalysis } from '~/utils/api'
 import HeroPage from '../analytics/pages/HeroPage.vue'
 import OverviewPage from '../analytics/pages/OverviewPage.vue'
 import StreakPage from '../analytics/pages/StreakPage.vue'
@@ -202,16 +213,9 @@ import TagsPage from '../analytics/pages/TagsPage.vue'
 import TimeDistributionPage from '../analytics/pages/TimeDistributionPage.vue'
 import MonthlyPage from '../analytics/pages/MonthlyPage.vue'
 import DurationAnalysisPage from '../analytics/pages/DurationAnalysisPage.vue'
-import TitleAnalysisPage from '../analytics/pages/TitleAnalysisPage.vue'
-import TitleLengthAnalysisPage from '../analytics/pages/TitleLengthAnalysisPage.vue'
-import TitleSentimentAnalysisPage from '../analytics/pages/TitleSentimentAnalysisPage.vue'
-import TitleTrendAnalysisPage from '../analytics/pages/TitleTrendAnalysisPage.vue'
-import TitleInteractionAnalysisPage from '../analytics/pages/TitleInteractionAnalysisPage.vue'
-import PopularHitRatePage from '../analytics/pages/PopularHitRatePage.vue'
-import PopularPredictionPage from '../analytics/pages/PopularPredictionPage.vue'
-import AuthorPopularAssociationPage from '../analytics/pages/AuthorPopularAssociationPage.vue'
-import CategoryPopularDistributionPage from '../analytics/pages/CategoryPopularDistributionPage.vue'
-import DurationPopularDistributionPage from '../analytics/pages/DurationPopularDistributionPage.vue'
+import LikesAnalysisPage from '../analytics/pages/LikesAnalysisPage.vue'
+import FavoritesAnalysisPage from '../analytics/pages/FavoritesAnalysisPage.vue'
+import WatchLaterAnalysisPage from '../analytics/pages/WatchLaterAnalysisPage.vue'
 import AnalyticsLayout from '../analytics/layout/AnalyticsLayout.vue'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart, BarChart, PieChart } from 'echarts/charts'
@@ -244,11 +248,6 @@ const selectedYear = ref(new Date().getFullYear())
 const availableYears = ref([])
 const loading = ref(false)
 // 已删除原有的 analyticsData，现在使用拆分后的独立数据
-const keywordAnalyticsData = ref(null)
-const lengthAnalyticsData = ref(null)
-const sentimentAnalyticsData = ref(null)
-const trendAnalyticsData = ref(null)
-const interactionAnalyticsData = ref(null)
 // 观看时间分析数据（逐步拆分中）
 const monthlyStatsData = ref(null)
 const weeklyStatsData = ref(null)
@@ -259,14 +258,13 @@ const completionRatesData = ref(null)
 const authorCompletionData = ref(null)
 const tagAnalysisData = ref(null)
 const durationAnalysisData = ref(null)
-const popularHitRateData = ref(null)
-const popularPredictionData = ref(null)
-const authorPopularAssociationData = ref(null)
-const categoryPopularDistributionData = ref(null)
-const durationPopularDistributionData = ref(null)
 const viewingData = ref(null)
+const likesAnalysisData = ref(null)
+const favoritesAnalysisData = ref(null)
+const watchLaterAnalysisData = ref(null)
 const currentPage = ref(0)
 const isTransitioning = ref(false)
+const showAllPages = ref(false)
 
 // 滚动和触摸相关状态
 let touchStartX = 0
@@ -291,18 +289,10 @@ const pages = [
   { name: 'UP主完成率', color: '#fb7299' },
   { name: '标签分析', color: '#fc9b7a' },
   { name: '视频时长分析', color: '#fb7299' },
-  // 标题分析
-  { name: '标题分析', color: '#fc9b7a' },
-  { name: '标题趋势分析', color: '#fb7299' },
-  { name: '标题长度分析', color: '#fc9b7a' },
-  { name: '标题情感分析', color: '#fb7299' },
-  { name: '标题互动分析', color: '#fc9b7a' },
-  // 热门视频分析
-  { name: '热门命中率', color: '#fb7299' },
-  { name: '预测能力', color: '#fc9b7a' },
-  { name: 'UP主热门关联', color: '#fb7299' },
-  { name: '分区分布', color: '#fc9b7a' },
-  { name: '时长分布', color: '#fb7299' }
+  // 额外模块分析
+  { name: '点赞分析', color: '#fc9b7a' },
+  { name: '收藏分析', color: '#fb7299' },
+  { name: '稍后再看', color: '#fc9b7a' }
 ]
 
 // 监听页面切换
@@ -523,92 +513,29 @@ const fetchPageData = async (pageNumber, forceRefresh = false) => {
         }
         break
 
-      case 11: // 标题分析页
-        if (!keywordAnalyticsData.value || forceRefresh) {
-          const response = await getTitleKeywordAnalysis(selectedYear.value, !forceRefresh)
+      case 11: // 点赞分析页
+        if (!likesAnalysisData.value || forceRefresh) {
+          const response = await getLikesAnalysis()
           if (response.data.status === 'success') {
-            keywordAnalyticsData.value = response.data.data
+            likesAnalysisData.value = response.data.data
           }
         }
         break
 
-      case 12: // 标题趋势分析页
-        if (!trendAnalyticsData.value || forceRefresh) {
-          const response = await getTitleTrendAnalysis(selectedYear.value, !forceRefresh)
+      case 12: // 收藏分析页
+        if (!favoritesAnalysisData.value || forceRefresh) {
+          const response = await getFavoritesAnalysis()
           if (response.data.status === 'success') {
-            trendAnalyticsData.value = response.data.data
+            favoritesAnalysisData.value = response.data.data
           }
         }
         break
 
-      case 13: // 标题长度分析页
-        if (!lengthAnalyticsData.value || forceRefresh) {
-          const response = await getTitleLengthAnalysis(selectedYear.value, !forceRefresh)
+      case 13: // 稍后再看分析页
+        if (!watchLaterAnalysisData.value || forceRefresh) {
+          const response = await getWatchLaterAnalysis()
           if (response.data.status === 'success') {
-            lengthAnalyticsData.value = response.data.data
-          }
-        }
-        break
-
-      case 14: // 标题情感分析页
-        if (!sentimentAnalyticsData.value || forceRefresh) {
-          const response = await getTitleSentimentAnalysis(selectedYear.value, !forceRefresh)
-          if (response.data.status === 'success') {
-            sentimentAnalyticsData.value = response.data.data
-          }
-        }
-        break
-
-      case 15: // 标题互动分析页
-        if (!interactionAnalyticsData.value || forceRefresh) {
-          const response = await getTitleInteractionAnalysis(selectedYear.value, !forceRefresh)
-          if (response.data.status === 'success') {
-            interactionAnalyticsData.value = response.data.data
-          }
-        }
-        break
-
-      case 16: // 热门命中率分析页
-        if (!popularHitRateData.value || forceRefresh) {
-          const response = await getPopularHitRate(selectedYear.value, !forceRefresh)
-          if (response.data.status === 'success') {
-            popularHitRateData.value = response.data.data
-          }
-        }
-        break
-
-      case 17: // 热门预测能力分析页
-        if (!popularPredictionData.value || forceRefresh) {
-          const response = await getPopularPredictionAbility(selectedYear.value, !forceRefresh)
-          if (response.data.status === 'success') {
-            popularPredictionData.value = response.data.data
-          }
-        }
-        break
-
-      case 18: // UP主热门关联分析页
-        if (!authorPopularAssociationData.value || forceRefresh) {
-          const response = await getAuthorPopularAssociation(selectedYear.value, !forceRefresh)
-          if (response.data.status === 'success') {
-            authorPopularAssociationData.value = response.data.data
-          }
-        }
-        break
-
-      case 19: // 热门视频分区分布分析页
-        if (!categoryPopularDistributionData.value || forceRefresh) {
-          const response = await getCategoryPopularDistribution(selectedYear.value, !forceRefresh)
-          if (response.data.status === 'success') {
-            categoryPopularDistributionData.value = response.data.data
-          }
-        }
-        break
-
-      case 20: // 热门视频时长分布分析页
-        if (!durationPopularDistributionData.value || forceRefresh) {
-          const response = await getDurationPopularDistribution(selectedYear.value, !forceRefresh)
-          if (response.data.status === 'success') {
-            durationPopularDistributionData.value = response.data.data
+            watchLaterAnalysisData.value = response.data.data
           }
         }
         break
@@ -630,11 +557,6 @@ const fetchPageData = async (pageNumber, forceRefresh = false) => {
 const fetchAnalyticsData = async (forceRefresh = false) => {
   if (forceRefresh) {
     // 清空现有数据
-    keywordAnalyticsData.value = null
-    lengthAnalyticsData.value = null
-    sentimentAnalyticsData.value = null
-    trendAnalyticsData.value = null
-    interactionAnalyticsData.value = null
     monthlyStatsData.value = null
     weeklyStatsData.value = null
     timeSlotsData.value = null
@@ -644,12 +566,10 @@ const fetchAnalyticsData = async (forceRefresh = false) => {
     authorCompletionData.value = null
     tagAnalysisData.value = null
     durationAnalysisData.value = null
-    popularHitRateData.value = null
-    popularPredictionData.value = null
-    authorPopularAssociationData.value = null
-    categoryPopularDistributionData.value = null
-    durationPopularDistributionData.value = null
     viewingData.value = null
+    likesAnalysisData.value = null
+    favoritesAnalysisData.value = null
+    watchLaterAnalysisData.value = null
   }
 
   // 只加载当前页面的数据
@@ -721,6 +641,104 @@ onUnmounted(() => {
     window.removeEventListener('touchend', handleTouchEnd)
   }
 })
+
+// 切换显示模式
+const toggleShowAll = () => {
+  showAllPages.value = !showAllPages.value
+  // 切换到全部模式时，预加载所有数据
+  if (showAllPages.value) {
+    loadAllPagesData()
+  }
+}
+
+// 加载所有页面数据
+const loadAllPagesData = async () => {
+  if (loading.value) return
+  loading.value = true
+
+  try {
+    // 并行加载所有数据
+    const promises = []
+
+    if (!monthlyStatsData.value) {
+      promises.push(getViewingMonthlyStats(selectedYear.value, true).then(res => {
+        if (res.data.status === 'success') monthlyStatsData.value = res.data.data
+      }))
+    }
+
+    if (!timeSlotsData.value) {
+      promises.push(getViewingTimeSlots(selectedYear.value, true).then(res => {
+        if (res.data.status === 'success') timeSlotsData.value = res.data.data
+      }))
+    }
+
+    if (!weeklyStatsData.value) {
+      promises.push(getViewingWeeklyStats(selectedYear.value, true).then(res => {
+        if (res.data.status === 'success') weeklyStatsData.value = res.data.data
+      }))
+    }
+
+    if (!continuityData.value) {
+      promises.push(getViewingContinuity(selectedYear.value, true).then(res => {
+        if (res.data.status === 'success') continuityData.value = res.data.data
+      }))
+    }
+
+    if (!watchCountsData.value) {
+      promises.push(getViewingWatchCounts(selectedYear.value, true).then(res => {
+        if (res.data.status === 'success') watchCountsData.value = res.data.data
+      }))
+    }
+
+    if (!completionRatesData.value) {
+      promises.push(getViewingCompletionRates(selectedYear.value, true).then(res => {
+        if (res.data.status === 'success') completionRatesData.value = res.data.data
+      }))
+    }
+
+    if (!authorCompletionData.value) {
+      promises.push(getViewingAuthorCompletion(selectedYear.value, true).then(res => {
+        if (res.data.status === 'success') authorCompletionData.value = res.data.data
+      }))
+    }
+
+    if (!tagAnalysisData.value) {
+      promises.push(getViewingTagAnalysis(selectedYear.value, true).then(res => {
+        if (res.data.status === 'success') tagAnalysisData.value = res.data.data
+      }))
+    }
+
+    if (!durationAnalysisData.value) {
+      promises.push(getViewingDurationAnalysis(selectedYear.value, true).then(res => {
+        if (res.data.status === 'success') durationAnalysisData.value = res.data.data
+      }))
+    }
+
+    if (!likesAnalysisData.value) {
+      promises.push(getLikesAnalysis().then(res => {
+        if (res.data.status === 'success') likesAnalysisData.value = res.data.data
+      }))
+    }
+
+    if (!favoritesAnalysisData.value) {
+      promises.push(getFavoritesAnalysis().then(res => {
+        if (res.data.status === 'success') favoritesAnalysisData.value = res.data.data
+      }))
+    }
+
+    if (!watchLaterAnalysisData.value) {
+      promises.push(getWatchLaterAnalysis().then(res => {
+        if (res.data.status === 'success') watchLaterAnalysisData.value = res.data.data
+      }))
+    }
+
+    await Promise.all(promises)
+  } catch (error) {
+    console.error('加载所有页面数据失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
 
 // 添加返回首页的方法
 const goToHome = () => {

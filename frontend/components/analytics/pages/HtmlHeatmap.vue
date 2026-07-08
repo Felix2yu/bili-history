@@ -25,7 +25,7 @@
     </div>
 
     <!-- 热力图主体 -->
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto" ref="containerRef">
       <div class="inline-flex gap-0.5">
         <!-- 星期标签 -->
         <div class="flex flex-col gap-0.5 mr-1 text-xs text-gray-500 dark:text-gray-400">
@@ -36,43 +36,42 @@
 
         <!-- 月份和日期格子 -->
         <div v-for="(week, wi) in weeks" :key="wi" class="flex flex-col gap-0.5">
-          <!-- 月份标签（仅第一行显示） -->
-          <div class="h-[14px] leading-[14px] text-xs text-gray-500 dark:text-gray-400 text-center">
+          <!-- 月份标签（仅在月份开始的周显示） -->
+          <div class="h-[14px] leading-[14px] text-xs text-gray-500 dark:text-gray-400 text-center whitespace-nowrap">
             {{ week.monthLabel }}
           </div>
           <!-- 日期格子 -->
           <div
             v-for="(cell, ci) in week.cells"
             :key="ci"
-            class="w-[14px] h-[14px] rounded-[2px] cursor-pointer transition-all duration-150 relative group"
+            class="w-[14px] h-[14px] rounded-[2px] cursor-pointer transition-all duration-150"
             :class="cell ? getCellClass(cell.count) : 'bg-gray-100 dark:bg-gray-800'"
             @mouseenter="showTooltip($event, cell)"
             @mouseleave="hideTooltip"
-          >
-            <!-- Tooltip -->
-            <div
-              v-if="tooltip.visible && tooltip.cell === cell"
-              class="absolute z-50 px-3 py-2 text-sm rounded-lg shadow-lg pointer-events-none whitespace-nowrap"
-              :class="isDarkMode ? 'bg-gray-800 text-white border border-gray-600' : 'bg-white text-gray-800 border border-gray-200'"
-              :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
-            >
-              <div class="font-medium">{{ cell.date }}</div>
-              <div class="text-[#fb7299]">{{ cell.count }} 个视频</div>
-              <div v-if="cell.duration > 0" class="text-gray-500 dark:text-gray-400">
-                观看时长 {{ formatDuration(cell.duration) }}
-              </div>
-            </div>
-          </div>
+          ></div>
         </div>
       </div>
     </div>
+
+    <!-- Tooltip (fixed positioning) -->
+    <Teleport to="body">
+      <div
+        v-if="tooltip.visible && tooltip.cell"
+        class="fixed z-[9999] px-3 py-2 text-sm rounded-lg shadow-lg pointer-events-none whitespace-nowrap"
+        :class="isDarkMode ? 'bg-gray-800 text-white border border-gray-600' : 'bg-white text-gray-800 border border-gray-200'"
+        :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px', transform: 'translate(-50%, -100%)' }"
+      >
+        <div class="font-medium">{{ tooltip.cell.date }}</div>
+        <div class="text-[#fb7299]">{{ tooltip.cell.count }} 个视频</div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useDarkMode } from '~/stores/darkMode'
-import { getHeatmapData, getDailyStats } from '~/utils/api'
+import { getHeatmapData } from '~/utils/api'
 
 const props = defineProps({
   year: {
@@ -82,8 +81,8 @@ const props = defineProps({
 })
 
 const { isDarkMode } = useDarkMode()
+const containerRef = ref(null)
 const heatmapData = ref({})
-const dailyStats = ref({})
 const tooltip = ref({ visible: false, cell: null, x: 0, y: 0 })
 
 const dayLabels = ['日', '一', '二', '三', '四', '五', '六']
@@ -93,56 +92,51 @@ const weeks = computed(() => {
   const year = props.year
   if (!year) return []
 
+  const result = []
+  // 从1月1日开始
   const startDate = new Date(Date.UTC(year, 0, 1))
   const endDate = new Date(Date.UTC(year, 11, 31))
-  const result = []
 
+  // 找到第一个周日
   let current = new Date(startDate)
-  // 调整到第一个周日
-  const dayOfWeek = current.getDay()
-  if (dayOfWeek !== 0) {
-    current = new Date(current.getTime() - (dayOfWeek * 24 * 60 * 60 * 1000))
+  const firstDayOfWeek = current.getDay()
+  if (firstDayOfWeek !== 0) {
+    // 回退到上一个周日
+    current = new Date(current.getTime() - (firstDayOfWeek * 24 * 60 * 60 * 1000))
   }
 
-  let currentWeek = { monthLabel: '', cells: [] }
   let lastMonth = -1
 
-  while (current <= endDate || currentWeek.cells.length > 0) {
-    const dateStr = current.toISOString().split('T')[0]
-    const month = current.getMonth()
+  while (current <= endDate) {
+    const weekCells = []
+    let monthLabel = ''
 
-    // 新月份开始，添加月份标签
-    if (month !== lastMonth && current <= endDate) {
-      if (currentWeek.cells.length > 0) {
-        result.push(currentWeek)
+    // 填充一周的7天
+    for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+      const dateStr = current.toISOString().split('T')[0]
+      const month = current.getMonth()
+
+      // 如果是新的一周的第一天且月份变了，记录月份标签
+      if (dayOfWeek === 0 && month !== lastMonth) {
+        monthLabel = `${month + 1}月`
+        lastMonth = month
       }
-      currentWeek = { monthLabel: `${month + 1}月`, cells: [] }
-      lastMonth = month
-    }
 
-    if (current <= endDate) {
-      const count = heatmapData.value[dateStr] || 0
-      const stats = dailyStats.value[dateStr] || {}
-      currentWeek.cells.push({
-        date: dateStr,
-        count,
-        duration: stats.total_duration || 0,
-        weekday: current.getDay()
-      })
-    } else {
-      // 填充最后一周的空位
-      if (currentWeek.cells.length > 0) {
-        currentWeek.cells.push(null)
+      if (current <= endDate) {
+        const count = heatmapData.value[dateStr] || 0
+        weekCells.push({
+          date: dateStr,
+          count,
+          weekday: dayOfWeek
+        })
+      } else {
+        weekCells.push(null)
       }
+
+      current = new Date(current.getTime() + 24 * 60 * 60 * 1000)
     }
 
-    // 周日或到达结束日期时，保存当前周
-    if ((current.getDay() === 6 || current >= endDate) && currentWeek.cells.length > 0) {
-      result.push(currentWeek)
-      currentWeek = { monthLabel: '', cells: [] }
-    }
-
-    current = new Date(current.getTime() + 24 * 60 * 60 * 1000)
+    result.push({ monthLabel, cells: weekCells })
   }
 
   return result
@@ -158,16 +152,6 @@ const getCellClass = (count) => {
   return isDarkMode.value ? 'bg-[#FF7FA8]' : 'bg-[#E84B85]'
 }
 
-// 格式化时长
-const formatDuration = (seconds) => {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-  if (h > 0) return `${h}小时${String(m).padStart(2, '0')}分`
-  if (m > 0) return `${m}分${String(s).padStart(2, '0')}秒`
-  return `${s}秒`
-}
-
 // 显示 tooltip
 const showTooltip = (event, cell) => {
   if (!cell) return
@@ -176,7 +160,7 @@ const showTooltip = (event, cell) => {
     visible: true,
     cell,
     x: rect.left + rect.width / 2,
-    y: rect.top - 10
+    y: rect.top - 8
   }
 }
 
@@ -194,20 +178,6 @@ const fetchHeatmapData = async () => {
     }
   } catch (error) {
     console.error('获取热力图数据失败:', error)
-  }
-}
-
-// 获取每日统计（用于显示观看时长）
-const fetchDailyStats = async () => {
-  try {
-    // 从年度分析数据中获取每日统计
-    // 这里我们可以复用现有的数据，或者单独获取
-    const stats = {}
-    // 遍历每天获取统计（如果需要的话）
-    // 为了避免大量请求，我们可以先不获取，只显示数量
-    dailyStats.value = stats
-  } catch (error) {
-    console.error('获取每日统计失败:', error)
   }
 }
 

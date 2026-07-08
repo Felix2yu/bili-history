@@ -317,6 +317,26 @@ export const getHeatmapData = async (year) => {
   })
 }
 
+// 获取点赞分析数据
+export const getLikesAnalysis = async () => {
+  return instance.get('/viewing/likes-analysis')
+}
+
+// 获取收藏分析数据
+export const getFavoritesAnalysis = async () => {
+  return instance.get('/viewing/favorites-analysis')
+}
+
+// 获取稍后再看分析数据
+export const getWatchLaterAnalysis = async () => {
+  return instance.get('/viewing/watchlater-analysis')
+}
+
+// 获取额外模块概览
+export const getExtraOverview = async () => {
+  return instance.get('/viewing/extra-overview')
+}
+
 // 获取热门视频命中率分析
 export const getPopularHitRate = async (year, useCache = true) => {
   return instance.get(`/popular/popular-hit-rate`, {

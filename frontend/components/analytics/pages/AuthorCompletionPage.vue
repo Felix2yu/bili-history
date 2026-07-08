@@ -116,6 +116,9 @@ const favoriteOption = computed(() => {
     authorMid: stats.author_mid
   }))
 
+  // 动态计算视频数量的最大值
+  const maxVideoCount = Math.max(...data.map(d => d.value[5]), 10)
+
   const isDark = !!(isDarkMode && isDarkMode.value)
   const legendTextColor = isDark ? '#bbbbbb' : '#666'
   const axisLabelColor = isDark ? '#bbbbbb' : '#999'
@@ -159,7 +162,7 @@ const favoriteOption = computed(() => {
         { name: '质量评分', max: 100 },
         { name: '完成率', max: 100 },
         { name: '完整观看率', max: 100 },
-        { name: '视频数量', max: 20 }
+        { name: '视频数量', max: Math.ceil(maxVideoCount * 1.2) }
       ],
       name: {
         textStyle: {

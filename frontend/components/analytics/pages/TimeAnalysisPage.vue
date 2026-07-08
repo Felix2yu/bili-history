@@ -161,7 +161,12 @@ const initBarChart = () => {
 
   if (barChart) {
     barChart.dispose()
+    barChart = null
   }
+
+  const timeData = props.viewingData.daily_time_slots
+  if (!timeData || Object.keys(timeData).length === 0) return
+
   const isDark = !!(isDarkMode && isDarkMode.value)
   const axisLineColor = isDark ? '#888888' : '#ddd'
   const axisLabelColor = isDark ? '#bbbbbb' : '#666'
@@ -169,8 +174,11 @@ const initBarChart = () => {
   const tooltipBg = isDark ? 'rgba(28, 28, 28, 0.9)' : 'rgba(255, 255, 255, 0.95)'
   const tooltipText = isDark ? '#ffffff' : '#111111'
 
+  // 确保容器有尺寸
+  const rect = barChartRef.value.getBoundingClientRect()
+  if (rect.width === 0 || rect.height === 0) return
+
   barChart = echarts.init(barChartRef.value)
-  const timeData = props.viewingData.daily_time_slots
 
   // 准备24小时数据
   const hours = []
@@ -266,9 +274,10 @@ const initBarChart = () => {
 
 
 onMounted(() => {
-  nextTick(() => {
+  // 延迟初始化确保容器已有尺寸
+  setTimeout(() => {
     initBarChart()
-  })
+  }, 100)
 
   // 监听窗口大小变化
   window.addEventListener('resize', () => {

@@ -257,7 +257,7 @@ const durationCompletionOption = computed(() => {
       label: {
         show: true,
         position: 'top',
-        formatter: '{c}%',
+        formatter: (params) => Number(params.value).toFixed(1) + '%',
         fontSize: '12px',
         color: labelTextColor
       }
@@ -277,7 +277,7 @@ const durationCompletionOption = computed(() => {
       label: {
         show: true,
         position: 'top',
-        formatter: '{c}%',
+        formatter: (params) => Number(params.value).toFixed(1) + '%',
         fontSize: '12px',
         color: labelTextColor,
         textBorderWidth: 0,

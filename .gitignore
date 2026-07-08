@@ -53,3 +53,5 @@ backend/bilibili-history-go
 
 # npm lock file (project uses bun)
 package-lock.json
+backend/main
+backend/fonts/

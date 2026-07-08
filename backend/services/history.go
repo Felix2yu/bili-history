@@ -147,6 +147,10 @@ func FetchHistory(skipExists bool) (map[string]interface{}, error) {
 					status := GetFetchStatus()
 					status.ErrorMessage = fmt.Sprintf("连续 %d 页失败，停止抓取: %v", consecutiveErrors, err)
 					setFetchStatus(status)
+					// 自动暂停任务并发送告警通知
+					_ = database.SetTaskEnabled("fetch_history", false)
+					alertMsg := fmt.Sprintf("⚠️ 历史记录抓取已自动暂停\n\n原因：连续 %d 页请求失败\n最后错误：%s\n已抓取：%d 页，%d 条记录\n\n请检查网络或代理设置后，在任务列表中重新启用。", consecutiveErrors, err.Error(), pageCount, len(allEntries))
+					_ = SendShoutrrrNotification("⚠️ B站历史抓取异常", alertMsg)
 					break
 				}
 				time.Sleep(2 * time.Second)
@@ -324,6 +328,7 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 
 	maxConsecutiveErrors := 3
 	consecutiveErrors := 0
+	var lastErrMsg string
 
 	for {
 		pageCount++
@@ -331,11 +336,16 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 		data, err := client.GetHistory(max, viewAt, ps)
 		if err != nil {
 			consecutiveErrors++
+			lastErrMsg = err.Error()
 			utils.LogWarning("获取历史记录第 %d 页失败: %v (连续失败 %d/%d)", pageCount, err, consecutiveErrors, maxConsecutiveErrors)
 			if consecutiveErrors >= maxConsecutiveErrors {
 				s := GetFetchStatus()
 				s.ErrorMessage = fmt.Sprintf("连续 %d 页失败，停止抓取: %v", consecutiveErrors, err)
 				setFetchStatus(s)
+				// 自动暂停任务并发送告警通知
+				_ = database.SetTaskEnabled("fetch_history", false)
+				alertMsg := fmt.Sprintf("⚠️ 历史记录抓取已自动暂停\n\n原因：连续 %d 页请求失败\n最后错误：%s\n已抓取：%d 页，%d 条记录\n\n请检查网络或代理设置后，在任务列表中重新启用。", consecutiveErrors, lastErrMsg, pageCount, len(allEntries))
+				_ = SendShoutrrrNotification("⚠️ B站历史抓取异常", alertMsg)
 				break
 			}
 			time.Sleep(2 * time.Second)

@@ -420,7 +420,7 @@ const total = ref(0)
 const sortOrder = ref(0)
 const size = ref(props.pageSize)
 const remarkData = ref({}) // 存储备注数据
-let abortController: AbortController | null = null // 用于取消过期请求
+let abortController = null // 用于取消过期请求
 const downloadedVideos = ref(new Set()) // 存储已下载视频的CID集合
 const favoriteStatus = ref({}) // 存储视频收藏状态信息
 

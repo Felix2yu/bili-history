@@ -242,6 +242,29 @@ func (s *Scheduler) initDefaultTasks() {
 	} else {
 		utils.LogInfo("调度器默认任务已全部存在，无需添加（数据库共 %d 个任务）", taskCount)
 	}
+
+	// 迁移：修正旧版任务的依赖关系
+	for _, d := range defaults {
+		if d.DependsOn == "" {
+			continue
+		}
+		s.mu.RLock()
+		existing, exists := s.tasks[d.TaskID]
+		s.mu.RUnlock()
+		if !exists {
+			continue
+		}
+		if existing.DependsOn != d.DependsOn {
+			utils.LogInfo("修正任务依赖: %s DependsOn %s -> %s", d.TaskID, existing.DependsOn, d.DependsOn)
+			if err := database.UpdateTaskDependsOn(d.TaskID, d.DependsOn); err != nil {
+				utils.LogError("修正任务依赖失败: %s: %v", d.TaskID, err)
+			} else {
+				s.mu.Lock()
+				existing.DependsOn = d.DependsOn
+				s.mu.Unlock()
+			}
+		}
+	}
 }
 
 func (s *Scheduler) Start() {

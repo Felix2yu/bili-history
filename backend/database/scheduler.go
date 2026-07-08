@@ -442,6 +442,16 @@ func RecordExecution(id, taskID, status, result, errMsg string, start, end time.
 	return err
 }
 
+// UpdateTaskDependsOn updates the DependsOn field for a task.
+func UpdateTaskDependsOn(taskID, dependsOn string) error {
+	db := GetSchedulerDB()
+	if db == nil {
+		return fmt.Errorf("scheduler database not available")
+	}
+	_, err := db.Exec("UPDATE main_tasks SET depends_on = ? WHERE task_id = ?", dependsOn, taskID)
+	return err
+}
+
 // GetExecutionHistory returns recent execution records, optionally filtered by task_id.
 func GetExecutionHistory(taskID string, limit int) ([]map[string]interface{}, error) {
 	db := GetSchedulerDB()

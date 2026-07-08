@@ -219,6 +219,7 @@ const emit = defineEmits([
   'update:businessLabel',
   'update:date',
   'update:category',
+  'update:category-type',
   'update:pageSize',
   'refresh-data',
 ])
@@ -287,13 +288,17 @@ const selectVideoCategory = (item) => {
   )
 
   let categoryText = ''
+  let categoryType = '' // main 或 sub
   if (item.type === 'main' || (item.type === 'sub' && isMainName)) {
     categoryText = item.text
+    categoryType = 'main'
   } else if (item.type === 'sub') {
     categoryText = item.text
+    categoryType = 'sub'
   }
 
   emit('update:category', categoryText)
+  emit('update:category-type', categoryType)
   emit('update:page', 1)
 
   showNotify({

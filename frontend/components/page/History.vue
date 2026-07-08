@@ -34,11 +34,13 @@
             @update:total="total = $event"
             @update:date="date = $event"
             @update:category="category = $event"
+      @update:category-type="categoryType = $event"
             v-model:show="show"
             v-model:showBottom="showBottom"
             :layout="layout"
             :date="date"
             :category="category"
+            :category-type="categoryType"
             :business="business"
             :is-batch-mode="isBatchMode"
           />
@@ -98,6 +100,7 @@ const showBottom = ref(false)
 const date = ref('')
 const total = ref(0)
 const category = ref('')
+const categoryType = ref('') // 'main' 或 'sub'
 const layout = ref(localStorage.getItem('defaultLayout') || 'grid')
 const isBatchMode = ref(false)
 const showRemarks = ref(props.defaultShowRemarks)

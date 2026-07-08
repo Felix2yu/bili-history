@@ -383,6 +383,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  categoryType: {
+    type: String,
+    default: '', // 'main' 或 'sub'
+  },
   business: {
     type: String,
     default: '',
@@ -843,14 +847,17 @@ watch(
 
 // 监听父组件的 category 变化
 watch(
-  () => props.category,
-  (newCategory) => {
+  () => [props.category, props.categoryType],
+  ([newCategory, newCategoryType]) => {
     if (!newCategory) {
       tagName.value = ''
       mainCategory.value = ''
+    } else if (newCategoryType === 'sub') {
+      // 子分区名称存储在 tag_name 字段中
+      tagName.value = newCategory
+      mainCategory.value = ''
     } else {
-      // 根据分区名称判断是主分区还是子分区
-      // 由于我们无法确定是主分区还是子分区，所以统一赋值给mainCategory
+      // 主分区名称存储在 main_category 字段中
       mainCategory.value = newCategory
       tagName.value = ''
     }

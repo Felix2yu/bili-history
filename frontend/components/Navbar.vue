@@ -102,6 +102,7 @@
             @update:businessLabel="$emit('update:businessLabel', $event)"
             @update:date="$emit('update:date', $event)"
             @update:category="$emit('update:category', $event)"
+            @update:category-type="$emit('update:category-type', $event)"
             @click-date="$emit('click-date')"
             @click-category="$emit('click-category')"
             @refresh-data="$emit('refresh-data')"
@@ -134,7 +135,7 @@ const props = defineProps({
 
 const emit = defineEmits([
   'click-date', 'click-category', 'click-business',
-  'change-layout', 'update:date', 'update:category',
+  'change-layout', 'update:date', 'update:category', 'update:category-type',
   'update:business', 'update:businessLabel', 'refresh-data', 'toggle-batch-mode'
 ])
 

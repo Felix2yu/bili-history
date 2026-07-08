@@ -5,13 +5,13 @@
       观看时间分析
     </h3>
 
-    <!-- 时间洞察卡片 - 压缩高度 -->
+    <!-- 时间洞察卡片 -->
     <div class="text-center text-sm max-w-4xl mx-auto">
       <div v-if="viewingData?.insights?.daily_record" class="text-gray-600 dark:text-gray-300" v-html="formatInsightText(viewingData.insights.daily_record)">
       </div>
     </div>
 
-    <!-- 时间统计卡片矩阵 - 压缩高度 -->
+    <!-- 时间统计卡片矩阵 -->
     <div class="grid grid-cols-4 gap-3">
       <div class="bg-gradient-to-br from-[#fb7299]/10 to-[#fc9b7a]/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
         <div class="flex items-center justify-between">
@@ -70,23 +70,21 @@
       </div>
     </div>
 
-    <!-- 主要图表区域 - 单个柱状图 -->
-    <div class="flex-1">
-      <!-- 24小时观看分布柱状图 -->
-      <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-        <h4 class="text-xl font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-4 text-center">24小时观看分布</h4>
-        <div ref="barChartRef" class="h-[280px]"></div>
+    <!-- 24小时观看分布柱状图 -->
+    <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
+      <h4 class="text-xl font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-4 text-center">24小时观看分布</h4>
+      <div class="h-[280px]">
+        <v-chart class="h-full w-full" :option="barOption" autoresize />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed, nextTick } from 'vue'
-import * as echarts from 'echarts'
-import gsap from 'gsap'
+import { computed } from 'vue'
+import VChart from 'vue-echarts'
 import { useDarkMode } from '~/stores/darkMode'
-import { formatDuration, formatDurationShort } from '~/utils/format'
+import { formatDurationShort } from '~/utils/format'
 
 const props = defineProps({
   viewingData: {
@@ -99,73 +97,53 @@ const props = defineProps({
   }
 })
 
-// 图表引用
-const barChartRef = ref(null)
-
-// 图表实例
-let barChart = null
 const { isDarkMode } = useDarkMode()
 
-// 格式化洞察文本，为数字添加颜色
 const formatInsightText = (text) => {
   if (!text) return '';
   return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-[#fb7299]">$1</span>')
 }
 
 const formatDate = (dateStr) => {
+  if (!dateStr) return ''
   const date = new Date(dateStr)
   return `${date.getMonth() + 1}月${date.getDate()}日`
 }
 
-// 获取最活跃时段
 const getPeakTimeSlot = () => {
   if (!props.viewingData?.daily_time_slots) return '未知'
   const timeData = props.viewingData.daily_time_slots
   const maxHour = Object.keys(timeData).reduce((a, b) => timeData[a] > timeData[b] ? a : b)
   const hour = parseInt(maxHour.replace('时', ''))
-
   if (hour >= 6 && hour < 12) return '上午'
   if (hour >= 12 && hour < 18) return '下午'
   if (hour >= 18 && hour < 24) return '晚上'
   return '深夜'
 }
 
-// 获取深夜观看次数
 const getNightWatchCount = () => {
   if (!props.viewingData?.daily_time_slots) return 0
   const timeData = props.viewingData.daily_time_slots
   let nightCount = 0
-
   Object.keys(timeData).forEach(hour => {
     const h = parseInt(hour.replace('时', ''))
     if (h >= 0 && h < 6) {
       nightCount += timeData[hour]
     }
   })
-
   return nightCount
 }
 
-// 获取时段对应的颜色
 const getTimeSlotColor = (hour) => {
   const h = parseInt(hour.replace('时', ''))
-  if (h >= 6 && h < 12) return '#7afc8c' // 上午-绿色
-  if (h >= 12 && h < 18) return '#fc9b7a' // 下午-橙色
-  if (h >= 18 && h < 24) return '#fb7299' // 晚上-粉色
-  return '#7a9efc' // 深夜-蓝色
+  if (h >= 6 && h < 12) return '#7afc8c'
+  if (h >= 12 && h < 18) return '#fc9b7a'
+  if (h >= 18 && h < 24) return '#fb7299'
+  return '#7a9efc'
 }
 
-// 初始化24小时柱状图
-const initBarChart = () => {
-  if (!barChartRef.value || !props.viewingData?.daily_time_slots) return
-
-  if (barChart) {
-    barChart.dispose()
-    barChart = null
-  }
-
-  const timeData = props.viewingData.daily_time_slots
-  if (!timeData || Object.keys(timeData).length === 0) return
+const barOption = computed(() => {
+  if (!props.viewingData?.daily_time_slots) return {}
 
   const isDark = !!(isDarkMode && isDarkMode.value)
   const axisLineColor = isDark ? '#888888' : '#ddd'
@@ -174,13 +152,7 @@ const initBarChart = () => {
   const tooltipBg = isDark ? 'rgba(28, 28, 28, 0.9)' : 'rgba(255, 255, 255, 0.95)'
   const tooltipText = isDark ? '#ffffff' : '#111111'
 
-  // 确保容器有尺寸
-  const rect = barChartRef.value.getBoundingClientRect()
-  if (rect.width === 0 || rect.height === 0) return
-
-  barChart = echarts.init(barChartRef.value)
-
-  // 准备24小时数据
+  const timeData = props.viewingData.daily_time_slots
   const hours = []
   const counts = []
 
@@ -190,7 +162,7 @@ const initBarChart = () => {
     counts.push(timeData[hour] || 0)
   }
 
-  const barOption = {
+  return {
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
@@ -203,7 +175,6 @@ const initBarChart = () => {
         if (hour >= 6 && hour < 12) period = '上午'
         else if (hour >= 12 && hour < 18) period = '下午'
         else if (hour >= 18 && hour < 24) period = '晚上'
-
         return `${params[0].name} (${period})<br/>观看次数: ${params[0].value}`
       }
     },
@@ -216,33 +187,14 @@ const initBarChart = () => {
     xAxis: {
       type: 'category',
       data: hours,
-      axisLabel: {
-        color: axisLabelColor,
-        fontSize: 12,
-        interval: 2 // 每隔2小时显示一个标签
-      },
-      axisLine: {
-        lineStyle: {
-          color: axisLineColor
-        }
-      }
+      axisLabel: { color: axisLabelColor, fontSize: 12, interval: 2 },
+      axisLine: { lineStyle: { color: axisLineColor } }
     },
     yAxis: {
       type: 'value',
-      axisLabel: {
-        color: axisLabelColor,
-        fontSize: 12
-      },
-      axisLine: {
-        lineStyle: {
-          color: axisLineColor
-        }
-      },
-      splitLine: {
-        lineStyle: {
-          color: splitLineColor
-        }
-      }
+      axisLabel: { color: axisLabelColor, fontSize: 12 },
+      axisLine: { lineStyle: { color: axisLineColor } },
+      splitLine: { lineStyle: { color: splitLineColor } }
     },
     series: [{
       name: '观看次数',
@@ -250,92 +202,17 @@ const initBarChart = () => {
       data: counts.map((count, index) => ({
         value: count,
         itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: getTimeSlotColor(`${index}时`) },
-            { offset: 1, color: getTimeSlotColor(`${index}时`) + '80' }
-          ])
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: getTimeSlotColor(`${index}时`) },
+              { offset: 1, color: getTimeSlotColor(`${index}时`) + '80' }
+            ]
+          }
         }
       })),
-      barWidth: '60%',
-      emphasis: {
-        itemStyle: {
-          shadowBlur: 10,
-          shadowOffsetX: 0,
-          shadowOffsetY: 0,
-          shadowColor: 'rgba(0, 0, 0, 0.5)'
-        }
-      }
+      barWidth: '60%'
     }]
   }
-
-  barChart.setOption(barOption)
-}
-
-
-
-onMounted(() => {
-  // 延迟初始化确保容器已有尺寸
-  setTimeout(() => {
-    initBarChart()
-  }, 100)
-
-  // 监听窗口大小变化
-  window.addEventListener('resize', () => {
-    barChart?.resize()
-  })
-})
-
-// 监听数据变化
-watch(() => props.viewingData, () => {
-  if (props.viewingData) {
-    initBarChart()
-  }
-}, { deep: true })
-
-// 深色模式切换时重绘
-watch(() => isDarkMode.value, () => {
-  initBarChart()
 })
 </script>
-
-<style>
-/* 流光动画效果 */
-@keyframes flow-light {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-.animate-flow-light {
-  position: relative;
-}
-
-.animate-flow-light::before,
-.animate-flow-light-delay-1::before,
-.animate-flow-light-delay-2::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 200%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  animation: flow-light 5s infinite linear;
-}
-
-.animate-flow-light-delay-1::before {
-  animation-delay: 1s;
-}
-
-.animate-flow-light-delay-2::before {
-  animation-delay: 2s;
-}
-</style>

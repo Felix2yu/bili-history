@@ -191,7 +191,7 @@ const tagCompletionOption = computed(() => {
         show: true,
         position: 'right',
         color: axisLabelColor,
-        formatter: '{c}%'
+        formatter: (params) => Number(params.value).toFixed(1) + '%'
       }
     }]
   }

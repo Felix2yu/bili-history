@@ -135,7 +135,7 @@ func fetchBiliHistoryRealtime(c *gin.Context) {
 }
 
 func fetchBiliHistoryFull(c *gin.Context) {
-	result, err := services.FetchHistory(false)
+	result, err := services.FetchHistorySync(false)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "error",

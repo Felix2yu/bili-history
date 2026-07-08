@@ -268,3 +268,193 @@ func FetchHistory(skipExists bool) (map[string]interface{}, error) {
 		"message": "开始获取历史记录",
 	}, nil
 }
+
+// FetchHistorySync starts a fetch and waits for it to complete before returning.
+// Used by the scheduler chain so that subsequent tasks (import, analyze, report)
+// can operate on the freshly fetched data.
+func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
+	status := GetFetchStatus()
+	if status.IsRunning {
+		return nil, fmt.Errorf("fetch already running")
+	}
+
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return nil, fmt.Errorf("load config error: %w", err)
+	}
+	if cfg.SESSDATA == "" {
+		return nil, fmt.Errorf("SESSDATA not configured")
+	}
+
+	newStatus := FetchStatus{
+		IsRunning:      true,
+		Status:         "running",
+		StartTime:      time.Now().Unix(),
+		LastUpdateTime: time.Now().Unix(),
+	}
+	setFetchStatus(newStatus)
+
+	client := biliapi.NewClient(cfg.SESSDATA)
+
+	var cutoffTimestamp int64
+	if skipExists {
+		latestDate, err := FindLatestHistoryDate()
+		if err == nil && !latestDate.IsZero() {
+			cutoffTimestamp = time.Date(latestDate.Year(), latestDate.Month(), latestDate.Day(), 0, 0, 0, 0, time.Local).Unix()
+		}
+	}
+
+	var allEntries []biliapi.HistoryEntry
+	pageCount := 0
+	var max int64 = 0
+	var viewAt int64 = 0
+	emptyPageCount := 0
+	maxEmptyPages := 3
+	ps := 30
+
+	for {
+		pageCount++
+
+		data, err := client.GetHistory(max, viewAt, ps)
+		if err != nil {
+			s := GetFetchStatus()
+			s.ErrorMessage = err.Error()
+			s.IsRunning = false
+			s.Status = "error"
+			setFetchStatus(s)
+			return nil, fmt.Errorf("fetch page %d failed: %w", pageCount, err)
+		}
+
+		s := GetFetchStatus()
+		s.CurrentPage = pageCount
+		s.LastUpdateTime = time.Now().Unix()
+		setFetchStatus(s)
+
+		if len(data.List) == 0 {
+			emptyPageCount++
+			if emptyPageCount >= maxEmptyPages {
+				break
+			}
+			if data.Cursor.Max == 0 || (max > 0 && data.Cursor.Max < 1000000) {
+				break
+			}
+			max = data.Cursor.Max
+			viewAt = data.Cursor.ViewAt
+			continue
+		}
+
+		emptyPageCount = 0
+
+		hasNew := false
+		for _, entry := range data.List {
+			if entry.ViewAt > cutoffTimestamp {
+				allEntries = append(allEntries, entry)
+				hasNew = true
+			}
+		}
+
+		s = GetFetchStatus()
+		s.TotalRecords = len(allEntries)
+		s.NewRecords = len(allEntries)
+		setFetchStatus(s)
+
+		if !hasNew && cutoffTimestamp > 0 {
+			break
+		}
+
+		if len(data.List) > 0 {
+			viewAt = data.List[len(data.List)-1].ViewAt
+		}
+		max = data.Cursor.Max
+
+		if max == 0 && len(data.List) == 0 {
+			break
+		}
+
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	// Directly insert to DB
+	db := database.GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		s := GetFetchStatus()
+		s.ErrorMessage = "数据库未初始化"
+		s.IsRunning = false
+		s.Status = "error"
+		setFetchStatus(s)
+		return nil, fmt.Errorf("database not initialized")
+	}
+
+	insertedCount := 0
+	for _, entry := range allEntries {
+		business := entry.Business
+		if business == "" {
+			business = entry.History.Business
+		}
+		if business != "archive" {
+			continue
+		}
+
+		bvid := entry.Bvid
+		if bvid == "" {
+			bvid = entry.History.Bvid
+		}
+		if bvid == "" {
+			continue
+		}
+
+		year := utils.GetYearFromTimestamp(entry.ViewAt)
+		if err := db.EnsureTableForYear(year); err != nil {
+			continue
+		}
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+
+		record := models.HistoryRecord{
+			Bvid:       bvid,
+			Title:      entry.Title,
+			LongTitle:  entry.LongTitle,
+			Cover:      entry.Cover,
+			URI:        entry.URI,
+			Page:       entry.History.Page,
+			Cid:        int64(entry.History.Cid),
+			Part:       entry.History.Part,
+			Business:   business,
+			Dt:         entry.History.Dt,
+			ViewAt:     entry.ViewAt,
+			Progress:   entry.Progress,
+			Badge:      entry.Badge,
+			ShowTitle:  entry.ShowTitle,
+			Duration:   entry.DTotal,
+			AuthorName: entry.AuthorName,
+			AuthorFace: entry.AuthorFace,
+			AuthorMid:  entry.AuthorMid,
+		}
+
+		inserted, err := database.InsertHistoryRecord(conn, tableName, &record)
+		if err != nil {
+			continue
+		}
+		if inserted {
+			insertedCount++
+		}
+	}
+
+	finalStatus := GetFetchStatus()
+	finalStatus.TotalPages = pageCount
+	finalStatus.NewRecords = insertedCount
+	finalStatus.IsRunning = false
+	finalStatus.Status = "completed"
+	finalStatus.LastUpdateTime = time.Now().Unix()
+	setFetchStatus(finalStatus)
+
+	utils.LogSuccess("历史记录同步获取完成: %d 页, %d 条新记录", pageCount, insertedCount)
+
+	return map[string]interface{}{
+		"status":       "success",
+		"message":      "历史记录获取完成",
+		"total_pages":  pageCount,
+		"total_records": len(allEntries),
+		"new_records":  insertedCount,
+	}, nil
+}

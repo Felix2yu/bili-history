@@ -51,11 +51,11 @@ func GetHistoryPage(params HistoryQueryParams) (*models.PagedResponse, []int, er
 	if params.DateRange != "" {
 		parts := strings.Split(params.DateRange, "-")
 		if len(parts) == 2 {
-			startTime, err := time.Parse("20060102", parts[0])
+			startTime, err := time.ParseInLocation("20060102", parts[0], time.Local)
 			if err == nil {
 				startTimestamp = startTime.Unix()
 			}
-			endTime, err := time.Parse("20060102", parts[1])
+			endTime, err := time.ParseInLocation("20060102", parts[1], time.Local)
 			if err == nil {
 				endTimestamp = endTime.Unix() + 86400
 			}

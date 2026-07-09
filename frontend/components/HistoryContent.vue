@@ -28,7 +28,7 @@
     </div>
 
     <!-- 数据为空状态 -->
-    <div v-else-if="isLoggedIn && records.length === 0" class="flex flex-col items-center justify-center py-16 glass-card mx-3 mt-4">
+    <div v-else-if="isLoaded && isLoggedIn && records.length === 0" class="flex flex-col items-center justify-center py-16 glass-card mx-3 mt-4">
       <div class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
         <svg class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -452,6 +452,7 @@ const favoriteVideoInfo = ref(null) // 用于存储收藏相关的视频信息
 // 登录相关
 const isLoggedIn = ref(false)
 const isLoading = ref(false)
+const isLoaded = ref(false)
 const showLoginDialog = ref(false)
 
 // 选择/取消选择记录
@@ -793,6 +794,7 @@ const fetchHistoryByDateRange = async () => {
     // 如果已有更新的请求在进行中，丢弃本次结果
     if (currentFetchId !== fetchId) return
 
+    isLoaded.value = true
     if (response.data && response.data.data) {
       total.value = response.data.data.total
       records.value = response.data.data.records
@@ -1092,7 +1094,7 @@ if (initialData.value) {
   mainCategories.value = initialData.value.categories
   emit('update:total-pages', Math.ceil(initialData.value.total / size.value))
   emit('update:total', initialData.value.total)
-  isLoading.value = true
+  isLoading.value = false
 
   // 客户端挂载后触发登录状态事件
   if (import.meta.client && initialData.value.loginUserInfo) {

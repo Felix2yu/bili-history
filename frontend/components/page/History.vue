@@ -19,6 +19,16 @@
 
     <div>
       <div class="mx-auto max-w-7xl sm:px-2 lg:px-8">
+        <!-- 日期日历 - 放在顶部 -->
+        <div v-if="currentContent === 'history' && !showRemarks && availableDates.length > 0" class="mx-auto mb-4 max-w-4xl mt-4">
+          <DatePagination
+            :current-date="currentDate"
+            :available-dates="availableDates"
+            :record-count="recordCount"
+            @date-change="handleDateChange"
+          />
+        </div>
+
         <div class="">
           <HistoryContent
             v-if="currentContent === 'history' && !showRemarks"
@@ -45,16 +55,6 @@
 
           <Remarks v-else-if="showRemarks" />
           <Settings v-else-if="currentContent === 'settings'" />
-        </div>
-
-        <!-- 日期分页组件 -->
-        <div v-if="currentContent === 'history' && !showRemarks && availableDates.length > 0" class="mx-auto mb-5 mt-8 max-w-4xl">
-          <DatePagination
-            :current-date="currentDate"
-            :available-dates="availableDates"
-            :record-count="recordCount"
-            @date-change="handleDateChange"
-          />
         </div>
       </div>
     </div>

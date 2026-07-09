@@ -1066,9 +1066,8 @@ const refreshData = async () => {
   }
 }
 
-// SSR: 初始数据在服务端获取
-const ssrDateKey = props.currentDate || 'default'
-const { data: initialData } = await useAsyncData(`history-${ssrDateKey}`, async () => {
+// SSR: 初始数据在服务端获取（仅登录状态和分类，记录由fetchHistoryByDateRange加载）
+const { data: initialData } = await useAsyncData('history-initial', async () => {
   try {
     const loginResponse = await getLoginStatus()
     const loggedIn = loginResponse.data && loginResponse.data.code === 0 && loginResponse.data.data.isLogin
@@ -1080,30 +1079,7 @@ const { data: initialData } = await useAsyncData(`history-${ssrDateKey}`, async 
     const catResponse = await getMainCategories()
     const categories = catResponse.data.status === 'success' ? catResponse.data.data.map((cat) => cat.name) : []
 
-    let ssrDateRange = ''
-    if (props.currentDate && props.currentDate.length === 8) {
-      ssrDateRange = `${props.currentDate}-${props.currentDate}`
-    }
-
-    const historyResponse = await getBiliHistory2024(
-      1,
-      9999,
-      0,
-      '',
-      '',
-      ssrDateRange,
-      false,
-      props.business,
-    )
-
-    let records = []
-    let total = 0
-    if (historyResponse.data && historyResponse.data.data) {
-      records = historyResponse.data.data.records || []
-      total = historyResponse.data.data.total || 0
-    }
-
-    return { isLoggedIn: true, records, total, categories, loginUserInfo: loginResponse.data.data }
+    return { isLoggedIn: true, records: [], total: 0, categories, loginUserInfo: loginResponse.data.data }
   } catch (error) {
     console.error('SSR 初始数据获取失败:', error)
     return { isLoggedIn: false, records: [], total: 0, categories: [], loginUserInfo: null }
@@ -1113,7 +1089,6 @@ const { data: initialData } = await useAsyncData(`history-${ssrDateKey}`, async 
 // 从 SSR 数据初始化组件状态
 if (initialData.value) {
   isLoggedIn.value = initialData.value.isLoggedIn
-  records.value = initialData.value.records
   total.value = initialData.value.total
   mainCategories.value = initialData.value.categories
   emit('update:total-pages', Math.ceil(initialData.value.total / size.value))
@@ -1144,6 +1119,11 @@ onMounted(async () => {
     await batchCheckDownloadStatus()
     await batchCheckFavorites()
   }
+})
+
+// 客户端挂载后获取分页数据
+onMounted(() => {
+  fetchHistoryByDateRange()
 })
 
 // 暴露方法给父组件

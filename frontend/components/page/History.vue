@@ -68,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, onUnmounted } from 'vue'
+import { ref, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Navbar from '../Navbar.vue'
 import HistoryContent from '../HistoryContent.vue'
@@ -223,6 +223,13 @@ watch(
         page.value = pageNum
       }
     }
+
+    // 路由变化时主动触发子组件数据刷新，防止SSR缓存覆盖
+    nextTick(() => {
+      if (historyContentRef.value?.fetchHistoryByDateRange) {
+        historyContentRef.value.fetchHistoryByDateRange()
+      }
+    })
   },
   { immediate: true }
 )

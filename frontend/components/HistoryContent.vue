@@ -803,7 +803,7 @@ const fetchHistoryByDateRange = async () => {
       }
     }
   } catch (error) {
-    if (error.name === 'AbortError' || error.name === 'CanceledError' || error.__CANCEL__) return
+    if (error.name === 'AbortError') return
     console.error('数据获取失败:', error)
     records.value = []
     total.value = 0
@@ -1090,10 +1090,7 @@ const { data: initialData } = await useAsyncData('history-initial', async () => 
 // 从 SSR 数据初始化组件状态
 if (initialData.value) {
   isLoggedIn.value = initialData.value.isLoggedIn
-  // 客户端：不从SSR缓存读records，由watch/fetchHistoryByDateRange获取正确分页数据
-  if (import.meta.server) {
-    records.value = initialData.value.records
-  }
+  records.value = initialData.value.records
   total.value = initialData.value.total
   mainCategories.value = initialData.value.categories
   emit('update:total-pages', Math.ceil(initialData.value.total / size.value))
@@ -1108,11 +1105,8 @@ if (initialData.value) {
   }
 }
 
-// 客户端挂载后获取额外数据（备注、下载状态、收藏状态）和首次分页数据
+// 客户端挂载后获取额外数据（备注、下载状态、收藏状态）
 onMounted(async () => {
-  // 客户端首次挂载时，从SSR缓存读取的records可能是旧页数据，重新获取当前页数据
-  fetchHistoryByDateRange()
-
   if (isLoggedIn.value && records.value.length > 0) {
     const batchRecords = records.value.map(record => ({
       bvid: record.bvid,

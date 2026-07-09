@@ -48,7 +48,7 @@
         </div>
 
         <!-- 日期分页组件 -->
-        <div v-if="currentContent === 'history' && !showRemarks && total > 0" class="mx-auto mb-5 mt-8 max-w-4xl">
+        <div v-if="currentContent === 'history' && !showRemarks && availableDates.length > 0" class="mx-auto mb-5 mt-8 max-w-4xl">
           <DatePagination
             :current-date="currentDate"
             :available-dates="availableDates"
@@ -162,11 +162,13 @@ watch(
       currentDate.value = newDate
     }
 
-    nextTick(() => {
-      if (historyContentRef.value?.fetchHistoryByDateRange) {
-        historyContentRef.value.fetchHistoryByDateRange()
-      }
-    })
+    // 路由变化时由 HistoryContent 的 watch(currentDate) 触发刷新
+    // 仅在组件已挂载后且非首次加载时手动刷新
+    if (historyContentRef.value?.fetchHistoryByDateRange && oldPath !== undefined) {
+      nextTick(() => {
+        historyContentRef.value?.fetchHistoryByDateRange()
+      })
+    }
   },
   { immediate: true }
 )

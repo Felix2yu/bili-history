@@ -148,6 +148,57 @@ func GetHistoryPage(params HistoryQueryParams) (*models.PagedResponse, []int, er
 	}, availableYears, nil
 }
 
+func GetHistoryDates() ([]string, error) {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
+	availableYears, err := db.GetAvailableYears()
+	if err != nil {
+		return nil, err
+	}
+
+	var queries []string
+	for _, year := range availableYears {
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			continue
+		}
+		queries = append(queries, fmt.Sprintf(
+			"SELECT DISTINCT strftime('%%Y%%m%%d', datetime(view_at, 'unixepoch', 'localtime')) AS dt FROM %s WHERE business NOT IN ('live', 'article', 'article-list')",
+			tableName,
+		))
+	}
+
+	if len(queries) == 0 {
+		return []string{}, nil
+	}
+
+	baseQuery := strings.Join(queries, " UNION ALL ")
+	finalQuery := fmt.Sprintf("SELECT dt FROM (%s) ORDER BY dt DESC", baseQuery)
+
+	rows, err := conn.Query(finalQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var dates []string
+	for rows.Next() {
+		var dt string
+		if err := rows.Scan(&dt); err != nil {
+			continue
+		}
+		if dt != "" {
+			dates = append(dates, dt)
+		}
+	}
+	return dates, nil
+}
+
 func SearchHistory(params HistorySearchParams) (*models.PagedResponse, []int, error) {
 	db := GetSQLiteDB()
 	conn := db.GetDB()

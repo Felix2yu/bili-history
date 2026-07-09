@@ -355,6 +355,10 @@ const props = defineProps({
     type: Number,
     default: new Date().getFullYear(),
   },
+  currentDate: {
+    type: String,
+    default: '',
+  },
   page: {
     type: Number,
     default: 1,
@@ -407,6 +411,7 @@ const activeLayout = computed(() => (isSmallScreen.value ? 'list' : props.layout
 const emit = defineEmits([
   'update:total-pages',
   'update:total',
+  'update:record-count',
   'update:date',
   'update:category',
   'update:show',
@@ -763,13 +768,24 @@ const fetchHistoryByDateRange = async () => {
   try {
     isLoading.value = true
     records.value = []
+
+    // 按日期模式：使用 currentDate 构造 date_range
+    let effectiveDateRange = dateRange.value || ''
+    let effectivePage = props.page
+    let effectiveSize = size.value
+    if (props.currentDate && props.currentDate.length === 8) {
+      effectiveDateRange = `${props.currentDate}-${props.currentDate}`
+      effectivePage = 1
+      effectiveSize = 9999
+    }
+
     const response = await getBiliHistory2024(
-      props.page,
-      size.value,
+      effectivePage,
+      effectiveSize,
       sortOrder.value,
       tagName.value,
       mainCategory.value,
-      dateRange.value || '',
+      effectiveDateRange,
       localStorage.getItem('useLocalImages') === 'true',
       props.business,
       abortController.signal,
@@ -783,6 +799,7 @@ const fetchHistoryByDateRange = async () => {
       records.value = response.data.data.records
       emit('update:total-pages', Math.ceil(response.data.data.total / size.value))
       emit('update:total', response.data.data.total)
+      emit('update:record-count', records.value.length)
 
       // 批量获取备注
       if (records.value.length > 0) {
@@ -814,9 +831,9 @@ const fetchHistoryByDateRange = async () => {
   }
 }
 
-// 监听年份和页码变化
+// 监听年份、页码和日期变化
 watch(
-  () => [props.selectedYear, props.page],
+  () => [props.selectedYear, props.page, props.currentDate],
   () => {
     fetchHistoryByDateRange()
   },
@@ -1050,7 +1067,8 @@ const refreshData = async () => {
 }
 
 // SSR: 初始数据在服务端获取
-const { data: initialData } = await useAsyncData('history-initial', async () => {
+const ssrDateKey = props.currentDate || 'default'
+const { data: initialData } = await useAsyncData(`history-${ssrDateKey}`, async () => {
   try {
     const loginResponse = await getLoginStatus()
     const loggedIn = loginResponse.data && loginResponse.data.code === 0 && loginResponse.data.data.isLogin
@@ -1062,13 +1080,18 @@ const { data: initialData } = await useAsyncData('history-initial', async () => 
     const catResponse = await getMainCategories()
     const categories = catResponse.data.status === 'success' ? catResponse.data.data.map((cat) => cat.name) : []
 
+    let ssrDateRange = ''
+    if (props.currentDate && props.currentDate.length === 8) {
+      ssrDateRange = `${props.currentDate}-${props.currentDate}`
+    }
+
     const historyResponse = await getBiliHistory2024(
-      props.page,
-      props.pageSize,
+      1,
+      9999,
       0,
       '',
       '',
-      '',
+      ssrDateRange,
       false,
       props.business,
     )

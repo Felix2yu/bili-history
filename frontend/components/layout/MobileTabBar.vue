@@ -127,7 +127,7 @@ const tabs = [
 
 const isActive = (tabRoute) => {
   if (tabRoute === '/') {
-    return route.path === '/' || route.path.startsWith('/page/')
+    return route.path === '/' || route.path.startsWith('/page/') || route.path.startsWith('/date/')
   }
   return route.path.startsWith(tabRoute)
 }

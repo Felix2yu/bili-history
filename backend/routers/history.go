@@ -16,6 +16,7 @@ func RegisterHistoryRoutes(r *gin.RouterGroup) {
 	history := r.Group("/history")
 	{
 		history.GET("/available-years", getAvailableYears)
+		history.GET("/dates", getHistoryDates)
 		history.GET("/all", getHistoryPage)
 		history.GET("/search", searchHistory)
 		history.POST("/reset-database", resetDatabase)
@@ -64,6 +65,15 @@ func getAvailableYears(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(years))
+}
+
+func getHistoryDates(c *gin.Context) {
+	dates, err := database.GetHistoryDates()
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, models.SuccessResponse(dates))
 }
 
 func getHistoryPage(c *gin.Context) {

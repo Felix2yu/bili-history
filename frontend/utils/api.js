@@ -109,6 +109,10 @@ export const getBiliHistory2024 = (page, size, sortOrder, tagName, mainCategory,
   })
 }
 
+export const getHistoryDates = () => {
+  return instance.get(`/history/dates`)
+}
+
 export const searchBiliHistory2024 = (search, searchType = 'all', page = 1, size = 30, useLocalImages = false, useSessdata = true) => {
   return instance.get(`/history/search`, {
     params: {

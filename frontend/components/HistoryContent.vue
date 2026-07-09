@@ -767,7 +767,6 @@ const fetchHistoryByDateRange = async () => {
 
   try {
     isLoading.value = true
-    records.value = []
 
     // 按日期模式：使用 currentDate 构造 date_range
     let effectiveDateRange = dateRange.value || ''

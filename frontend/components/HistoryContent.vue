@@ -1092,7 +1092,7 @@ if (initialData.value) {
   mainCategories.value = initialData.value.categories
   emit('update:total-pages', Math.ceil(initialData.value.total / size.value))
   emit('update:total', initialData.value.total)
-  isLoading.value = false
+  isLoading.value = true
 
   // 客户端挂载后触发登录状态事件
   if (import.meta.client && initialData.value.loginUserInfo) {

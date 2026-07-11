@@ -45,7 +45,7 @@ func (s *SQLiteDB) init() {
 	db.SetMaxIdleConns(1)
 
 	_, err = db.Exec(`
-		PRAGMA journal_mode = DELETE;
+		PRAGMA journal_mode = WAL;
 		PRAGMA synchronous = NORMAL;
 		PRAGMA legacy_file_format = 1;
 		PRAGMA user_version = 317;
@@ -198,6 +198,7 @@ func (s *SQLiteDB) EnsureTableForYear(year int) error {
 			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_author_mid ON %s (author_mid);", tableName, tableName),
 			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_view_at ON %s (view_at);", tableName, tableName),
 			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_remark_time ON %s (remark_time);", tableName, tableName),
+			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_bvid ON %s (bvid);", tableName, tableName),
 		}
 
 		for _, idxSQL := range indexSQLs {
@@ -251,6 +252,18 @@ func MigrateStatusColumn() {
 				utils.LogWarning("Migration: failed to add status column to %s: %v", tableName, err)
 			} else {
 				utils.LogInfo("Migration: added status column to %s", tableName)
+			}
+		}
+
+		// Ensure bvid index exists
+		var indexCount int
+		_ = db.GetDB().QueryRow("SELECT COUNT(*) FROM pragma_table_index(?) WHERE name=?", tableName, fmt.Sprintf("idx_%s_bvid", tableName)).Scan(&indexCount)
+		if indexCount == 0 {
+			_, err := db.GetDB().Exec(fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_bvid ON %s (bvid)", tableName, tableName))
+			if err != nil {
+				utils.LogWarning("Migration: failed to add bvid index to %s: %v", tableName, err)
+			} else {
+				utils.LogInfo("Migration: added bvid index to %s", tableName)
 			}
 		}
 	}

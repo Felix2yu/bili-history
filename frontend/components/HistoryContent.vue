@@ -1088,27 +1088,30 @@ if (initialData.value) {
   }
 }
 
-// 客户端挂载后获取额外数据（备注、下载状态、收藏状态）
+// 客户端挂载后获取数据
 onMounted(async () => {
+  // 并行获取历史数据和额外数据
+  const historyPromise = fetchHistoryByDateRange()
+
+  // 等待历史数据加载完成后获取备注等信息
+  await historyPromise
+
   if (isLoggedIn.value && records.value.length > 0) {
     const batchRecords = records.value.map(record => ({
       bvid: record.bvid,
       view_at: record.view_at,
     }))
-    try {
-      const remarksResponse = await batchGetRemarks(batchRecords)
-      if (remarksResponse.data.status === 'success') {
-        remarkData.value = remarksResponse.data.data
-      }
-    } catch (e) { /* ignore */ }
-    await batchCheckDownloadStatus()
-    await batchCheckFavorites()
+    // 并行获取备注、下载状态、收藏状态
+    await Promise.all([
+      batchGetRemarks(batchRecords).then(res => {
+        if (res.data.status === 'success') {
+          remarkData.value = res.data.data
+        }
+      }).catch(() => {}),
+      batchCheckDownloadStatus(),
+      batchCheckFavorites()
+    ])
   }
-})
-
-// 客户端挂载后获取分页数据
-onMounted(() => {
-  fetchHistoryByDateRange()
 })
 
 // 暴露方法给父组件

@@ -215,21 +215,19 @@ func batchGetRemarks(c *gin.Context) {
 		return
 	}
 
-	results := make(map[string]interface{})
+	// Collect unique bvids
+	bvidSet := make(map[string]bool)
 	for _, item := range req.Items {
-		key := item.Bvid
-		if key == "" {
-			continue
-		}
-		remark, remarkTime, err := database.GetRemarkByBvidAndViewAt(item.Bvid, item.ViewAt)
-		if err == nil && remark != "" {
-			results[key] = map[string]interface{}{
-				"remark":      remark,
-				"remark_time": remarkTime,
-			}
+		if item.Bvid != "" {
+			bvidSet[item.Bvid] = true
 		}
 	}
+	bvids := make([]string, 0, len(bvidSet))
+	for bvid := range bvidSet {
+		bvids = append(bvids, bvid)
+	}
 
+	results := database.BatchGetRemarksByBvid(bvids)
 	c.JSON(http.StatusOK, models.SuccessResponse(results))
 }
 

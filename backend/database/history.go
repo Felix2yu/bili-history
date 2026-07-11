@@ -666,6 +666,62 @@ func GetRemarkByBvidAndViewAt(bvid string, viewAt int64) (string, int64, error) 
 	return remark, remarkTime, nil
 }
 
+// BatchGetRemarksByBvid retrieves remarks for multiple bvids in a single query per year table.
+func BatchGetRemarksByBvid(bvids []string) map[string]map[string]interface{} {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return nil
+	}
+
+	result := make(map[string]map[string]interface{})
+	if len(bvids) == 0 {
+		return result
+	}
+
+	years, err := db.GetAvailableYears()
+	if err != nil {
+		return result
+	}
+
+	placeholders := make([]string, len(bvids))
+	args := make([]interface{}, len(bvids))
+	for i, bvid := range bvids {
+		placeholders[i] = "?"
+		args[i] = bvid
+	}
+	inClause := strings.Join(placeholders, ",")
+
+	for _, year := range years {
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			continue
+		}
+
+		query := fmt.Sprintf("SELECT bvid, remark, remark_time FROM %s WHERE bvid IN (%s) AND remark IS NOT NULL AND remark != '' ORDER BY view_at DESC", tableName, inClause)
+		rows, err := conn.Query(query, args...)
+		if err != nil {
+			continue
+		}
+		for rows.Next() {
+			var bvid, remark string
+			var remarkTime int64
+			if rows.Scan(&bvid, &remark, &remarkTime) == nil {
+				// Only keep the first (most recent) remark per bvid
+				if _, exists := result[bvid]; !exists {
+					result[bvid] = map[string]interface{}{
+						"remark":      remark,
+						"remark_time": remarkTime,
+					}
+				}
+			}
+		}
+		rows.Close()
+	}
+	return result
+}
+
 func InsertHistoryRecord(conn *sql.DB, tableName string, record *models.HistoryRecord) (bool, error) {
 	// Check if a record with the same bvid already exists
 	existsQuery := fmt.Sprintf("SELECT id, author_name, view_at FROM %s WHERE bvid = ? ORDER BY view_at DESC LIMIT 1", tableName)
@@ -916,10 +972,23 @@ func GetDeletedStatus(bvids []string) map[string]bool {
 	}
 
 	result := make(map[string]bool)
+	if len(bvids) == 0 {
+		return result
+	}
+
 	years, err := db.GetAvailableYears()
 	if err != nil {
 		return result
 	}
+
+	// Build IN clause placeholders
+	placeholders := make([]string, len(bvids))
+	args := make([]interface{}, len(bvids))
+	for i, bvid := range bvids {
+		placeholders[i] = "?"
+		args[i] = bvid
+	}
+	inClause := strings.Join(placeholders, ",")
 
 	for _, year := range years {
 		tableName := fmt.Sprintf("bilibili_history_%d", year)
@@ -928,13 +997,18 @@ func GetDeletedStatus(bvids []string) map[string]bool {
 			continue
 		}
 
-		for _, bvid := range bvids {
-			var status int
-			err := conn.QueryRow(fmt.Sprintf("SELECT COALESCE(status, 0) FROM %s WHERE bvid = ? LIMIT 1", tableName), bvid).Scan(&status)
-			if err == nil && status == 1 {
+		query := fmt.Sprintf("SELECT DISTINCT bvid FROM %s WHERE bvid IN (%s) AND COALESCE(status, 0) = 1", tableName, inClause)
+		rows, err := conn.Query(query, args...)
+		if err != nil {
+			continue
+		}
+		for rows.Next() {
+			var bvid string
+			if rows.Scan(&bvid) == nil {
 				result[bvid] = true
 			}
 		}
+		rows.Close()
 	}
 	return result
 }

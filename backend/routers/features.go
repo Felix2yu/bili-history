@@ -248,6 +248,8 @@ func getOnlineFavoriteContents(c *gin.Context) {
 
 	mediaIDStr := c.Query("media_id")
 	mediaID, _ := strconv.ParseInt(mediaIDStr, 10, 64)
+	seasonIDStr := c.Query("season_id")
+	seasonID, _ := strconv.ParseInt(seasonIDStr, 10, 64)
 	pn, _ := strconv.Atoi(c.DefaultQuery("pn", "1"))
 	ps, _ := strconv.Atoi(c.DefaultQuery("ps", "20"))
 
@@ -258,6 +260,48 @@ func getOnlineFavoriteContents(c *gin.Context) {
 		_ = client.FetchWbiKeys()
 	}
 
+	// 合集使用 season API
+	if seasonID > 0 {
+		data, err := client.GetSeasonContents(seasonID, pn, ps)
+		if err != nil {
+			if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+				c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+				return
+			}
+			c.JSON(http.StatusOK, models.ErrorResponse("获取合集内容失败: "+err.Error()))
+			return
+		}
+
+		list := make([]map[string]interface{}, 0)
+		for _, item := range data.Media {
+			list = append(list, map[string]interface{}{
+				"id":          item.ID,
+				"title":       item.Title,
+				"cover":       item.Cover,
+				"bvid":        item.Bvid,
+				"duration":    item.Duration,
+				"upper_mid":   item.Upper.Mid,
+				"upper_name":  item.Upper.Name,
+				"upper_face":  item.Upper.Face,
+				"pub_time":    item.Pubtime,
+			})
+		}
+
+		c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+			"info": map[string]interface{}{
+				"title":       data.Info.Title,
+				"cover":       data.Info.Cover,
+				"media_count": data.Info.MediaCount,
+			},
+			"list":  list,
+			"total": data.Page.Count,
+			"page":  pn,
+			"size":  ps,
+		}))
+		return
+	}
+
+	// 普通收藏夹使用 resource API
 	data, err := client.GetFavoriteResources(mediaID, pn, ps)
 	if err != nil {
 		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
@@ -268,7 +312,6 @@ func getOnlineFavoriteContents(c *gin.Context) {
 		return
 	}
 
-	// 转换为前端期望的格式
 	list := make([]map[string]interface{}, 0)
 	for _, item := range data.Media {
 		bvid := ""

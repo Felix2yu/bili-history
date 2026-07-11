@@ -25,6 +25,7 @@ const (
 	FavoriteFolderListURL        = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"
 	FavoriteCollectedListURL     = "https://api.bilibili.com/x/v3/fav/folder/collected/list"
 	FavoriteResourceListURL = "https://api.bilibili.com/x/v3/fav/resource/list"
+	FavoriteSeasonListURL   = "https://api.bilibili.com/x/space/fav/season/list"
 	FavoriteDealURL         = "https://api.bilibili.com/x/v3/fav/resource/deal"
 	LikedVideoURL           = "https://api.bilibili.com/x/space/like/video"
 	LikeURL                 = "https://api.bilibili.com/x/web-interface/archive/like"
@@ -877,6 +878,48 @@ func (c *Client) GetFavoriteResources(mediaID int64, pn, ps int) (*FavResourceDa
 		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
 	}
 	var data FavResourceData
+	if err := json.Unmarshal(resp.Data, &data); err != nil {
+		return nil, fmt.Errorf("unmarshal data error: %w", err)
+	}
+	return &data, nil
+}
+
+type SeasonMediaItem struct {
+	ID       int64      `json:"id"`
+	Title    string     `json:"title"`
+	Cover    string     `json:"cover"`
+	Duration int        `json:"duration"`
+	Pubtime  int64      `json:"pubtime"`
+	Bvid     string     `json:"bvid"`
+	Upper    FavUpper   `json:"upper"`
+	CntInfo  *FavStat   `json:"cnt_info"`
+}
+
+type SeasonData struct {
+	Info  *FavFolderInfo    `json:"info"`
+	Media []SeasonMediaItem `json:"medias"`
+	Page  FavResourcePage   `json:"page"`
+}
+
+func (c *Client) GetSeasonContents(seasonID int64, pn, ps int) (*SeasonData, error) {
+	params := map[string]string{
+		"season_id":  fmt.Sprintf("%d", seasonID),
+		"pn":         fmt.Sprintf("%d", pn),
+		"ps":         fmt.Sprintf("%d", ps),
+		"web_location": "0.0",
+	}
+	body, err := c.Get(FavoriteSeasonListURL, params)
+	if err != nil {
+		return nil, err
+	}
+	var resp BiliResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return nil, fmt.Errorf("unmarshal response error: %w", err)
+	}
+	if resp.Code != 0 {
+		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+	}
+	var data SeasonData
 	if err := json.Unmarshal(resp.Data, &data); err != nil {
 		return nil, fmt.Errorf("unmarshal data error: %w", err)
 	}

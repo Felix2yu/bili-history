@@ -591,24 +591,32 @@ async function loadContents() {
     let response
     // 确保使用正确的收藏夹ID
     const folderId = currentFolder.value.media_id || currentFolder.value.id
+    const isSeason = currentFolder.value.type === 21
 
     console.log(`开始加载收藏夹[${folderId}]第${contentsPage.value}页内容`)
 
-    // 优先读本地
-    response = await getLocalFavoriteContents({
-      media_id: folderId,
-      page: contentsPage.value,
-      size: contentsPageSize.value
-    })
+    // 优先读本地（合集不读本地，直接在线获取）
+    if (!isSeason) {
+      response = await getLocalFavoriteContents({
+        media_id: folderId,
+        page: contentsPage.value,
+        size: contentsPageSize.value
+      })
+    }
 
     // 本地没有数据时，从B站在线获取
-    if (response.data.status === 'success' && (!response.data.data.list || response.data.data.list.length === 0)) {
-      console.log('本地无数据，从B站在线获取')
-      response = await getOnlineFavoriteContents({
-        media_id: folderId,
+    if (isSeason || (response && response.data.status === 'success' && (!response.data.data.list || response.data.data.list.length === 0))) {
+      console.log('从B站在线获取')
+      const params = {
         pn: contentsPage.value,
         ps: contentsPageSize.value
-      })
+      }
+      if (isSeason) {
+        params.season_id = folderId
+      } else {
+        params.media_id = folderId
+      }
+      response = await getOnlineFavoriteContents(params)
     }
 
     console.log('收到收藏夹响应:', response.data)

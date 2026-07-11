@@ -791,17 +791,9 @@ func (c *Client) GetCollectedFavoriteFolders(upMid string, pn, ps int) (*FavFold
 	if err != nil {
 		return nil, err
 	}
-
-	// Debug: print raw response
-	fmt.Printf("[DEBUG] CollectedFavorite response: %s\n", string(body))
-
 	var resp BiliResponse
 	if err := json.Unmarshal(body, &resp); err != nil {
-		bodyStr := string(body)
-		if len(bodyStr) > 200 {
-			bodyStr = bodyStr[:200]
-		}
-		return nil, fmt.Errorf("unmarshal response error: %w, body: %s", err, bodyStr)
+		return nil, fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
 		return nil, &ApiError{Code: resp.Code, Message: resp.Message}

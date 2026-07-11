@@ -691,6 +691,25 @@ func syncFavorites(c *gin.Context) {
 		}
 	}
 
+	// Sync collected folders (我收藏的)
+	collectedData, err := client.GetCollectedFavoriteFolders(cfg.DedeUserID, 1, 50)
+	if err == nil && len(collectedData.List) > 0 {
+		collectedFolders := make([]database.FavoriteFolder, 0, len(collectedData.List))
+		for _, f := range collectedData.List {
+			collectedFolders = append(collectedFolders, database.FavoriteFolder{
+				MediaID:    f.ID,
+				Mid:        f.Mid,
+				Title:      f.Title,
+				Cover:      f.Cover,
+				Attr:       f.Attr,
+				Intro:      f.Intro,
+				MediaCount: f.MediaCount,
+				FolderType: 1, // collected
+			})
+		}
+		_ = database.SaveFavoriteFolders(collectedFolders)
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
 		"folders_count":  len(folders),
 		"contents_total": totalContents,

@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS favorites_folder (
     media_count INTEGER DEFAULT 0,
     fav_state INTEGER DEFAULT 0,
     like_state INTEGER DEFAULT 0,
+    folder_type INTEGER DEFAULT 0,
     fetch_time INTEGER NOT NULL
 );
 `
@@ -203,6 +204,12 @@ func GetFavoritesDB() *sql.DB {
 			if _, err := db.Exec(favoritesContentSchema); err != nil {
 				utils.LogError("Failed to ensure favorites content schema: %v", err)
 			}
+			// Migration: add folder_type column for existing tables
+			var colCount int
+			_ = db.QueryRow("SELECT COUNT(*) FROM pragma_table_info('favorites_folder') WHERE name='folder_type'").Scan(&colCount)
+			if colCount == 0 {
+				_, _ = db.Exec("ALTER TABLE favorites_folder ADD COLUMN folder_type INTEGER DEFAULT 0")
+			}
 		}
 		favoritesDB = &ExtraDB{
 			db: db,
@@ -272,6 +279,7 @@ type FavoriteFolder struct {
 	MediaCount  int    `json:"media_count"`
 	FavState    int    `json:"fav_state"`
 	LikeState   int    `json:"like_state"`
+	FolderType  int    `json:"folder_type"` // 0=created, 1=collected
 	FetchTime   int64  `json:"fetch_time"`
 }
 
@@ -398,13 +406,13 @@ func SaveFavoriteFolders(folders []FavoriteFolder) error {
 
 	now := time.Now().Unix()
 	stmt, err := tx.Prepare(`INSERT INTO favorites_folder
-		(media_id, fid, mid, title, cover, attr, intro, ctime, mtime, state, media_count, fav_state, like_state, fetch_time)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		(media_id, fid, mid, title, cover, attr, intro, ctime, mtime, state, media_count, fav_state, like_state, folder_type, fetch_time)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(media_id) DO UPDATE SET
 			fid=excluded.fid, mid=excluded.mid, title=excluded.title, cover=excluded.cover,
 			attr=excluded.attr, intro=excluded.intro, ctime=excluded.ctime, mtime=excluded.mtime,
 			state=excluded.state, media_count=excluded.media_count, fav_state=excluded.fav_state,
-			like_state=excluded.like_state, fetch_time=excluded.fetch_time`)
+			like_state=excluded.like_state, folder_type=excluded.folder_type, fetch_time=excluded.fetch_time`)
 	if err != nil {
 		return fmt.Errorf("prepare stmt: %w", err)
 	}
@@ -413,7 +421,7 @@ func SaveFavoriteFolders(folders []FavoriteFolder) error {
 	liveIDs := make([]int64, 0, len(folders))
 	for _, f := range folders {
 		_, err := stmt.Exec(f.MediaID, f.Fid, f.Mid, f.Title, f.Cover, f.Attr, f.Intro,
-			f.Ctime, f.Mtime, f.State, f.MediaCount, f.FavState, f.LikeState, now)
+			f.Ctime, f.Mtime, f.State, f.MediaCount, f.FavState, f.LikeState, f.FolderType, now)
 		if err != nil {
 			utils.LogError("Failed to upsert favorite folder %d: %v", f.MediaID, err)
 			continue

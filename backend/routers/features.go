@@ -272,6 +272,8 @@ func getOnlineFavoriteContents(c *gin.Context) {
 			return
 		}
 
+		fmt.Printf("[DEBUG] Season data: info=%+v, medias count=%d\n", data.Info, len(data.Media))
+
 		list := make([]map[string]interface{}, 0)
 		for _, item := range data.Media {
 			list = append(list, map[string]interface{}{

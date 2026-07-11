@@ -595,22 +595,18 @@ async function loadContents() {
 
   try {
     let response
-    // 确保使用正确的收藏夹ID
     const folderId = currentFolder.value.media_id || currentFolder.value.id
     const isSeason = currentFolder.value.type === 21
 
-    // 优先读本地（合集不读本地，直接在线获取）
-    if (!isSeason) {
-      response = await getLocalFavoriteContents({
-        media_id: folderId,
-        page: contentsPage.value,
-        size: contentsPageSize.value
-      })
-    }
+    // 优先读本地
+    response = await getLocalFavoriteContents({
+      media_id: folderId,
+      page: contentsPage.value,
+      size: contentsPageSize.value
+    })
 
     // 本地没有数据时，从B站在线获取
-    if (isSeason || (response && response.data.status === 'success' && (!response.data.data.list || response.data.data.list.length === 0))) {
-      console.log('从B站在线获取')
+    if (!response || response.data.status !== 'success' || !response.data.data.list || response.data.data.list.length === 0) {
       const params = {
         pn: contentsPage.value,
         ps: contentsPageSize.value

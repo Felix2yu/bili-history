@@ -708,6 +708,38 @@ func syncFavorites(c *gin.Context) {
 			})
 		}
 		_ = database.SaveFavoriteFolders(collectedFolders)
+
+		// Fetch contents for each collected folder
+		for _, f := range collectedData.List {
+			if f.MediaCount == 0 {
+				continue
+			}
+			// Type 21 = season (合集), use season API
+			if f.Type == 21 {
+				seasonData, err := client.GetSeasonContents(f.ID, 1, 100)
+				if err != nil || seasonData == nil || len(seasonData.Media) == 0 {
+					continue
+				}
+				contents := make([]database.FavoriteContent, 0, len(seasonData.Media))
+				for _, item := range seasonData.Media {
+					contents = append(contents, database.FavoriteContent{
+						MediaID:     f.ID,
+						ContentID:   item.ID,
+						Type:        21,
+						Title:       item.Title,
+						Cover:       item.Cover,
+						Bvid:        item.Bvid,
+						Duration:    item.Duration,
+						UpperMid:    item.Upper.Mid,
+						Pubtime:     item.Pubtime,
+						CreatorName: item.Upper.Name,
+						CreatorFace: item.Upper.Face,
+					})
+				}
+				_ = database.SaveFavoriteContents(f.ID, contents)
+				totalContents += len(contents)
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{

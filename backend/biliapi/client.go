@@ -728,21 +728,22 @@ func (c *Client) GetDynamicList(hostMid string, offset string, ps int) (*Dynamic
 // ===== Favorites =====
 
 type FavFolderInfo struct {
-	ID         int64  `json:"id"`
-	Fid        int64  `json:"fid"`
-	Mid        int64  `json:"mid"`
-	Title      string `json:"title"`
-	Cover      string `json:"cover"`
-	Attr       int    `json:"attr"`
-	Intro      string `json:"intro"`
-	Ctime      int64  `json:"ctime"`
-	Mtime      int64  `json:"mtime"`
-	State      int    `json:"state"`
-	MediaCount int    `json:"media_count"`
-	FavState   int    `json:"fav_state"`
-	LikeState  int    `json:"like_state"`
-	Type       int    `json:"type"`
-	Link       string `json:"link"`
+	ID         int64    `json:"id"`
+	Fid        int64    `json:"fid"`
+	Mid        int64    `json:"mid"`
+	Title      string   `json:"title"`
+	Cover      string   `json:"cover"`
+	Attr       int      `json:"attr"`
+	Intro      string   `json:"intro"`
+	Ctime      int64    `json:"ctime"`
+	Mtime      int64    `json:"mtime"`
+	State      int      `json:"state"`
+	MediaCount int      `json:"media_count"`
+	FavState   int      `json:"fav_state"`
+	LikeState  int      `json:"like_state"`
+	Type       int      `json:"type"`
+	Link       string   `json:"link"`
+	Upper      FavUpper `json:"upper"`
 }
 
 type FavFolderListData struct {

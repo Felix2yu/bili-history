@@ -159,7 +159,10 @@
                         >
                           {{ folder.title }}
                         </h3>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{{ folder.intro || '无简介' }}</p>
+                        <p v-if="folder.intro" class="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{{ folder.intro }}</p>
+                        <p v-if="activeTab === 'collected' && folder.upper?.name" class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                          UP主: {{ folder.upper.name }}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -271,8 +274,8 @@
                         </span>
                       </div>
 
-                      <!-- 收藏时间 -->
-                      <div class="flex justify-between items-center text-[10px] text-gray-500">
+                      <!-- 收藏时间（合集无收藏时间，不显示） -->
+                      <div v-if="item.fav_time" class="flex justify-between items-center text-[10px] text-gray-500">
                         <div class="flex items-center space-x-1">
                           <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

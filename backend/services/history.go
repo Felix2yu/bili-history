@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"bilibili-history-go/biliapi"
@@ -13,35 +14,52 @@ import (
 )
 
 type FetchStatus struct {
-	IsRunning       bool   `json:"is_running"`
-	TotalPages      int    `json:"total_pages"`
-	CurrentPage     int    `json:"current_page"`
-	TotalRecords    int    `json:"total_records"`
-	NewRecords      int    `json:"new_records"`
-	ErrorMessage    string `json:"error_message,omitempty"`
-	Status          string `json:"status"`
-	StartTime       int64  `json:"start_time,omitempty"`
-	LastUpdateTime  int64  `json:"last_update_time,omitempty"`
+	TaskID         string `json:"task_id"`
+	IsRunning      bool   `json:"is_running"`
+	TotalPages     int    `json:"total_pages"`
+	CurrentPage    int    `json:"current_page"`
+	TotalRecords   int    `json:"total_records"`
+	NewRecords     int    `json:"new_records"`
+	ErrorMessage   string `json:"error_message,omitempty"`
+	Status         string `json:"status"`
+	StartTime      int64  `json:"start_time,omitempty"`
+	LastUpdateTime int64  `json:"last_update_time,omitempty"`
 }
 
 var (
-	fetchStatus = FetchStatus{
-		IsRunning: false,
-		Status:    "idle",
-	}
-	fetchMutex sync.Mutex
+	fetchRunningCount atomic.Int32
+	fetchTasks        = make(map[string]*FetchStatus)
+	fetchMutex        sync.RWMutex
 )
 
-func GetFetchStatus() FetchStatus {
-	fetchMutex.Lock()
-	defer fetchMutex.Unlock()
-	return fetchStatus
+// GetFetchStatusOverall returns overall status with RunningCount
+func GetFetchStatusOverall() map[string]interface{} {
+	fetchMutex.RLock()
+	defer fetchMutex.RUnlock()
+
+	tasks := make(map[string]*FetchStatus)
+	for id, status := range fetchTasks {
+		tasks[id] = status
+	}
+
+	return map[string]interface{}{
+		"running_count": fetchRunningCount.Load(),
+		"is_running":    fetchRunningCount.Load() > 0,
+		"tasks":         tasks,
+	}
 }
 
-func setFetchStatus(status FetchStatus) {
+func setFetchTaskStatus(taskID string, status *FetchStatus) {
 	fetchMutex.Lock()
 	defer fetchMutex.Unlock()
-	fetchStatus = status
+	status.TaskID = taskID
+	fetchTasks[taskID] = status
+}
+
+func removeFetchTaskStatus(taskID string) {
+	fetchMutex.Lock()
+	defer fetchMutex.Unlock()
+	delete(fetchTasks, taskID)
 }
 
 // FindLatestHistoryDate queries the DB for the latest view_at timestamp
@@ -80,10 +98,9 @@ func FindLatestHistoryDate() (time.Time, error) {
 	return time.Unix(latestViewAt, 0), nil
 }
 
-func FetchHistory(skipExists bool) (map[string]interface{}, error) {
-	status := GetFetchStatus()
-	if status.IsRunning {
-		return nil, fmt.Errorf("fetch already running")
+func FetchHistory(taskID string, skipExists bool) (map[string]interface{}, error) {
+	if taskID == "" {
+		taskID = fmt.Sprintf("manual_%d", time.Now().UnixNano())
 	}
 
 	cfg, err := config.LoadConfig()
@@ -94,27 +111,31 @@ func FetchHistory(skipExists bool) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("SESSDATA not configured")
 	}
 
-	newStatus := FetchStatus{
-		IsRunning:      true,
-		Status:         "running",
-		StartTime:      time.Now().Unix(),
-		LastUpdateTime: time.Now().Unix(),
-	}
-	setFetchStatus(newStatus)
+	fetchRunningCount.Add(1)
+	setFetchTaskStatus(taskID, &FetchStatus{
+		TaskID:    taskID,
+		IsRunning: true,
+		Status:    "running",
+		StartTime: time.Now().Unix(),
+	})
 
 	go func() {
 		defer func() {
-			status := GetFetchStatus()
-			status.IsRunning = false
-			status.LastUpdateTime = time.Now().Unix()
-			if status.ErrorMessage != "" {
-				status.Status = "error"
-			} else {
-				status.Status = "completed"
+			fetchRunningCount.Add(-1)
+			status := GetFetchTaskStatus(taskID)
+			if status != nil {
+				status.IsRunning = false
+				status.LastUpdateTime = time.Now().Unix()
+				if status.ErrorMessage != "" {
+					status.Status = "error"
+				} else {
+					status.Status = "completed"
+				}
+				setFetchTaskStatus(taskID, status)
 			}
-			setFetchStatus(status)
 		}()
 
+		status := GetFetchTaskStatus(taskID)
 		client := biliapi.NewClient(cfg.SESSDATA)
 
 		var cutoffTimestamp int64
@@ -142,14 +163,12 @@ func FetchHistory(skipExists bool) (map[string]interface{}, error) {
 			data, err := client.GetHistory(max, viewAt, ps)
 			if err != nil {
 				consecutiveErrors++
-				utils.LogWarning("获取历史记录第 %d 页失败: %v (连续失败 %d/%d)", pageCount, err, consecutiveErrors, maxConsecutiveErrors)
+				utils.LogWarning("[%s] 获取历史记录第 %d 页失败: %v (连续失败 %d/%d)", taskID, pageCount, err, consecutiveErrors, maxConsecutiveErrors)
 				if consecutiveErrors >= maxConsecutiveErrors {
-					status := GetFetchStatus()
 					status.ErrorMessage = fmt.Sprintf("连续 %d 页失败，停止抓取: %v", consecutiveErrors, err)
-					setFetchStatus(status)
-					// 自动暂停任务并发送告警通知
+					setFetchTaskStatus(taskID, status)
 					_ = database.SetTaskEnabled("fetch_history", false)
-					alertMsg := fmt.Sprintf("⚠️ 历史记录抓取已自动暂停\n\n原因：连续 %d 页请求失败\n最后错误：%s\n已抓取：%d 页，%d 条记录\n\n请检查网络或代理设置后，在任务列表中重新启用。", consecutiveErrors, err.Error(), pageCount, len(allEntries))
+					alertMsg := fmt.Sprintf("⚠️ 历史记录抓取已自动暂停\n\n任务: %s\n原因：连续 %d 页请求失败\n最后错误：%s\n已抓取：%d 页，%d 条记录\n\n请检查网络或代理设置后，在任务列表中重新启用。", taskID, consecutiveErrors, err.Error(), pageCount, len(allEntries))
 					_ = SendShoutrrrNotification("⚠️ B站历史抓取异常", alertMsg)
 					break
 				}
@@ -158,10 +177,9 @@ func FetchHistory(skipExists bool) (map[string]interface{}, error) {
 			}
 			consecutiveErrors = 0
 
-			status := GetFetchStatus()
 			status.CurrentPage = pageCount
 			status.LastUpdateTime = time.Now().Unix()
-			setFetchStatus(status)
+			setFetchTaskStatus(taskID, status)
 
 			if len(data.List) == 0 {
 				emptyPageCount++
@@ -186,10 +204,9 @@ func FetchHistory(skipExists bool) (map[string]interface{}, error) {
 				}
 			}
 
-			status = GetFetchStatus()
 			status.TotalRecords = len(allEntries)
 			status.NewRecords = len(allEntries)
-			setFetchStatus(status)
+			setFetchTaskStatus(taskID, status)
 
 			if !hasNew && cutoffTimestamp > 0 {
 				break
@@ -211,13 +228,12 @@ func FetchHistory(skipExists bool) (map[string]interface{}, error) {
 		db := database.GetSQLiteDB()
 		conn := db.GetDB()
 		if conn == nil {
-			status := GetFetchStatus()
 			status.ErrorMessage = "数据库未初始化"
-			setFetchStatus(status)
+			setFetchTaskStatus(taskID, status)
 			return
 		}
 
-		// Deduplicate: keep only the latest entry per bvid+view_at combination
+		// Deduplicate
 		seen := make(map[string]bool)
 		var deduped []biliapi.HistoryEntry
 		for _, entry := range allEntries {
@@ -287,25 +303,34 @@ func FetchHistory(skipExists bool) (map[string]interface{}, error) {
 			}
 		}
 
-		status = GetFetchStatus()
 		status.TotalPages = pageCount
 		status.NewRecords = insertedCount
-		setFetchStatus(status)
+		setFetchTaskStatus(taskID, status)
+
+		utils.LogSuccess("[%s] 历史记录异步获取完成: %d 页, %d 条新记录", taskID, pageCount, insertedCount)
 	}()
 
 	return map[string]interface{}{
 		"status":  "success",
 		"message": "开始获取历史记录",
+		"task_id": taskID,
 	}, nil
 }
 
+// GetFetchTaskStatus returns status for a specific task
+func GetFetchTaskStatus(taskID string) *FetchStatus {
+	fetchMutex.RLock()
+	defer fetchMutex.RUnlock()
+	if status, ok := fetchTasks[taskID]; ok {
+		return status
+	}
+	return nil
+}
+
 // FetchHistorySync starts a fetch and waits for it to complete before returning.
-// Used by the scheduler chain so that subsequent tasks (import, analyze, report)
-// can operate on the freshly fetched data.
-func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
-	status := GetFetchStatus()
-	if status.IsRunning {
-		return nil, fmt.Errorf("fetch already running")
+func FetchHistorySync(taskID string, skipExists bool) (map[string]interface{}, error) {
+	if taskID == "" {
+		taskID = fmt.Sprintf("sync_%d", time.Now().UnixNano())
 	}
 
 	cfg, err := config.LoadConfig()
@@ -316,13 +341,17 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("SESSDATA not configured")
 	}
 
-	newStatus := FetchStatus{
-		IsRunning:      true,
-		Status:         "running",
-		StartTime:      time.Now().Unix(),
-		LastUpdateTime: time.Now().Unix(),
-	}
-	setFetchStatus(newStatus)
+	fetchRunningCount.Add(1)
+	defer fetchRunningCount.Add(-1)
+
+	setFetchTaskStatus(taskID, &FetchStatus{
+		TaskID:    taskID,
+		IsRunning: true,
+		Status:    "running",
+		StartTime: time.Now().Unix(),
+	})
+
+	defer removeFetchTaskStatus(taskID)
 
 	client := biliapi.NewClient(cfg.SESSDATA)
 
@@ -347,10 +376,11 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 	var lastErrMsg string
 	requestInterval := 1500 * time.Millisecond
 
+	status := GetFetchTaskStatus(taskID)
+
 	for {
 		pageCount++
 
-		// 成功获取一页后等待间隔，避免触发B站限流
 		if pageCount > 1 {
 			time.Sleep(requestInterval)
 		}
@@ -359,14 +389,12 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 		if err != nil {
 			consecutiveErrors++
 			lastErrMsg = err.Error()
-			utils.LogWarning("获取历史记录第 %d 页失败: %v (连续失败 %d/%d)", pageCount, err, consecutiveErrors, maxConsecutiveErrors)
+			utils.LogWarning("[%s] 获取历史记录第 %d 页失败: %v (连续失败 %d/%d)", taskID, pageCount, err, consecutiveErrors, maxConsecutiveErrors)
 			if consecutiveErrors >= maxConsecutiveErrors {
-				s := GetFetchStatus()
-				s.ErrorMessage = fmt.Sprintf("连续 %d 页失败，停止抓取: %v", consecutiveErrors, err)
-				setFetchStatus(s)
-				// 自动暂停任务并发送告警通知
+				status.ErrorMessage = fmt.Sprintf("连续 %d 页失败，停止抓取: %v", consecutiveErrors, err)
+				setFetchTaskStatus(taskID, status)
 				_ = database.SetTaskEnabled("fetch_history", false)
-				alertMsg := fmt.Sprintf("⚠️ 历史记录抓取已自动暂停\n\n原因：连续 %d 页请求失败\n最后错误：%s\n已抓取：%d 页，%d 条记录\n\n请检查网络或代理设置后，在任务列表中重新启用。", consecutiveErrors, lastErrMsg, pageCount, len(allEntries))
+				alertMsg := fmt.Sprintf("⚠️ 历史记录抓取已自动暂停\n\n任务: %s\n原因：连续 %d 页请求失败\n最后错误：%s\n已抓取：%d 页，%d 条记录\n\n请检查网络或代理设置后，在任务列表中重新启用。", taskID, consecutiveErrors, lastErrMsg, pageCount, len(allEntries))
 				_ = SendShoutrrrNotification("⚠️ B站历史抓取异常", alertMsg)
 				break
 			}
@@ -375,10 +403,9 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 		}
 		consecutiveErrors = 0
 
-		s := GetFetchStatus()
-		s.CurrentPage = pageCount
-		s.LastUpdateTime = time.Now().Unix()
-		setFetchStatus(s)
+		status.CurrentPage = pageCount
+		status.LastUpdateTime = time.Now().Unix()
+		setFetchTaskStatus(taskID, status)
 
 		if len(data.List) == 0 {
 			emptyPageCount++
@@ -403,10 +430,9 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 			}
 		}
 
-		s = GetFetchStatus()
-		s.TotalRecords = len(allEntries)
-		s.NewRecords = len(allEntries)
-		setFetchStatus(s)
+		status.TotalRecords = len(allEntries)
+		status.NewRecords = len(allEntries)
+		setFetchTaskStatus(taskID, status)
 
 		if !hasNew && cutoffTimestamp > 0 {
 			break
@@ -428,15 +454,10 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 	db := database.GetSQLiteDB()
 	conn := db.GetDB()
 	if conn == nil {
-		s := GetFetchStatus()
-		s.ErrorMessage = "数据库未初始化"
-		s.IsRunning = false
-		s.Status = "error"
-		setFetchStatus(s)
 		return nil, fmt.Errorf("database not initialized")
 	}
 
-	// Deduplicate: keep only the latest entry per bvid+view_at combination
+	// Deduplicate
 	seen := make(map[string]bool)
 	var deduped []biliapi.HistoryEntry
 	for _, entry := range allEntries {
@@ -506,19 +527,12 @@ func FetchHistorySync(skipExists bool) (map[string]interface{}, error) {
 		}
 	}
 
-	finalStatus := GetFetchStatus()
-	finalStatus.TotalPages = pageCount
-	finalStatus.NewRecords = insertedCount
-	finalStatus.IsRunning = false
-	finalStatus.Status = "completed"
-	finalStatus.LastUpdateTime = time.Now().Unix()
-	setFetchStatus(finalStatus)
-
-	utils.LogSuccess("历史记录同步获取完成: %d 页, %d 条新记录", pageCount, insertedCount)
+	utils.LogSuccess("[%s] 历史记录同步获取完成: %d 页, %d 条新记录", taskID, pageCount, insertedCount)
 
 	return map[string]interface{}{
 		"status":       "success",
 		"message":      "历史记录获取完成",
+		"task_id":      taskID,
 		"total_pages":  pageCount,
 		"total_records": len(allEntries),
 		"new_records":  insertedCount,

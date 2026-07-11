@@ -58,30 +58,3 @@ export const useApiBase = () => {
     resetBaseUrl,
   }
 }
-
-export const useApiFetch = (request: any, opts: any = {}) => {
-  const { baseUrl } = useApiBase()
-  const config = useRuntimeConfig()
-
-  const apiBase = import.meta.server
-    ? (config.backendUrl || config.public.defaultBackendUrl)
-    : baseUrl.value
-
-  return useFetch(request, {
-    baseURL: apiBase,
-    ...opts,
-  })
-}
-
-export const useApi$fetch = () => {
-  const { baseUrl } = useApiBase()
-  const config = useRuntimeConfig()
-
-  const apiBase = import.meta.server
-    ? (config.backendUrl || config.public.defaultBackendUrl)
-    : baseUrl.value
-
-  return $fetch.create({
-    baseURL: apiBase,
-  })
-}

@@ -184,7 +184,6 @@ type VideoInfo struct {
 	Duration  int         `json:"duration"`
 	Owner     VideoOwner  `json:"owner"`
 	Stat      VideoStat   `json:"stat"`
-	Rights    VideoRights `json:"rights"`
 }
 
 type VideoOwner struct {
@@ -201,19 +200,6 @@ type VideoStat struct {
 	Coin     int `json:"coin"`
 	Share    int `json:"share"`
 	Like     int `json:"like"`
-}
-
-type VideoRights struct {
-	Bp            int `json:"bp"`
-	Elec          int `json:"elec"`
-	Download      int `json:"download"`
-	Movie         int `json:"movie"`
-	Pay           int `json:"pay"`
-	Hd5           int `json:"hd5"`
-	NoReprint     int `json:"no_reprint"`
-	Autoplay      int `json:"autoplay"`
-	UgcPay        int `json:"ugc_pay"`
-	IsCooperation int `json:"is_cooperation"`
 }
 
 // generateBuvid3 生成 buvid3 UUID (格式: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)

@@ -261,14 +261,6 @@ func gatherDailyReportData() map[string]interface{} {
 	return data
 }
 
-func getMapKeys(m map[string]interface{}) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return keys
-}
-
 func SendSessdataExpiredNotification(username string) error {
 	title := "⚠️ Bilibili历史记录管理 - SESSDATA 已过期"
 	message := "您的 SESSDATA 已失效，请重新登录。\n"

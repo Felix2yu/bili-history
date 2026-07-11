@@ -45,14 +45,6 @@ type UploaderInfo struct {
 	UpdateTime   int64  `json:"update_time" db:"update_time"`
 }
 
-// VideoTag 视频标签模型
-type VideoTag struct {
-	ID      int64  `json:"id" db:"id"`
-	Bvid    string `json:"bvid" db:"bvid"`
-	TagID   int    `json:"tag_id" db:"tag_id"`
-	TagName string `json:"tag_name" db:"tag_name"`
-}
-
 // VideoDetailStats 视频详情统计
 type VideoDetailStats struct {
 	TotalVideos    int64 `json:"total_videos"`

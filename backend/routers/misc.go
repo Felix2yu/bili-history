@@ -122,7 +122,8 @@ func RegisterFetchRoutes(r *gin.RouterGroup) {
 }
 
 func fetchBiliHistoryRealtime(c *gin.Context) {
-	result, err := services.FetchHistory(true)
+	taskID := c.Query("task_id")
+	result, err := services.FetchHistory(taskID, true)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "error",
@@ -135,7 +136,8 @@ func fetchBiliHistoryRealtime(c *gin.Context) {
 }
 
 func fetchBiliHistoryFull(c *gin.Context) {
-	result, err := services.FetchHistorySync(false)
+	taskID := c.Query("task_id")
+	result, err := services.FetchHistorySync(taskID, false)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "error",
@@ -1107,8 +1109,9 @@ func fetchBiliHistory(c *gin.Context) {
 	if skipStr := c.Query("skip_exists"); skipStr == "false" {
 		skipExists = false
 	}
+	taskID := c.Query("task_id")
 
-	result, err := services.FetchHistory(skipExists)
+	result, err := services.FetchHistory(taskID, skipExists)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("启动历史记录获取失败: "+err.Error()))
 		return
@@ -1118,7 +1121,23 @@ func fetchBiliHistory(c *gin.Context) {
 }
 
 func getFetchStatus(c *gin.Context) {
-	status := services.GetFetchStatus()
+	taskID := c.Query("task_id")
+	if taskID != "" {
+		status := services.GetFetchTaskStatus(taskID)
+		if status == nil {
+			c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+				"task_id":   taskID,
+				"status":    "not_found",
+				"message":   "任务不存在或已完成",
+			}))
+			return
+		}
+		c.JSON(http.StatusOK, models.SuccessResponse(status))
+		return
+	}
+
+	// Return overall status
+	status := services.GetFetchStatusOverall()
 	c.JSON(http.StatusOK, models.SuccessResponse(status))
 }
 

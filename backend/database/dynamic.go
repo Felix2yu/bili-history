@@ -207,21 +207,6 @@ func SaveDynamicHost(host DynamicHost) error {
 	return err
 }
 
-// GetLatestDynamicID 获取指定用户最新的动态ID
-func GetLatestDynamicID(hostMid string) string {
-	db := GetDynamicDB()
-	if db == nil {
-		return ""
-	}
-
-	var idStr string
-	err := db.QueryRow("SELECT id_str FROM dynamics WHERE host_mid = ? ORDER BY publish_ts DESC LIMIT 1", hostMid).Scan(&idStr)
-	if err != nil {
-		return ""
-	}
-	return idStr
-}
-
 // IsDynamicExists 检查动态是否已存在
 func IsDynamicExists(idStr string) bool {
 	db := GetDynamicDB()

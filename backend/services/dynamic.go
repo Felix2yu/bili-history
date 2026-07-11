@@ -50,15 +50,6 @@ func GetDynamicProgressChan() chan string {
 	return dynamicProgressCh
 }
 
-// DynamicType 表示动态类型常量
-const (
-	DynamicTypeVideo   = "DYNAMIC_TYPE_AV"      // 视频动态
-	DynamicTypeDraw    = "DYNAMIC_TYPE_DRAW"    // 图文动态
-	DynamicTypeOpus    = "DYNAMIC_TYPE_OPUS"    // 文章动态
-	DynamicTypeForward = "DYNAMIC_TYPE_FORWARD" // 转发动态
-	DynamicTypeNone    = "DYNAMIC_TYPE_NONE"    // 纯文本动态
-)
-
 func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool, dynamicTypes []string) {
 	cfg := config.GetConfig()
 	if cfg == nil || cfg.SESSDATA == "" {

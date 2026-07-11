@@ -306,15 +306,6 @@ export const getViewingBehavior = async (year, useCache = false) => {
   })
 }
 
-// 获取每年每天的观看数合集
-export const getYearlyAnalysis = async (year) => {
-  return instance.post(`/analysis/analyze`, null, {
-    params: {
-      year
-    }
-  })
-}
-
 // 获取热力图数据（日期 -> 观看数量）
 export const getHeatmapData = async (year) => {
   return instance.get(`/heatmap/data`, {
@@ -335,11 +326,6 @@ export const getFavoritesAnalysis = async () => {
 // 获取稍后再看分析数据
 export const getWatchLaterAnalysis = async () => {
   return instance.get('/viewing/watchlater-analysis')
-}
-
-// 获取额外模块概览
-export const getExtraOverview = async () => {
-  return instance.get('/viewing/extra-overview')
 }
 
 // 获取热门视频命中率分析
@@ -511,30 +497,6 @@ export const exportHistory = (options = {}) => {
   })
 }
 
-// 下载Excel文件
-export const downloadExcelFile = (filename) => {
-  return instance.get(`/export/download_excel/${encodeURIComponent(filename)}`, {
-    responseType: 'blob',
-    headers: {
-      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    }
-  }).then(response => {
-    // 创建blob链接并下载
-    const blob = new Blob([response.data], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', filename)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    return response
-  })
-}
-
 // 下载SQLite数据库
 export const downloadDatabase = () => {
   return instance.get('/export/download_db', {
@@ -671,24 +633,6 @@ export const batchGetRemarks = (records) => {
   })
 }
 
-/**
- * 检查视频是否已删除（通过Bilibili API验证）
- * @param {string[]} bvids - 要检查的bvid列表
- * @returns {Promise} - { success, deleted: string[], checked: number }
- */
-export const checkDeletedVideos = (bvids) => {
-  return instance.post('/history/check-deleted', { bvids })
-}
-
-/**
- * 获取视频删除状态
- * @param {string[]} bvids - 要查询的bvid列表
- * @returns {Promise} - { success, data: { [bvid]: boolean } }
- */
-export const getDeletedStatus = (bvids) => {
-  return instance.post('/history/deleted-status', { bvids })
-}
-
 // 获取所有备注记录
 export const getAllRemarks = (page = 1, size = 10, sortOrder = 0) => {
   return instance.get('/history/remarks', {
@@ -698,11 +642,6 @@ export const getAllRemarks = (page = 1, size = 10, sortOrder = 0) => {
       sort_order: sortOrder
     }
   })
-}
-
-// 获取SQLite版本
-export const getSqliteVersion = () => {
-  return instance.get('/history/sqlite-version')
 }
 
 // 图片管理相关接口
@@ -1584,15 +1523,6 @@ export const getVideoDetailsStats = () => {
 }
 
 /**
- * 获取失效视频明细
- * @param {Object} params 可选过滤参数
- * @returns {Promise<object>}
- */
-export const getInvalidVideos = (params = {}) => {
-  return instance.get('/fetch/invalid-videos', { params })
-}
-
-/**
  * 停止视频详情获取任务
  * @returns {Promise<object>} - 包含停止结果的响应
  */
@@ -1832,21 +1762,4 @@ export const getLikeLocal = (params = {}) => {
   return instance.get('/like/local', { params })
 }
 // =============================
-// 历史记录(简化)接口（/history_simple）
-// =============================
 
-/**
- * 获取观看历史记录并存入数据库
- * GET /history_simple/list
- */
-export const getHistorySimpleList = () => {
-  return instance.get('/history_simple/list')
-}
-
-/**
- * 从本地数据库获取历史记录
- * GET /history_simple/local
- */
-export const getHistorySimpleLocal = (params = {}) => {
-  return instance.get('/history_simple/local', { params })
-}

@@ -37,18 +37,6 @@ func GetDatabasePath(paths ...string) string {
 	return fullPath
 }
 
-func GetLogsPath() string {
-	now := Now()
-	year := now.Format("2006")
-	month := now.Format("01")
-	day := now.Format("02")
-	
-	logPath := filepath.Join("output", "logs", year, month, day, day+".log")
-	os.MkdirAll(filepath.Dir(logPath), 0755)
-	
-	return logPath
-}
-
 func GetDBFilePath() string {
 	cfg := config.GetConfig()
 	if cfg == nil {

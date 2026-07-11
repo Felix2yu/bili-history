@@ -119,13 +119,6 @@ func getImageDownloadStatus(c *gin.Context) {
 	}))
 }
 
-func boolToInt(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
-}
-
 func countLocalImages(dir string) (total int, downloaded int) {
 	utils.LogWarning("[图片计数] 检查目录: %s", dir)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {

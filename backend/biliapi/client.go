@@ -771,9 +771,11 @@ func (c *Client) GetFavoriteFolderList() (*FavFolderListData, error) {
 
 func (c *Client) GetCollectedFavoriteFolders(upMid string, pn, ps int) (*FavFolderListData, error) {
 	params := map[string]string{
-		"up_mid": upMid,
-		"pn":     fmt.Sprintf("%d", pn),
-		"ps":     fmt.Sprintf("%d", ps),
+		"up_mid":      upMid,
+		"pn":          fmt.Sprintf("%d", pn),
+		"ps":          fmt.Sprintf("%d", ps),
+		"platform":    "web",
+		"web_location": "0.0",
 	}
 
 	// 确保获取 wbi keys

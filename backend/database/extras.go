@@ -476,6 +476,16 @@ func SaveFavoriteContents(mediaID int64, contents []FavoriteContent) error {
 	defer stmt.Close()
 
 	for _, c := range contents {
+		// 如果新标题是"已失效视频"，尝试保留原标题
+		if c.Title == "已失效视频" || c.Title == "" {
+			var existingTitle string
+			err := db.QueryRow("SELECT title FROM favorites_content WHERE media_id = ? AND content_id = ?",
+				c.MediaID, c.ContentID).Scan(&existingTitle)
+			if err == nil && existingTitle != "" && existingTitle != "已失效视频" {
+				c.Title = existingTitle
+			}
+		}
+
 		_, err := stmt.Exec(c.MediaID, c.ContentID, c.Type, c.Title, c.Cover, c.Bvid, c.Intro,
 			c.Page, c.Duration, c.UpperMid, c.Attr, c.Ctime, c.Pubtime, c.FavTime, c.Link, now,
 			c.CreatorName, c.CreatorFace, c.BvID, c.Collect, c.Play, c.Danmaku, c.PlaySwitch,

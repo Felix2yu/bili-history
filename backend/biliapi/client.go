@@ -741,6 +741,8 @@ type FavFolderInfo struct {
 	MediaCount int    `json:"media_count"`
 	FavState   int    `json:"fav_state"`
 	LikeState  int    `json:"like_state"`
+	Type       int    `json:"type"`
+	Link       string `json:"link"`
 }
 
 type FavFolderListData struct {

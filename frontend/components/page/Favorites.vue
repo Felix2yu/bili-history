@@ -345,6 +345,7 @@ import DownloadDialog from '../DownloadDialog.vue'
 import {
   getCreatedFavoriteFolders,
   getCollectedFavoriteFolders,
+  getLocalCollectedFolders,
   getFavoriteContents,
   getLocalFavoriteContents,
   getOnlineFavoriteContents,
@@ -514,11 +515,19 @@ async function fetchFavorites() {
         keyword: searchKeyword.value || undefined
       })
     } else if (activeTab.value === 'collected') {
-      response = await getCollectedFavoriteFolders({
-        pn: currentPage.value,
-        ps: pageSize.value,
-        keyword: searchKeyword.value || undefined
+      // 优先读本地
+      response = await getLocalCollectedFolders({
+        page: currentPage.value,
+        size: pageSize.value
       })
+      // 本地没有数据时，从B站在线获取
+      if (!response || response.data.status !== 'success' || !response.data.data.list || response.data.data.list.length === 0) {
+        response = await getCollectedFavoriteFolders({
+          pn: currentPage.value,
+          ps: pageSize.value,
+          keyword: searchKeyword.value || undefined
+        })
+      }
     }
 
     if (response.data.status === 'success') {

@@ -802,6 +802,61 @@ func GetFavoriteFolders(created bool) ([]map[string]interface{}, int, error) {
 	return results, total, nil
 }
 
+// GetFavoriteFoldersByType retrieves folders filtered by folder_type (0=created, 1=collected)
+func GetFavoriteFoldersByType(folderType int, page, size int) ([]map[string]interface{}, int, error) {
+	db := GetFavoritesDB()
+	if db == nil {
+		return []map[string]interface{}{}, 0, nil
+	}
+
+	var total int
+	err := db.QueryRow("SELECT COUNT(*) FROM favorites_folder WHERE folder_type = ?", folderType).Scan(&total)
+	if err != nil {
+		return []map[string]interface{}{}, 0, err
+	}
+
+	offset := (page - 1) * size
+	rows, err := db.Query("SELECT * FROM favorites_folder WHERE folder_type = ? ORDER BY mtime DESC LIMIT ? OFFSET ?", folderType, size, offset)
+	if err != nil {
+		return []map[string]interface{}{}, 0, err
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return []map[string]interface{}{}, 0, err
+	}
+
+	var results []map[string]interface{}
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range columns {
+			valuePtrs[i] = &values[i]
+		}
+		if err := rows.Scan(valuePtrs...); err != nil {
+			continue
+		}
+
+		result := make(map[string]interface{})
+		for i, col := range columns {
+			val := values[i]
+			if val == nil {
+				continue
+			}
+			switch v := val.(type) {
+			case []byte:
+				result[col] = string(v)
+			default:
+				result[col] = v
+			}
+		}
+		results = append(results, result)
+	}
+
+	return results, total, nil
+}
+
 func GetFavoriteContents(mediaID int64, page, size int) ([]map[string]interface{}, int, error) {
 	db := GetFavoritesDB()
 	if db == nil {

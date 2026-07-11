@@ -1116,6 +1116,17 @@ export const getLocalFavoriteFolders = (params = {}) => {
 }
 
 /**
+ * 获取本地收藏的合集列表
+ * @param {Object} params 请求参数
+ * @param {number} [params.page] 页码，默认为1
+ * @param {number} [params.size] 每页数量，默认为20
+ * @returns {Promise<Object>} 合集列表
+ */
+export const getLocalCollectedFolders = (params = {}) => {
+  return instance.get('/favorite/collected/local/list', { params })
+}
+
+/**
  * 获取数据库中的收藏内容列表
  * @param {Object} params 请求参数
  * @param {number} params.media_id 收藏夹ID

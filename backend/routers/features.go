@@ -22,6 +22,7 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 		favorite.GET("/list", getFavoriteList)
 		favorite.GET("/local/list", getLocalFavoriteFolders)
 		favorite.GET("/collected/list", getCollectedFavoriteFolders)
+		favorite.GET("/collected/local/list", getLocalCollectedFolders)
 		favorite.GET("/content/list", getLocalFavoriteContents)
 		favorite.GET("/content/online", getOnlineFavoriteContents)
 		favorite.POST("/sync", syncFavorites)
@@ -171,6 +172,24 @@ func getLocalFavoriteFolders(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
 		"list":  pagedList,
+		"total": total,
+		"page":  page,
+		"size":  size,
+	}))
+}
+
+func getLocalCollectedFolders(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+
+	list, total, err := database.GetFavoriteFoldersByType(1, page, size) // 1 = collected
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse("获取本地收藏夹失败: "+err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"list":  list,
 		"total": total,
 		"page":  page,
 		"size":  size,

@@ -1126,6 +1126,18 @@ export const getLocalFavoriteFolders = (params = {}) => {
 export const getLocalFavoriteContents = (params = {}) => {
   return instance.get('/favorite/content/list', { params })
 }
+
+/**
+ * 从B站在线获取收藏夹内容
+ * @param {Object} params 请求参数
+ * @param {number} params.media_id 收藏夹ID
+ * @param {number} [params.pn] 页码，默认为1
+ * @param {number} [params.ps] 每页数量，默认为20
+ * @returns {Promise<Object>} 内容列表
+ */
+export const getOnlineFavoriteContents = (params = {}) => {
+  return instance.get('/favorite/content/online', { params })
+}
 // #endregion
 
 /**

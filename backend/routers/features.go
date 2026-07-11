@@ -23,6 +23,7 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 		favorite.GET("/local/list", getLocalFavoriteFolders)
 		favorite.GET("/collected/list", getCollectedFavoriteFolders)
 		favorite.GET("/content/list", getLocalFavoriteContents)
+		favorite.GET("/content/online", getOnlineFavoriteContents)
 		favorite.POST("/sync", syncFavorites)
 		favorite.POST("/resource/deal", favoriteResource)
 		favorite.POST("/resource/batch-deal", batchFavoriteResource)
@@ -235,6 +236,38 @@ func getLocalFavoriteContents(c *gin.Context) {
 		"total": total,
 		"page":  page,
 		"size":  size,
+	}))
+}
+
+func getOnlineFavoriteContents(c *gin.Context) {
+	cfg := config.GetConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("未配置 SESSDATA"))
+		return
+	}
+
+	mediaIDStr := c.Query("media_id")
+	mediaID, _ := strconv.ParseInt(mediaIDStr, 10, 64)
+	pn, _ := strconv.Atoi(c.DefaultQuery("pn", "1"))
+	ps, _ := strconv.Atoi(c.DefaultQuery("ps", "20"))
+
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+	data, err := client.GetFavoriteResources(mediaID, pn, ps)
+	if err != nil {
+		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+			return
+		}
+		c.JSON(http.StatusOK, models.ErrorResponse("获取收藏夹内容失败: "+err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"info":  data.Info,
+		"list":  data.Media,
+		"total": data.Page.Count,
+		"page":  pn,
+		"size":  ps,
 	}))
 }
 

@@ -344,6 +344,7 @@ import {
   getCollectedFavoriteFolders,
   getFavoriteContents,
   getLocalFavoriteContents,
+  getOnlineFavoriteContents,
   getLoginStatus
 } from '~/utils/api'
 import { openInBrowser } from '~/utils/openUrl.js'
@@ -593,14 +594,24 @@ async function loadContents() {
 
     console.log(`开始加载收藏夹[${folderId}]第${contentsPage.value}页内容`)
 
-    response = await getFavoriteContents({
+    // 优先读本地
+    response = await getLocalFavoriteContents({
       media_id: folderId,
-      pn: contentsPage.value,
-      ps: contentsPageSize.value,
-      keyword: searchKeyword.value || undefined
+      page: contentsPage.value,
+      size: contentsPageSize.value
     })
 
-    console.log('收到在线收藏夹响应:', response.data)
+    // 本地没有数据时，从B站在线获取
+    if (response.data.status === 'success' && (!response.data.data.list || response.data.data.list.length === 0)) {
+      console.log('本地无数据，从B站在线获取')
+      response = await getOnlineFavoriteContents({
+        media_id: folderId,
+        pn: contentsPage.value,
+        ps: contentsPageSize.value
+      })
+    }
+
+    console.log('收到收藏夹响应:', response.data)
 
       if (response.data.status === 'success') {
         // 更新收藏夹信息

@@ -430,7 +430,12 @@ const { data: initialData } = await useAsyncData('favorites-initial', async () =
       return { isLoggedIn: false, favorites: [], totalItems: 0 }
     }
 
-    const response = await getCreatedFavoriteFolders()
+    // 优先读本地
+    let response = await getLocalFavoriteFolders({ page: 1, size: 50 })
+    // 本地没有数据时，从B站在线获取
+    if (!response || response.data.status !== 'success' || !response.data.data.list || response.data.data.list.length === 0) {
+      response = await getCreatedFavoriteFolders()
+    }
     const favorites = response.data.status === 'success' ? (response.data.data.list || []) : []
     const totalItems = response.data.status === 'success' ? (response.data.data.count || 0) : 0
 
@@ -511,9 +516,17 @@ async function fetchFavorites() {
     let response
 
     if (activeTab.value === 'created') {
-      response = await getCreatedFavoriteFolders({
-        keyword: searchKeyword.value || undefined
+      // 优先读本地
+      response = await getLocalFavoriteFolders({
+        page: currentPage.value,
+        size: pageSize.value
       })
+      // 本地没有数据时，从B站在线获取
+      if (!response || response.data.status !== 'success' || !response.data.data.list || response.data.data.list.length === 0) {
+        response = await getCreatedFavoriteFolders({
+          keyword: searchKeyword.value || undefined
+        })
+      }
     } else if (activeTab.value === 'collected') {
       // 优先读本地
       response = await getLocalCollectedFolders({

@@ -77,7 +77,7 @@
 
 <script setup>
 import { ref, defineProps, defineEmits, computed, watch, onMounted } from 'vue'
-import { getCreatedFavoriteFolders, favoriteResource, batchFavoriteResource, localBatchFavoriteResource } from '~/utils/api'
+import { getCreatedFavoriteFolders, getLocalFavoriteFolders, favoriteResource, batchFavoriteResource, localBatchFavoriteResource } from '~/utils/api'
 import { showNotify } from 'vant'
 import LoginDialog from './LoginDialog.vue'
 
@@ -116,12 +116,16 @@ const cancelText = computed(() => '取消')
 const loadFavorites = async () => {
   loading.value = true
   try {
-    const response = await getCreatedFavoriteFolders()
+    // 优先读本地
+    let response = await getLocalFavoriteFolders({ page: 1, size: 100 })
+    // 本地没有数据时，从B站在线获取
+    if (!response || response.data.status !== 'success' || !response.data.data.list || response.data.data.list.length === 0) {
+      response = await getCreatedFavoriteFolders()
+    }
     if (response.data.status === 'success') {
       favorites.value = response.data.data.list || []
       isLoggedIn.value = true
     } else {
-      // 没有权限或未登录
       isLoggedIn.value = false
       favorites.value = []
     }

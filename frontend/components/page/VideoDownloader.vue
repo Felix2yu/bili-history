@@ -367,7 +367,6 @@ import { showNotify } from 'vant'
 import 'vant/es/notify/style'
 import { getLoginStatus, downloadVideo, downloadUserVideos, getVideoInfo, checkCollection, downloadCollection } from '~/utils/api'
 import DownloadDialog from '../DownloadDialog.vue'
-import SimpleSearchBar from '../SimpleSearchBar.vue'
 import CustomDropdown from '../CustomDropdown.vue'
 import UserVideos from '../UserVideos.vue'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
@@ -395,10 +394,6 @@ const onDownloadTypeChange = (value) => {
   inputValue.value = '' // 清空输入框
   videoInfo.value = {} // 重置视频信息
 }
-
-// 下载选项
-const downloadCover = ref(true)
-const onlyAudio = ref(false)
 
 // 下载状态
 const isDownloading = ref(false)

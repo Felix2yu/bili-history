@@ -346,7 +346,6 @@ import LoginDialog from './LoginDialog.vue'
 import DownloadDialog from './DownloadDialog.vue'
 import FavoriteDialog from './FavoriteDialog.vue'
 import { openInBrowser } from '~/utils/openUrl.js'
-import { normalizeImageUrl } from '~/utils/imageUrl.js'
 import { formatDuration, formatTimestamp, getBusinessType } from '~/utils/format'
 import VideoGridCard from './VideoGridCard.vue'
 
@@ -590,22 +589,6 @@ watch(() => props.isBatchMode, (newVal) => {
     selectedRecords.value.clear()
   }
 })
-
-// 计算属性用于显示当前选中的分类
-computed(() => {
-  return mainCategory.value || tagName.value || '全部分区'
-})
-// 获取主分区列表
-const fetchMainCategories = async () => {
-  try {
-    const response = await getMainCategories()
-    if (response.data.status === 'success') {
-      mainCategories.value = response.data.data.map((cat) => cat.name)
-    }
-  } catch (error) {
-    console.error('Error fetching main categories:', error)
-  }
-}
 
 // 辅助函数：格式化日期
 const formatDate = (date) => `${date.getMonth() + 1}/${date.getDate()}`
@@ -1200,13 +1183,6 @@ const handleAuthorClick = async (record) => {
   await openInBrowser(url)
 }
 
-// 获取进度条宽度
-const getProgressWidth = (progress, duration) => {
-  if (progress === -1) return '100%'
-  if (duration === 0) return '0%'
-  return `${(progress / duration) * 100}%`
-}
-
 // formatTimestamp 已从 ~/utils/format 导入
 
 // 高亮显示匹配的文本
@@ -1565,10 +1541,6 @@ const isAllFavorited = computed(() => {
   return selectedRecords.value.size > 0 && favoritedCount.value === selectedRecords.value.size
 })
 
-// 检查是否所有选中的记录都未收藏
-computed(() => {
-  return selectedRecords.value.size > 0 && unfavoritedCount.value === selectedRecords.value.size
-})
 // 复制选中视频的链接到剪贴板
 const handleCopyLinks = async () => {
   if (selectedRecords.value.size === 0) {

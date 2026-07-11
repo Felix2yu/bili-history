@@ -1,7 +1,6 @@
 package biliapi
 
 import (
-	"bytes"
 	"compress/gzip"
 	"crypto/md5"
 	"encoding/json"
@@ -428,40 +427,6 @@ func (c *Client) GetWithDm(urlStr string, params map[string]string) ([]byte, err
 	return body, nil
 }
 
-func (c *Client) Post(urlStr string, data interface{}) ([]byte, error) {
-	var body io.Reader
-	if data != nil {
-		jsonData, err := json.Marshal(data)
-		if err != nil {
-			return nil, fmt.Errorf("marshal data error: %w", err)
-		}
-		body = bytes.NewBuffer(jsonData)
-	}
-
-	req, err := http.NewRequest("POST", urlStr, body)
-	if err != nil {
-		return nil, fmt.Errorf("create request error: %w", err)
-	}
-
-	headers := c.getHeaders()
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request error: %w", err)
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read body error: %w", err)
-	}
-
-	return respBody, nil
-}
 
 func (c *Client) GetHistory(max int64, viewAt int64, ps int) (*HistoryCursorData, error) {
 	params := map[string]string{
@@ -970,3 +935,4 @@ func (c *Client) LikeVideo(bvid string, like bool) error {
 	}
 	return nil
 }
+

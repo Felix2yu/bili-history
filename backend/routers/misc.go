@@ -74,7 +74,6 @@ func RegisterExportRoutes(r *gin.RouterGroup) {
 	export := r.Group("/export")
 	{
 		export.POST("/excel", exportToExcel)
-		export.POST("/export_history", exportToExcel)
 	}
 }
 

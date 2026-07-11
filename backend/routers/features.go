@@ -34,6 +34,7 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 		like.GET("/list", getLikeList)
 		like.GET("/local", getLikeLocal)
 		like.POST("/sync", syncLikes)
+		like.POST("/toggle", toggleLike)
 	}
 
 	watchlater := r.Group("/watchlater")
@@ -611,6 +612,45 @@ func syncLikes(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
 		"total": len(allVideos),
+	}))
+}
+
+type ToggleLikeRequest struct {
+	Bvid string `json:"bvid" binding:"required"`
+	Like bool   `json:"like"`
+}
+
+func toggleLike(c *gin.Context) {
+	cfg := config.GetConfig()
+	if cfg == nil || cfg.SESSDATA == "" || cfg.BiliJct == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("未配置 SESSDATA / bili_jct，无法点赞"))
+		return
+	}
+
+	var req ToggleLikeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+	if err := client.LikeVideo(req.Bvid, req.Like); err != nil {
+		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+			return
+		}
+		c.JSON(http.StatusOK, models.ErrorResponse("点赞操作失败: "+err.Error()))
+		return
+	}
+
+	action := "点赞"
+	if !req.Like {
+		action = "取消点赞"
+	}
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"success": true,
+		"action":  action,
+		"bvid":    req.Bvid,
 	}))
 }
 

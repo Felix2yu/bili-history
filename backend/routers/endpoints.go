@@ -173,11 +173,6 @@ func init() {
 		Tags:        tagAnalysis,
 		OperationID: "get_daily_stats",
 	})
-	RegisterEndpointMeta("POST", "/heatmap/generate_heatmap", EndpointMeta{
-		Summary:     "生成观看热力图（待实现）",
-		Tags:        tagAnalysis,
-		OperationID: "generate_heatmap",
-	})
 	RegisterEndpointMeta("GET", "/heatmap/data", EndpointMeta{
 		Summary:     "获取热力图数据",
 		Tags:        tagAnalysis,

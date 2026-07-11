@@ -252,6 +252,12 @@ func getOnlineFavoriteContents(c *gin.Context) {
 	ps, _ := strconv.Atoi(c.DefaultQuery("ps", "20"))
 
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+
+	// 确保获取 wbi keys
+	if client.ImgKey == "" || client.SubKey == "" {
+		_ = client.FetchWbiKeys()
+	}
+
 	data, err := client.GetFavoriteResources(mediaID, pn, ps)
 	if err != nil {
 		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
@@ -262,9 +268,35 @@ func getOnlineFavoriteContents(c *gin.Context) {
 		return
 	}
 
+	// 转换为前端期望的格式
+	list := make([]map[string]interface{}, 0)
+	for _, item := range data.Media {
+		bvid := ""
+		if item.UGC != nil {
+			bvid = item.UGC.Bvid
+		}
+		list = append(list, map[string]interface{}{
+			"id":          item.ID,
+			"title":       item.Title,
+			"cover":       item.Cover,
+			"bvid":        bvid,
+			"duration":    item.Duration,
+			"upper_mid":   item.Upper.Mid,
+			"upper_name":  item.Upper.Name,
+			"upper_face":  item.Upper.Face,
+			"fav_time":    item.FavTime,
+			"pub_time":    item.Pubtime,
+			"intro":       item.Intro,
+		})
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"info":  data.Info,
-		"list":  data.Media,
+		"info": map[string]interface{}{
+			"title":       data.Info.Title,
+			"cover":       data.Info.Cover,
+			"media_count": data.Info.MediaCount,
+		},
+		"list":  list,
 		"total": data.Page.Count,
 		"page":  pn,
 		"size":  ps,

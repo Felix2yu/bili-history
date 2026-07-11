@@ -275,15 +275,17 @@ func getOnlineFavoriteContents(c *gin.Context) {
 		list := make([]map[string]interface{}, 0)
 		for _, item := range data.Media {
 			list = append(list, map[string]interface{}{
-				"id":          item.ID,
-				"title":       item.Title,
-				"cover":       item.Cover,
-				"bvid":        item.Bvid,
-				"duration":    item.Duration,
-				"upper_mid":   item.Upper.Mid,
-				"upper_name":  item.Upper.Name,
-				"upper_face":  item.Upper.Face,
-				"pub_time":    item.Pubtime,
+				"id":       item.ID,
+				"title":    item.Title,
+				"cover":    item.Cover,
+				"bvid":     item.Bvid,
+				"duration": item.Duration,
+				"upper": map[string]interface{}{
+					"mid":  item.Upper.Mid,
+					"name": item.Upper.Name,
+					"face": item.Upper.Face,
+				},
+				"pub_time": item.Pubtime,
 			})
 		}
 

@@ -284,8 +284,8 @@
                   </div>
                 </div>
 
-                <!-- 内容分页 -->
-                <div v-if="contentsTotalPages > 1" class="flex justify-center mt-6">
+                <!-- 内容分页（合集不分页，B站API返回全部数据） -->
+                <div v-if="contentsTotalPages > 1 && !isSeasonFolder" class="flex justify-center mt-6">
                   <Pagination
                     :current-page="contentsPage"
                     :total-pages="contentsTotalPages"
@@ -403,6 +403,11 @@ const totalPages = computed(() => {
 // 计算内容总页数
 const contentsTotalPages = computed(() => {
   return Math.ceil(contentsTotalItems.value / contentsPageSize.value)
+})
+
+// 判断当前是否为合集（B站合集API不分页，返回全部数据）
+const isSeasonFolder = computed(() => {
+  return currentFolder.value?.type === 21
 })
 
 // 监听活动标签变化

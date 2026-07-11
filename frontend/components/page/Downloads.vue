@@ -96,11 +96,12 @@
               <!-- 作者信息 -->
               <div class="flex items-center space-x-1">
                 <img
-                  :src="normalizeImageUrl(video.author_face) || 'https://i1.hdslb.com/bfs/face/1b6f746be0d0c8324e01e618c5e85e113a8b38be.jpg'"
+                  v-if="normalizeImageUrl(video.author_face)"
+                  :src="normalizeImageUrl(video.author_face)"
                   :alt="video.author_name"
                   class="w-3.5 h-3.5 rounded-full object-cover cursor-pointer"
                   loading="lazy"
-                  onerror="this.src='https://i1.hdslb.com/bfs/face/1b6f746be0d0c8324e01e618c5e85e113a8b38be.jpg'"
+                  onerror="this.style.display='none'"
                   @click.stop="handleAuthorClick(video)"
                 />
                 <span class="text-[10px] text-gray-600 dark:text-gray-400 truncate hover:text-[#fb7299] cursor-pointer" @click.stop="handleAuthorClick(video)">

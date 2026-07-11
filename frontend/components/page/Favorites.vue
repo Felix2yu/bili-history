@@ -263,7 +263,7 @@
                           :alt="getAuthorName(item)"
                           class="w-3.5 h-3.5 rounded-full object-cover cursor-pointer"
                           loading="lazy"
-                          onerror="this.src='https://i1.hdslb.com/bfs/face/1b6f746be0d0c8324e01e618c5e85e113a8b38be.jpg'"
+                          onerror="this.style.display='none'"
                           @click.stop="openAuthorPage(item)"
                         />
                         <span class="text-[10px] text-gray-600 dark:text-gray-400 truncate hover:text-[#fb7299] cursor-pointer" @click.stop="openAuthorPage(item)">
@@ -741,12 +741,10 @@ function getAuthorFace(item) {
   }
   // 再检查upper_mid关联的信息（本地数据可能有的另一种形式）
   else if (item.upper_mid && typeof item.upper_mid === 'number') {
-    // 如果只有mid而没有头像，返回默认头像
-    return 'https://i1.hdslb.com/bfs/face/1b6f746be0d0c8324e01e618c5e85e113a8b38be.jpg'
+    return ''
   }
-  // 最后返回默认头像
   else {
-    return 'https://i1.hdslb.com/bfs/face/1b6f746be0d0c8324e01e618c5e85e113a8b38be.jpg'
+    return ''
   }
 }
 

@@ -22,7 +22,8 @@ const (
 	WatchLaterDelURL        = "https://api.bilibili.com/x/v2/history/toview/del"
 	DynamicSpaceURL         = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
 	UserCardURL             = "https://api.bilibili.com/x/web-interface/card"
-	FavoriteFolderListURL   = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"
+	FavoriteFolderListURL        = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"
+	FavoriteCollectedListURL     = "https://api.bilibili.com/x/v3/fav/folder/collected/list"
 	FavoriteResourceListURL = "https://api.bilibili.com/x/v3/fav/resource/list"
 	FavoriteDealURL         = "https://api.bilibili.com/x/v3/fav/resource/deal"
 	LikedVideoURL           = "https://api.bilibili.com/x/space/like/video"
@@ -751,6 +752,30 @@ func (c *Client) GetFavoriteFolderList() (*FavFolderListData, error) {
 		"up_mid": c.DedeUserID,
 	}
 	body, err := c.Get(FavoriteFolderListURL, params)
+	if err != nil {
+		return nil, err
+	}
+	var resp BiliResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return nil, fmt.Errorf("unmarshal response error: %w", err)
+	}
+	if resp.Code != 0 {
+		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+	}
+	var data FavFolderListData
+	if err := json.Unmarshal(resp.Data, &data); err != nil {
+		return nil, fmt.Errorf("unmarshal data error: %w", err)
+	}
+	return &data, nil
+}
+
+func (c *Client) GetCollectedFavoriteFolders(upMid string, pn, ps int) (*FavFolderListData, error) {
+	params := map[string]string{
+		"up_mid": upMid,
+		"pn":     fmt.Sprintf("%d", pn),
+		"ps":     fmt.Sprintf("%d", ps),
+	}
+	body, err := c.Get(FavoriteCollectedListURL, params)
 	if err != nil {
 		return nil, err
 	}

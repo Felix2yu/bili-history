@@ -33,19 +33,6 @@
                 </svg>
                 <span>我收藏的</span>
               </button>
-
-              <button
-                @click="activeTab = 'local'"
-                class="py-2 px-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200"
-                :class="activeTab === 'local'
-                  ? 'bg-accent/10 text-accent'
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5 hover:text-gray-700 dark:hover:text-gray-300'"
-              >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                </svg>
-                <span>本地</span>
-              </button>
             </nav>
           </div>
 
@@ -65,7 +52,6 @@
               </div>
               <div class="flex items-center space-x-2">
                 <button
-                  v-if="activeTab !== 'local'"
                   @click="fetchAllContents"
                   class="flex items-center px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
                   :disabled="fetchingAll"
@@ -129,10 +115,6 @@
                     {{ activeTab === 'created' ? '您还没有创建过收藏夹' : '您还没有收藏任何收藏夹' }}
                   </p>
                 </template>
-                <!-- 本地收藏夹为空 -->
-                <template v-else-if="activeTab === 'local'">
-                  <p class="mt-2 text-sm text-gray-400">您的本地数据库中没有保存的收藏夹</p>
-                </template>
               </div>
 
               <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 stagger-children">
@@ -151,7 +133,6 @@
                       @click="viewFolderContents(folder)"
                     />
                     <button
-                      v-if="activeTab !== 'local'"
                       @click.stop="startDownloadFolder(folder)"
                       class="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-lg bg-black/40 text-white hover:bg-black/60 transition-colors"
                       title="下载收藏夹中的视频"
@@ -223,7 +204,6 @@
 
                   <div class="flex items-center space-x-3 mt-2 sm:mt-0">
                     <button
-                      v-if="activeTab !== 'local'"
                       @click="startDownloadFolder(currentFolder)"
                       class="flex items-center px-3 py-1.5 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                     >
@@ -362,7 +342,6 @@ import DownloadDialog from '../DownloadDialog.vue'
 import {
   getCreatedFavoriteFolders,
   getCollectedFavoriteFolders,
-  getLocalFavoriteFolders,
   getFavoriteContents,
   getLocalFavoriteContents,
   getLoginStatus
@@ -531,24 +510,11 @@ async function fetchFavorites() {
         ps: pageSize.value,
         keyword: searchKeyword.value || undefined
       })
-    } else if (activeTab.value === 'local') {
-      response = await getLocalFavoriteFolders({
-        page: currentPage.value,
-        size: pageSize.value
-      })
     }
 
     if (response.data.status === 'success') {
-      if (activeTab.value === 'created') {
-        favorites.value = response.data.data.list || []
-        totalItems.value = response.data.data.count || 0
-      } else if (activeTab.value === 'collected') {
-        favorites.value = response.data.data.list || []
-        totalItems.value = response.data.data.count || 0
-      } else if (activeTab.value === 'local') {
-        favorites.value = response.data.data.list || []
-        totalItems.value = response.data.data.total || 0
-      }
+      favorites.value = response.data.data.list || []
+      totalItems.value = response.data.data.count || 0
 
       // 如果收藏夹没有封面，使用第一个视频的封面
       for (const folder of favorites.value) {
@@ -627,36 +593,14 @@ async function loadContents() {
 
     console.log(`开始加载收藏夹[${folderId}]第${contentsPage.value}页内容`)
 
-    if (activeTab.value === 'local') {
-      response = await getLocalFavoriteContents({
-        media_id: folderId,
-        page: contentsPage.value,
-        size: contentsPageSize.value
-      })
+    response = await getFavoriteContents({
+      media_id: folderId,
+      pn: contentsPage.value,
+      ps: contentsPageSize.value,
+      keyword: searchKeyword.value || undefined
+    })
 
-      if (response.data.status === 'success') {
-        folderContents.value = response.data.data.list || []
-        contentsTotalItems.value = response.data.data.total || 0
-        console.log(`加载到本地收藏夹内容 ${folderContents.value.length} 条`)
-      } else {
-        console.error('本地收藏夹请求失败:', response.data)
-        showNotify({ type: 'danger', message: response.data.message || '获取本地收藏夹内容失败' })
-      }
-    } else {
-      console.log('发送在线收藏夹请求:', {
-        media_id: folderId,
-        pn: contentsPage.value,
-        ps: contentsPageSize.value
-      })
-
-      response = await getFavoriteContents({
-        media_id: folderId,
-        pn: contentsPage.value,
-        ps: contentsPageSize.value,
-        keyword: searchKeyword.value || undefined
-      })
-
-      console.log('收到在线收藏夹响应:', response.data)
+    console.log('收到在线收藏夹响应:', response.data)
 
       if (response.data.status === 'success') {
         // 更新收藏夹信息
@@ -696,11 +640,9 @@ async function loadContents() {
           showNotify({ type: 'warning', message: '无法从响应中提取内容数据' })
         }
       } else {
-        console.error('在线收藏夹请求失败:', response.data)
+        console.error('收藏夹请求失败:', response.data)
         showNotify({ type: 'danger', message: response.data.message || '获取收藏夹内容失败' })
       }
-    }
-
 
   } catch (error) {
     console.error('获取收藏夹内容出错:', error)
@@ -765,11 +707,8 @@ function formatTime(timestamp) {
   if (!timestamp) return '未知'
 
   const date = new Date(timestamp * 1000)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
 // 获取作者头像
@@ -828,41 +767,23 @@ async function fetchAllContents() {
 
     console.log('开始获取全部收藏内容，收藏夹ID:', folderId, '每页大小:', contentsPageSize.value)
 
-    if (activeTab.value === 'local') {
-      fetchApi = (page) => getLocalFavoriteContents({
+    fetchApi = (page) => {
+      console.log(`请求收藏夹第${page}页, 参数:`, {
         media_id: folderId,
-        page: page,
-        size: contentsPageSize.value
+        pn: page,
+        ps: contentsPageSize.value
       })
+      return getFavoriteContents({
+        media_id: folderId,
+        pn: page,
+        ps: contentsPageSize.value
+      })
+    }
 
-      processResponse = (response, page) => {
-        console.log(`处理本地收藏夹第${page}页响应:`, response.data)
-        if (response.data.status === 'success') {
-          return {
-            contents: response.data.data.list || [],
-            total: response.data.data.total || 0
-          }
-        }
-        return { contents: [], total: 0 }
-      }
-    } else {
-      fetchApi = (page) => {
-        console.log(`请求在线收藏夹第${page}页, 参数:`, {
-          media_id: folderId,
-          pn: page,
-          ps: contentsPageSize.value
-        })
-        return getFavoriteContents({
-          media_id: folderId,
-          pn: page,
-          ps: contentsPageSize.value
-        })
-      }
-
-      processResponse = (response, page) => {
-        console.log(`处理在线收藏夹第${page}页响应:`, response.data)
-        if (response.data.status === 'success') {
-          // 更新收藏夹信息
+    processResponse = (response, page) => {
+      console.log(`处理收藏夹第${page}页响应:`, response.data)
+      if (response.data.status === 'success') {
+        // 更新收藏夹信息
           if (response.data.data && response.data.data.info && page === 1) {
             const info = response.data.data.info
             currentFolder.value.title = info.title || currentFolder.value.title
@@ -900,7 +821,6 @@ async function fetchAllContents() {
         console.error(`第${page}页: 请求失败:`, response.data)
         return { contents: [], total: 0 }
       }
-    }
 
     // 第一页请求，获取总数量信息
     console.log('获取第1页数据...')

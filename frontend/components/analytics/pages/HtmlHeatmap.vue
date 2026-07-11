@@ -85,7 +85,7 @@ const containerRef = ref(null)
 const heatmapData = ref({})
 const tooltip = ref({ visible: false, cell: null, x: 0, y: 0 })
 
-const dayLabels = ['日', '一', '二', '三', '四', '五', '六']
+const dayLabels = ['一', '二', '三', '四', '五', '六', '日']
 
 // 计算年份的所有周
 const weeks = computed(() => {
@@ -97,12 +97,14 @@ const weeks = computed(() => {
   const startDate = new Date(Date.UTC(year, 0, 1))
   const endDate = new Date(Date.UTC(year, 11, 31))
 
-  // 找到第一个周日
+  // 找到第一个周一 (getDay: 0=周日,1=周一...6=周六)
   let current = new Date(startDate)
   const firstDayOfWeek = current.getDay()
-  if (firstDayOfWeek !== 0) {
-    // 回退到上一个周日
-    current = new Date(current.getTime() - (firstDayOfWeek * 24 * 60 * 60 * 1000))
+  // 转换为周一起始: 0=周一,6=周日
+  const daysToMonday = (firstDayOfWeek + 6) % 7
+  if (daysToMonday !== 0) {
+    // 回退到上一个周一
+    current = new Date(current.getTime() - (daysToMonday * 24 * 60 * 60 * 1000))
   }
 
   let lastMonth = -1

@@ -591,8 +591,9 @@ watch(() => props.isBatchMode, (newVal) => {
 })
 
 // 辅助函数：格式化日期
-const formatDate = (date) => `${date.getMonth() + 1}/${date.getDate()}`
-const formatDateWithYear = (date) => `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
+const pad = (n) => String(n).padStart(2, '0')
+const formatDate = (date) => `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+const formatDateWithYear = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 const formatDateForAPI = (date) => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')

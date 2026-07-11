@@ -41,14 +41,18 @@ export const formatTimestamp = (timestamp) => {
   const isYesterday = yesterday.toDateString() === date.toDateString()
   const timeString = date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
 
+  const pad = (n) => String(n).padStart(2, '0')
+  const mmdd = `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+  const yyyymmdd = `${date.getFullYear()}-${mmdd}`
+
   if (isToday) {
     return timeString
   } else if (isYesterday) {
     return `昨天 ${timeString}`
   } else if (now.getFullYear() === date.getFullYear()) {
-    return `${date.getMonth() + 1}-${date.getDate()} ${timeString}`
+    return `${mmdd} ${timeString}`
   } else {
-    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${timeString}`
+    return `${yyyymmdd} ${timeString}`
   }
 }
 

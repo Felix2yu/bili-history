@@ -182,7 +182,8 @@ const timeText = computed(() => {
   if (!timestamp) return ''
   if (props.timeFormat === 'date') {
     const date = new Date(timestamp * 1000)
-    return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
+    const pad = (n) => String(n).padStart(2, '0')
+    return `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
   }
   return ''
 })

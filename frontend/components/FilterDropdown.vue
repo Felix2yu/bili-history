@@ -335,12 +335,13 @@ const formatDateForInput = (dateStr) => {
   }
 }
 
-// 格式化日期为显示格式 (YYYY/MM/DD)
+// 格式化日期为显示格式 (YYYY-MM-DD)
 const formatDateForDisplay = (dateStr) => {
   try {
     const date = new Date(dateStr)
     if (isNaN(date.getTime())) return ''
-    return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`
+    const pad = (n) => String(n).padStart(2, '0')
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
   } catch (e) {
     console.error('日期格式化错误:', e)
     return ''

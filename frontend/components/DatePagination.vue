@@ -214,7 +214,7 @@ const showCalendar = ref(false)
 const showYearPicker = ref(false)
 const showMonthPicker = ref(false)
 const dateBtnRef = ref(null)
-const weekHeaders = ['日', '一', '二', '三', '四', '五', '六']
+const weekHeaders = ['一', '二', '三', '四', '五', '六', '日']
 
 const today = computed(() => {
   const now = new Date()
@@ -224,8 +224,11 @@ const today = computed(() => {
 const formattedDate = computed(() => {
   const d = parseDate(props.currentDate)
   if (!d) return props.currentDate
-  const weekday = weekHeaders[d.getDay()]
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} 周${weekday}`
+  // getDay(): 0=周日,1=周一...6=周六 -> 转换为 0=周一,6=周日
+  const weekdayIndex = (d.getDay() + 6) % 7
+  const weekday = weekHeaders[weekdayIndex]
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} 周${weekday}`
 })
 
 const hasPrev = computed(() => {
@@ -301,11 +304,12 @@ function isMonthAvailable(year, month) {
 const calendarCells = computed(() => {
   const year = viewDate.value.getFullYear()
   const month = viewDate.value.getMonth()
-  const firstDay = new Date(year, month, 1).getDay()
+  // getDay(): 0=周日 -> 转换为周一起始: 0=周一,6=周日
+  const firstDayOfWeek = (new Date(year, month, 1).getDay() + 6) % 7
   const daysInMonth = new Date(year, month + 1, 0).getDate()
 
   const cells = []
-  for (let i = 0; i < firstDay; i++) {
+  for (let i = 0; i < firstDayOfWeek; i++) {
     cells.push({ day: null, dateStr: '', available: false, isToday: false })
   }
   for (let d = 1; d <= daysInMonth; d++) {

@@ -1112,7 +1112,7 @@ export const getFavoriteContents = (params = {}) => {
  * @returns {Promise<Object>} 收藏夹列表
  */
 export const getLocalFavoriteFolders = (params = {}) => {
-  return instance.get('/favorite/list', { params })
+  return instance.get('/favorite/local/list', { params })
 }
 
 /**

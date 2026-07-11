@@ -20,6 +20,7 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 	favorite := r.Group("/favorite")
 	{
 		favorite.GET("/list", getFavoriteList)
+		favorite.GET("/local/list", getLocalFavoriteFolders)
 		favorite.GET("/collected/list", getCollectedFavoriteFolders)
 		favorite.GET("/content/list", getLocalFavoriteContents)
 		favorite.POST("/sync", syncFavorites)
@@ -147,16 +148,72 @@ func batchCheckFavoriteStatus(c *gin.Context) {
 	}))
 }
 
-func getCollectedFavoriteFolders(c *gin.Context) {
+func getLocalFavoriteFolders(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+
 	list, total, err := database.GetFavoriteFolders(true)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("获取收藏夹失败: "+err.Error()))
+		c.JSON(http.StatusOK, models.ErrorResponse("获取本地收藏夹列表失败: "+err.Error()))
 		return
+	}
+
+	start := (page - 1) * size
+	end := start + size
+	if start > len(list) {
+		start = len(list)
+	}
+	if end > len(list) {
+		end = len(list)
+	}
+	pagedList := list[start:end]
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"list":  pagedList,
+		"total": total,
+		"page":  page,
+		"size":  size,
+	}))
+}
+
+func getCollectedFavoriteFolders(c *gin.Context) {
+	cfg := config.GetConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("未配置 SESSDATA，无法获取收藏夹"))
+		return
+	}
+
+	pn, _ := strconv.Atoi(c.DefaultQuery("pn", "1"))
+	ps, _ := strconv.Atoi(c.DefaultQuery("ps", "20"))
+	keyword := c.Query("keyword")
+
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+
+	data, err := client.GetCollectedFavoriteFolders(cfg.DedeUserID, pn, ps)
+	if err != nil {
+		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+			return
+		}
+		c.JSON(http.StatusOK, models.ErrorResponse("获取收藏的收藏夹失败: "+err.Error()))
+		return
+	}
+
+	// 按关键词过滤
+	var list []biliapi.FavFolderInfo
+	if keyword != "" {
+		for _, f := range data.List {
+			if strings.Contains(f.Title, keyword) || strings.Contains(f.Intro, keyword) {
+				list = append(list, f)
+			}
+		}
+	} else {
+		list = data.List
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
 		"list":     list,
-		"count":    total,
+		"count":    data.Count,
 		"has_more": false,
 	}))
 }
@@ -331,30 +388,27 @@ func localBatchFavoriteResource(c *gin.Context) {
 }
 
 func getFavoriteList(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	cfg := config.GetConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("未配置 SESSDATA，无法获取收藏夹"))
+		return
+	}
 
-	list, total, err := database.GetFavoriteFolders(true)
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+
+	data, err := client.GetFavoriteFolderList()
 	if err != nil {
+		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+			return
+		}
 		c.JSON(http.StatusOK, models.ErrorResponse("获取收藏夹列表失败: "+err.Error()))
 		return
 	}
 
-	start := (page - 1) * size
-	end := start + size
-	if start > len(list) {
-		start = len(list)
-	}
-	if end > len(list) {
-		end = len(list)
-	}
-	pagedList := list[start:end]
-
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":  pagedList,
-		"total": total,
-		"page":  page,
-		"size":  size,
+		"list":  data.List,
+		"total": data.Count,
 	}))
 }
 

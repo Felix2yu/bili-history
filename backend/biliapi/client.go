@@ -290,7 +290,7 @@ func (c *Client) getHeaders() map[string]string {
 		"Origin":             "https://www.bilibili.com",
 		"Accept":             "application/json, text/plain, */*",
 		"Accept-Language":    "zh-CN,zh;q=0.9,en;q=0.8",
-		"Accept-Encoding":    "gzip, deflate, br",
+		"Accept-Encoding":    "gzip, deflate",
 		"Connection":         "keep-alive",
 		"Sec-Ch-Ua":          `"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"`,
 		"Sec-Ch-Ua-Mobile":   "?0",

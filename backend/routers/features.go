@@ -294,7 +294,7 @@ func getOnlineFavoriteContents(c *gin.Context) {
 				"media_count": data.Info.MediaCount,
 			},
 			"list":  list,
-			"total": data.Page.Count,
+			"total": data.Info.MediaCount,
 			"page":  pn,
 			"size":  ps,
 		}))

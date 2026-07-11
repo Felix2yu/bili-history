@@ -775,6 +775,18 @@ func (c *Client) GetCollectedFavoriteFolders(upMid string, pn, ps int) (*FavFold
 		"pn":     fmt.Sprintf("%d", pn),
 		"ps":     fmt.Sprintf("%d", ps),
 	}
+
+	// 确保获取 wbi keys
+	if c.ImgKey == "" || c.SubKey == "" {
+		_ = c.FetchWbiKeys()
+	}
+
+	// 添加 wbi 签名
+	if c.ImgKey != "" && c.SubKey != "" {
+		w_rid := wbiSign(params, c.ImgKey, c.SubKey)
+		params["w_rid"] = w_rid
+	}
+
 	body, err := c.Get(FavoriteCollectedListURL, params)
 	if err != nil {
 		return nil, err

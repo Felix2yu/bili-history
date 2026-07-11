@@ -568,6 +568,8 @@ async function viewFolderContents(folder) {
   contentsPage.value = 1
   folderContents.value = []
 
+  console.log('查看收藏夹:', { id: folder.id, media_id: folder.media_id, type: folder.type, title: folder.title })
+
   // 先加载内容
   const contents = await loadContents()
   console.log(`收藏夹[${folder.media_id || folder.id}]加载完成，共${contents.length}个视频`)
@@ -593,7 +595,7 @@ async function loadContents() {
     const folderId = currentFolder.value.media_id || currentFolder.value.id
     const isSeason = currentFolder.value.type === 21
 
-    console.log(`开始加载收藏夹[${folderId}]第${contentsPage.value}页内容`)
+    console.log(`开始加载收藏夹[${folderId}]第${contentsPage.value}页内容, type=${currentFolder.value.type}, isSeason=${isSeason}`)
 
     // 优先读本地（合集不读本地，直接在线获取）
     if (!isSeason) {
@@ -619,9 +621,10 @@ async function loadContents() {
       response = await getOnlineFavoriteContents(params)
     }
 
-    console.log('收到收藏夹响应:', response.data)
+    console.log('收到收藏夹响应:', JSON.stringify(response.data))
 
       if (response.data.status === 'success') {
+        console.log('响应数据结构:', { hasList: !!response.data.data?.list, listLength: response.data.data?.list?.length, hasMedias: !!response.data.data?.medias })
         // 更新收藏夹信息
         if (response.data.data && response.data.data.info) {
           const info = response.data.data.info

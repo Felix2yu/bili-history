@@ -199,6 +199,8 @@ func (s *SQLiteDB) EnsureTableForYear(year int) error {
 			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_view_at ON %s (view_at);", tableName, tableName),
 			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_remark_time ON %s (remark_time);", tableName, tableName),
 			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_bvid ON %s (bvid);", tableName, tableName),
+			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_tag_name ON %s (tag_name);", tableName, tableName),
+			fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_main_category ON %s (main_category);", tableName, tableName),
 		}
 
 		for _, idxSQL := range indexSQLs {
@@ -255,15 +257,19 @@ func MigrateStatusColumn() {
 			}
 		}
 
-		// Ensure bvid index exists
-		var indexCount int
-		_ = db.GetDB().QueryRow("SELECT COUNT(*) FROM pragma_table_index(?) WHERE name=?", tableName, fmt.Sprintf("idx_%s_bvid", tableName)).Scan(&indexCount)
-		if indexCount == 0 {
-			_, err := db.GetDB().Exec(fmt.Sprintf("CREATE INDEX IF NOT EXISTS idx_%s_bvid ON %s (bvid)", tableName, tableName))
-			if err != nil {
-				utils.LogWarning("Migration: failed to add bvid index to %s: %v", tableName, err)
-			} else {
-				utils.LogInfo("Migration: added bvid index to %s", tableName)
+		// Ensure indexes exist
+		indexesToEnsure := []string{"bvid", "tag_name", "main_category"}
+		for _, idxCol := range indexesToEnsure {
+			idxName := fmt.Sprintf("idx_%s_%s", tableName, idxCol)
+			var indexCount int
+			_ = db.GetDB().QueryRow("SELECT COUNT(*) FROM pragma_table_index(?) WHERE name=?", tableName, idxName).Scan(&indexCount)
+			if indexCount == 0 {
+				_, err := db.GetDB().Exec(fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s (%s)", idxName, tableName, idxCol))
+				if err != nil {
+					utils.LogWarning("Migration: failed to add %s index to %s: %v", idxCol, tableName, err)
+				} else {
+					utils.LogInfo("Migration: added %s index to %s", idxCol, tableName)
+				}
 			}
 		}
 	}

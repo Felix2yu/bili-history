@@ -4,7 +4,7 @@
     <div class="relative w-32 sm:w-40 flex-shrink-0 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
       <img
         v-if="video.cover"
-        :src="video.cover"
+        :src="coverUrl"
         :alt="video.title"
         class="w-full h-full object-cover"
         loading="lazy"
@@ -32,7 +32,7 @@
         <div class="flex items-center gap-1.5 mt-1.5">
           <img
             v-if="video.author_face"
-            :src="video.author_face"
+            :src="authorFaceUrl"
             class="w-4 h-4 rounded-full object-cover"
             loading="lazy"
           />
@@ -81,6 +81,7 @@
 <script setup>
 import { computed } from 'vue'
 import { formatDuration, formatTimestamp, getBusinessType } from '~/utils/format'
+import { normalizeImageUrl } from '~/utils/imageUrl'
 
 const props = defineProps({
   video: {
@@ -100,6 +101,9 @@ const completionRateText = computed(() => {
   if (completionRate.value >= 90) return '看完'
   return `${completionRate.value}%`
 })
+
+const coverUrl = computed(() => normalizeImageUrl(props.video.cover))
+const authorFaceUrl = computed(() => normalizeImageUrl(props.video.author_face))
 
 function getDeviceName(dt) {
   switch (dt) {

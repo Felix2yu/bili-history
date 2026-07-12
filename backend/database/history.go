@@ -10,6 +10,9 @@ import (
 	"bilibili-history-go/utils"
 )
 
+// historyColumns 定义列表查询所需的列，避免 SELECT * 的性能开销
+const historyColumns = "id, title, long_title, cover, covers, uri, oid, epid, bvid, page, cid, part, business, dt, videos, author_name, author_face, author_mid, view_at, progress, badge, show_title, duration, current, total, new_desc, is_finish, is_fav, kid, tag_name, live_status, main_category, remark, remark_time, status"
+
 type HistoryQueryParams struct {
 	Page           int
 	Size           int
@@ -69,7 +72,7 @@ func GetHistoryPage(params HistoryQueryParams) (*models.PagedResponse, []int, er
 			continue
 		}
 
-		query := fmt.Sprintf("SELECT * FROM %s WHERE 1=1", tableName)
+		query := fmt.Sprintf("SELECT %s FROM %s WHERE 1=1", historyColumns, tableName)
 
 		if startTimestamp > 0 && endTimestamp > 0 {
 			query += " AND view_at >= ? AND view_at < ?"
@@ -118,10 +121,10 @@ func GetHistoryPage(params HistoryQueryParams) (*models.PagedResponse, []int, er
 	}
 
 	finalQuery := fmt.Sprintf(`
-		SELECT * FROM (%s)
+		SELECT %s FROM (%s)
 		ORDER BY view_at %s
 		LIMIT ? OFFSET ?
-	`, baseQuery, sortDir)
+	`, historyColumns, baseQuery, sortDir)
 
 	queryParams := make([]interface{}, len(paramsList))
 	copy(queryParams, paramsList)
@@ -262,7 +265,7 @@ func SearchHistory(params HistorySearchParams) (*models.PagedResponse, []int, er
 			businessFilter = whereClause + " AND business NOT IN ('live', 'article', 'article-list')"
 		}
 
-		subQuery := fmt.Sprintf("SELECT * FROM %s %s", tableName, businessFilter)
+		subQuery := fmt.Sprintf("SELECT %s FROM %s %s", historyColumns, tableName, businessFilter)
 		subQueries = append(subQueries, subQuery)
 		baseParams = append(baseParams, searchParams...)
 	}
@@ -291,10 +294,10 @@ func SearchHistory(params HistorySearchParams) (*models.PagedResponse, []int, er
 	}
 
 	query := fmt.Sprintf(`
-		SELECT * FROM (%s)
+		SELECT %s FROM (%s)
 		ORDER BY view_at %s
 		LIMIT ? OFFSET ?
-	`, baseQuery, sortDir)
+	`, historyColumns, baseQuery, sortDir)
 
 	queryParams := make([]interface{}, len(baseParams))
 	copy(queryParams, baseParams)
@@ -1027,7 +1030,7 @@ func GetAllHistoryRecords(year int) ([]map[string]interface{}, error) {
 		return nil, nil
 	}
 
-	rows, err := conn.Query(fmt.Sprintf("SELECT * FROM %s ORDER BY view_at DESC", tableName))
+	rows, err := conn.Query(fmt.Sprintf("SELECT %s FROM %s ORDER BY view_at DESC", historyColumns, tableName))
 	if err != nil {
 		return nil, err
 	}

@@ -1,5 +1,5 @@
 <template>
-  <div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-7xl mx-auto">
+  <div class="px-2 sm:px-4 lg:px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
     <!-- 标题 -->
     <h2 class="text-2xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
       周报 / 月报
@@ -92,7 +92,7 @@
             <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
           </div>
 
-          <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+          <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
             <ReportVideoCard
               v-for="video in group"
               :key="`${video.bvid}-${video.view_at}`"

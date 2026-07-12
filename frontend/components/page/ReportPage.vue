@@ -101,6 +101,16 @@
           </div>
         </div>
       </div>
+
+      <!-- 加载更多 -->
+      <div v-if="hasMore" class="text-center py-4">
+        <button
+          @click="loadMore"
+          class="px-6 py-2 text-sm font-medium text-[#fb7299] bg-[#fb7299]/10 rounded-full hover:bg-[#fb7299]/20 transition-colors"
+        >
+          加载更多 ({{ displayCount }}/{{ totalVideoCount }})
+        </button>
+      </div>
     </template>
 
     <!-- 错误状态 -->
@@ -130,6 +140,7 @@ const currentMonth = ref(new Date().getMonth() + 1)
 const reportData = ref(null)
 const loading = ref(false)
 const error = ref(null)
+const displayCount = ref(30)
 
 function getCurrentWeek() {
   const now = new Date()
@@ -144,14 +155,24 @@ function getCurrentWeek() {
 const groupedVideos = computed(() => {
   if (!reportData.value?.videos) return {}
   const groups = {}
+  let count = 0
   for (const video of reportData.value.videos) {
+    if (count >= displayCount.value) break
     const date = new Date(video.view_at * 1000)
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     if (!groups[key]) groups[key] = []
     groups[key].push(video)
+    count++
   }
   return groups
 })
+
+const totalVideoCount = computed(() => reportData.value?.videos?.length || 0)
+const hasMore = computed(() => displayCount.value < totalVideoCount.value)
+
+function loadMore() {
+  displayCount.value += 30
+}
 
 function formatDateGroup(dateStr) {
   const date = new Date(dateStr + 'T00:00:00')
@@ -173,6 +194,7 @@ async function fetchReport() {
   loading.value = true
   error.value = null
   reportData.value = null
+  displayCount.value = 30
 
   try {
     let response

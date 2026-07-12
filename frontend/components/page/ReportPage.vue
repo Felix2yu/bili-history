@@ -35,14 +35,10 @@
           <button
             v-for="tab in tabs"
             :key="tab.key"
-            @click="selectTab(tab.key)"
-            class="w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200"
-            :class="selectedTab === tab.key
-              ? 'border-[#fb7299] bg-[#fb7299]/5'
-              : 'border-gray-200 dark:border-gray-700 hover:border-[#fb7299]/50 hover:bg-gray-50 dark:hover:bg-gray-700/50'"
+            @click="activeTab = tab.key; showSelector = false"
+            class="w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200 hover:border-[#fb7299]/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-gray-200 dark:border-gray-700"
           >
-            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-              :class="selectedTab === tab.key ? 'bg-[#fb7299]/10 text-[#fb7299]' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-700 text-gray-500">
               <svg v-if="tab.key === 'yearly'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -57,21 +53,8 @@
               <div class="font-medium text-gray-800 dark:text-gray-200">{{ tab.label }}</div>
               <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ tab.desc }}</div>
             </div>
-            <div v-if="selectedTab === tab.key" class="w-5 h-5 rounded-full bg-[#fb7299] flex items-center justify-center flex-shrink-0">
-              <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
           </button>
         </div>
-        <button
-          @click="confirmSelection"
-          :disabled="!selectedTab"
-          class="w-full py-3 rounded-xl font-medium text-white transition-all duration-200"
-          :class="selectedTab ? 'bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] hover:shadow-lg hover:shadow-[#fb7299]/20' : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'"
-        >
-          进入概览
-        </button>
       </div>
     </div>
 
@@ -192,7 +175,6 @@ const tabs = [
 // 如果有 query 参数，直接跳过选择弹窗
 const hasInitialTab = !!(route.query.tab)
 const showSelector = ref(!hasInitialTab)
-const selectedTab = ref(null)
 const activeTab = ref(hasInitialTab ? (route.query.tab === 'monthly' ? 'monthly' : route.query.tab === 'weekly' ? 'weekly' : 'yearly') : '')
 const currentYear = ref(new Date().getFullYear())
 const currentWeek = ref(getCurrentWeek())
@@ -201,28 +183,31 @@ const reportData = ref(null)
 const loading = ref(false)
 const error = ref(null)
 
+// ISO 8601 周计算：周一开始，周日结束
 function getCurrentWeek() {
   const now = new Date()
-  const jan4 = new Date(now.getFullYear(), 0, 4)
-  const weekday = jan4.getDay() || 7 // Sunday = 7
-  const week1Monday = new Date(jan4)
-  week1Monday.setDate(jan4.getDate() - weekday + 1)
-  const diffDays = Math.floor((now - week1Monday) / 86400000)
+  const jan1 = new Date(now.getFullYear(), 0, 1)
+  // 找到1月1日之后的第一个周一
+  const dayOfWeek = jan1.getDay() || 7 // 转换为 1=周一 ... 7=周日
+  const firstMonday = new Date(jan1)
+  if (dayOfWeek > 1) {
+    firstMonday.setDate(jan1.getDate() + (8 - dayOfWeek))
+  }
+  // 如果当前日期在第一个周一之前，属于上一年的最后一周
+  if (now < firstMonday) {
+    // 计算上一年最后一周
+    const prevJan1 = new Date(now.getFullYear() - 1, 0, 1)
+    const prevDayOfWeek = prevJan1.getDay() || 7
+    const prevFirstMonday = new Date(prevJan1)
+    if (prevDayOfWeek > 1) {
+      prevFirstMonday.setDate(prevJan1.getDate() + (8 - prevDayOfWeek))
+    }
+    const dec31 = new Date(now.getFullYear() - 1, 11, 31)
+    const diffDays = Math.floor((dec31 - prevFirstMonday) / 86400000)
+    return Math.max(1, Math.floor(diffDays / 7) + 1)
+  }
+  const diffDays = Math.floor((now - firstMonday) / 86400000)
   return Math.max(1, Math.floor(diffDays / 7) + 1)
-}
-
-function selectTab(key) {
-  selectedTab.value = key
-}
-
-function confirmSelection() {
-  if (!selectedTab.value) return
-  activeTab.value = selectedTab.value
-  showSelector.value = false
-}
-
-function handleSelectorClose() {
-  // 如果没有选择过，不允许关闭弹窗
 }
 
 function switchTab(key) {

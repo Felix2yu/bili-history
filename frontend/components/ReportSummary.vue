@@ -91,13 +91,12 @@
           </svg>
           每日观看
         </h4>
-        <div class="relative" style="height: 100px;">
-          <div class="absolute inset-0 flex items-end gap-1">
+        <div style="height: 100px;">
+          <div class="flex items-end gap-1 h-full">
             <div
               v-for="day in summary.daily_breakdown"
               :key="day.date"
-              class="flex-1 flex flex-col items-center group relative"
-              style="height: 100%;"
+              class="flex-1 flex flex-col items-center group relative h-full"
             >
               <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                 {{ day.date.slice(5) }}: {{ day.count }}个视频
@@ -105,9 +104,11 @@
               <div class="w-full mt-auto bg-gradient-to-t from-[#fb7299] to-[#fc9b7a] rounded-t transition-all duration-300 hover:opacity-80"
                    :style="{ height: `${Math.max((day.count / maxDailyCount) * 100, 4)}%` }"
               ></div>
-              <span class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 flex-shrink-0">{{ day.date.slice(8) }}</span>
             </div>
           </div>
+        </div>
+        <div class="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-1">
+          <span v-for="day in summary.daily_breakdown.filter((_, i) => i % Math.max(Math.floor(summary.daily_breakdown.length / 5), 1) === 0 || i === summary.daily_breakdown.length - 1)" :key="day.date">{{ day.date.slice(8) }}</span>
         </div>
       </div>
 
@@ -119,13 +120,12 @@
           </svg>
           观看时段
         </h4>
-        <div class="relative" style="height: 100px;">
-          <div class="absolute inset-0 flex items-end gap-px">
+        <div style="height: 100px;">
+          <div class="flex items-end gap-px h-full">
             <div
               v-for="hour in 24"
               :key="hour - 1"
-              class="flex-1 flex flex-col items-center group relative"
-              style="height: 100%;"
+              class="flex-1 flex flex-col items-center group relative h-full"
             >
               <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                 {{ hour - 1 }}时: {{ summary.hour_dist[hour - 1] || 0 }}次
@@ -139,11 +139,7 @@
           </div>
         </div>
         <div class="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-1">
-          <span>0时</span>
-          <span>6时</span>
-          <span>12时</span>
-          <span>18时</span>
-          <span>23时</span>
+          <span>0时</span><span>6时</span><span>12时</span><span>18时</span><span>23时</span>
         </div>
       </div>
     </div>
@@ -241,21 +237,24 @@
           </svg>
           周内分布
         </h4>
-        <div class="flex items-end gap-2 h-24">
-          <div
-            v-for="day in summary.weekday_dist"
-            :key="day.name"
-            class="flex-1 flex flex-col items-center gap-1 group relative"
-            style="height: 100%;"
-          >
-            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-              {{ day.name }}: {{ day.count }}
+        <div style="height: 100px;">
+          <div class="flex items-end gap-2 h-full">
+            <div
+              v-for="day in summary.weekday_dist"
+              :key="day.name"
+              class="flex-1 flex flex-col items-center group relative h-full"
+            >
+              <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                {{ day.name }}: {{ day.count }}
+              </div>
+              <div class="w-full mt-auto bg-gradient-to-t from-[#fb7299] to-[#fc9b7a] rounded-t transition-all duration-300 hover:opacity-80"
+                   :style="{ height: `${Math.max((day.count / maxWeekdayCount) * 100, 4)}%` }"
+              ></div>
             </div>
-            <div class="w-full mt-auto bg-gradient-to-t from-[#fb7299] to-[#fc9b7a] rounded-t transition-all duration-300 hover:opacity-80"
-                 :style="{ height: `${Math.max((day.count / maxWeekdayCount) * 100, 4)}%` }"
-            ></div>
-            <span class="text-[10px] text-gray-500 dark:text-gray-400">{{ day.name }}</span>
           </div>
+        </div>
+        <div class="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-1">
+          <span v-for="day in summary.weekday_dist" :key="day.name">{{ day.name }}</span>
         </div>
       </div>
     </div>

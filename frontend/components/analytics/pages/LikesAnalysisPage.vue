@@ -72,16 +72,6 @@
         </div>
       </div>
 
-      <!-- 数据概览 -->
-      <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-gray-300/50 dark:border-gray-500/50">
-        <h4 class="text-lg font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-3">数据概览</h4>
-        <div class="grid grid-cols-1 gap-4">
-          <div class="text-center">
-            <div class="text-2xl font-bold text-[#fc9b7a]">{{ Math.round(viewingData.avg_danmaku_count || 0) }}</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">平均弹幕数</div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <div v-else class="text-center text-gray-500 dark:text-gray-400 py-8">

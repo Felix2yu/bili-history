@@ -51,11 +51,11 @@
       <transition name="float" mode="out-in">
         <!-- 网格布局（最小屏幕自动回退到列表） -->
         <div v-if="activeLayout === 'grid'"
-             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 px-4 mx-auto transition-all duration-300 ease-in-out" key="grid-layout">
+             :style="{ display: 'flex', flexWrap: 'wrap', gap: '16px', padding: '0 16px', maxWidth: '100%' }" key="grid-layout">
           <template v-for="(record, index) in records" :key="`grid-${record.id}-${record.view_at}`">
             <!-- 日期分割线和视频数量 -->
-            <div v-if="shouldShowDivider(index)" class="col-span-full relative py-2">
-              <div class="relative flex items-center justify-between px-1">
+            <div v-if="shouldShowDivider(index)" :style="{ width: '100%', position: 'relative', padding: '8px 0' }">
+              <div :style="{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }">
                 <div class="flex items-center gap-2">
                   <div v-if="isBatchMode" class="flex items-center justify-center cursor-pointer" @click.stop="toggleDaySelection(record.view_at)">
                     <div class="w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all"
@@ -77,6 +77,7 @@
               :select-mode="isBatchMode"
               :is-selected="selectedRecords.has(`${record.bvid}_${record.view_at}`)"
               :show-category="true"
+              :style="{ flex: '1 1 200px', maxWidth: '280px' }"
               :show-owner="record.business !== 'cheese' && record.business !== 'pgc'"
               :show-views="false"
               :show-time="false"

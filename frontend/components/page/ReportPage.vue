@@ -11,7 +11,7 @@
         <button
           v-for="tab in tabs"
           :key="tab.key"
-          @click="activeTab = tab.key"
+          @click="switchTab(tab.key)"
           class="px-5 py-2 text-sm font-medium rounded-lg transition-all duration-200"
           :class="activeTab === tab.key
             ? 'bg-white dark:bg-gray-700 text-[#fb7299] shadow-sm'
@@ -22,12 +22,65 @@
       </div>
     </div>
 
+    <!-- 选择弹窗 -->
+    <div v-if="showSelector" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- 遮罩层 -->
+      <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="handleSelectorClose"></div>
+      <!-- 弹窗内容 -->
+      <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 space-y-6">
+        <h3 class="text-xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+          选择概览类型
+        </h3>
+        <div class="space-y-3">
+          <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            @click="selectTab(tab.key)"
+            class="w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200"
+            :class="selectedTab === tab.key
+              ? 'border-[#fb7299] bg-[#fb7299]/5'
+              : 'border-gray-200 dark:border-gray-700 hover:border-[#fb7299]/50 hover:bg-gray-50 dark:hover:bg-gray-700/50'"
+          >
+            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+              :class="selectedTab === tab.key ? 'bg-[#fb7299]/10 text-[#fb7299]' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'">
+              <svg v-if="tab.key === 'yearly'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <svg v-else-if="tab.key === 'monthly'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div class="flex-1 text-left">
+              <div class="font-medium text-gray-800 dark:text-gray-200">{{ tab.label }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ tab.desc }}</div>
+            </div>
+            <div v-if="selectedTab === tab.key" class="w-5 h-5 rounded-full bg-[#fb7299] flex items-center justify-center flex-shrink-0">
+              <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <button
+          @click="confirmSelection"
+          :disabled="!selectedTab"
+          class="w-full py-3 rounded-xl font-medium text-white transition-all duration-200"
+          :class="selectedTab ? 'bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] hover:shadow-lg hover:shadow-[#fb7299]/20' : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'"
+        >
+          进入概览
+        </button>
+      </div>
+    </div>
+
     <!-- 年度标签：直接渲染 AnimatedAnalytics -->
     <template v-if="activeTab === 'yearly'">
       <AnimatedAnalytics />
     </template>
 
-    <!-- 月度 / 周概览标签 -->
+    <!-- 月度 / 周度标签 -->
     <template v-else>
       <!-- 时间选择器 -->
       <div class="flex items-center justify-center gap-4">
@@ -131,12 +184,16 @@ import AnimatedAnalytics from '~/components/page/AnimatedAnalytics.vue'
 const route = useRoute()
 
 const tabs = [
-  { key: 'yearly', label: '年度' },
-  { key: 'monthly', label: '月度' },
-  { key: 'weekly', label: '周概览' },
+  { key: 'yearly', label: '年度', desc: '全年观看数据总览与分析' },
+  { key: 'monthly', label: '月度', desc: '按月查看观看记录与统计' },
+  { key: 'weekly', label: '周度', desc: '按周查看观看记录与统计' },
 ]
 
-const activeTab = ref(route.query.tab === 'monthly' ? 'monthly' : route.query.tab === 'weekly' ? 'weekly' : 'yearly')
+// 如果有 query 参数，直接跳过选择弹窗
+const hasInitialTab = !!(route.query.tab)
+const showSelector = ref(!hasInitialTab)
+const selectedTab = ref(null)
+const activeTab = ref(hasInitialTab ? (route.query.tab === 'monthly' ? 'monthly' : route.query.tab === 'weekly' ? 'weekly' : 'yearly') : '')
 const currentYear = ref(new Date().getFullYear())
 const currentWeek = ref(getCurrentWeek())
 const currentMonth = ref(new Date().getMonth() + 1)
@@ -152,6 +209,26 @@ function getCurrentWeek() {
   week1Monday.setDate(jan4.getDate() - weekday + 1)
   const diffDays = Math.floor((now - week1Monday) / 86400000)
   return Math.max(1, Math.floor(diffDays / 7) + 1)
+}
+
+function selectTab(key) {
+  selectedTab.value = key
+}
+
+function confirmSelection() {
+  if (!selectedTab.value) return
+  activeTab.value = selectedTab.value
+  showSelector.value = false
+}
+
+function handleSelectorClose() {
+  // 如果没有选择过，不允许关闭弹窗
+}
+
+function switchTab(key) {
+  if (key === activeTab.value) return
+  activeTab.value = key
+  reportData.value = null
 }
 
 const groupedVideos = computed(() => {
@@ -183,7 +260,7 @@ function formatDayDuration(dateStr) {
 }
 
 async function fetchReport() {
-  if (activeTab.value === 'yearly') return
+  if (activeTab.value === 'yearly' || !activeTab.value) return
   loading.value = true
   error.value = null
   reportData.value = null

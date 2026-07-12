@@ -50,11 +50,12 @@
     <div v-else class="overflow-hidden">
         <!-- 网格布局 -->
         <div v-if="activeLayout === 'grid'"
-             :style="{ display: 'flex', flexWrap: 'wrap', gap: '16px', padding: '0 16px', width: '100%' }" key="grid-layout">
+             class="grid gap-4 px-4 mx-auto" key="grid-layout"
+             style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
           <template v-for="(record, index) in records" :key="`grid-${record.id}-${record.view_at}`">
             <!-- 日期分割线和视频数量 -->
-            <div v-if="shouldShowDivider(index)" :style="{ width: '100%', position: 'relative', padding: '8px 0' }">
-              <div :style="{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }">
+            <div v-if="shouldShowDivider(index)" class="col-span-full relative py-2">
+              <div class="relative flex items-center justify-between px-1">
                 <div class="flex items-center gap-2">
                   <div v-if="isBatchMode" class="flex items-center justify-center cursor-pointer" @click.stop="toggleDaySelection(record.view_at)">
                     <div class="w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all"
@@ -76,7 +77,6 @@
               :select-mode="isBatchMode"
               :is-selected="selectedRecords.has(`${record.bvid}_${record.view_at}`)"
               :show-category="true"
-              :style="{ flex: '1 1 200px', maxWidth: '280px' }"
               :show-owner="record.business !== 'cheese' && record.business !== 'pgc'"
               :show-views="false"
               :show-time="false"

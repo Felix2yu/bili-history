@@ -65,7 +65,8 @@
               </div>
 
               <!-- 文件信息标签 -->
-              <div class="absolute bottom-1 right-1 bg-black/60 backdrop-blur-sm px-1 py-0.5 rounded text-white text-[10px]">
+              <div class="absolute bottom-1 right-1 bg-black/60 backdrop-blur-sm px-1 py-0.5 rounded text-white text-[10px] flex items-center gap-1">
+                <span v-if="isUnsupportedFormat(video)" class="bg-amber-500/80 px-1 rounded text-[9px]">不支持播放</span>
                 <div v-if="video.files && video.files.length > 0">
                   {{ video.files[0].size_mb.toFixed(1) }} MB
                 </div>
@@ -398,6 +399,15 @@ const handleAuthorClick = async (video) => {
     const url = `https://space.bilibili.com/${video.author_mid}`
     await openInBrowser(url)
   }
+}
+
+// 检查是否为浏览器不支持的格式（MKV 容器、AV1 编码）
+const isUnsupportedFormat = (video) => {
+  if (!video.files || !video.files.length) return false
+  const fileName = video.files[0].file_path || ''
+  const lower = fileName.toLowerCase()
+  // MKV 容器在大多数浏览器中无法直接播放
+  return lower.endsWith('.mkv')
 }
 
 // SSR: 初始数据在服务端获取

@@ -174,8 +174,11 @@ type dashAudioStream struct {
 // videoDetail holds extra info from bilibili view API
 type videoDetail struct {
 	Title string `json:"title"`
+	Cover string `json:"pic"`
 	Owner struct {
-		Name string `json:"name"`
+		Name  string `json:"name"`
+		Face  string `json:"face"`
+		Mid   int64  `json:"mid"`
 	} `json:"owner"`
 }
 
@@ -499,7 +502,6 @@ func ListDownloadedVideos(search string, page, limit int) ([]DownloadedVideo, in
 		}
 
 		// 解析文件名，提取元数据
-		// 文件名格式：[UP主名]投稿名.mp4 或 投稿名-BVxxxxxx.mp4
 		fullName := strings.TrimSuffix(name, filepath.Ext(name))
 		authorName := ""
 		title := fullName
@@ -523,10 +525,33 @@ func ListDownloadedVideos(search string, page, limit int) ([]DownloadedVideo, in
 		// 检查是否为纯音频
 		isAudioOnly := strings.Contains(strings.ToLower(name), "audio") || strings.HasSuffix(strings.ToLower(name), ".m4a")
 
+		// 获取封面：优先读缓存，否则从 API 获取
+		cover := ""
+		authorFace := ""
+		authorMid := int64(0)
+		if bvid != "" {
+			coverFile := path + ".cover"
+			if data, err := os.ReadFile(coverFile); err == nil {
+				cover = string(data)
+			} else if detail, err := fetchVideoDetail(bvid, getCookie()); err == nil {
+				cover = detail.Cover
+				authorFace = detail.Owner.Face
+				authorMid = detail.Owner.Mid
+				if authorName == "" {
+					authorName = detail.Owner.Name
+				}
+				// 缓存封面 URL
+				os.WriteFile(coverFile, []byte(cover), 0644)
+			}
+		}
+
 		videos = append(videos, DownloadedVideo{
 			Title:        title,
 			BVID:         bvid,
+			Cover:        cover,
 			AuthorName:   authorName,
+			AuthorFace:   authorFace,
+			AuthorMid:    authorMid,
 			DownloadDate: info.ModTime().Format("2006-01-02"),
 			Files: []DownloadedVideoFile{
 				{

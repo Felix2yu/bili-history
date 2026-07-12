@@ -51,8 +51,8 @@
       <transition name="float" mode="out-in">
         <!-- 网格布局（最小屏幕自动回退到列表） -->
         <div v-if="activeLayout === 'grid'"
-             class="hidden sm:grid gap-4 px-4 mx-auto transition-all duration-300 ease-in-out transform-gpu"
-             style="max-width: 1152px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));" key="grid-layout">
+             class="gap-4 px-4 mx-auto transition-all duration-300 ease-in-out transform-gpu"
+             style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));" key="grid-layout">
           <template v-for="(record, index) in records" :key="`grid-${record.id}-${record.view_at}`">
             <!-- 日期分割线和视频数量 -->
             <div v-if="shouldShowDivider(index)" class="col-span-full relative py-2">

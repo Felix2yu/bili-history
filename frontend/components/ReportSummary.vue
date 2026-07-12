@@ -20,8 +20,8 @@
       </div>
     </div>
 
-    <!-- 日均统计 + 完播统计 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <!-- 日均 + 完播 + 设备分布 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       <div class="glass-card p-4 flex items-center justify-between text-sm">
         <div class="flex items-center gap-2">
           <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -55,69 +55,96 @@
           </span>
         </div>
       </div>
-    </div>
 
-    <!-- 每日观看分布 (柱状图) -->
-    <div v-if="summary.daily_breakdown?.length" class="glass-card p-4">
-      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-        <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-        每日观看
-      </h4>
-      <div class="relative" style="height: 120px;">
-        <div class="absolute inset-0 flex items-end gap-1">
-          <div
-            v-for="day in summary.daily_breakdown"
-            :key="day.date"
-            class="flex-1 flex flex-col items-center group relative"
-            style="height: 100%;"
-          >
-            <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-              {{ day.date.slice(5) }}: {{ day.count }}个视频
-            </div>
-            <div class="w-full mt-auto bg-gradient-to-t from-[#fb7299] to-[#fc9b7a] rounded-t transition-all duration-300 hover:opacity-80"
-                 :style="{ height: `${Math.max((day.count / maxDailyCount) * 100, 4)}%` }"
-            ></div>
-            <span class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 flex-shrink-0">{{ day.date.slice(8) }}</span>
-          </div>
+      <!-- 设备分布（紧凑条形） -->
+      <div v-if="summary.device_dist && Object.keys(summary.device_dist).length > 0" class="glass-card p-4 flex items-center justify-between text-sm">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span class="text-gray-600 dark:text-gray-400">设备</span>
         </div>
-      </div>
-    </div>
-
-    <!-- 时段分布 -->
-    <div v-if="summary.hour_dist && Object.keys(summary.hour_dist).length > 0" class="glass-card p-4">
-      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-        <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        观看时段
-      </h4>
-      <div class="relative" style="height: 80px;">
-        <div class="absolute inset-0 flex items-end gap-px">
+        <div class="flex gap-3 flex-wrap">
           <div
-            v-for="hour in 24"
-            :key="hour - 1"
-            class="flex-1 flex flex-col items-center group relative"
-            style="height: 100%;"
+            v-for="(count, device) in summary.device_dist"
+            :key="device"
+            class="flex items-center gap-1"
           >
-            <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-              {{ hour - 1 }}时: {{ summary.hour_dist[hour - 1] || 0 }}次
-            </div>
             <div
-              class="w-full mt-auto rounded-t transition-all duration-300"
-              :class="(hour - 1) >= 22 || (hour - 1) < 6 ? 'bg-purple-400' : 'bg-[#fb7299]'"
-              :style="{ height: `${Math.max(((summary.hour_dist[hour - 1] || 0) / maxHourCount) * 100, 2)}%` }"
+              class="w-2 h-2 rounded-full"
+              :class="device === '手机' ? 'bg-[#fb7299]' : device === '电脑' ? 'bg-blue-500' : device === '平板' ? 'bg-green-500' : 'bg-gray-400'"
             ></div>
+            <span class="text-gray-600 dark:text-gray-400">{{ device }}</span>
+            <span class="font-semibold text-[#fb7299]">{{ count }}</span>
           </div>
         </div>
       </div>
-      <div class="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-1">
-        <span>0时</span>
-        <span>6时</span>
-        <span>12时</span>
-        <span>18时</span>
-        <span>23时</span>
+    </div>
+
+    <!-- 每日观看 + 时段分布（并排） -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- 每日观看分布 (柱状图) -->
+      <div v-if="summary.daily_breakdown?.length" class="glass-card p-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          每日观看
+        </h4>
+        <div class="relative" style="height: 120px;">
+          <div class="absolute inset-0 flex items-end gap-1">
+            <div
+              v-for="day in summary.daily_breakdown"
+              :key="day.date"
+              class="flex-1 flex flex-col items-center group relative"
+              style="height: 100%;"
+            >
+              <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                {{ day.date.slice(5) }}: {{ day.count }}个视频
+              </div>
+              <div class="w-full mt-auto bg-gradient-to-t from-[#fb7299] to-[#fc9b7a] rounded-t transition-all duration-300 hover:opacity-80"
+                   :style="{ height: `${Math.max((day.count / maxDailyCount) * 100, 4)}%` }"
+              ></div>
+              <span class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 flex-shrink-0">{{ day.date.slice(8) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 时段分布 -->
+      <div v-if="summary.hour_dist && Object.keys(summary.hour_dist).length > 0" class="glass-card p-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          观看时段
+        </h4>
+        <div class="relative" style="height: 80px;">
+          <div class="absolute inset-0 flex items-end gap-px">
+            <div
+              v-for="hour in 24"
+              :key="hour - 1"
+              class="flex-1 flex flex-col items-center group relative"
+              style="height: 100%;"
+            >
+              <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                {{ hour - 1 }}时: {{ summary.hour_dist[hour - 1] || 0 }}次
+              </div>
+              <div
+                class="w-full mt-auto rounded-t transition-all duration-300"
+                :class="(hour - 1) >= 22 || (hour - 1) < 6 ? 'bg-purple-400' : 'bg-[#fb7299]'"
+                :style="{ height: `${Math.max(((summary.hour_dist[hour - 1] || 0) / maxHourCount) * 100, 2)}%` }"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-1">
+          <span>0时</span>
+          <span>6时</span>
+          <span>12时</span>
+          <span>18时</span>
+          <span>23时</span>
+        </div>
       </div>
     </div>
 
@@ -186,57 +213,30 @@
       </div>
     </div>
 
-    <!-- 设备分布 & 最长观看 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <!-- 设备分布 -->
-      <div v-if="summary.device_dist && Object.keys(summary.device_dist).length > 0" class="glass-card p-4">
-        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-          设备分布
-        </h4>
-        <div class="flex gap-6 flex-wrap">
-          <div
-            v-for="(count, device) in summary.device_dist"
-            :key="device"
-            class="flex items-center gap-2 text-sm"
-          >
-            <div
-              class="w-3 h-3 rounded-full"
-              :class="device === '手机' ? 'bg-[#fb7299]' : device === '电脑' ? 'bg-blue-500' : device === '平板' ? 'bg-green-500' : 'bg-gray-400'"
-            ></div>
-            <span class="text-gray-600 dark:text-gray-400">{{ device }}</span>
-            <span class="font-semibold text-[#fb7299]">{{ count }}</span>
-            <span class="text-xs text-gray-400">({{ ((count / summary.total_videos) * 100).toFixed(0) }}%)</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 最长观看视频 -->
-      <div v-if="summary.top_videos?.length" class="glass-card p-4">
-        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          最长观看
-        </h4>
-        <div class="space-y-2">
-          <div
-            v-for="(video, index) in summary.top_videos"
-            :key="video.bvid"
-            class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-          >
-            <span class="text-xs text-gray-400 w-4 text-right font-mono">{{ index + 1 }}</span>
-            <img
-              v-if="video.cover"
-              :src="normalizeImageUrl(video.cover)"
-              class="w-16 h-10 rounded object-cover flex-shrink-0"
-              loading="lazy"
-            />
-            <div class="flex-1 min-w-0">
-              <div class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ video.title }}</div>
-              <div class="text-xs text-gray-400 dark:text-gray-500">{{ video.author_name }}</div>
+    <!-- 最长观看视频 -->
+    <div v-if="summary.top_videos?.length" class="glass-card p-4">
+      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        最长观看
+      </h4>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div
+          v-for="(video, index) in summary.top_videos"
+          :key="video.bvid"
+          class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+        >
+          <span class="text-xs text-gray-400 w-4 text-right font-mono">{{ index + 1 }}</span>
+          <img
+            v-if="video.cover"
+            :src="normalizeImageUrl(video.cover)"
+            class="w-16 h-10 rounded object-cover flex-shrink-0"
+            loading="lazy"
+          />
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ video.title }}</div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">{{ video.author_name }}</div>
           </div>
           <div class="text-right flex-shrink-0">
             <div class="text-sm font-semibold text-[#fb7299]">{{ formatDurationShort(video.duration) }}</div>

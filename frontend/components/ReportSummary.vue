@@ -186,55 +186,57 @@
       </div>
     </div>
 
-    <!-- 设备分布 -->
-    <div v-if="summary.device_dist && Object.keys(summary.device_dist).length > 0" class="glass-card p-4">
-      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-        <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-        设备分布
-      </h4>
-      <div class="flex gap-6 flex-wrap">
-        <div
-          v-for="(count, device) in summary.device_dist"
-          :key="device"
-          class="flex items-center gap-2 text-sm"
-        >
+    <!-- 设备分布 & 最长观看 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- 设备分布 -->
+      <div v-if="summary.device_dist && Object.keys(summary.device_dist).length > 0" class="glass-card p-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          设备分布
+        </h4>
+        <div class="flex gap-6 flex-wrap">
           <div
-            class="w-3 h-3 rounded-full"
-            :class="device === '手机' ? 'bg-[#fb7299]' : device === '电脑' ? 'bg-blue-500' : device === '平板' ? 'bg-green-500' : 'bg-gray-400'"
-          ></div>
-          <span class="text-gray-600 dark:text-gray-400">{{ device }}</span>
-          <span class="font-semibold text-[#fb7299]">{{ count }}</span>
-          <span class="text-xs text-gray-400">({{ ((count / summary.total_videos) * 100).toFixed(0) }}%)</span>
+            v-for="(count, device) in summary.device_dist"
+            :key="device"
+            class="flex items-center gap-2 text-sm"
+          >
+            <div
+              class="w-3 h-3 rounded-full"
+              :class="device === '手机' ? 'bg-[#fb7299]' : device === '电脑' ? 'bg-blue-500' : device === '平板' ? 'bg-green-500' : 'bg-gray-400'"
+            ></div>
+            <span class="text-gray-600 dark:text-gray-400">{{ device }}</span>
+            <span class="font-semibold text-[#fb7299]">{{ count }}</span>
+            <span class="text-xs text-gray-400">({{ ((count / summary.total_videos) * 100).toFixed(0) }}%)</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 最长观看视频 -->
-    <div v-if="summary.top_videos?.length" class="glass-card p-4">
-      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-        <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        最长观看
-      </h4>
-      <div class="space-y-2">
-        <div
-          v-for="(video, index) in summary.top_videos"
-          :key="video.bvid"
-          class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-        >
-          <span class="text-xs text-gray-400 w-4 text-right font-mono">{{ index + 1 }}</span>
-          <img
-            v-if="video.cover"
-            :src="normalizeImageUrl(video.cover)"
-            class="w-16 h-10 rounded object-cover flex-shrink-0"
-            loading="lazy"
-          />
-          <div class="flex-1 min-w-0">
-            <div class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ video.title }}</div>
-            <div class="text-xs text-gray-400 dark:text-gray-500">{{ video.author_name }}</div>
+      <!-- 最长观看视频 -->
+      <div v-if="summary.top_videos?.length" class="glass-card p-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          最长观看
+        </h4>
+        <div class="space-y-2">
+          <div
+            v-for="(video, index) in summary.top_videos"
+            :key="video.bvid"
+            class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+          >
+            <span class="text-xs text-gray-400 w-4 text-right font-mono">{{ index + 1 }}</span>
+            <img
+              v-if="video.cover"
+              :src="normalizeImageUrl(video.cover)"
+              class="w-16 h-10 rounded object-cover flex-shrink-0"
+              loading="lazy"
+            />
+            <div class="flex-1 min-w-0">
+              <div class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ video.title }}</div>
+              <div class="text-xs text-gray-400 dark:text-gray-500">{{ video.author_name }}</div>
           </div>
           <div class="text-right flex-shrink-0">
             <div class="text-sm font-semibold text-[#fb7299]">{{ formatDurationShort(video.duration) }}</div>

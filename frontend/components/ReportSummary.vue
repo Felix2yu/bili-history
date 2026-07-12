@@ -214,21 +214,31 @@
     </div>
 
     <!-- 额外分析维度 -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <!-- 深夜占比 -->
       <div v-if="summary.late_night_ratio !== undefined" class="glass-card p-3 text-center">
         <div class="text-lg font-bold text-purple-500">{{ (summary.late_night_ratio * 100).toFixed(0) }}%</div>
-        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">深夜观看(22-6时)</div>
+        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">深夜观看</div>
       </div>
       <!-- 收藏率 -->
       <div v-if="summary.favorite_rate !== undefined" class="glass-card p-3 text-center">
         <div class="text-lg font-bold text-amber-500">{{ (summary.favorite_rate * 100).toFixed(0) }}%</div>
         <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">收藏率</div>
       </div>
-      <!-- 新UP主 -->
-      <div v-if="summary.new_up_count" class="glass-card p-3 text-center">
-        <div class="text-lg font-bold text-[#fb7299]">{{ summary.new_up_count }}</div>
-        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">涉及UP主</div>
+      <!-- 弃看率 -->
+      <div v-if="summary.abandon_rate !== undefined" class="glass-card p-3 text-center">
+        <div class="text-lg font-bold text-red-400">{{ (summary.abandon_rate * 100).toFixed(0) }}%</div>
+        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">弃看率</div>
+      </div>
+      <!-- 黄金时段集中度 -->
+      <div v-if="summary.golden_slot_ratio !== undefined" class="glass-card p-3 text-center">
+        <div class="text-lg font-bold text-orange-400">{{ (summary.golden_slot_ratio * 100).toFixed(0) }}%</div>
+        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">黄金3h集中度</div>
+      </div>
+      <!-- UP主多样性 -->
+      <div v-if="summary.up_diversity !== undefined" class="glass-card p-3 text-center">
+        <div class="text-lg font-bold text-cyan-500">{{ (summary.up_diversity * 100).toFixed(0) }}%</div>
+        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">UP主多样性</div>
       </div>
       <!-- 重刷次数 -->
       <div v-if="summary.rewatch_stats?.total_rewatched" class="glass-card p-3 text-center">
@@ -283,6 +293,56 @@
                 <div class="h-full bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] rounded-full" :style="{ width: `${(slot.count / summary.top_time_slots[0].count) * 100}%` }"></div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 标题词频 + 周内分布 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- 标题词频 -->
+      <div v-if="summary.title_keywords?.length" class="glass-card p-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+          </svg>
+          标题热词
+        </h4>
+        <div class="flex flex-wrap gap-1.5">
+          <span
+            v-for="(kw, index) in summary.title_keywords.slice(0, 15)"
+            :key="kw.word"
+            class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors"
+            :class="index < 3 ? 'bg-[#fb7299]/15 text-[#fb7299]' : index < 6 ? 'bg-[#fb7299]/10 text-[#fb7299]/80' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'"
+          >
+            {{ kw.word }}
+            <span class="ml-1 text-[9px] opacity-60">{{ kw.count }}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- 周内分布 -->
+      <div v-if="summary.weekday_dist?.length" class="glass-card p-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          周内分布
+        </h4>
+        <div class="flex items-end gap-2 h-20">
+          <div
+            v-for="day in summary.weekday_dist"
+            :key="day.name"
+            class="flex-1 flex flex-col items-center gap-1 group relative"
+            style="height: 100%;"
+          >
+            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+              {{ day.name }}: {{ day.count }}
+            </div>
+            <div class="w-full mt-auto bg-gradient-to-t from-[#fb7299] to-[#fc9b7a] rounded-t transition-all duration-300 hover:opacity-80"
+                 :style="{ height: `${Math.max((day.count / maxWeekdayCount) * 100, 4)}%` }"
+            ></div>
+            <span class="text-[10px] text-gray-500 dark:text-gray-400">{{ day.name }}</span>
           </div>
         </div>
       </div>
@@ -381,6 +441,11 @@ const maxHourCount = computed(() => {
 const maxCompCount = computed(() => {
   if (!props.summary.completion_dist?.length) return 1
   return Math.max(...props.summary.completion_dist.map(d => d.count), 1)
+})
+
+const maxWeekdayCount = computed(() => {
+  if (!props.summary.weekday_dist?.length) return 1
+  return Math.max(...props.summary.weekday_dist.map(d => d.count), 1)
 })
 </script>
 

@@ -57,6 +57,11 @@ type ReportSummary struct {
 	FavoriteRate     float64               `json:"favorite_rate"`
 	NewUpCount       int                   `json:"new_up_count"`
 	TopTimeSlots     []TimeSlotStat        `json:"top_time_slots"`
+	TitleKeywords    []KeywordStat         `json:"title_keywords"`
+	AbandonRate      float64               `json:"abandon_rate"`
+	GoldenSlotRatio  float64               `json:"golden_slot_ratio"`
+	UpDiversity      float64               `json:"up_diversity"`
+	WeekdayDist      []WeekdayStat         `json:"weekday_dist"`
 }
 
 type DailyBreakdown struct {
@@ -101,6 +106,16 @@ type DurationPref struct {
 }
 
 type TimeSlotStat struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
+type KeywordStat struct {
+	Word  string `json:"word"`
+	Count int    `json:"count"`
+}
+
+type WeekdayStat struct {
 	Name  string `json:"name"`
 	Count int    `json:"count"`
 }
@@ -451,6 +466,102 @@ func computeSummary(videos []ReportVideo, dayCount int) ReportSummary {
 		sortedVideos = sortedVideos[:5]
 	}
 	summary.TopVideos = sortedVideos
+
+	// Title keywords: simple Chinese word extraction
+	keywordMap := make(map[string]int)
+	stopWords := map[string]bool{
+		"的": true, "了": true, "在": true, "是": true, "我": true, "有": true, "和": true,
+		"就": true, "不": true, "人": true, "都": true, "一": true, "一个": true, "上": true,
+		"也": true, "很": true, "到": true, "说": true, "要": true, "去": true, "你": true,
+		"会": true, "着": true, "没有": true, "看": true, "好": true, "自己": true, "这": true,
+		"他": true, "她": true, "它": true, "么": true, "被": true, "从": true, "把": true,
+		"那": true, "吗": true, "吧": true, "啊": true, "呢": true, "还": true, "但": true,
+		"与": true, "及": true, "或": true, "等": true, "之": true, "对": true, "为": true,
+		"中": true, "大": true, "小": true, "新": true, "全": true, "最": true, "更": true,
+		"【": true, "】": true, "|": true, "-": true, " ": true,
+	}
+	for _, v := range videos {
+		title := v.Title
+		// Extract 2-4 char segments as keywords
+		runes := []rune(title)
+		for i := 0; i < len(runes); i++ {
+			for l := 2; l <= 4 && i+l <= len(runes); l++ {
+				word := string(runes[i : i+l])
+				// Skip if contains non-Chinese chars or is stop word
+				allChinese := true
+				for _, r := range word {
+					if r < 0x4e00 || r > 0x9fff {
+						allChinese = false
+						break
+					}
+				}
+				if allChinese && !stopWords[word] && l >= 2 {
+					keywordMap[word]++
+				}
+			}
+		}
+	}
+	for word, count := range keywordMap {
+		if count >= 2 {
+			summary.TitleKeywords = append(summary.TitleKeywords, KeywordStat{Word: word, Count: count})
+		}
+	}
+	sort.Slice(summary.TitleKeywords, func(i, j int) bool {
+		return summary.TitleKeywords[i].Count > summary.TitleKeywords[j].Count
+	})
+	if len(summary.TitleKeywords) > 20 {
+		summary.TitleKeywords = summary.TitleKeywords[:20]
+	}
+
+	// Abandon rate: videos with progress < 20% of duration
+	var abandonCount int
+	for _, v := range videos {
+		if v.Duration > 0 && v.Progress >= 0 {
+			rate := float64(v.Progress) / float64(v.Duration)
+			if rate < 0.2 {
+				abandonCount++
+			}
+		}
+	}
+	if summary.TotalVideos > 0 {
+		summary.AbandonRate = float64(abandonCount) / float64(summary.TotalVideos)
+	}
+
+	// Golden slot concentration: top 3 consecutive hours ratio
+	hourTotals := make([]int, 24)
+	for _, v := range videos {
+		hour := time.Unix(v.ViewAt, 0).Hour()
+		hourTotals[hour]++
+	}
+	maxConsecutive := 0
+	for start := 0; start < 24; start++ {
+		sum := 0
+		for h := 0; h < 3; h++ {
+			sum += hourTotals[(start+h)%24]
+		}
+		if sum > maxConsecutive {
+			maxConsecutive = sum
+		}
+	}
+	if summary.TotalVideos > 0 {
+		summary.GoldenSlotRatio = float64(maxConsecutive) / float64(summary.TotalVideos)
+	}
+
+	// UP主 diversity: unique authors / total videos
+	if summary.TotalVideos > 0 {
+		summary.UpDiversity = float64(summary.UniqueAuthors) / float64(summary.TotalVideos)
+	}
+
+	// Weekday distribution
+	weekdayNames := []string{"周日", "周一", "周二", "周三", "周四", "周五", "周六"}
+	weekdayCounts := make([]int, 7)
+	for _, v := range videos {
+		wd := time.Unix(v.ViewAt, 0).Weekday()
+		weekdayCounts[wd]++
+	}
+	for i, name := range weekdayNames {
+		summary.WeekdayDist = append(summary.WeekdayDist, WeekdayStat{Name: name, Count: weekdayCounts[i]})
+	}
 
 	return summary
 }

@@ -219,7 +219,7 @@
                     <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">开启后将同步已删除的历史记录，建议仅在需要恢复记录时开启</p>
                   </div>
                   <label class="relative inline-flex shrink-0 cursor-pointer items-center">
-                    <input type="checkbox" v-model="syncDeleted" class="peer sr-only">
+                    <input type="checkbox" v-model="syncDeleted" class="peer sr-only" @change="handleSyncDeletedChange">
                     <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
                   </label>
                 </div>
@@ -656,17 +656,15 @@ const mcpConnectionPrompt = computed(() => {
 
 // 同步已删除记录
 const syncDeleted = ref(false)
-const syncDeletedInitialized = ref(false)
 
-// 监听同步已删除记录变化
-watch(syncDeleted, async (newVal) => {
-  if (!syncDeletedInitialized.value) return
+// 处理同步已删除记录变更
+const handleSyncDeletedChange = async () => {
   try {
-    const response = await updateSyncConfig({ sync_deleted: newVal })
+    const response = await updateSyncConfig({ sync_deleted: syncDeleted.value })
     if (response.data && response.data.success) {
       showNotify({
         type: 'success',
-        message: newVal ? '已开启同步已删除记录' : '已关闭同步已删除记录'
+        message: syncDeleted.value ? '已开启同步已删除记录' : '已关闭同步已删除记录'
       })
     } else {
       throw new Error(response.data?.message || '更新配置失败')
@@ -678,9 +676,9 @@ watch(syncDeleted, async (newVal) => {
       message: `更新配置失败: ${error.message}`
     })
     // 恢复原值
-    syncDeleted.value = !newVal
+    syncDeleted.value = !syncDeleted.value
   }
-})
+}
 
 // 同步删除B站历史记录
 const syncDeleteToBilibili = ref(false)
@@ -930,7 +928,6 @@ onMounted(async () => {
           syncDeleteToBilibili.value = false
         }
         console.log('同步删除配置获取完成')
-        syncDeletedInitialized.value = true
       })(),
       (async () => {
         console.log('开始获取外观配置')

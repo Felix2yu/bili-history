@@ -48,7 +48,7 @@ type ReportSummary struct {
 	DeviceDist       map[string]int `json:"device_dist"`
 	DailyBreakdown   []DailyBreakdown `json:"daily_breakdown"`
 	HourDist         map[int]int    `json:"hour_dist"`
-	CompletionStats  CompletionStats `json:"completion_stats"`
+	CompletionStats  ReportCompletionStats `json:"completion_stats"`
 	TopVideos        []ReportVideo  `json:"top_videos"`
 }
 
@@ -59,7 +59,7 @@ type DailyBreakdown struct {
 	UniqueUp   int    `json:"unique_up"`
 }
 
-type CompletionStats struct {
+type ReportCompletionStats struct {
 	Finished     int     `json:"finished"`
 	Partial      int     `json:"partial"`
 	AvgRate      float64 `json:"avg_rate"`

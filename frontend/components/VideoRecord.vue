@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="cardRef"
     class="mx-auto max-w-2xl cursor-pointer transition-all duration-200 ease-in-out lg:max-w-4xl relative group"
     :class="{
       'glass-card-hover p-3': !isBatchMode || !isSelected,
@@ -54,7 +55,7 @@
         <div v-if="record.tag_name || record.tname" class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]" :class="isBatchMode ? 'ml-6' : ''">
           {{ record.tag_name || record.tname }}
         </div>
-        <img :src="normalizeImageUrl(record.cover || record.covers[0])" class="h-full w-full object-cover" alt="" loading="lazy" />
+        <img v-if="imgLoaded" :src="normalizeImageUrl(record.cover || record.covers[0])" class="h-full w-full object-cover" alt="" />
       </div>
       <div class="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <div v-if="record.business !== 'cheese' && record.business !== 'pgc'" class="flex items-center gap-2" @click.stop>
@@ -171,7 +172,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
 import { showDialog, showNotify } from 'vant'
@@ -200,6 +201,10 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['toggle-selection', 'refresh-data', 'remark-updated'])
+
+const cardRef = ref(null)
+const imgLoaded = ref(false)
+let observer = null
 
 const remarkContent = ref('')
 const originalRemark = ref('')
@@ -360,7 +365,28 @@ const handleRemarkBlur = async () => {
   }
 }
 
-onMounted(() => { initRemark() })
+onMounted(() => {
+  initRemark()
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          imgLoaded.value = true
+          observer.disconnect()
+          break
+        }
+      }
+    },
+    { rootMargin: '200px' }
+  )
+  if (cardRef.value) {
+    observer.observe(cardRef.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (observer) observer.disconnect()
+})
 watch(() => props.remarkData, () => { initRemark() }, { deep: true })
 
 const showDownloadDialog = ref(false)

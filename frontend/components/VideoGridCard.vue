@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="cardRef"
     class="rounded-md overflow-hidden border transition-all duration-200 relative group"
     :class="cardClasses"
   >
@@ -17,10 +18,10 @@
       @click="handleClick"
     >
       <img
+        v-if="imgLoaded"
         :src="imageUrl"
         :alt="video.title"
         class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 bg-gray-200 dark:bg-gray-700"
-        loading="lazy"
         :onerror="errorImageUrl"
       />
 
@@ -100,7 +101,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { normalizeImageUrl } from '~/utils/imageUrl.js'
 import { formatDuration } from '~/utils/format'
 
@@ -128,6 +129,10 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['click', 'toggle-select', 'owner-click'])
+
+const cardRef = ref(null)
+const imgLoaded = ref(false)
+let observer = null
 
 const imageUrl = computed(() => {
   const cover = props.video[props.coverKey]
@@ -212,4 +217,26 @@ const handleClick = () => {
 const handleOwnerClick = () => {
   emit('owner-click', props.video)
 }
+
+onMounted(() => {
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          imgLoaded.value = true
+          observer.disconnect()
+          break
+        }
+      }
+    },
+    { rootMargin: '200px' }
+  )
+  if (cardRef.value) {
+    observer.observe(cardRef.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (observer) observer.disconnect()
+})
 </script>

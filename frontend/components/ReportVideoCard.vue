@@ -1,15 +1,14 @@
 <template>
-  <div class="glass-card p-3 flex gap-3 hover:shadow-md transition-shadow duration-200">
+  <div ref="cardRef" class="glass-card p-3 flex gap-3 hover:shadow-md transition-shadow duration-200">
     <!-- 封面 -->
     <div class="relative w-32 sm:w-40 flex-shrink-0 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
       <img
-        v-if="video.cover"
+        v-if="video.cover && imgLoaded"
         :src="coverUrl"
         :alt="video.title"
         class="w-full h-full object-cover"
-        loading="lazy"
       />
-      <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+      <div v-else-if="!video.cover" class="w-full h-full flex items-center justify-center text-gray-400">
         <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
         </svg>
@@ -31,10 +30,9 @@
         <!-- UP主 -->
         <div class="flex items-center gap-1.5 mt-1.5">
           <img
-            v-if="video.author_face"
+            v-if="video.author_face && faceLoaded"
             :src="authorFaceUrl"
             class="w-4 h-4 rounded-full object-cover"
-            loading="lazy"
           />
           <span class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ video.author_name }}</span>
         </div>
@@ -79,7 +77,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { formatDuration, formatTimestamp, getBusinessType } from '~/utils/format'
 import { normalizeImageUrl } from '~/utils/imageUrl'
 
@@ -89,6 +87,11 @@ const props = defineProps({
     required: true,
   },
 })
+
+const cardRef = ref(null)
+const imgLoaded = ref(false)
+const faceLoaded = ref(false)
+let observer = null
 
 const completionRate = computed(() => {
   if (props.video.duration <= 0) return 0
@@ -113,6 +116,29 @@ function getDeviceName(dt) {
     default: return '其他'
   }
 }
+
+onMounted(() => {
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          imgLoaded.value = true
+          faceLoaded.value = true
+          observer.disconnect()
+          break
+        }
+      }
+    },
+    { rootMargin: '200px' }
+  )
+  if (cardRef.value) {
+    observer.observe(cardRef.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (observer) observer.disconnect()
+})
 </script>
 
 <style scoped>

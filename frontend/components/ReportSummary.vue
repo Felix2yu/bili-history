@@ -213,6 +213,114 @@
       </div>
     </div>
 
+    <!-- 额外分析维度 -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <!-- 深夜占比 -->
+      <div v-if="summary.late_night_ratio !== undefined" class="glass-card p-3 text-center">
+        <div class="text-lg font-bold text-purple-500">{{ (summary.late_night_ratio * 100).toFixed(0) }}%</div>
+        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">深夜观看(22-6时)</div>
+      </div>
+      <!-- 收藏率 -->
+      <div v-if="summary.favorite_rate !== undefined" class="glass-card p-3 text-center">
+        <div class="text-lg font-bold text-amber-500">{{ (summary.favorite_rate * 100).toFixed(0) }}%</div>
+        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">收藏率</div>
+      </div>
+      <!-- 新UP主 -->
+      <div v-if="summary.new_up_count" class="glass-card p-3 text-center">
+        <div class="text-lg font-bold text-[#fb7299]">{{ summary.new_up_count }}</div>
+        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">涉及UP主</div>
+      </div>
+      <!-- 重刷次数 -->
+      <div v-if="summary.rewatch_stats?.total_rewatched" class="glass-card p-3 text-center">
+        <div class="text-lg font-bold text-green-500">{{ summary.rewatch_stats.total_rewatched }}</div>
+        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">重刷次数</div>
+      </div>
+    </div>
+
+    <!-- 时长偏好 + 完播率分布 + 活跃时段 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- 时长偏好 -->
+      <div v-if="summary.duration_pref?.short + summary.duration_pref?.mid + summary.duration_pref?.long > 0" class="glass-card p-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">时长偏好</h4>
+        <div class="flex h-4 rounded-full overflow-hidden">
+          <div class="bg-green-400 transition-all" :style="{ width: `${summary.duration_pref.short_ratio * 100}%` }" title="短视频"></div>
+          <div class="bg-[#fb7299] transition-all" :style="{ width: `${summary.duration_pref.mid_ratio * 100}%` }" title="中视频"></div>
+          <div class="bg-blue-500 transition-all" :style="{ width: `${summary.duration_pref.long_ratio * 100}%` }" title="长视频"></div>
+        </div>
+        <div class="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 mt-2">
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span>短(&lt;5min) {{ summary.duration_pref.short }}</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#fb7299] inline-block"></span>中(5-20min) {{ summary.duration_pref.mid }}</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>长(&gt;20min) {{ summary.duration_pref.long }}</span>
+        </div>
+      </div>
+
+      <!-- 完播率分布 -->
+      <div v-if="summary.completion_dist?.length" class="glass-card p-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">完播率分布</h4>
+        <div class="space-y-1.5">
+          <div v-for="item in summary.completion_dist" :key="item.range" class="flex items-center gap-2">
+            <span class="text-[10px] text-gray-500 dark:text-gray-400 w-12 text-right">{{ item.range }}</span>
+            <div class="flex-1 h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] rounded-full" :style="{ width: `${(item.count / maxCompCount) * 100}%` }"></div>
+            </div>
+            <span class="text-[10px] text-gray-500 dark:text-gray-400 w-6">{{ item.count }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 活跃时段 -->
+      <div v-if="summary.top_time_slots?.length" class="glass-card p-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">活跃时段</h4>
+        <div class="space-y-2">
+          <div v-for="(slot, index) in summary.top_time_slots" :key="slot.name" class="flex items-center gap-2">
+            <span class="text-xs text-gray-400 w-4 text-right">{{ index + 1 }}</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-0.5">
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ slot.name }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">{{ slot.count }}次</span>
+              </div>
+              <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] rounded-full" :style="{ width: `${(slot.count / summary.top_time_slots[0].count) * 100}%` }"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 重刷视频列表 -->
+    <div v-if="summary.rewatch_stats?.rewatched_videos?.length" class="glass-card p-4">
+      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        重刷视频
+      </h4>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div
+          v-for="(video, index) in summary.rewatch_stats.rewatched_videos"
+          :key="video.bvid"
+          class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+        >
+          <span class="text-xs text-gray-400 w-4 text-right font-mono">{{ index + 1 }}</span>
+          <img
+            v-if="video.cover"
+            :src="normalizeImageUrl(video.cover)"
+            class="w-16 h-10 rounded object-cover flex-shrink-0"
+            loading="lazy"
+          />
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ video.title }}</div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">{{ video.author_name }}</div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <div class="text-sm font-semibold text-green-500">{{ video.count }}次</div>
+            <div class="text-[10px] text-gray-400">{{ formatDurationShort(video.total_duration) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 最长观看视频 -->
     <div v-if="summary.top_videos?.length" class="glass-card p-4">
       <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
@@ -268,6 +376,11 @@ const maxDailyCount = computed(() => {
 const maxHourCount = computed(() => {
   if (!props.summary.hour_dist) return 1
   return Math.max(...Object.values(props.summary.hour_dist), 1)
+})
+
+const maxCompCount = computed(() => {
+  if (!props.summary.completion_dist?.length) return 1
+  return Math.max(...props.summary.completion_dist.map(d => d.count), 1)
 })
 </script>
 

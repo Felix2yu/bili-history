@@ -122,7 +122,7 @@
     </div>
 
     <!-- Top 分区 & Top UP主 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <!-- Top 分区 -->
       <div v-if="summary.top_categories?.length" class="glass-card p-4">
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">

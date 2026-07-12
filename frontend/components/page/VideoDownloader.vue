@@ -139,6 +139,7 @@
                     :src="normalizeImageUrl(videoInfo.pic)"
                   :alt="videoInfo.title"
                   class="w-full h-full object-cover"
+                  loading="lazy"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                   <svg class="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">

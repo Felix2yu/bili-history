@@ -58,7 +58,7 @@
       </div>
       <div class="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <div v-if="record.business !== 'cheese' && record.business !== 'pgc'" class="flex items-center gap-2" @click.stop>
-          <img :src="normalizeImageUrl(record.author_face)" class="w-4 h-4 rounded-full" @click="handleAuthorClick" />
+          <img :src="normalizeImageUrl(record.author_face)" class="w-4 h-4 rounded-full" @click="handleAuthorClick" loading="lazy" />
           <span class="cursor-pointer hover:text-accent transition-colors" @click="handleAuthorClick" v-html="highlightedAuthorName"></span>
         </div>
         <div class="flex items-center gap-2">
@@ -150,7 +150,7 @@
         <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
           <div v-if="record.business === 'pgc'" class="text-gray-500 dark:text-gray-400 truncate">{{ record.long_title }}</div>
           <div v-else class="flex items-center gap-2 min-w-0" @click.stop>
-            <img :src="normalizeImageUrl(record.author_face)" class="w-4 h-4 rounded-full flex-shrink-0" @click="handleAuthorClick" />
+            <img :src="normalizeImageUrl(record.author_face)" class="w-4 h-4 rounded-full flex-shrink-0" @click="handleAuthorClick" loading="lazy" />
             <span class="cursor-pointer hover:text-accent transition-colors truncate" @click="handleAuthorClick" v-html="highlightedAuthorName"></span>
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">

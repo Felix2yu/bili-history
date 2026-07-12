@@ -68,7 +68,7 @@
         <div v-if="hosts.length" class="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           <div v-for="h in hosts" :key="h.host_mid" class="group border rounded-md p-2 flex items-center space-x-2 hover:border-[#fb7299] cursor-pointer dark:border-gray-700"
                @click="selectHost(h.host_mid)">
-            <img :src="h.face_path ? (h.face_path.startsWith('http') ? h.face_path : toStaticUrl(h.face_path)) : ''" class="w-9 h-9 rounded-full object-cover border" alt="face" />
+            <img :src="h.face_path ? (h.face_path.startsWith('http') ? h.face_path : toStaticUrl(h.face_path)) : ''" class="w-9 h-9 rounded-full object-cover border" alt="face" loading="lazy" />
             <div class="min-w-0 flex-1">
               <div class="text-xs font-medium truncate">{{ h.up_name || h.host_mid }}</div>
               <div class="text-[11px] text-gray-500 truncate">动态：{{ h.item_count }} · 抓取：{{ formatTs(h.last_fetch_time) }}</div>

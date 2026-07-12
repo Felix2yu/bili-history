@@ -130,6 +130,7 @@
                       :src="normalizeImageUrl(folder.cover)"
                       :alt="folder.title"
                       class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      loading="lazy"
                       @click="viewFolderContents(folder)"
                     />
                     <button

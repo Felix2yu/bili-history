@@ -84,7 +84,7 @@
         <template v-for="(m, idx) in displayMedias" :key="idx">
           <!-- 普通图片 -->
           <div v-if="m.kind==='image'" class="relative rounded-md overflow-hidden hover:opacity-90 cursor-pointer h-28 sm:h-32 md:h-36" role="button" tabindex="0" @click="openPreview('image', m.url)" @keydown.enter="openPreview('image', m.url)">
-            <img :src="m.url" class="block w-full h-full object-cover" />
+            <img :src="m.url" class="block w-full h-full object-cover" loading="lazy" />
           </div>
           <!-- 实况照片（悬停播放） -->
           <div v-else class="relative rounded-md overflow-hidden hover:opacity-90 cursor-pointer h-28 sm:h-32 md:h-36"

@@ -34,7 +34,7 @@
           @keydown.enter="openLink(videoUrl)"
         >
           <div class="w-full" style="aspect-ratio: 16 / 9">
-            <img v-if="coverUrl" :src="coverUrl" class="block w-full h-full object-cover" alt="cover" />
+            <img v-if="coverUrl" :src="coverUrl" class="block w-full h-full object-cover" alt="cover" loading="lazy" />
             <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">no cover</div>
           </div>
           <div v-if="item.bvid" class="absolute bottom-1 left-1 text-[10px] bg-black/60 text-white px-1.5 py-0.5 rounded">{{ item.bvid }}</div>

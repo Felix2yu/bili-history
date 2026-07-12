@@ -28,6 +28,7 @@
               :src="normalizeImageUrl(record.cover || record.covers?.[0])"
               class="absolute left-0 top-0 h-full w-full object-cover"
               alt=""
+              loading="lazy"
             />
           </div>
           <div

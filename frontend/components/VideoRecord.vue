@@ -54,7 +54,7 @@
         <div v-if="record.tag_name || record.tname" class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]" :class="isBatchMode ? 'ml-6' : ''">
           {{ record.tag_name || record.tname }}
         </div>
-        <img :src="normalizeImageUrl(record.cover || record.covers[0])" class="h-full w-full object-cover" alt="" />
+        <img :src="normalizeImageUrl(record.cover || record.covers[0])" class="h-full w-full object-cover" alt="" loading="lazy" />
       </div>
       <div class="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <div v-if="record.business !== 'cheese' && record.business !== 'pgc'" class="flex items-center gap-2" @click.stop>
@@ -91,9 +91,9 @@
             <span>已收藏</span>
           </div>
         </div>
-        <img v-if="record.cover" :src="normalizeImageUrl(record.cover)" class="h-full w-full object-cover" alt="" />
+        <img v-if="record.cover" :src="normalizeImageUrl(record.cover)" class="h-full w-full object-cover" alt="" loading="lazy" />
         <div v-else v-for="(cover, index) in record.covers" :key="index" class="mb-1">
-          <img :src="normalizeImageUrl(cover)" class="h-full w-full object-cover" alt="" />
+          <img :src="normalizeImageUrl(cover)" class="h-full w-full object-cover" alt="" loading="lazy" />
         </div>
         <!-- Tag badge on cover -->
         <div v-if="record.tag_name || record.tname"

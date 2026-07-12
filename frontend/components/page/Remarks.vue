@@ -27,6 +27,7 @@
                 :src="normalizeImageUrl(record.cover)"
                 class="w-full h-full object-cover"
                 alt=""
+                loading="lazy"
               />
               <!-- 视频时长 -->
               <div class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">

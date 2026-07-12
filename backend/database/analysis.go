@@ -3,7 +3,10 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"sort"
+	"strings"
 	"time"
+	"unicode"
 )
 
 type DailyStats struct {
@@ -29,15 +32,21 @@ type MonthlyStats struct {
 }
 
 type AnalysisResult struct {
-	Year           int            `json:"year"`
-	DailyStats     []DailyStats   `json:"daily_stats"`
-	MonthlyStats   []MonthlyStats `json:"monthly_stats"`
-	TotalVideos    int            `json:"total_videos"`
-	TotalDuration  int            `json:"total_duration"`
-	UniqueAuthors  int            `json:"unique_authors"`
-	AvgDuration    float64        `json:"avg_duration"`
-	TagRanking     []TagCount     `json:"tag_ranking"`
-	AuthorRanking  []AuthorCount  `json:"author_ranking"`
+	Year                int                `json:"year"`
+	DailyStats          []DailyStats       `json:"daily_stats"`
+	MonthlyStats        []MonthlyStats     `json:"monthly_stats"`
+	TotalVideos         int                `json:"total_videos"`
+	TotalDuration       int                `json:"total_duration"`
+	UniqueAuthors       int                `json:"unique_authors"`
+	AvgDuration         float64            `json:"avg_duration"`
+	TagRanking          []TagCount         `json:"tag_ranking"`
+	AuthorRanking       []AuthorCount      `json:"author_ranking"`
+	DeviceDistribution  map[string]int     `json:"device_distribution"`
+	TitleKeywords       []KeywordCount     `json:"title_keywords"`
+	DurationPreference  DurationPreference `json:"duration_preference"`
+	TopVideos           []TopVideo         `json:"top_videos"`
+	WeekdayDistribution []WeekdayCount     `json:"weekday_distribution"`
+	ActiveDays          int                `json:"active_days"`
 }
 
 type TagCount struct {
@@ -49,6 +58,34 @@ type AuthorCount struct {
 	AuthorName string `json:"author_name"`
 	AuthorMid  int64  `json:"author_mid"`
 	Count      int    `json:"count"`
+}
+
+type KeywordCount struct {
+	Word  string `json:"word"`
+	Count int    `json:"count"`
+}
+
+type DurationPreference struct {
+	Short      int     `json:"short"`
+	Mid        int     `json:"mid"`
+	Long       int     `json:"long"`
+	ShortRatio float64 `json:"short_ratio"`
+	MidRatio   float64 `json:"mid_ratio"`
+	LongRatio  float64 `json:"long_ratio"`
+}
+
+type TopVideo struct {
+	Title      string `json:"title"`
+	BVID       string `json:"bvid"`
+	Cover      string `json:"cover"`
+	AuthorName string `json:"author_name"`
+	Duration   int    `json:"duration"`
+	ViewAt     int64  `json:"view_at"`
+}
+
+type WeekdayCount struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
 }
 
 func AnalyzeHistory(year int) (*AnalysisResult, error) {
@@ -228,7 +265,178 @@ func AnalyzeHistory(year int) (*AnalysisResult, error) {
 		}
 	}
 
+	// 设备分布
+	deviceRows, err := conn.Query(fmt.Sprintf(`
+		SELECT dt, COUNT(*) as count
+		FROM %s
+		WHERE view_at >= ? AND view_at < ?
+		GROUP BY dt
+		ORDER BY count DESC
+	`, tableName), yearStartTS, yearEndTS)
+	if err == nil {
+		defer deviceRows.Close()
+		result.DeviceDistribution = make(map[string]int)
+		for deviceRows.Next() {
+			var dt int
+			var count int
+			if deviceRows.Scan(&dt, &count) == nil {
+				result.DeviceDistribution[getDeviceName(dt)] += count
+			}
+		}
+	}
+
+	// 标题热词（提取高频词）
+	titleRows, err := conn.Query(fmt.Sprintf(`
+		SELECT title FROM %s
+		WHERE view_at >= ? AND view_at < ? AND title != ''
+	`, tableName), yearStartTS, yearEndTS)
+	if err == nil {
+		defer titleRows.Close()
+		wordCount := make(map[string]int)
+		for titleRows.Next() {
+			var title string
+			if titleRows.Scan(&title) == nil {
+				words := extractKeywords(title)
+				for _, w := range words {
+					if len([]rune(w)) >= 2 {
+						wordCount[w]++
+					}
+				}
+			}
+		}
+		for word, count := range wordCount {
+			result.TitleKeywords = append(result.TitleKeywords, KeywordCount{Word: word, Count: count})
+		}
+		sort.Slice(result.TitleKeywords, func(i, j int) bool {
+			return result.TitleKeywords[i].Count > result.TitleKeywords[j].Count
+		})
+		if len(result.TitleKeywords) > 30 {
+			result.TitleKeywords = result.TitleKeywords[:30]
+		}
+	}
+
+	// 时长偏好（短<5min / 中5-20min / 长>20min）
+	durationPrefRows, err := conn.Query(fmt.Sprintf(`
+		SELECT duration FROM %s
+		WHERE view_at >= ? AND view_at < ? AND duration > 0
+	`, tableName), yearStartTS, yearEndTS)
+	if err == nil {
+		defer durationPrefRows.Close()
+		var short, mid, long int
+		for durationPrefRows.Next() {
+			var duration int
+			if durationPrefRows.Scan(&duration) == nil {
+				if duration <= 300 {
+					short++
+				} else if duration <= 1200 {
+					mid++
+				} else {
+					long++
+				}
+			}
+		}
+		total := short + mid + long
+		result.DurationPreference = DurationPreference{
+			Short:      short,
+			Mid:        mid,
+			Long:       long,
+			ShortRatio: float64(short) / float64(total),
+			MidRatio:   float64(mid) / float64(total),
+			LongRatio:  float64(long) / float64(total),
+		}
+	}
+
+	// 最长观看视频 Top 10
+	topVideoRows, err := conn.Query(fmt.Sprintf(`
+		SELECT title, bvid, cover, author_name, duration, view_at
+		FROM %s
+		WHERE view_at >= ? AND view_at < ? AND duration > 0
+		ORDER BY duration DESC
+		LIMIT 10
+	`, tableName), yearStartTS, yearEndTS)
+	if err == nil {
+		defer topVideoRows.Close()
+		for topVideoRows.Next() {
+			var title, bvid, cover, authorName string
+			var duration int
+			var viewAt int64
+			if topVideoRows.Scan(&title, &bvid, &cover, &authorName, &duration, &viewAt) == nil {
+				result.TopVideos = append(result.TopVideos, TopVideo{
+					Title:      title,
+					BVID:       bvid,
+					Cover:      cover,
+					AuthorName: authorName,
+					Duration:   duration,
+					ViewAt:     viewAt,
+				})
+			}
+		}
+	}
+
+	// 周内分布
+	weekdayRows, err := conn.Query(fmt.Sprintf(`
+		SELECT CAST(strftime('%%w', view_at, 'unixepoch', 'localtime') AS INTEGER) as weekday,
+			COUNT(*) as count
+		FROM %s
+		WHERE view_at >= ? AND view_at < ?
+		GROUP BY weekday
+		ORDER BY weekday
+	`, tableName), yearStartTS, yearEndTS)
+	if err == nil {
+		defer weekdayRows.Close()
+		weekdayNames := []string{"周日", "周一", "周二", "周三", "周四", "周五", "周六"}
+		weekdayMap := make(map[int]int)
+		for weekdayRows.Next() {
+			var weekday, count int
+			if weekdayRows.Scan(&weekday, &count) == nil {
+				weekdayMap[weekday] = count
+			}
+		}
+		for i := 0; i < 7; i++ {
+			result.WeekdayDistribution = append(result.WeekdayDistribution, WeekdayCount{
+				Name:  weekdayNames[i],
+				Count: weekdayMap[i],
+			})
+		}
+	}
+
+	// 活跃天数
+	result.ActiveDays = len(result.DailyStats)
+
 	return result, nil
+}
+
+// extractKeywords 从标题中提取关键词（简单分词）
+func extractKeywords(title string) []string {
+	// 替换常见分隔符为空格
+	title = strings.NewReplacer(
+		"|", " ", "-", " ", "—", " ", "【", " ", "】", " ",
+		"(", " ", ")", " ", "「", " ", "」", " ",
+		"[", " ", "]", " ", "·", " ", "&", " ",
+	).Replace(title)
+
+	var words []string
+	var current []rune
+	for _, r := range title {
+		if unicode.IsSpace(r) || unicode.IsPunct(r) {
+			if len(current) > 0 {
+				word := string(current)
+				if len([]rune(word)) >= 2 {
+					words = append(words, word)
+				}
+				current = nil
+			}
+		} else {
+			current = append(current, r)
+		}
+	}
+	if len(current) > 0 {
+		word := string(current)
+		if len([]rune(word)) >= 2 {
+			words = append(words, word)
+		}
+	}
+	return words
 }
 
 type HeatmapData struct {

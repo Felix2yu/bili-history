@@ -10,6 +10,6 @@ definePageMeta({
 import ReportPage from '~/components/page/ReportPage.vue'
 
 useHead({
-  title: '周报月报 - BiliHistory',
+  title: '数据概览 - BiliHistory',
 })
 </script>

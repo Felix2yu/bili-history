@@ -2,7 +2,7 @@
   <div class="px-2 sm:px-4 lg:px-6 py-6 space-y-6 max-w-[1600px] mx-auto">
     <!-- 标题 -->
     <h2 class="text-2xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
-      周报 / 月报
+      数据概览
     </h2>
 
     <!-- Tab 切换 -->
@@ -22,108 +22,121 @@
       </div>
     </div>
 
-    <!-- 时间选择器 -->
-    <div class="flex items-center justify-center gap-4">
-      <button
-        @click="navigateTime(-1)"
-        class="glass-icon-btn"
-        :disabled="loading"
-      >
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-
-      <div class="text-center min-w-[200px]">
-        <div v-if="activeTab === 'weekly'" class="text-lg font-semibold text-gray-800 dark:text-gray-200">
-          {{ currentYear }} 第 {{ currentWeek }} 周
-        </div>
-        <div v-else class="text-lg font-semibold text-gray-800 dark:text-gray-200">
-          {{ currentYear }}年{{ currentMonth }}月
-        </div>
-        <div v-if="reportData" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          <template v-if="activeTab === 'weekly'">
-            {{ reportData.start_date }} ~ {{ reportData.end_date }}
-          </template>
-          <template v-else>
-            共 {{ reportData.summary?.unique_days || 0 }} 天有观看记录
-          </template>
-        </div>
-      </div>
-
-      <button
-        @click="navigateTime(1)"
-        class="glass-icon-btn"
-        :disabled="loading"
-      >
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    </div>
-
-    <!-- 加载状态 -->
-    <div v-if="loading" class="flex justify-center py-16">
-      <van-loading type="spinner" color="#fb7299" size="36">加载中...</van-loading>
-    </div>
-
-    <!-- 空状态 -->
-    <div v-else-if="reportData && reportData.videos?.length === 0" class="text-center py-16">
-      <div class="text-gray-400 dark:text-gray-500 text-lg mb-2">该{{ activeTab === 'weekly' ? '周' : '月' }}暂无观看记录</div>
-      <div class="text-gray-400 dark:text-gray-500 text-sm">试试切换到其他时间</div>
-    </div>
-
-    <!-- 报告内容 -->
-    <template v-else-if="reportData && reportData.videos?.length > 0">
-      <!-- 汇总统计 -->
-      <ReportSummary :summary="reportData.summary" />
-
-      <!-- 视频列表 -->
-      <div class="space-y-6">
-        <div v-for="(group, date) in groupedVideos" :key="date" class="space-y-3">
-          <div class="flex items-center gap-2">
-            <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
-            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-              {{ formatDateGroup(date) }}
-              <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">
-                ({{ group.length }}个视频 · {{ formatDayDuration(date) }})
-              </span>
-            </span>
-            <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
-          </div>
-
-          <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));">
-            <ReportVideoCard
-              v-for="video in group"
-              :key="`${video.bvid}-${video.view_at}`"
-              :video="video"
-            />
-          </div>
-        </div>
-      </div>
+    <!-- 年度标签：直接渲染 AnimatedAnalytics -->
+    <template v-if="activeTab === 'yearly'">
+      <AnimatedAnalytics />
     </template>
 
-    <!-- 错误状态 -->
-    <div v-else-if="error" class="text-center py-16">
-      <div class="text-red-500 text-lg mb-2">加载失败</div>
-      <div class="text-gray-500 text-sm">{{ error }}</div>
-    </div>
+    <!-- 月度 / 周概览标签 -->
+    <template v-else>
+      <!-- 时间选择器 -->
+      <div class="flex items-center justify-center gap-4">
+        <button
+          @click="navigateTime(-1)"
+          class="glass-icon-btn"
+          :disabled="loading"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div class="text-center min-w-[200px]">
+          <div v-if="activeTab === 'weekly'" class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            {{ currentYear }} 第 {{ currentWeek }} 周
+          </div>
+          <div v-else class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            {{ currentYear }}年{{ currentMonth }}月
+          </div>
+          <div v-if="reportData" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            <template v-if="activeTab === 'weekly'">
+              {{ reportData.start_date }} ~ {{ reportData.end_date }}
+            </template>
+            <template v-else>
+              共 {{ reportData.summary?.unique_days || 0 }} 天有观看记录
+            </template>
+          </div>
+        </div>
+
+        <button
+          @click="navigateTime(1)"
+          class="glass-icon-btn"
+          :disabled="loading"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- 加载状态 -->
+      <div v-if="loading" class="flex justify-center py-16">
+        <van-loading type="spinner" color="#fb7299" size="36">加载中...</van-loading>
+      </div>
+
+      <!-- 空状态 -->
+      <div v-else-if="reportData && reportData.videos?.length === 0" class="text-center py-16">
+        <div class="text-gray-400 dark:text-gray-500 text-lg mb-2">该{{ activeTab === 'weekly' ? '周' : '月' }}暂无观看记录</div>
+        <div class="text-gray-400 dark:text-gray-500 text-sm">试试切换到其他时间</div>
+      </div>
+
+      <!-- 报告内容 -->
+      <template v-else-if="reportData && reportData.videos?.length > 0">
+        <!-- 汇总统计 -->
+        <ReportSummary :summary="reportData.summary" />
+
+        <!-- 视频列表 -->
+        <div class="space-y-6">
+          <div v-for="(group, date) in groupedVideos" :key="date" class="space-y-3">
+            <div class="flex items-center gap-2">
+              <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                {{ formatDateGroup(date) }}
+                <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">
+                  ({{ group.length }}个视频 · {{ formatDayDuration(date) }})
+                </span>
+              </span>
+              <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+
+            <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));">
+              <ReportVideoCard
+                v-for="video in group"
+                :key="`${video.bvid}-${video.view_at}`"
+                :video="video"
+              />
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 错误状态 -->
+      <div v-else-if="error" class="text-center py-16">
+        <div class="text-red-500 text-lg mb-2">加载失败</div>
+        <div class="text-gray-500 text-sm">{{ error }}</div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { getWeeklyReport, getMonthlyReport, getAvailableYears } from '~/utils/api'
+import { useRoute } from 'vue-router'
+import { getWeeklyReport, getMonthlyReport } from '~/utils/api'
 import { formatDurationShort } from '~/utils/format'
 import ReportSummary from '~/components/ReportSummary.vue'
 import ReportVideoCard from '~/components/ReportVideoCard.vue'
+import AnimatedAnalytics from '~/components/page/AnimatedAnalytics.vue'
+
+const route = useRoute()
 
 const tabs = [
-  { key: 'weekly', label: '周报' },
-  { key: 'monthly', label: '月报' },
+  { key: 'yearly', label: '年度' },
+  { key: 'monthly', label: '月度' },
+  { key: 'weekly', label: '周概览' },
 ]
 
-const activeTab = ref('weekly')
+const activeTab = ref(route.query.tab === 'monthly' ? 'monthly' : route.query.tab === 'weekly' ? 'weekly' : 'yearly')
 const currentYear = ref(new Date().getFullYear())
 const currentWeek = ref(getCurrentWeek())
 const currentMonth = ref(new Date().getMonth() + 1)
@@ -170,6 +183,7 @@ function formatDayDuration(dateStr) {
 }
 
 async function fetchReport() {
+  if (activeTab.value === 'yearly') return
   loading.value = true
   error.value = null
   reportData.value = null

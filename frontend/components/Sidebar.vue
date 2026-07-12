@@ -65,17 +65,7 @@
         <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        <span>周报月报</span>
-      </router-link>
-
-      <router-link to="/analytics" @click="emit('navigate')"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-        :class="currentContent === 'analytics' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
-      >
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-        <span>年度总结</span>
+        <span>数据概览</span>
       </router-link>
 
       <router-link to="/media" @click="emit('navigate')"
@@ -175,7 +165,6 @@ const currentContent = computed(() => {
   if (path.startsWith('/media')) return 'media'
   if (path.startsWith('/scheduler')) return 'scheduler'
   if (path.startsWith('/report')) return 'report'
-  if (path.startsWith('/analytics')) return 'analytics'
   return 'history'
 })
 

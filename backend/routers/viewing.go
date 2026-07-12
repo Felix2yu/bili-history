@@ -81,10 +81,20 @@ func getMonthlyStats(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{
-		"monthly_stats":    result.MonthlyStats,
-		"total_videos":     result.TotalVideos,
-		"year":             year,
-		"available_years":  availableYears,
+		"monthly_stats":        result.MonthlyStats,
+		"total_videos":         result.TotalVideos,
+		"total_duration":       result.TotalDuration,
+		"unique_authors":       result.UniqueAuthors,
+		"tag_ranking":          result.TagRanking,
+		"author_ranking":       result.AuthorRanking,
+		"device_distribution":  result.DeviceDistribution,
+		"title_keywords":       result.TitleKeywords,
+		"duration_preference":  result.DurationPreference,
+		"top_videos":           result.TopVideos,
+		"weekday_distribution": result.WeekdayDistribution,
+		"active_days":          result.ActiveDays,
+		"year":                 year,
+		"available_years":      availableYears,
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(data))

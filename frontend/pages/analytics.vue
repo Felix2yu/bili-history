@@ -1,10 +1,12 @@
 <template>
-  <AnimatedAnalytics />
+  <div></div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 definePageMeta({
   layout: 'main',
 })
-import AnimatedAnalytics from '~/components/page/AnimatedAnalytics.vue'
+
+// 重定向到数据概览的年度标签
+navigateTo('/report', { replace: true })
 </script>

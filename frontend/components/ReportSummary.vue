@@ -228,7 +228,7 @@
           <span class="text-xs text-gray-400 w-4 text-right font-mono">{{ index + 1 }}</span>
           <img
             v-if="video.cover"
-            :src="video.cover"
+            :src="normalizeImageUrl(video.cover)"
             class="w-16 h-10 rounded object-cover flex-shrink-0"
             loading="lazy"
           />
@@ -249,6 +249,7 @@
 <script setup>
 import { computed } from 'vue'
 import { formatDurationShort, formatTimestamp } from '~/utils/format'
+import { normalizeImageUrl } from '~/utils/imageUrl'
 
 const props = defineProps({
   summary: {

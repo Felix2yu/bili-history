@@ -180,7 +180,7 @@
     </div>
 
     <!-- 常看UP主 + 标题热词 + 周内分布 -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <!-- 常看UP主 -->
       <div v-if="summary.top_authors?.length" class="glass-card p-4">
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
@@ -241,7 +241,7 @@
           </svg>
           周内分布
         </h4>
-        <div class="flex items-end gap-2 h-28">
+        <div class="flex items-end gap-2 h-24">
           <div
             v-for="day in summary.weekday_dist"
             :key="day.name"

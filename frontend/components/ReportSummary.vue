@@ -65,20 +65,22 @@
         </svg>
         每日观看
       </h4>
-      <div class="flex items-end gap-1 h-24">
-        <div
-          v-for="day in summary.daily_breakdown"
-          :key="day.date"
-          class="flex-1 flex flex-col items-center gap-1 group relative"
-        >
-          <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-            {{ day.date.slice(5) }}: {{ day.count }}个视频
-          </div>
+      <div class="relative" style="height: 120px;">
+        <div class="absolute inset-0 flex items-end gap-1">
           <div
-            class="w-full bg-gradient-to-t from-[#fb7299] to-[#fc9b7a] rounded-t transition-all duration-300 hover:opacity-80"
-            :style="{ height: `${(day.count / maxDailyCount) * 100}%`, minHeight: '4px' }"
-          ></div>
-          <span class="text-[9px] text-gray-400 dark:text-gray-500">{{ day.date.slice(8) }}</span>
+            v-for="day in summary.daily_breakdown"
+            :key="day.date"
+            class="flex-1 flex flex-col items-center group relative"
+            style="height: 100%;"
+          >
+            <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+              {{ day.date.slice(5) }}: {{ day.count }}个视频
+            </div>
+            <div class="w-full mt-auto bg-gradient-to-t from-[#fb7299] to-[#fc9b7a] rounded-t transition-all duration-300 hover:opacity-80"
+                 :style="{ height: `${Math.max((day.count / maxDailyCount) * 100, 4)}%` }"
+            ></div>
+            <span class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 flex-shrink-0">{{ day.date.slice(8) }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -91,20 +93,23 @@
         </svg>
         观看时段
       </h4>
-      <div class="flex items-end gap-px h-16">
-        <div
-          v-for="hour in 24"
-          :key="hour - 1"
-          class="flex-1 flex flex-col items-center gap-0.5 group relative"
-        >
-          <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-            {{ hour - 1 }}时: {{ summary.hour_dist[hour - 1] || 0 }}次
-          </div>
+      <div class="relative" style="height: 80px;">
+        <div class="absolute inset-0 flex items-end gap-px">
           <div
-            class="w-full rounded-t transition-all duration-300"
-            :class="(hour - 1) >= 22 || (hour - 1) < 6 ? 'bg-purple-400' : 'bg-[#fb7299]'"
-            :style="{ height: `${((summary.hour_dist[hour - 1] || 0) / maxHourCount) * 100}%`, minHeight: '2px' }"
-          ></div>
+            v-for="hour in 24"
+            :key="hour - 1"
+            class="flex-1 flex flex-col items-center group relative"
+            style="height: 100%;"
+          >
+            <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+              {{ hour - 1 }}时: {{ summary.hour_dist[hour - 1] || 0 }}次
+            </div>
+            <div
+              class="w-full mt-auto rounded-t transition-all duration-300"
+              :class="(hour - 1) >= 22 || (hour - 1) < 6 ? 'bg-purple-400' : 'bg-[#fb7299]'"
+              :style="{ height: `${Math.max(((summary.hour_dist[hour - 1] || 0) / maxHourCount) * 100, 2)}%` }"
+            ></div>
+          </div>
         </div>
       </div>
       <div class="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-1">

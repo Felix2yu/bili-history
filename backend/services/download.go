@@ -39,12 +39,23 @@ type StreamInfo struct {
 	Ext     string `json:"ext"`
 }
 
+type DownloadedVideoFile struct {
+	FilePath    string  `json:"file_path"`
+	SizeMB      float64 `json:"size_mb"`
+	IsAudioOnly bool    `json:"is_audio_only"`
+}
+
 type DownloadedVideo struct {
-	Title      string `json:"title"`
-	FilePath   string `json:"file_path"`
-	FileName   string `json:"file_name"`
-	FileSize   int64  `json:"file_size"`
-	DownloadAt int64  `json:"download_at"`
+	Title       string              `json:"title"`
+	BVID        string              `json:"bvid"`
+	CID         string              `json:"cid"`
+	Cover       string              `json:"cover"`
+	AuthorName  string              `json:"author_name"`
+	AuthorFace  string              `json:"author_face"`
+	AuthorMid   int64               `json:"author_mid"`
+	DownloadDate string             `json:"download_date"`
+	Files       []DownloadedVideoFile `json:"files"`
+	Directory   string              `json:"directory"`
 }
 
 func GetDownloadOutputPath() string {
@@ -487,12 +498,44 @@ func ListDownloadedVideos(search string, page, limit int) ([]DownloadedVideo, in
 			return nil
 		}
 
+		// 解析文件名，提取元数据
+		// 文件名格式：[UP主名]投稿名.mp4 或 投稿名-BVxxxxxx.mp4
+		fullName := strings.TrimSuffix(name, filepath.Ext(name))
+		authorName := ""
+		title := fullName
+
+		// 尝试匹配 [UP主名]标题 格式
+		if strings.HasPrefix(fullName, "[") {
+			endIdx := strings.Index(fullName, "]")
+			if endIdx > 0 {
+				authorName = fullName[1:endIdx]
+				title = fullName[endIdx+1:]
+			}
+		}
+
+		// 尝试从文件名中提取 BV 号
+		bvid := ""
+		bvMatch := bvRegexp.FindString(fullName)
+		if bvMatch != "" {
+			bvid = bvMatch
+		}
+
+		// 检查是否为纯音频
+		isAudioOnly := strings.Contains(strings.ToLower(name), "audio") || strings.HasSuffix(strings.ToLower(name), ".m4a")
+
 		videos = append(videos, DownloadedVideo{
-			Title:      strings.TrimSuffix(name, filepath.Ext(name)),
-			FilePath:   path,
-			FileName:   name,
-			FileSize:   info.Size(),
-			DownloadAt: info.ModTime().Unix(),
+			Title:        title,
+			BVID:         bvid,
+			AuthorName:   authorName,
+			DownloadDate: info.ModTime().Format("2006-01-02"),
+			Files: []DownloadedVideoFile{
+				{
+					FilePath:    path,
+					SizeMB:      float64(info.Size()) / 1024 / 1024,
+					IsAudioOnly: isAudioOnly,
+				},
+			},
+			Directory: filepath.Dir(path),
 		})
 		return nil
 	})

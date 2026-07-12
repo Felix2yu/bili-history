@@ -85,7 +85,9 @@
             <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
               {{ formatDateGroup(date) }}
-              <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">({{ group.length }}个视频)</span>
+              <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">
+                ({{ group.length }}个视频 · {{ formatDayDuration(date) }})
+              </span>
             </span>
             <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
           </div>
@@ -112,6 +114,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { getWeeklyReport, getMonthlyReport, getAvailableYears } from '~/utils/api'
+import { formatDurationShort } from '~/utils/format'
 import ReportSummary from '~/components/ReportSummary.vue'
 import ReportVideoCard from '~/components/ReportVideoCard.vue'
 
@@ -130,10 +133,12 @@ const error = ref(null)
 
 function getCurrentWeek() {
   const now = new Date()
-  const jan1 = new Date(now.getFullYear(), 0, 1)
-  const days = Math.floor((now - jan1) / 86400000)
-  const weekNum = Math.ceil((days + jan1.getDay() + 1) / 7)
-  return Math.max(1, weekNum)
+  const jan4 = new Date(now.getFullYear(), 0, 4)
+  const weekday = jan4.getDay() || 7 // Sunday = 7
+  const week1Monday = new Date(jan4)
+  week1Monday.setDate(jan4.getDate() - weekday + 1)
+  const diffDays = Math.floor((now - week1Monday) / 86400000)
+  return Math.max(1, Math.floor(diffDays / 7) + 1)
 }
 
 const groupedVideos = computed(() => {
@@ -155,6 +160,13 @@ function formatDateGroup(dateStr) {
   const day = date.getDate()
   const weekday = weekdays[date.getDay()]
   return `${month}月${day}日 ${weekday}`
+}
+
+function formatDayDuration(dateStr) {
+  const group = groupedVideos.value[dateStr]
+  if (!group) return ''
+  const total = group.reduce((sum, v) => sum + (v.duration > 0 ? v.duration : 0), 0)
+  return formatDurationShort(total)
 }
 
 async function fetchReport() {
@@ -185,11 +197,11 @@ async function fetchReport() {
 function navigateTime(direction) {
   if (activeTab.value === 'weekly') {
     currentWeek.value += direction
-    if (currentWeek.value > 52) {
+    if (currentWeek.value > 53) {
       currentWeek.value = 1
       currentYear.value++
     } else if (currentWeek.value < 1) {
-      currentWeek.value = 52
+      currentWeek.value = 53
       currentYear.value--
     }
   } else {

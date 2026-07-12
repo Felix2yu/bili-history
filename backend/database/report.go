@@ -46,6 +46,23 @@ type ReportSummary struct {
 	TopCategories    []CategoryStat `json:"top_categories"`
 	TopAuthors       []AuthorStat   `json:"top_authors"`
 	DeviceDist       map[string]int `json:"device_dist"`
+	DailyBreakdown   []DailyBreakdown `json:"daily_breakdown"`
+	HourDist         map[int]int    `json:"hour_dist"`
+	CompletionStats  CompletionStats `json:"completion_stats"`
+	TopVideos        []ReportVideo  `json:"top_videos"`
+}
+
+type DailyBreakdown struct {
+	Date       string `json:"date"`
+	Count      int    `json:"count"`
+	Duration   int    `json:"duration"`
+	UniqueUp   int    `json:"unique_up"`
+}
+
+type CompletionStats struct {
+	Finished     int     `json:"finished"`
+	Partial      int     `json:"partial"`
+	AvgRate      float64 `json:"avg_rate"`
 }
 
 type WeeklyReportResponse struct {
@@ -107,15 +124,15 @@ func GetMonthlyReport(year, month int) (*MonthlyReportResponse, error) {
 	}, nil
 }
 
-// getWeekRange calculates the start (Monday) and end (Sunday) of an ISO week
+// getWeekRange calculates the start (Monday) and end (Sunday) of an ISO week.
+// ISO 8601: Jan 4 is always in week 1. Monday is day 1, Sunday is day 7.
 func getWeekRange(year, week int) (time.Time, time.Time) {
 	jan4 := time.Date(year, 1, 4, 0, 0, 0, 0, time.Local)
-	// Find the Monday of the week containing Jan 4
-	weekday := jan4.Weekday()
-	if weekday == time.Sunday {
-		weekday = 7
+	weekday := int(jan4.Weekday())
+	if weekday == 0 {
+		weekday = 7 // Sunday = 7
 	}
-	week1Monday := jan4.AddDate(0, 0, -int(weekday-time.Monday))
+	week1Monday := jan4.AddDate(0, 0, -weekday+1)
 
 	startDate := week1Monday.AddDate(0, 0, (week-1)*7)
 	endDate := startDate.AddDate(0, 0, 6).Add(time.Hour*24 - time.Second)
@@ -200,26 +217,43 @@ func queryReportVideos(startDate, endDate time.Time) ([]ReportVideo, error) {
 func computeSummary(videos []ReportVideo, dayCount int) ReportSummary {
 	if len(videos) == 0 {
 		return ReportSummary{
-			DeviceDist: make(map[string]int),
+			DeviceDist:  make(map[string]int),
+			HourDist:    make(map[int]int),
 		}
 	}
 
 	summary := ReportSummary{
 		TotalVideos:  len(videos),
 		DeviceDist:   make(map[string]int),
+		HourDist:     make(map[int]int),
 	}
 
 	authorMap := make(map[string]*AuthorStat)
 	categoryMap := make(map[string]int)
-	daySet := make(map[string]bool)
 	uniqueAuthorMids := make(map[int64]bool)
+
+	// Daily breakdown tracking
+	type dayInfo struct {
+		count    int
+		duration int
+		authors  map[int64]bool
+	}
+	dailyMap := make(map[string]*dayInfo)
+
+	var totalCompletionRate float64
+	var completionCount int
 
 	for _, v := range videos {
 		summary.TotalDuration += v.Duration
 
-		// Track unique days
+		// Track daily breakdown
 		day := time.Unix(v.ViewAt, 0).Format("2006-01-02")
-		daySet[day] = true
+		if _, ok := dailyMap[day]; !ok {
+			dailyMap[day] = &dayInfo{authors: make(map[int64]bool)}
+		}
+		dailyMap[day].count++
+		dailyMap[day].duration += v.Duration
+		dailyMap[day].authors[v.AuthorMid] = true
 
 		// Track unique authors
 		uniqueAuthorMids[v.AuthorMid] = true
@@ -246,15 +280,48 @@ func computeSummary(videos []ReportVideo, dayCount int) ReportSummary {
 
 		// Device distribution
 		summary.DeviceDist[getDeviceName(v.Dt)]++
+
+		// Hourly distribution
+		hour := time.Unix(v.ViewAt, 0).Hour()
+		summary.HourDist[hour]++
+
+		// Completion stats
+		if v.Duration > 0 {
+			rate := float64(v.Progress) / float64(v.Duration)
+			if v.Progress == -1 || rate >= 0.9 {
+				summary.CompletionStats.Finished++
+			} else {
+				summary.CompletionStats.Partial++
+			}
+			totalCompletionRate += rate
+			completionCount++
+		}
 	}
 
-	summary.UniqueDays = len(daySet)
+	summary.UniqueDays = len(dailyMap)
 	summary.UniqueAuthors = len(uniqueAuthorMids)
+
+	if completionCount > 0 {
+		summary.CompletionStats.AvgRate = totalCompletionRate / float64(completionCount)
+	}
 
 	if dayCount > 0 {
 		summary.AvgDailyVideos = float64(summary.TotalVideos) / float64(dayCount)
 		summary.AvgDailyDuration = float64(summary.TotalDuration) / float64(dayCount)
 	}
+
+	// Build daily breakdown sorted by date
+	for date, info := range dailyMap {
+		summary.DailyBreakdown = append(summary.DailyBreakdown, DailyBreakdown{
+			Date:     date,
+			Count:    info.count,
+			Duration: info.duration,
+			UniqueUp: len(info.authors),
+		})
+	}
+	sort.Slice(summary.DailyBreakdown, func(i, j int) bool {
+		return summary.DailyBreakdown[i].Date < summary.DailyBreakdown[j].Date
+	})
 
 	// Top categories (by count)
 	for name, count := range categoryMap {
@@ -277,6 +344,17 @@ func computeSummary(videos []ReportVideo, dayCount int) ReportSummary {
 	if len(summary.TopAuthors) > 10 {
 		summary.TopAuthors = summary.TopAuthors[:10]
 	}
+
+	// Top videos (by duration, up to 5)
+	sortedVideos := make([]ReportVideo, len(videos))
+	copy(sortedVideos, videos)
+	sort.Slice(sortedVideos, func(i, j int) bool {
+		return sortedVideos[i].Duration > sortedVideos[j].Duration
+	})
+	if len(sortedVideos) > 5 {
+		sortedVideos = sortedVideos[:5]
+	}
+	summary.TopVideos = sortedVideos
 
 	return summary
 }

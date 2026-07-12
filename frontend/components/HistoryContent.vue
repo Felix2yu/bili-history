@@ -48,10 +48,9 @@
 
     <!-- 视频记录列表 -->
     <div v-else class="overflow-hidden">
-      <transition name="float" mode="out-in">
-        <!-- 网格布局（最小屏幕自动回退到列表） -->
+        <!-- 网格布局 -->
         <div v-if="activeLayout === 'grid'"
-             :style="{ display: 'flex', flexWrap: 'wrap', gap: '16px', padding: '0 16px', maxWidth: '100%' }" key="grid-layout">
+             :style="{ display: 'flex', flexWrap: 'wrap', gap: '16px', padding: '0 16px', width: '100%' }" key="grid-layout">
           <template v-for="(record, index) in records" :key="`grid-${record.id}-${record.view_at}`">
             <!-- 日期分割线和视频数量 -->
             <div v-if="shouldShowDivider(index)" :style="{ width: '100%', position: 'relative', padding: '8px 0' }">
@@ -209,7 +208,6 @@
             />
           </template>
         </div>
-      </transition>
     </div>
 
     <!-- 日期选择日历 -->
@@ -302,21 +300,6 @@
 
 .animate-bounce-x {
   animation: bounce-x 1s infinite;
-}
-
-.float-enter-active,
-.float-leave-active {
-  transition: all 0.3s ease;
-}
-
-.float-enter-from {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.float-leave-to {
-  opacity: 0;
-  transform: translateY(-20px);
 }
 </style>
 

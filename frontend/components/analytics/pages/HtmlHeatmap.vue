@@ -26,16 +26,16 @@
 
     <!-- 热力图主体 -->
     <div class="overflow-x-auto" ref="containerRef">
-      <div class="inline-flex gap-0.5">
+      <div class="flex gap-0.5 w-full">
         <!-- 星期标签 -->
-        <div class="flex flex-col gap-0.5 mr-1 text-xs text-gray-500 dark:text-gray-400">
+        <div class="flex flex-col gap-0.5 mr-1 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
           <div v-for="(day, i) in dayLabels" :key="i" class="h-[14px] leading-[14px]">
             {{ i % 2 === 1 ? day : '' }}
           </div>
         </div>
 
         <!-- 月份和日期格子 -->
-        <div v-for="(week, wi) in weeks" :key="wi" class="flex flex-col gap-0.5">
+        <div v-for="(week, wi) in weeks" :key="wi" class="flex flex-col gap-0.5 flex-1 min-w-[14px]">
           <!-- 月份标签（仅在月份开始的周显示） -->
           <div class="h-[14px] leading-[14px] text-xs text-gray-500 dark:text-gray-400 text-center whitespace-nowrap">
             {{ week.monthLabel }}
@@ -44,7 +44,7 @@
           <div
             v-for="(cell, ci) in week.cells"
             :key="ci"
-            class="w-[14px] h-[14px] rounded-[2px] cursor-pointer transition-all duration-150"
+            class="h-[14px] rounded-[2px] cursor-pointer transition-all duration-150 w-full"
             :class="cell ? getCellClass(cell.count) : 'bg-gray-100 dark:bg-gray-800'"
             @mouseenter="showTooltip($event, cell)"
             @mouseleave="hideTooltip"

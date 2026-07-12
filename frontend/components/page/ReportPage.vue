@@ -1,5 +1,5 @@
 <template>
-  <div class="px-2 sm:px-4 lg:px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
+  <div class="px-2 sm:px-4 lg:px-6 py-6 space-y-6 max-w-[1600px] mx-auto">
     <!-- 标题 -->
     <h2 class="text-2xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
       周报 / 月报

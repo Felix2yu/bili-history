@@ -91,7 +91,7 @@
           </svg>
           每日观看
         </h4>
-        <div class="relative" style="height: 120px;">
+        <div class="relative" style="height: 100px;">
           <div class="absolute inset-0 flex items-end gap-1">
             <div
               v-for="day in summary.daily_breakdown"
@@ -119,7 +119,7 @@
           </svg>
           观看时段
         </h4>
-        <div class="relative" style="height: 80px;">
+        <div class="relative" style="height: 100px;">
           <div class="absolute inset-0 flex items-end gap-px">
             <div
               v-for="hour in 24"

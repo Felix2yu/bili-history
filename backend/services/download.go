@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"bilibili-history-go/config"
+	"bilibili-history-go/database"
 	"bilibili-history-go/utils"
 
 	"github.com/Felix2yu/bili-dl/C"
@@ -478,10 +479,72 @@ func CheckVideoDownloaded(cids []string) map[string]bool {
 	return result
 }
 
+type bvMeta struct {
+	cover      string
+	authorName string
+	authorFace string
+	authorMid  int64
+}
+
+// loadBVMetadata 从历史记录数据库加载所有 BV 号对应的封面和作者信息
+func loadBVMetadata() map[string]bvMeta {
+	result := make(map[string]bvMeta)
+
+	db := database.GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return result
+	}
+
+	years, err := db.GetAvailableYears()
+	if err != nil || len(years) == 0 {
+		return result
+	}
+
+	for _, year := range years {
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			continue
+		}
+
+		rows, err := conn.Query(fmt.Sprintf(`
+			SELECT bvid, cover, author_name, author_face, author_mid
+			FROM %s
+			WHERE bvid != '' AND cover != ''
+			GROUP BY bvid
+		`, tableName))
+		if err != nil {
+			continue
+		}
+
+		for rows.Next() {
+			var bvid, cover, authorName, authorFace string
+			var authorMid int64
+			if rows.Scan(&bvid, &cover, &authorName, &authorFace, &authorMid) == nil {
+				if _, exists := result[bvid]; !exists {
+					result[bvid] = bvMeta{
+						cover:      cover,
+						authorName: authorName,
+						authorFace: authorFace,
+						authorMid:  authorMid,
+					}
+				}
+			}
+		}
+		rows.Close()
+	}
+
+	return result
+}
+
 func ListDownloadedVideos(search string, page, limit int) ([]DownloadedVideo, int, error) {
 	outputDir := GetDownloadOutputPath()
 
 	var videos []DownloadedVideo
+
+	// 预加载所有年份的 BV→封面/作者 映射
+	bvMeta := loadBVMetadata()
 
 	filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -525,23 +588,18 @@ func ListDownloadedVideos(search string, page, limit int) ([]DownloadedVideo, in
 		// 检查是否为纯音频
 		isAudioOnly := strings.Contains(strings.ToLower(name), "audio") || strings.HasSuffix(strings.ToLower(name), ".m4a")
 
-		// 获取封面：优先读缓存，否则从 API 获取
+		// 从本地历史记录获取封面和作者信息
 		cover := ""
 		authorFace := ""
 		authorMid := int64(0)
 		if bvid != "" {
-			coverFile := path + ".cover"
-			if data, err := os.ReadFile(coverFile); err == nil {
-				cover = string(data)
-			} else if detail, err := fetchVideoDetail(bvid, getCookie()); err == nil {
-				cover = detail.Cover
-				authorFace = detail.Owner.Face
-				authorMid = detail.Owner.Mid
+			if meta, ok := bvMeta[bvid]; ok {
+				cover = meta.cover
+				authorFace = meta.authorFace
+				authorMid = meta.authorMid
 				if authorName == "" {
-					authorName = detail.Owner.Name
+					authorName = meta.authorName
 				}
-				// 缓存封面 URL
-				os.WriteFile(coverFile, []byte(cover), 0644)
 			}
 		}
 

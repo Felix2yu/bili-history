@@ -237,24 +237,16 @@
           </svg>
           周内分布
         </h4>
-        <div style="height: 100px;">
-          <div class="flex items-end gap-2 h-full">
-            <div
-              v-for="day in summary.weekday_dist"
-              :key="day.name"
-              class="flex-1 flex flex-col items-center group relative h-full"
-            >
-              <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                {{ day.name }}: {{ day.count }}
-              </div>
-              <div class="w-full mt-auto bg-gradient-to-t from-[#fb7299] to-[#fc9b7a] rounded-t transition-all duration-300 hover:opacity-80"
-                   :style="{ height: `${Math.max((day.count / maxWeekdayCount) * 100, 4)}%` }"
+        <div class="space-y-1.5">
+          <div v-for="day in summary.weekday_dist" :key="day.name" class="flex items-center gap-2">
+            <span class="text-[10px] text-gray-500 dark:text-gray-400 w-6 text-right flex-shrink-0">{{ day.name }}</span>
+            <div class="flex-1 h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] rounded-full transition-all duration-300"
+                   :style="{ width: `${Math.max((day.count / maxWeekdayCount) * 100, 2)}%` }"
               ></div>
             </div>
+            <span class="text-[10px] text-gray-500 dark:text-gray-400 w-5 text-right flex-shrink-0">{{ day.count }}</span>
           </div>
-        </div>
-        <div class="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-1">
-          <span v-for="day in summary.weekday_dist" :key="day.name">{{ day.name }}</span>
         </div>
       </div>
     </div>

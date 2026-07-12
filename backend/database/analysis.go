@@ -158,8 +158,8 @@ func AnalyzeHistory(year int) (*AnalysisResult, error) {
 	authorRows, err := conn.Query(fmt.Sprintf(`
 		SELECT author_name, author_mid, COUNT(*) as count
 		FROM %s
-		WHERE view_at >= ? AND view_at < ? AND author_name != '' AND author_mid IS NOT NULL AND author_mid != 0
-		GROUP BY author_mid
+		WHERE view_at >= ? AND view_at < ? AND author_name != ''
+		GROUP BY author_name
 		ORDER BY count DESC
 		LIMIT 20
 	`, tableName), yearStartTS, yearEndTS)

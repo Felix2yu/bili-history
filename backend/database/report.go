@@ -50,7 +50,7 @@ type ReportSummary struct {
 	HourDist         map[int]int           `json:"hour_dist"`
 	CompletionStats  ReportCompletionStats `json:"completion_stats"`
 	TopVideos        []ReportVideo         `json:"top_videos"`
-	RewatchStats     RewatchStats          `json:"rewatch_stats"`
+	RewatchStats     ReportRewatchStats    `json:"rewatch_stats"`
 	CompletionDist   []CompletionDistItem  `json:"completion_dist"`
 	DurationPref     DurationPref          `json:"duration_pref"`
 	LateNightRatio   float64               `json:"late_night_ratio"`
@@ -72,7 +72,7 @@ type ReportCompletionStats struct {
 	AvgRate  float64 `json:"avg_rate"`
 }
 
-type RewatchStats struct {
+type ReportRewatchStats struct {
 	TotalRewatched  int            `json:"total_rewatched"`
 	RewatchedVideos []RewatchVideo `json:"rewatched_videos"`
 }

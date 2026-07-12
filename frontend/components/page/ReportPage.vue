@@ -92,7 +92,7 @@
             <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
           </div>
 
-          <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+          <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));">
             <ReportVideoCard
               v-for="video in group"
               :key="`${video.bvid}-${video.view_at}`"

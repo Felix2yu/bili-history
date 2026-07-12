@@ -552,15 +552,16 @@ func computeSummary(videos []ReportVideo, dayCount int) ReportSummary {
 		summary.UpDiversity = float64(summary.UniqueAuthors) / float64(summary.TotalVideos)
 	}
 
-	// Weekday distribution
-	weekdayNames := []string{"周日", "周一", "周二", "周三", "周四", "周五", "周六"}
+	// Weekday distribution (Monday to Sunday)
+	weekdayNames := []string{"周一", "周二", "周三", "周四", "周五", "周六", "周日"}
+	weekdayIndices := []int{1, 2, 3, 4, 5, 6, 0} // Go: Mon=1..Sat=6, Sun=0
 	weekdayCounts := make([]int, 7)
 	for _, v := range videos {
 		wd := time.Unix(v.ViewAt, 0).Weekday()
 		weekdayCounts[wd]++
 	}
 	for i, name := range weekdayNames {
-		summary.WeekdayDist = append(summary.WeekdayDist, WeekdayStat{Name: name, Count: weekdayCounts[i]})
+		summary.WeekdayDist = append(summary.WeekdayDist, WeekdayStat{Name: name, Count: weekdayCounts[weekdayIndices[i]]})
 	}
 
 	return summary

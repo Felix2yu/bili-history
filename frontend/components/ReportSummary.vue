@@ -148,40 +148,40 @@
       </div>
     </div>
 
-    <!-- Top 分区 & Top UP主 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <!-- Top 分区 -->
-      <div v-if="summary.top_categories?.length" class="glass-card p-4">
-        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-          </svg>
-          常看分区
-        </h4>
-        <div class="space-y-2">
-          <div
-            v-for="(cat, index) in summary.top_categories.slice(0, 5)"
-            :key="cat.name"
-            class="flex items-center gap-2"
-          >
-            <span class="text-xs text-gray-400 w-4 text-right">{{ index + 1 }}</span>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between mb-0.5">
-                <span class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ cat.name }}</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">{{ cat.count }}次</span>
-              </div>
-              <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  class="h-full bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] rounded-full"
-                  :style="{ width: `${(cat.count / summary.top_categories[0].count) * 100}%` }"
-                ></div>
-              </div>
+    <!-- Top 分区 -->
+    <div v-if="summary.top_categories?.length" class="glass-card p-4">
+      <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+        常看分区
+      </h4>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div
+          v-for="(cat, index) in summary.top_categories.slice(0, 6)"
+          :key="cat.name"
+          class="flex items-center gap-2"
+        >
+          <span class="text-xs text-gray-400 w-4 text-right">{{ index + 1 }}</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-0.5">
+              <span class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ cat.name }}</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">{{ cat.count }}次</span>
+            </div>
+            <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] rounded-full"
+                :style="{ width: `${(cat.count / summary.top_categories[0].count) * 100}%` }"
+              ></div>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Top UP主 -->
+    <!-- 常看UP主 + 标题热词 + 周内分布 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- 常看UP主 -->
       <div v-if="summary.top_authors?.length" class="glass-card p-4">
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
           <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -199,7 +199,7 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between mb-0.5">
                 <span class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ author.name }}</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">{{ author.count }}次 · {{ formatDurationShort(author.duration) }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">{{ author.count }}次</span>
               </div>
               <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
@@ -208,6 +208,53 @@
                 ></div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 标题热词 -->
+      <div v-if="summary.title_keywords?.length" class="glass-card p-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+          </svg>
+          标题热词
+        </h4>
+        <div class="flex flex-wrap gap-1.5">
+          <span
+            v-for="(kw, index) in summary.title_keywords.slice(0, 12)"
+            :key="kw.word"
+            class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors"
+            :class="index < 3 ? 'bg-[#fb7299]/15 text-[#fb7299]' : index < 6 ? 'bg-[#fb7299]/10 text-[#fb7299]/80' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'"
+          >
+            {{ kw.word }}
+            <span class="ml-1 text-[9px] opacity-60">{{ kw.count }}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- 周内分布 -->
+      <div v-if="summary.weekday_dist?.length" class="glass-card p-4">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          周内分布
+        </h4>
+        <div class="flex items-end gap-2 h-20">
+          <div
+            v-for="day in summary.weekday_dist"
+            :key="day.name"
+            class="flex-1 flex flex-col items-center gap-1 group relative"
+            style="height: 100%;"
+          >
+            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+              {{ day.name }}: {{ day.count }}
+            </div>
+            <div class="w-full mt-auto bg-gradient-to-t from-[#fb7299] to-[#fc9b7a] rounded-t transition-all duration-300 hover:opacity-80"
+                 :style="{ height: `${Math.max((day.count / maxWeekdayCount) * 100, 4)}%` }"
+            ></div>
+            <span class="text-[10px] text-gray-500 dark:text-gray-400">{{ day.name }}</span>
           </div>
         </div>
       </div>
@@ -293,56 +340,6 @@
                 <div class="h-full bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] rounded-full" :style="{ width: `${(slot.count / summary.top_time_slots[0].count) * 100}%` }"></div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 标题词频 + 周内分布 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <!-- 标题词频 -->
-      <div v-if="summary.title_keywords?.length" class="glass-card p-4">
-        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-          </svg>
-          标题热词
-        </h4>
-        <div class="flex flex-wrap gap-1.5">
-          <span
-            v-for="(kw, index) in summary.title_keywords.slice(0, 15)"
-            :key="kw.word"
-            class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors"
-            :class="index < 3 ? 'bg-[#fb7299]/15 text-[#fb7299]' : index < 6 ? 'bg-[#fb7299]/10 text-[#fb7299]/80' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'"
-          >
-            {{ kw.word }}
-            <span class="ml-1 text-[9px] opacity-60">{{ kw.count }}</span>
-          </span>
-        </div>
-      </div>
-
-      <!-- 周内分布 -->
-      <div v-if="summary.weekday_dist?.length" class="glass-card p-4">
-        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          周内分布
-        </h4>
-        <div class="flex items-end gap-2 h-20">
-          <div
-            v-for="day in summary.weekday_dist"
-            :key="day.name"
-            class="flex-1 flex flex-col items-center gap-1 group relative"
-            style="height: 100%;"
-          >
-            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-              {{ day.name }}: {{ day.count }}
-            </div>
-            <div class="w-full mt-auto bg-gradient-to-t from-[#fb7299] to-[#fc9b7a] rounded-t transition-all duration-300 hover:opacity-80"
-                 :style="{ height: `${Math.max((day.count / maxWeekdayCount) * 100, 4)}%` }"
-            ></div>
-            <span class="text-[10px] text-gray-500 dark:text-gray-400">{{ day.name }}</span>
           </div>
         </div>
       </div>

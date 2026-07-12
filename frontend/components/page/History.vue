@@ -18,7 +18,7 @@
     />
 
     <div>
-      <div class="mx-auto max-w-7xl sm:px-2 lg:px-8">
+      <div class="mx-auto sm:px-2 lg:px-8">
         <!-- 日期分页 - 顶部 -->
         <div v-if="currentContent === 'history' && !showRemarks && availableDates.length > 0" class="mx-auto mb-4 max-w-4xl mt-4">
           <DatePagination

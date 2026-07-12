@@ -259,13 +259,13 @@ const loadDownloadedVideos = async () => {
     isLoading.value = true
     const response = await getDownloadedVideos(searchTerm.value, currentPage.value, 20)
 
-    if (response.data && response.data.status === 'success') {
+    if (response.data && response.data.status === 'success' && response.data.data) {
       downloads.value = {
-        videos: response.data.videos,
-        total: response.data.total,
-        page: response.data.page,
-        limit: response.data.limit,
-        pages: response.data.pages
+        videos: response.data.data.videos || [],
+        total: response.data.data.total || 0,
+        page: response.data.data.page || 1,
+        limit: response.data.data.limit || 20,
+        pages: response.data.data.pages || 1
       }
     } else {
       console.error('获取下载视频失败:', response.data?.message || '未知错误')
@@ -404,7 +404,10 @@ const handleAuthorClick = async (video) => {
 const { data: initialData } = await useAsyncData('downloads-initial', async () => {
   try {
     const response = await getDownloadedVideos('', 1, 20)
-    return { downloads: response.data || { videos: [], total: 0, page: 1, limit: 20, pages: 1 } }
+    if (response.data?.status === 'success' && response.data?.data) {
+      return { downloads: response.data.data }
+    }
+    return { downloads: { videos: [], total: 0, page: 1, limit: 20, pages: 1 } }
   } catch (error) {
     console.error('SSR 获取下载列表失败:', error)
     return { downloads: { videos: [], total: 0, page: 1, limit: 20, pages: 1 } }

@@ -58,6 +58,16 @@
 
       <div class="py-2 px-3"><div class="border-t border-gray-200/20 dark:border-gray-700/30"></div></div>
 
+      <router-link to="/report" @click="emit('navigate')"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
+        :class="currentContent === 'report' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
+      >
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>周报月报</span>
+      </router-link>
+
       <router-link to="/analytics" @click="emit('navigate')"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
         :class="currentContent === 'analytics' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
@@ -164,6 +174,7 @@ const currentContent = computed(() => {
   if (path.startsWith('/likes')) return 'likes'
   if (path.startsWith('/media')) return 'media'
   if (path.startsWith('/scheduler')) return 'scheduler'
+  if (path.startsWith('/report')) return 'report'
   if (path.startsWith('/analytics')) return 'analytics'
   return 'history'
 })

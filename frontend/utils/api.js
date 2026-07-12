@@ -1776,3 +1776,40 @@ export const toggleLike = (bvid, like = true) => {
 }
 // =============================
 
+// =============================
+// 周报月报相关接口
+// =============================
+
+/**
+ * 获取周报数据
+ * GET /report/weekly?year=2025&week=28
+ */
+export const getWeeklyReport = (year, week) => {
+  return instance.get('/report/weekly', { params: { year, week } })
+}
+
+/**
+ * 获取月报数据
+ * GET /report/monthly?year=2025&month=7
+ */
+export const getMonthlyReport = (year, month) => {
+  return instance.get('/report/monthly', { params: { year, month } })
+}
+
+/**
+ * 获取有数据的周列表
+ * GET /report/available-weeks?year=2025
+ */
+export const getAvailableWeeks = (year) => {
+  return instance.get('/report/available-weeks', { params: { year } })
+}
+
+/**
+ * 获取有数据的月列表
+ * GET /report/available-months?year=2025
+ */
+export const getAvailableMonths = (year) => {
+  return instance.get('/report/available-months', { params: { year } })
+}
+// =============================
+

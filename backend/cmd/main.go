@@ -84,6 +84,7 @@ func main() {
 		routers.RegisterVideoDetailsRoutes(api)
 		routers.RegisterInteractionRoutes(api)
 		routers.RegisterTitleAnalyticsRoutes(api)
+		routers.RegisterReportRoutes(api)
 		routers.RegisterImageRoutes(api)
 		routers.RegisterDownloadRoutes(api)
 	}

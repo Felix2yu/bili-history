@@ -55,6 +55,7 @@ func init() {
 	tagTitle := []string{"标题分析"}
 	tagInteraction := []string{"互动记录"}
 	tagDownload := []string{"视频下载"}
+	tagReport := []string{"周报月报"}
 
 	// ========== 历史记录 ==========
 	RegisterEndpointMeta("GET", "/history/available-years", EndpointMeta{
@@ -820,5 +821,27 @@ func init() {
 		Summary:     "下载合集（SSE流）",
 		Tags:        tagDownload,
 		OperationID: "download_collection_sse",
+	})
+
+	// ========== 周报月报 ==========
+	RegisterEndpointMeta("GET", "/report/weekly", EndpointMeta{
+		Summary:     "获取周报数据",
+		Tags:        tagReport,
+		OperationID: "get_weekly_report",
+	})
+	RegisterEndpointMeta("GET", "/report/monthly", EndpointMeta{
+		Summary:     "获取月报数据",
+		Tags:        tagReport,
+		OperationID: "get_monthly_report",
+	})
+	RegisterEndpointMeta("GET", "/report/available-weeks", EndpointMeta{
+		Summary:     "获取有数据的周列表",
+		Tags:        tagReport,
+		OperationID: "get_available_weeks",
+	})
+	RegisterEndpointMeta("GET", "/report/available-months", EndpointMeta{
+		Summary:     "获取有数据的月列表",
+		Tags:        tagReport,
+		OperationID: "get_available_months",
 	})
 }

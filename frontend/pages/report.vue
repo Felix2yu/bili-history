@@ -3,6 +3,10 @@
 </template>
 
 <script setup>
+definePageMeta({
+  layout: 'main',
+})
+
 import ReportPage from '~/components/page/ReportPage.vue'
 
 useHead({

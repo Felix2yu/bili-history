@@ -1,6 +1,7 @@
 package services
 
 import (
+	"database/sql"
 	"fmt"
 	"net/url"
 	"time"
@@ -194,7 +195,17 @@ func gatherDailyReportData() map[string]interface{} {
 
 	// 今日观看时长
 	var todayDuration int
-	err = conn.QueryRow(fmt.Sprintf("SELECT COALESCE(SUM(duration), 0) FROM %s WHERE view_at >= ? AND view_at < ?", tableName), todayStart, todayEnd).Scan(&todayDuration)
+	err = conn.QueryRow(fmt.Sprintf(`
+		SELECT COALESCE(SUM(
+			CASE
+				WHEN progress = -1 THEN duration
+				WHEN progress >= 0 AND progress > duration THEN duration
+				WHEN progress >= 0 THEN progress
+				ELSE 0
+			END
+		), 0)
+		FROM %s WHERE view_at >= ? AND view_at < ?
+	`, tableName), todayStart, todayEnd).Scan(&todayDuration)
 	if err != nil {
 		utils.LogWarning("每日报告: 查询今日观看时长失败: %v", err)
 		todayDuration = 0
@@ -227,18 +238,16 @@ func gatherDailyReportData() map[string]interface{} {
 			}
 		}
 	} else {
-		// 今日最常看UP主
-		var topAuthor string
-		err = conn.QueryRow(fmt.Sprintf("SELECT author_name FROM %s WHERE view_at >= ? AND view_at < ? AND author_name != '' GROUP BY author_mid ORDER BY COUNT(*) DESC LIMIT 1", tableName), todayStart, todayEnd).Scan(&topAuthor)
-		if err == nil && topAuthor != "" {
-			data["top_author"] = topAuthor
+		// 今日最常看UP主 TOP3
+		topAuthors := queryTopN(conn, tableName, todayStart, todayEnd, "author_mid", "author_name")
+		if len(topAuthors) > 0 {
+			data["top_author"] = formatTopN(topAuthors)
 		}
 
-		// 今日最常看分区
-		var topCategory string
-		err = conn.QueryRow(fmt.Sprintf("SELECT main_category FROM %s WHERE view_at >= ? AND view_at < ? AND main_category IS NOT NULL AND main_category != '' GROUP BY main_category ORDER BY COUNT(*) DESC LIMIT 1", tableName), todayStart, todayEnd).Scan(&topCategory)
-		if err == nil && topCategory != "" {
-			data["top_category"] = topCategory
+		// 今日最常看分区 TOP3
+		topCategories := queryTopN(conn, tableName, todayStart, todayEnd, "main_category", "main_category")
+		if len(topCategories) > 0 {
+			data["top_category"] = formatTopN(topCategories)
 		}
 
 		// 今日最常看标签
@@ -273,4 +282,39 @@ func SendSessdataExpiredNotification(username string) error {
 
 func ResetShoutrrrRouter() {
 	shoutrrrRouter = nil
+}
+
+// queryTopN queries top N items by count, returning a list of {group_key, display_name} pairs.
+func queryTopN(conn *sql.DB, tableName string, start, end int64, groupCol, displayCol string) []string {
+	query := fmt.Sprintf(`
+		SELECT %s FROM %s
+		WHERE view_at >= ? AND view_at < ?
+		AND %s IS NOT NULL AND %s != ''
+		GROUP BY %s
+		ORDER BY COUNT(*) DESC
+		LIMIT 3
+	`, displayCol, tableName, groupCol, groupCol, groupCol)
+
+	rows, err := conn.Query(query, start, end)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	var results []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err == nil && name != "" {
+			results = append(results, name)
+		}
+	}
+	return results
+}
+
+func formatTopN(items []string) string {
+	var result string
+	for i, name := range items {
+		result += fmt.Sprintf("%d.%s ", i+1, name)
+	}
+	return result
 }

@@ -219,17 +219,20 @@ func batchDeleteHistory(c *gin.Context) {
 	})
 }
 
-func deleteSingleBiliHistory(c *gin.Context) {
-	var req struct {
-		Bvid string `json:"bvid"`
+// extractOidFromKid 从 kid 格式中提取 oid
+// kid 格式：business_oid，例如 archive_123456
+func extractOidFromKid(kid string) string {
+	parts := strings.SplitN(kid, "_", 2)
+	if len(parts) == 2 {
+		return parts[1]
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
-		return
-	}
+	return ""
+}
 
-	if req.Bvid == "" {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse("bvid 不能为空"))
+func deleteSingleBiliHistory(c *gin.Context) {
+	kid := c.Query("kid")
+	if kid == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("kid 不能为空"))
 		return
 	}
 
@@ -240,7 +243,7 @@ func deleteSingleBiliHistory(c *gin.Context) {
 	}
 
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
-	if err := client.DeleteBiliHistory([]string{req.Bvid}); err != nil {
+	if err := client.DeleteBiliHistoryByKid(kid); err != nil {
 		if apiErr, ok := err.(*biliapi.ApiError); ok {
 			c.JSON(http.StatusOK, gin.H{
 				"status":  "error",
@@ -252,8 +255,10 @@ func deleteSingleBiliHistory(c *gin.Context) {
 		return
 	}
 
-	// 同步软删除本地记录
-	_ = database.MarkVideoDeleted(req.Bvid)
+	// 同步软删除本地记录：从 kid 中提取 oid
+	if oid := extractOidFromKid(kid); oid != "" {
+		_ = database.MarkVideoDeleted(oid)
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",

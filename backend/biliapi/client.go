@@ -617,6 +617,34 @@ func (c *Client) DeleteBiliHistory(bvids []string) error {
 	return nil
 }
 
+// DeleteBiliHistoryByKid 删除B站观看历史记录（通过 kid 格式）
+// kid 格式：business_oid，例如 archive_123456
+func (c *Client) DeleteBiliHistoryByKid(kid string) error {
+	if c.BiliJct == "" {
+		return fmt.Errorf("bili_jct (csrf) is required to delete history")
+	}
+	if kid == "" {
+		return fmt.Errorf("kid is empty")
+	}
+
+	form := url.Values{}
+	form.Set("kid", kid)
+	form.Set("csrf", c.BiliJct)
+
+	body, err := c.PostForm(HistoryDelURL, form)
+	if err != nil {
+		return err
+	}
+	var resp BiliResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return fmt.Errorf("unmarshal response error: %w", err)
+	}
+	if resp.Code != 0 {
+		return &ApiError{Code: resp.Code, Message: resp.Message}
+	}
+	return nil
+}
+
 // ApiError represents a Bilibili API-level error with its code and message.
 type ApiError struct {
 	Code    int

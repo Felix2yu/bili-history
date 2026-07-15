@@ -280,8 +280,11 @@ func deleteSingleBiliHistory(c *gin.Context) {
 
 	bvid, err := database.GetBvidByOid(oid)
 	if err != nil {
-		// 如果找不到 bvid，仍然尝试用 kid 作为 bvid（兼容某些情况）
-		bvid = oid
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": fmt.Sprintf("未找到 oid=%s 对应的视频记录", oid),
+		})
+		return
 	}
 
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
@@ -293,7 +296,11 @@ func deleteSingleBiliHistory(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("删除失败: "+err.Error()))
+		// 返回更详细的错误信息帮助排查
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "error",
+			"message": fmt.Sprintf("删除B站历史记录失败: %s, bvid=%s, kid=%s", err.Error(), bvid, kid),
+		})
 		return
 	}
 

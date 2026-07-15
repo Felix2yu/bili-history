@@ -561,6 +561,11 @@ func (c *Client) PostForm(urlStr string, form url.Values) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read body error: %w", err)
 	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(respBody))
+	}
+
 	return respBody, nil
 }
 

@@ -1068,3 +1068,31 @@ func GetAllHistoryRecords(year int) ([]map[string]interface{}, error) {
 	}
 	return results, nil
 }
+
+// GetBvidByOid 根据 oid 查询 bvid
+func GetBvidByOid(oid string) (string, error) {
+	db := GetSQLiteDB()
+	conn := db.GetDB()
+	if conn == nil {
+		return "", fmt.Errorf("database not initialized")
+	}
+
+	availableYears, err := db.GetAvailableYears()
+	if err != nil {
+		return "", err
+	}
+
+	for _, year := range availableYears {
+		tableName := fmt.Sprintf("bilibili_history_%d", year)
+		exists, _ := db.TableExists(tableName)
+		if !exists {
+			continue
+		}
+		var bvid string
+		err := conn.QueryRow(fmt.Sprintf("SELECT bvid FROM %s WHERE oid = ? LIMIT 1", tableName), oid).Scan(&bvid)
+		if err == nil && bvid != "" {
+			return bvid, nil
+		}
+	}
+	return "", fmt.Errorf("未找到 oid=%s 对应的 bvid", oid)
+}

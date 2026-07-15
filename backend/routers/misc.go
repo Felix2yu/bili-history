@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -192,23 +193,27 @@ func RegisterDeleteRoutes(r *gin.RouterGroup) {
 }
 
 func batchDeleteHistory(c *gin.Context) {
-	// 支持两种格式：
-	// 1. {"bvids": ["bvid1", "bvid2"]}
-	// 2. [{"bvid": "bvid1", "view_at": 123}, ...]
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("读取请求体失败"))
+		return
+	}
+
 	var bvids []string
 
+	// 尝试格式1: {"bvids": ["bvid1", "bvid2"]}
 	var reqWithKey struct {
 		Bvids []string `json:"bvids"`
 	}
-	if err := c.ShouldBindJSON(&reqWithKey); err == nil && len(reqWithKey.Bvids) > 0 {
+	if json.Unmarshal(body, &reqWithKey) == nil && len(reqWithKey.Bvids) > 0 {
 		bvids = reqWithKey.Bvids
 	} else {
-		// 尝试解析为数组
+		// 尝试格式2: [{"bvid": "bvid1", "view_at": 123}, ...]
 		var items []struct {
 			Bvid   string `json:"bvid"`
 			ViewAt int64  `json:"view_at"`
 		}
-		if err := c.ShouldBindJSON(&items); err != nil {
+		if err := json.Unmarshal(body, &items); err != nil {
 			c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
 			return
 		}
@@ -266,8 +271,21 @@ func deleteSingleBiliHistory(c *gin.Context) {
 		return
 	}
 
+	// 从 kid 中提取 oid，再查询 bvid
+	oid := extractOidFromKid(kid)
+	if oid == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("无效的 kid 格式"))
+		return
+	}
+
+	bvid, err := database.GetBvidByOid(oid)
+	if err != nil {
+		// 如果找不到 bvid，仍然尝试用 kid 作为 bvid（兼容某些情况）
+		bvid = oid
+	}
+
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
-	if err := client.DeleteBiliHistoryByKid(kid); err != nil {
+	if err := client.DeleteBiliHistory([]string{bvid}); err != nil {
 		if apiErr, ok := err.(*biliapi.ApiError); ok {
 			c.JSON(http.StatusOK, gin.H{
 				"status":  "error",
@@ -279,10 +297,8 @@ func deleteSingleBiliHistory(c *gin.Context) {
 		return
 	}
 
-	// 同步软删除本地记录：从 kid 中提取 oid
-	if oid := extractOidFromKid(kid); oid != "" {
-		_ = database.MarkVideoDeleted(oid)
-	}
+	// 同步软删除本地记录
+	_ = database.MarkVideoDeleted(bvid)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",

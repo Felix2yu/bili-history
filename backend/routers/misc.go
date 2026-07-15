@@ -192,21 +192,40 @@ func RegisterDeleteRoutes(r *gin.RouterGroup) {
 }
 
 func batchDeleteHistory(c *gin.Context) {
-	var req struct {
+	// 支持两种格式：
+	// 1. {"bvids": ["bvid1", "bvid2"]}
+	// 2. [{"bvid": "bvid1", "view_at": 123}, ...]
+	var bvids []string
+
+	var reqWithKey struct {
 		Bvids []string `json:"bvids"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
-		return
+	if err := c.ShouldBindJSON(&reqWithKey); err == nil && len(reqWithKey.Bvids) > 0 {
+		bvids = reqWithKey.Bvids
+	} else {
+		// 尝试解析为数组
+		var items []struct {
+			Bvid   string `json:"bvid"`
+			ViewAt int64  `json:"view_at"`
+		}
+		if err := c.ShouldBindJSON(&items); err != nil {
+			c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+			return
+		}
+		for _, item := range items {
+			if item.Bvid != "" {
+				bvids = append(bvids, item.Bvid)
+			}
+		}
 	}
 
-	if len(req.Bvids) == 0 {
+	if len(bvids) == 0 {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("bvids 不能为空"))
 		return
 	}
 
 	deletedCount := 0
-	for _, bvid := range req.Bvids {
+	for _, bvid := range bvids {
 		if err := database.MarkVideoDeleted(bvid); err == nil {
 			deletedCount++
 		}
@@ -239,6 +258,11 @@ func deleteSingleBiliHistory(c *gin.Context) {
 	cfg, _ := config.LoadConfig()
 	if cfg == nil || cfg.SESSDATA == "" {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("SESSDATA 未配置"))
+		return
+	}
+
+	if cfg.BiliJct == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("BiliJct (csrf token) 未配置，无法删除B站历史记录"))
 		return
 	}
 

@@ -10,7 +10,7 @@
     "start": "nuxt start",
     "preview": "nuxt preview",
     "generate": "nuxt generate",
-    "postinstall": "nuxt prepare && bash scripts/ignore-icloud.sh"
+    "postinstall": "nuxt prepare && [ -f scripts/ignore-icloud.sh ] && bash scripts/ignore-icloud.sh || true"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.9.0",

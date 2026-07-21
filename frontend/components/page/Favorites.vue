@@ -237,7 +237,7 @@
                         :alt="getVideoTitle(item)"
                         class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
-                        onerror="this.src='https://i0.hdslb.com/bfs/archive/c9e72655b7c9c9c68a30d3275313c501e68427d1.jpg'"
+                        onerror="this.src='/api/images/proxy?url=https%3A%2F%2Fi0.hdslb.com%2Fbfs%2Farchive%2Fc9e72655b7c9c9c68a30d3275313c501e68427d1.jpg'"
                       />
 
                       <!-- 视频时长标签 -->

@@ -5,6 +5,9 @@
 // - 以 / 开头或相对路径 -> 拼接当前 API BaseURL
 import { getCurrentBaseUrl } from '~/utils/api'
 
+// B站 CDN 图片通过后端代理获取（解决 Referer 403 问题）
+const isBilibiliCdn = (url) => /^https?:\/\/i[0-9]*\.hdslb\.com\//i.test(url)
+
 export const normalizeImageUrl = (url) => {
 	if (!url) return ''
 	if (typeof url !== 'string') return url
@@ -13,7 +16,16 @@ export const normalizeImageUrl = (url) => {
 	if (url.startsWith('data:') || url.startsWith('blob:')) return url
 
 	// 协议相对 URL
-	if (url.startsWith('//')) return `https:${url}`
+	if (url.startsWith('//')) url = `https:${url}`
+
+	// B站 CDN 图片走后端代理（后端设置正确的 Referer: https://www.bilibili.com）
+	if (isBilibiliCdn(url)) {
+		const base = getCurrentBaseUrl && getCurrentBaseUrl()
+		if (base) {
+			const baseNormalized = String(base).replace(/\/$/, '')
+			return `${baseNormalized}/images/proxy?url=${encodeURIComponent(url)}`
+		}
+	}
 
 	// 已是绝对 URL - 将 HTTP 升级为 HTTPS（避免混合内容警告）
 	if (/^https?:\/\//i.test(url)) {

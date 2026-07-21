@@ -141,7 +141,7 @@ const imageUrl = computed(() => {
     || (props.video.covers && props.video.covers[0])
   return normalizeImageUrl(cover)
 })
-const errorImageUrl = "this.src='https://i0.hdslb.com/bfs/archive/c9e72655b7c9c9c68a30d3275313c501e68427d1.jpg'"
+const errorImageUrl = "this.src='/api/images/proxy?url=https%3A%2F%2Fi0.hdslb.com%2Fbfs%2Farchive%2Fc9e72655b7c9c9c68a30d3275313c501e68427d1.jpg'"
 const ownerFaceUrl = computed(() => {
   const face = props.video[props.ownerFaceKey] || props.video.author_face
   return normalizeImageUrl(face)

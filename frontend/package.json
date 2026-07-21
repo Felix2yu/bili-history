@@ -30,6 +30,9 @@
     "vue-echarts": "^8.0.1",
     "vue-router": "^5.1.0"
   },
+  "overrides": {
+    "brace-expansion": ">=2.1.2"
+  },
   "devDependencies": {
     "@types/node": "^22.15.3",
     "@vite-pwa/nuxt": "^1.1.1",

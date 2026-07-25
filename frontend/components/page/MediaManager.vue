@@ -76,7 +76,7 @@
             <!-- 视频管理 -->
             <div v-if="activeTab === 'videos'" class="animate-fadeIn">
               <!-- ArtPlayer致谢 - 只在视频标签显示 -->
-              <div class="mb-4 flex items-center justify-center h-9 px-3 py-0 bg-[#fb7299]/5 dark:bg-pink-900/20 rounded-md border border-[#fb7299]/20 dark:border-[#fb7299]/30">
+              <div class="mb-4 flex items-center justify-center h-9 px-3 py-0 bg-accent/5 dark:bg-pink-900/20 rounded-md border border-accent/20 dark:border-accent/30">
                 <a href="https://github.com/zhw2590582/ArtPlayer" target="_blank" rel="noopener noreferrer" class="flex items-center hover:opacity-80 transition-opacity mr-1.5">
                   <img src="https://artplayer.org/document/logo.png" alt="ArtPlayer Logo" class="h-3.5 mr-1.5" />
                 </a>
@@ -85,7 +85,7 @@
                     href="https://github.com/zhw2590582/ArtPlayer"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="text-[#fb7299] font-medium hover:underline"
+                    class="text-accent font-medium hover:underline"
                   >
                     ArtPlayer
                   </a>

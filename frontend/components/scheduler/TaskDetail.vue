@@ -6,8 +6,8 @@
         <!-- 标题栏 -->
         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
           <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-8 h-8 rounded-xl bg-[#fb7299]/10 flex items-center justify-center flex-shrink-0">
-              <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <div class="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
               </svg>
             </div>
@@ -18,7 +18,7 @@
           </div>
           <div class="flex items-center gap-1.5 flex-shrink-0">
             <button @click="$emit('view-history', task.task_id)"
-              class="px-2.5 py-1 text-xs font-medium text-white bg-[#fb7299] rounded-lg hover:bg-[#fb7299]/90 transition-colors">
+              class="px-2.5 py-1 text-xs font-medium text-white bg-accent rounded-lg hover:bg-accent/90 transition-colors">
               历史
             </button>
             <button @click="$emit('update:show', false)"
@@ -152,7 +152,7 @@
               {{ task.config?.enabled ? '禁用' : '启用' }}
             </button>
             <button @click="$emit('edit-task', task.task_id)"
-              class="px-3 py-1.5 text-xs font-medium text-[#fb7299] hover:bg-[#fb7299]/10 rounded-lg transition-colors">
+              class="px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/10 rounded-lg transition-colors">
               编辑
             </button>
           </div>

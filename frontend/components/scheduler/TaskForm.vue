@@ -6,8 +6,8 @@
         <!-- 标题栏 -->
         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-xl bg-[#fb7299]/10 flex items-center justify-center">
-              <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <div class="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
+              <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   v-if="isEditing" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                 <path stroke-linecap="round" stroke-linejoin="round" v-else d="M12 4v16m8-8H4" />
@@ -39,13 +39,13 @@
               <div>
                 <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">任务 ID</label>
                 <input v-model="form.task_id" type="text" :disabled="isEditing"
-                  class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#fb7299]/30 focus:border-[#fb7299] disabled:opacity-50 transition-all"
+                  class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent disabled:opacity-50 transition-all"
                   placeholder="选择端点后自动填充" required />
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">任务名称 <span class="text-[#fb7299]">*</span></label>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">任务名称 <span class="text-accent">*</span></label>
                 <input v-model="form.name" type="text"
-                  class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#fb7299]/30 focus:border-[#fb7299] transition-all"
+                  class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
                   placeholder="例如：获取B站历史记录" required />
               </div>
             </div>
@@ -56,9 +56,9 @@
             <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">API 设置</h4>
             <div class="space-y-3">
               <div>
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">API 端点 <span class="text-[#fb7299]">*</span></label>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">API 端点 <span class="text-accent">*</span></label>
                 <button type="button" @click="showApiSelector = true"
-                  class="w-full text-left px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#fb7299]/30 focus:border-[#fb7299] transition-all">
+                  class="w-full text-left px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all">
                   {{ form.endpoint || '选择 API 端点...' }}
                 </button>
               </div>
@@ -76,7 +76,7 @@
             <div>
               <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">清理年份</label>
               <select v-model="popularCleanupYear" :disabled="popularCleanupYearsLoading"
-                class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#fb7299]/30 focus:border-[#fb7299] transition-all disabled:opacity-50">
+                class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all disabled:opacity-50">
                 <option :value="null">全部年份</option>
                 <option v-for="year in popularCleanupYearOptions" :key="year" :value="year">{{ year }}</option>
               </select>
@@ -89,29 +89,29 @@
             <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">调度设置</h4>
             <div class="space-y-3">
               <div>
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">调度类型 <span class="text-[#fb7299]">*</span></label>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">调度类型 <span class="text-accent">*</span></label>
                 <select v-model="form.schedule_type" :disabled="!!parentTaskId"
-                  class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#fb7299]/30 focus:border-[#fb7299] transition-all disabled:opacity-50" required>
+                  class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all disabled:opacity-50" required>
                   <option v-if="!parentTaskId" value="daily">每日执行</option>
                   <option v-if="!parentTaskId" value="interval">间隔执行</option>
                   <option value="chain">链式依赖</option>
                 </select>
               </div>
               <div v-if="form.schedule_type === 'daily' && !parentTaskId">
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">执行时间 <span class="text-[#fb7299]">*</span></label>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">执行时间 <span class="text-accent">*</span></label>
                 <input v-model="form.schedule_time" type="time"
-                  class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#fb7299]/30 focus:border-[#fb7299] transition-all" required />
+                  class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all" required />
               </div>
               <div v-if="form.schedule_type === 'interval' && !parentTaskId" class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">间隔 <span class="text-[#fb7299]">*</span></label>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">间隔 <span class="text-accent">*</span></label>
                   <input v-model.number="form.interval" type="number" min="1"
-                    class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#fb7299]/30 focus:border-[#fb7299] transition-all" required />
+                    class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all" required />
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">单位 <span class="text-[#fb7299]">*</span></label>
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">单位 <span class="text-accent">*</span></label>
                   <select v-model="form.unit"
-                    class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#fb7299]/30 focus:border-[#fb7299] transition-all" required>
+                    class="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all" required>
                     <option value="minutes">分钟</option>
                     <option value="hours">小时</option>
                     <option value="days">天</option>
@@ -127,16 +127,16 @@
           <div>
             <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">依赖任务</h4>
             <button type="button" @click="showDependencySelector = true" :disabled="!!parentTaskId || isEditing"
-              class="w-full text-left px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#fb7299]/30 focus:border-[#fb7299] transition-all disabled:opacity-50 min-h-[2.5rem]">
+              class="w-full text-left px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all disabled:opacity-50 min-h-[2.5rem]">
               <div v-if="form.depends_on.length === 0" class="text-gray-400">
                 {{ parentTaskId ? '自动依赖父任务' : (isEditing ? '不可修改' : '选择依赖任务...') }}
               </div>
               <div v-else class="flex flex-wrap gap-1">
                 <span v-for="taskId in form.depends_on" :key="taskId"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-[#fb7299]/10 text-[#fb7299]">
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-accent/10 text-accent">
                   {{ getTaskName(taskId) }}
                   <button type="button" @click.stop="removeTask(taskId)" v-if="!parentTaskId && !isEditing"
-                    class="hover:text-[#fb7299]/70">
+                    class="hover:text-accent/70">
                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -154,7 +154,7 @@
             取消
           </button>
           <button type="submit" @click="submitForm"
-            class="px-4 py-2 text-sm font-medium text-white bg-[#fb7299] rounded-xl hover:bg-[#fb7299]/90 transition-colors shadow-sm">
+            class="px-4 py-2 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-colors shadow-sm">
             {{ isEditing ? '保存修改' : '创建任务' }}
           </button>
         </div>

@@ -101,7 +101,7 @@
                     <span>已下载</span>
                   </div>
                   <div v-if="getCategoryName(r)"
-                       class="bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]">
+                       class="bg-accent/80 px-1 py-0.5 rounded text-white text-[10px]">
                     {{ getCategoryName(r) }}
                   </div>
                 </div>
@@ -472,7 +472,7 @@ const handleBatchDelete = async () => {
       showCancelButton: true,
       confirmButtonText: '确认删除',
       cancelButtonText: '取消',
-      confirmButtonColor: '#fb7299',
+      confirmButtonColor: 'var(--accent)',
     })
 
     // 从记录中找到对应的完整信息
@@ -1196,7 +1196,7 @@ const handleDelete = async (record) => {
       showCancelButton: true,
       confirmButtonText: '确认删除',
       cancelButtonText: '取消',
-      confirmButtonColor: '#fb7299',
+      confirmButtonColor: 'var(--accent)',
     })
 
     // 如果需要同步删除B站历史记录

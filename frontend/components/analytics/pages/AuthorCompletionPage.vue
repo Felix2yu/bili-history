@@ -3,7 +3,7 @@
   <div class="space-y-4" v-if="viewingData">
     <div class="max-w-7xl w-full mx-auto px-2 py-4">
         <div class="space-y-4">
-          <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+          <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
             UP主完成率分析
           </h3>
 
@@ -22,7 +22,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <!-- 最喜欢的UP主 -->
             <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-gray-300/50 dark:border-gray-500/50">
-              <h4 class="text-base font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-3">
+              <h4 class="text-base font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-3">
                 最喜欢的UP主
               </h4>
               <div class="space-y-2">
@@ -30,11 +30,11 @@
                   <span class="text-xs text-gray-400 w-4 text-right flex-shrink-0">{{ index + 1 }}</span>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between mb-0.5">
-                      <span class="text-sm text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-[#fb7299]" @click="handleAuthorClick(item.mid)">{{ item.name }}</span>
+                      <span class="text-sm text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-accent" @click="handleAuthorClick(item.mid)">{{ item.name }}</span>
                       <span class="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">{{ item.score.toFixed(1) }}分</span>
                     </div>
                     <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div class="h-full bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] rounded-full" :style="{ width: `${(item.score / topScore) * 100}%` }"></div>
+                      <div class="h-full bg-gradient-to-r from-accent to-accent/70 rounded-full" :style="{ width: `${(item.score / topScore) * 100}%` }"></div>
                     </div>
                     <div class="flex gap-3 mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
                       <span>完播 {{ item.completion }}%</span>
@@ -49,7 +49,7 @@
 
             <!-- 观看最多的UP主 -->
             <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-gray-300/50 dark:border-gray-500/50">
-              <h4 class="text-base font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-3">
+              <h4 class="text-base font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-3">
                 观看最多的UP主
               </h4>
               <div class="space-y-2">
@@ -57,7 +57,7 @@
                   <span class="text-xs text-gray-400 w-4 text-right flex-shrink-0">{{ index + 1 }}</span>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between mb-0.5">
-                      <span class="text-sm text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-[#fb7299]" @click="handleAuthorClick(item.mid)">{{ item.name }}</span>
+                      <span class="text-sm text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-accent" @click="handleAuthorClick(item.mid)">{{ item.name }}</span>
                       <span class="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">{{ item.videos }}个视频</span>
                     </div>
                     <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -135,6 +135,6 @@ const handleAuthorClick = (mid) => {
 
 const formatInsightText = (text) => {
   if (!text) return '';
-  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-[#fb7299]">$1</span>')
+  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-accent">$1</span>')
 }
 </script>

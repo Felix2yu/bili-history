@@ -9,7 +9,7 @@
           @click="handleToggleSort(opt.key)"
           class="px-2 py-1 text-xs rounded-md transition-colors"
           :class="sortKey === opt.key
-            ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
+            ? 'bg-accent/10 text-accent font-medium'
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
         >
           {{ opt.label }}
@@ -25,7 +25,7 @@
           @click="handleSelectCategory('')"
           class="px-2 py-1 text-xs rounded-md transition-colors"
           :class="selectedCategory === ''
-            ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
+            ? 'bg-accent/10 text-accent font-medium'
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
         >
           全部
@@ -36,7 +36,7 @@
           @click="handleSelectCategory(cat.tname)"
           class="px-2 py-1 text-xs rounded-md transition-colors"
           :class="selectedCategory === cat.tname
-            ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
+            ? 'bg-accent/10 text-accent font-medium'
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
         >
           {{ cat.tname }} ({{ cat.count }})
@@ -58,7 +58,7 @@
               @click="handleSelectCategory(cat.tname); showCatDropdown = false"
               class="w-full text-left px-2 py-1 text-xs rounded transition-colors"
               :class="selectedCategory === cat.tname
-                ? 'bg-[#fb7299]/10 text-[#fb7299]'
+                ? 'bg-accent/10 text-accent'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
               {{ cat.tname }} ({{ cat.count }})
@@ -75,7 +75,7 @@
           @click="handleSelectOwner('')"
           class="px-2 py-1 text-xs rounded-md transition-colors"
           :class="selectedOwner === ''
-            ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
+            ? 'bg-accent/10 text-accent font-medium'
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
         >
           全部
@@ -86,7 +86,7 @@
           @click="handleSelectOwner(owner.name)"
           class="px-2 py-1 text-xs rounded-md transition-colors max-w-[120px] truncate"
           :class="selectedOwner === owner.name
-            ? 'bg-[#fb7299]/10 text-[#fb7299] font-medium'
+            ? 'bg-accent/10 text-accent font-medium'
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
           :title="owner.name"
         >
@@ -109,7 +109,7 @@
               @click="handleSelectOwner(owner.name); showOwnerDropdown = false"
               class="w-full text-left px-2 py-1 text-xs rounded transition-colors"
               :class="selectedOwner === owner.name
-                ? 'bg-[#fb7299]/10 text-[#fb7299]'
+                ? 'bg-accent/10 text-accent'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'"
             >
               {{ owner.name }} ({{ owner.count }})

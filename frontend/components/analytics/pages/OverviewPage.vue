@@ -1,26 +1,26 @@
 <!-- 数据概览页组件 -->
 <template>
   <div class="space-y-12" v-if="viewingData">
-    <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+    <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
       年度观看数据
     </h3>
 
     <!-- 核心统计卡片 -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
-        <div class="text-2xl font-bold text-[#fb7299]">{{ viewingData.total_videos || 0 }}</div>
+        <div class="text-2xl font-bold text-accent">{{ viewingData.total_videos || 0 }}</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">观看视频数</div>
       </div>
       <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
-        <div class="text-2xl font-bold text-[#fb7299]">{{ formatDurationShort(viewingData.total_duration || 0) }}</div>
+        <div class="text-2xl font-bold text-accent">{{ formatDurationShort(viewingData.total_duration || 0) }}</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">总观看时长</div>
       </div>
       <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
-        <div class="text-2xl font-bold text-[#fb7299]">{{ viewingData.active_days || 0 }}</div>
+        <div class="text-2xl font-bold text-accent">{{ viewingData.active_days || 0 }}</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">活跃天数</div>
       </div>
       <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 text-center border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
-        <div class="text-2xl font-bold text-[#fb7299]">{{ viewingData.unique_authors || 0 }}</div>
+        <div class="text-2xl font-bold text-accent">{{ viewingData.unique_authors || 0 }}</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">UP主数量</div>
       </div>
     </div>
@@ -53,7 +53,7 @@
       <!-- 常看分区 Top 6 -->
       <div v-if="viewingData.tag_ranking?.length" class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
           </svg>
           常看分区
@@ -67,7 +67,7 @@
                 <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">{{ tag.count }}次</span>
               </div>
               <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div class="h-full bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] rounded-full" :style="{ width: `${(tag.count / viewingData.tag_ranking[0].count) * 100}%` }"></div>
+                <div class="h-full bg-gradient-to-r from-accent to-accent/70 rounded-full" :style="{ width: `${(tag.count / viewingData.tag_ranking[0].count) * 100}%` }"></div>
               </div>
             </div>
           </div>
@@ -77,7 +77,7 @@
       <!-- 常看UP主 Top 5 -->
       <div v-if="viewingData.author_ranking?.length" class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-          <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
           常看UP主
@@ -91,7 +91,7 @@
                 <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">{{ author.count }}次</span>
               </div>
               <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div class="h-full bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] rounded-full" :style="{ width: `${(author.count / viewingData.author_ranking[0].count) * 100}%` }"></div>
+                <div class="h-full bg-gradient-to-r from-accent to-accent/70 rounded-full" :style="{ width: `${(author.count / viewingData.author_ranking[0].count) * 100}%` }"></div>
               </div>
             </div>
           </div>
@@ -106,7 +106,7 @@
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">设备分布</h4>
         <div class="space-y-2">
           <div v-for="[device, count] in deviceEntries" :key="device" class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full flex-shrink-0" :class="device === '手机' ? 'bg-[#fb7299]' : device === '电脑' ? 'bg-blue-500' : device === '平板' ? 'bg-green-500' : 'bg-gray-400'"></div>
+            <div class="w-2 h-2 rounded-full flex-shrink-0" :class="device === '手机' ? 'bg-accent' : device === '电脑' ? 'bg-blue-500' : device === '平板' ? 'bg-green-500' : 'bg-gray-400'"></div>
             <span class="text-sm text-gray-700 dark:text-gray-300 flex-1">{{ device }}</span>
             <span class="text-xs text-gray-500 dark:text-gray-400">{{ count }}</span>
           </div>
@@ -121,7 +121,7 @@
             v-for="(kw, index) in viewingData.title_keywords.slice(0, 15)"
             :key="kw.word"
             class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors"
-            :class="index < 3 ? 'bg-[#fb7299]/15 text-[#fb7299]' : index < 6 ? 'bg-[#fb7299]/10 text-[#fb7299]/80' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'"
+            :class="index < 3 ? 'bg-accent/15 text-accent' : index < 6 ? 'bg-accent/10 text-accent/80' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'"
           >
             {{ kw.word }}
             <span class="ml-1 text-[9px] opacity-60">{{ kw.count }}</span>
@@ -134,12 +134,12 @@
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">时长偏好</h4>
         <div class="flex h-4 rounded-full overflow-hidden mb-2">
           <div class="bg-green-400 transition-all" :style="{ width: `${viewingData.duration_preference.short_ratio * 100}%` }" title="短视频"></div>
-          <div class="bg-[#fb7299] transition-all" :style="{ width: `${viewingData.duration_preference.mid_ratio * 100}%` }" title="中视频"></div>
+          <div class="bg-accent transition-all" :style="{ width: `${viewingData.duration_preference.mid_ratio * 100}%` }" title="中视频"></div>
           <div class="bg-blue-500 transition-all" :style="{ width: `${viewingData.duration_preference.long_ratio * 100}%` }" title="长视频"></div>
         </div>
         <div class="flex justify-between text-[10px] text-gray-500 dark:text-gray-400">
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span>短(&lt;5min) {{ viewingData.duration_preference.short }}</span>
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#fb7299] inline-block"></span>中(5-20min) {{ viewingData.duration_preference.mid }}</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-accent inline-block"></span>中(5-20min) {{ viewingData.duration_preference.mid }}</span>
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>长(&gt;20min) {{ viewingData.duration_preference.long }}</span>
         </div>
       </div>
@@ -148,7 +148,7 @@
     <!-- 周内分布 -->
     <div v-if="viewingData.weekday_distribution?.length" class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
       <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-        <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
         周内分布
@@ -157,7 +157,7 @@
         <div v-for="day in viewingData.weekday_distribution" :key="day.name" class="flex items-center gap-2">
           <span class="text-[10px] text-gray-500 dark:text-gray-400 w-6 text-right flex-shrink-0">{{ day.name }}</span>
           <div class="flex-1 h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div class="h-full bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] rounded-full transition-all duration-300" :style="{ width: `${Math.max((day.count / maxWeekdayCount) * 100, 2)}%` }"></div>
+            <div class="h-full bg-gradient-to-r from-accent to-accent/70 rounded-full transition-all duration-300" :style="{ width: `${Math.max((day.count / maxWeekdayCount) * 100, 2)}%` }"></div>
           </div>
           <span class="text-[10px] text-gray-500 dark:text-gray-400 w-5 text-right flex-shrink-0">{{ day.count }}</span>
         </div>
@@ -167,7 +167,7 @@
     <!-- 最长观看视频 -->
     <div v-if="viewingData.top_videos?.length" class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
       <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-        <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         最长观看
@@ -190,7 +190,7 @@
             <div class="text-xs text-gray-400 dark:text-gray-500">{{ video.author_name }}</div>
           </div>
           <div class="text-right flex-shrink-0">
-            <div class="text-sm font-semibold text-[#fb7299]">{{ formatDurationShort(video.duration) }}</div>
+            <div class="text-sm font-semibold text-accent">{{ formatDurationShort(video.duration) }}</div>
           </div>
         </div>
       </div>
@@ -199,7 +199,7 @@
     <!-- 年度观看热力图 -->
     <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
       <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-        <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
         年度观看热力图
@@ -228,7 +228,7 @@ const viewingBehaviorData = ref(null)
 // 格式化洞察文本，为数字添加颜色
 const formatInsightText = (text) => {
   if (!text) return '';
-  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-[#fb7299]">$1</span>')
+  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-accent">$1</span>')
 }
 
 // 设备分布条目

@@ -6,13 +6,13 @@
         <div class="bg-white/5 backdrop-blur-md border-b border-white/10 dark:bg-black/5 dark:border-gray-800/50 rounded-t-xl">
           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-14">
-              <h1 class="text-2xl font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+              <h1 class="text-2xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
                 {{ selectedYear }}年度回顾
               </h1>
               <div class="flex items-center space-x-4">
                 <select
                   v-model="selectedYear"
-                  class="w-24 bg-white/10 backdrop-blur text-gray-800 dark:text-white border border-white/20 dark:border-gray-700 rounded-lg px-3 py-1 focus:ring-2 focus:ring-[#fb7299] focus:border-transparent transition-colors duration-200"
+                  class="w-24 bg-white/10 backdrop-blur text-gray-800 dark:text-white border border-white/20 dark:border-gray-700 rounded-lg px-3 py-1 focus:ring-2 focus:ring-accent focus:border-transparent transition-colors duration-200"
                   :disabled="loading"
                 >
                   <option v-for="year in availableYears" :key="year" :value="year">
@@ -24,7 +24,7 @@
                 <button
                   @click="handleForceRefresh"
                   :disabled="loading"
-                  class="inline-flex items-center text-gray-600 dark:text-gray-300 hover:text-[#fb7299] dark:hover:text-[#fb7299] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  class="inline-flex items-center text-gray-600 dark:text-gray-300 hover:text-accent dark:hover:text-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   <svg
                     class="w-5 h-5"
@@ -72,7 +72,7 @@
       >
         <div class="text-center">
           <svg
-            class="w-12 h-12 mx-auto mb-4 animate-spin text-[#fb7299]"
+            class="w-12 h-12 mx-auto mb-4 animate-spin text-accent"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

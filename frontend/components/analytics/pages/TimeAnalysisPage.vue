@@ -1,7 +1,7 @@
 <!-- 时间分析页组件 -->
 <template>
   <div class="space-y-4" v-if="viewingData">
-    <h3 class="text-2xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+    <h3 class="text-2xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
       观看时间分析
     </h3>
 
@@ -13,21 +13,21 @@
 
     <!-- 时间统计卡片矩阵 -->
     <div class="grid grid-cols-4 gap-3">
-      <div class="bg-gradient-to-br from-[#fb7299]/10 to-[#fc9b7a]/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
+      <div class="bg-gradient-to-br from-accent/10 to-accent/70/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-gray-600 dark:text-gray-400">单日最长</p>
-            <p class="text-lg font-bold text-[#fb7299]">{{ formatDurationShort(viewingData?.time_investment?.max_duration_day?.total_duration || 0) }} <span class="text-xs text-gray-500 font-normal">{{ formatDate(viewingData?.time_investment?.max_duration_day?.date || '') }}</span></p>
+            <p class="text-lg font-bold text-accent">{{ formatDurationShort(viewingData?.time_investment?.max_duration_day?.total_duration || 0) }} <span class="text-xs text-gray-500 font-normal">{{ formatDate(viewingData?.time_investment?.max_duration_day?.date || '') }}</span></p>
           </div>
-          <div class="w-8 h-8 bg-[#fb7299]/20 rounded-full flex items-center justify-center">
-            <svg class="w-4 h-4 text-[#fb7299]" fill="currentColor" viewBox="0 0 20 20">
+          <div class="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
             </svg>
           </div>
         </div>
       </div>
 
-      <div class="bg-gradient-to-br from-[#fc9b7a]/10 to-[#fb7299]/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
+      <div class="bg-gradient-to-br from-[#fc9b7a]/10 to-accent/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-gray-600 dark:text-gray-400">日均时长</p>
@@ -41,21 +41,21 @@
         </div>
       </div>
 
-      <div class="bg-gradient-to-br from-[#fb7299]/10 to-[#fc9b7a]/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
+      <div class="bg-gradient-to-br from-accent/10 to-accent/70/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-gray-600 dark:text-gray-400">最活跃时段</p>
-            <p class="text-lg font-bold text-[#fb7299]">{{ getPeakTimeSlot() }}</p>
+            <p class="text-lg font-bold text-accent">{{ getPeakTimeSlot() }}</p>
           </div>
-          <div class="w-8 h-8 bg-[#fb7299]/20 rounded-full flex items-center justify-center">
-            <svg class="w-4 h-4 text-[#fb7299]" fill="currentColor" viewBox="0 0 20 20">
+          <div class="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
             </svg>
           </div>
         </div>
       </div>
 
-      <div class="bg-gradient-to-br from-[#fc9b7a]/10 to-[#fb7299]/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
+      <div class="bg-gradient-to-br from-[#fc9b7a]/10 to-accent/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-gray-600 dark:text-gray-400">深夜观看</p>
@@ -72,7 +72,7 @@
 
     <!-- 24小时观看分布柱状图 -->
     <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-      <h4 class="text-xl font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-4 text-center">24小时观看分布</h4>
+      <h4 class="text-xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-4 text-center">24小时观看分布</h4>
       <div class="h-[280px]">
         <v-chart class="h-full w-full" :option="barOption" autoresize />
       </div>
@@ -101,7 +101,7 @@ const { isDarkMode } = useDarkMode()
 
 const formatInsightText = (text) => {
   if (!text) return '';
-  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-[#fb7299]">$1</span>')
+  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-accent">$1</span>')
 }
 
 const formatDate = (dateStr) => {
@@ -138,7 +138,7 @@ const getTimeSlotColor = (hour) => {
   const h = parseInt(hour.replace('时', ''))
   if (h >= 6 && h < 12) return '#7afc8c'
   if (h >= 12 && h < 18) return '#fc9b7a'
-  if (h >= 18 && h < 24) return '#fb7299'
+  if (h >= 18 && h < 24) return 'var(--accent)'
   return '#7a9efc'
 }
 
@@ -167,7 +167,7 @@ const barOption = computed(() => {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
       backgroundColor: tooltipBg,
-      borderColor: '#fb7299',
+      borderColor: 'var(--accent)',
       textStyle: { color: tooltipText },
       formatter: function(params) {
         const hour = parseInt(params[0].name.split(':')[0])

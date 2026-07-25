@@ -23,7 +23,7 @@
                   v-model="searchQuery"
                   type="text"
                   :placeholder="searchPlaceholder"
-                  class="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#fb7299] focus:border-[#fb7299]"
+                  class="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
                 />
                 <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -42,7 +42,7 @@
               <select
                 v-if="showMethodFilter"
                 v-model="methodFilter"
-                class="text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#fb7299] focus:border-[#fb7299] py-1.5 pl-2 pr-8"
+                class="text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent py-1.5 pl-2 pr-8"
               >
                 <option value="ALL">全部</option>
                 <option value="GET">GET</option>
@@ -79,7 +79,7 @@
                     :key="item.id"
                     @click="selectItem(item)"
                     class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-md transition-colors"
-                    :class="{'bg-[#fb7299]/10 hover:bg-[#fb7299]/20': isSelected(item)}"
+                    :class="{'bg-accent/10 hover:bg-accent/20': isSelected(item)}"
                   >
                     <div class="flex items-start justify-between">
                       <div class="flex-1">
@@ -273,7 +273,7 @@ watch(() => props.show, (newVal) => {
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #fb7299 #f3f4f6;
+  scrollbar-color: var(--accent) #f3f4f6;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -286,7 +286,7 @@ watch(() => props.show, (newVal) => {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #fb7299;
+  background-color: var(--accent);
   border-radius: 2px;
 }
 </style>

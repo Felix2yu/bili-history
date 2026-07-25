@@ -6,8 +6,8 @@
         <!-- 标题栏 -->
         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
           <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-8 h-8 rounded-xl bg-[#fb7299]/10 flex items-center justify-center flex-shrink-0">
-              <svg class="w-4 h-4 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <div class="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -18,7 +18,7 @@
           </div>
           <div class="flex items-center gap-1.5">
             <button @click="refreshHistory"
-              class="px-2.5 py-1 text-xs font-medium text-[#fb7299] hover:bg-[#fb7299]/10 rounded-lg transition-colors">
+              class="px-2.5 py-1 text-xs font-medium text-accent hover:bg-accent/10 rounded-lg transition-colors">
               刷新
             </button>
             <button @click="$emit('update:show', false)"
@@ -34,7 +34,7 @@
         <div class="flex-1 overflow-y-auto px-5 py-4">
           <!-- 加载 -->
           <div v-if="loading" class="flex justify-center py-12">
-            <div class="animate-spin rounded-full h-8 w-8 border-2 border-[#fb7299] border-t-transparent"></div>
+            <div class="animate-spin rounded-full h-8 w-8 border-2 border-accent border-t-transparent"></div>
           </div>
 
           <!-- 空状态 -->

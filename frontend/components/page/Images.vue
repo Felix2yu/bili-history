@@ -7,7 +7,7 @@
         <button
           @click="handleDownloadClick"
           :disabled="isLoading || isStoppingDownload"
-          class="px-4 py-2 bg-[#fb7299] text-white rounded-md hover:bg-[#fb7299]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-[#fb7299]/20"
+          class="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-accent/20"
         >
           <div class="flex items-center space-x-2">
             <svg v-if="isDownloading" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -41,7 +41,7 @@
           type="checkbox"
           id="useSessdata"
           v-model="useSessdata"
-          class="w-4 h-4 text-[#fb7299] bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-[#fb7299]"
+          class="w-4 h-4 text-accent bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-accent"
         >
         <label for="useSessdata" class="text-sm text-gray-700 dark:text-gray-300">
           使用SESSDATA下载图片（对于公开内容如视频封面和头像，可以不使用SESSDATA）
@@ -67,7 +67,7 @@
       <!-- 封面图片状态 -->
       <div class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-200 dark:border-gray-700">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-[#fb7299]">封面图片</h2>
+          <h2 class="text-xl font-semibold text-accent">封面图片</h2>
           <span class="text-sm text-gray-500 dark:text-gray-400">最后更新: {{ formatTime(status?.last_update) }}</span>
         </div>
 
@@ -78,7 +78,7 @@
             <span class="text-sm text-gray-600 dark:text-gray-400">{{ getProgressPercentage(status?.covers, 'covers') }}%</span>
           </div>
           <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-            <div class="bg-[#fb7299] h-2.5 rounded-full transition-all duration-500 animate-pulse"
+            <div class="bg-accent h-2.5 rounded-full transition-all duration-500 animate-pulse"
                  :style="{ width: getProgressPercentage(status?.covers, 'covers') + '%' }"></div>
           </div>
         </div>
@@ -86,11 +86,11 @@
         <!-- 状态卡片网格 -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div class="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <div class="text-2xl font-bold text-[#fb7299]">{{ status?.covers?.total || 0 }}</div>
+            <div class="text-2xl font-bold text-accent">{{ status?.covers?.total || 0 }}</div>
             <div class="text-sm text-gray-500 dark:text-gray-400">计划下载</div>
           </div>
           <div class="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <div class="text-2xl font-bold text-[#fb7299]">{{ status?.covers?.downloaded || 0 }}</div>
+            <div class="text-2xl font-bold text-accent">{{ status?.covers?.downloaded || 0 }}</div>
             <div class="text-sm text-gray-500 dark:text-gray-400">已下载</div>
           </div>
           <div class="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
@@ -127,7 +127,7 @@
       <!-- 头像图片状态 -->
       <div class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-200 dark:border-gray-700">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-[#fb7299]">头像图片</h2>
+          <h2 class="text-xl font-semibold text-accent">头像图片</h2>
         </div>
 
         <!-- 进度条 -->
@@ -137,7 +137,7 @@
             <span class="text-sm text-gray-600 dark:text-gray-400">{{ getProgressPercentage(status?.avatars, 'avatars') }}%</span>
           </div>
           <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-            <div class="bg-[#fb7299] h-2.5 rounded-full transition-all duration-500 animate-pulse"
+            <div class="bg-accent h-2.5 rounded-full transition-all duration-500 animate-pulse"
                  :style="{ width: getProgressPercentage(status?.avatars, 'avatars') + '%' }"></div>
           </div>
         </div>
@@ -145,11 +145,11 @@
         <!-- 状态卡片网格 -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div class="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <div class="text-2xl font-bold text-[#fb7299]">{{ status?.avatars?.total || 0 }}</div>
+            <div class="text-2xl font-bold text-accent">{{ status?.avatars?.total || 0 }}</div>
             <div class="text-sm text-gray-500 dark:text-gray-400">计划下载</div>
           </div>
           <div class="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <div class="text-2xl font-bold text-[#fb7299]">{{ status?.avatars?.downloaded || 0 }}</div>
+            <div class="text-2xl font-bold text-accent">{{ status?.avatars?.downloaded || 0 }}</div>
             <div class="text-sm text-gray-500 dark:text-gray-400">已下载</div>
           </div>
           <div class="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">

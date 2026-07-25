@@ -1,7 +1,7 @@
 <!-- 时间分布页组件 -->
 <template>
   <div class="space-y-6" v-if="viewingData">
-    <h3 class="text-4xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+    <h3 class="text-4xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
       时间分布分析
     </h3>
 
@@ -14,7 +14,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- 周度分布图表 -->
       <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-        <h4 class="text-xl font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-4">周度分布</h4>
+        <h4 class="text-xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-4">周度分布</h4>
         <div class="h-[220px]">
           <v-chart ref="weeklyChartRef" class="h-full w-full" :option="weeklyOption" autoresize />
         </div>
@@ -22,7 +22,7 @@
 
       <!-- 季节分布图表 -->
       <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-        <h4 class="text-xl font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-4">季节分布</h4>
+        <h4 class="text-xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-4">季节分布</h4>
         <div class="h-[220px]">
           <v-chart ref="seasonalChartRef" class="h-full w-full" :option="seasonalOption" autoresize />
         </div>
@@ -60,7 +60,7 @@ const weeklyOption = computed(() => {
     tooltip: {
       trigger: 'axis',
       backgroundColor: (isDarkMode && isDarkMode.value) ? 'rgba(28, 28, 28, 0.9)' : 'rgba(255, 255, 255, 0.95)',
-      borderColor: '#fb7299',
+      borderColor: 'var(--accent)',
       textStyle: { color: (isDarkMode && isDarkMode.value) ? '#ffffff' : '#111111' }
     },
     grid: {
@@ -120,7 +120,7 @@ const seasonalOption = computed(() => {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
       backgroundColor: (isDarkMode && isDarkMode.value) ? 'rgba(28, 28, 28, 0.9)' : 'rgba(255, 255, 255, 0.95)',
-      borderColor: '#fb7299',
+      borderColor: 'var(--accent)',
       textStyle: { color: (isDarkMode && isDarkMode.value) ? '#ffffff' : '#111111' },
       formatter: (params) => {
         const data = params[0]
@@ -190,6 +190,6 @@ onMounted(() => {
 // 格式化洞察文本，为数字添加颜色
 const formatInsightText = (text) => {
   if (!text) return '';
-  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-[#fb7299]">$1</span>')
+  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-accent">$1</span>')
 }
 </script> 

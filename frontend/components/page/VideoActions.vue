@@ -385,7 +385,7 @@ const handleDelete = async () => {
       showCancelButton: true,
       confirmButtonText: '确认删除',
       cancelButtonText: '取消',
-      confirmButtonColor: '#fb7299',
+      confirmButtonColor: 'var(--accent)',
     })
 
     if (syncDeleteToBilibili) {

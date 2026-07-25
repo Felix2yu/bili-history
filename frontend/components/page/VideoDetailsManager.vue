@@ -7,7 +7,7 @@
         <button
           @click="startFetchingDetails"
           :disabled="stats.pendingVideosCount === 0 || isFetching"
-          class="px-4 py-2 bg-[#fb7299] text-white rounded-md hover:bg-[#fb7299]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-[#fb7299]/20"
+          class="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-accent/20"
         >
           <div class="flex items-center space-x-2">
             <svg v-if="isFetching" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -43,7 +43,7 @@
           type="checkbox"
           id="useSessdata"
           v-model="useSessdata"
-          class="w-4 h-4 text-[#fb7299] bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-[#fb7299]"
+          class="w-4 h-4 text-accent bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-accent"
           :disabled="stats.pendingVideosCount === 0 || isFetching"
         >
         <label for="useSessdata" class="text-sm text-gray-700 dark:text-gray-300">
@@ -54,7 +54,7 @@
 
     <!-- 加载中状态 -->
     <div v-if="isLoading" class="flex justify-center items-center py-12">
-      <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-[#fb7299]"></div>
+      <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-accent"></div>
     </div>
 
     <!-- 统计数据卡片 -->
@@ -93,7 +93,7 @@
           </div>
           <div class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
-              class="h-full bg-[#fb7299] transition-all duration-300"
+              class="h-full bg-accent transition-all duration-300"
               :style="{width: `${progress.progressPercentage || 0}%`}"
             ></div>
           </div>

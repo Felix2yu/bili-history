@@ -1,7 +1,7 @@
 <template>
   <div class="px-2 sm:px-4 lg:px-6 py-6 space-y-6 max-w-[1600px] mx-auto">
     <!-- 标题 -->
-    <h2 class="text-2xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+    <h2 class="text-2xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
       数据概览
     </h2>
 
@@ -14,7 +14,7 @@
           @click="switchTab(tab.key)"
           class="px-5 py-2 text-sm font-medium rounded-lg transition-all duration-200"
           :class="activeTab === tab.key
-            ? 'bg-white dark:bg-gray-700 text-[#fb7299] shadow-sm'
+            ? 'bg-white dark:bg-gray-700 text-accent shadow-sm'
             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
         >
           {{ tab.label }}
@@ -28,7 +28,7 @@
       <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="handleSelectorClose"></div>
       <!-- 弹窗内容 -->
       <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 space-y-6">
-        <h3 class="text-xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+        <h3 class="text-xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
           选择概览类型
         </h3>
         <div class="space-y-3">
@@ -36,7 +36,7 @@
             v-for="tab in tabs"
             :key="tab.key"
             @click="activeTab = tab.key; showSelector = false"
-            class="w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200 hover:border-[#fb7299]/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-gray-200 dark:border-gray-700"
+            class="w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200 hover:border-accent/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-gray-200 dark:border-gray-700"
           >
             <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-700 text-gray-500">
               <svg v-if="tab.key === 'yearly'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -107,7 +107,7 @@
 
       <!-- 加载状态 -->
       <div v-if="loading" class="flex justify-center py-16">
-        <van-loading type="spinner" color="#fb7299" size="36">加载中...</van-loading>
+        <van-loading type="spinner" color="var(--accent)" size="36">加载中...</van-loading>
       </div>
 
       <!-- 空状态 -->
@@ -308,7 +308,7 @@ onMounted(() => {
     border border-gray-200/50 dark:border-gray-700/50
     text-gray-600 dark:text-gray-400
     hover:bg-white dark:hover:bg-gray-700
-    hover:text-[#fb7299]
+    hover:text-accent
     transition-all duration-200
     disabled:opacity-50 disabled:cursor-not-allowed;
 }

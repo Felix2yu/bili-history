@@ -52,7 +52,7 @@
             <span>已收藏</span>
           </div>
         </div>
-        <div v-if="record.tag_name || record.tname" class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]" :class="isBatchMode ? 'ml-6' : ''">
+        <div v-if="record.tag_name || record.tname" class="absolute top-1 left-1 bg-accent/80 px-1 py-0.5 rounded text-white text-[10px]" :class="isBatchMode ? 'ml-6' : ''">
           {{ record.tag_name || record.tname }}
         </div>
         <img v-if="imgLoaded" :src="normalizeImageUrl(record.cover || record.covers[0])" class="h-full w-full object-cover" alt="" />
@@ -98,7 +98,7 @@
         </div>
         <!-- Tag badge on cover -->
         <div v-if="record.tag_name || record.tname"
-             class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]"
+             class="absolute top-1 left-1 bg-accent/80 px-1 py-0.5 rounded text-white text-[10px]"
              :class="isBatchMode ? 'ml-6' : ''">
           {{ record.tag_name || record.tname }}
         </div>
@@ -299,7 +299,7 @@ const handleDelete = async () => {
       message: syncDeleteToBilibili
         ? '确定要删除这条记录吗？此操作将同时删除B站服务器上的历史记录，不可恢复。'
         : '确定要删除这条记录吗？此操作不可恢复。',
-      showCancelButton: true, confirmButtonText: '确认删除', cancelButtonText: '取消', confirmButtonColor: '#fb7299'
+      showCancelButton: true, confirmButtonText: '确认删除', cancelButtonText: '取消', confirmButtonColor: 'var(--accent)'
     })
     if (syncDeleteToBilibili) {
       try {

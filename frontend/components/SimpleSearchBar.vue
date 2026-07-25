@@ -1,6 +1,6 @@
 <template>
   <div class="relative">
-    <div class="flex h-9 items-center rounded-md border border-gray-300 dark:border-gray-600 bg-transparent focus-within:border-[#fb7299] transition-colors duration-200">
+    <div class="flex h-9 items-center rounded-md border border-gray-300 dark:border-gray-600 bg-transparent focus-within:border-accent transition-colors duration-200">
       <!-- 搜索图标 -->
       <div class="pl-3 text-gray-400 dark:text-gray-500">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

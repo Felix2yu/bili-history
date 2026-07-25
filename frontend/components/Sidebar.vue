@@ -188,7 +188,7 @@ const handleLoginClick = () => {
   } else {
     showDialog({
       title: '确认退出', message: '确定要退出登录吗？',
-      showCancelButton: true, confirmButtonText: '确认', cancelButtonText: '取消', confirmButtonColor: '#fb7299'
+      showCancelButton: true, confirmButtonText: '确认', cancelButtonText: '取消', confirmButtonColor: 'var(--accent)'
     }).then(() => handleLogout()).catch(() => {})
   }
 }

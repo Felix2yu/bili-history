@@ -2,7 +2,7 @@
   <div class="transition-all duration-300 ease-in-out">
     <!-- 加载状态 -->
     <div v-if="isLoading" class="flex flex-col items-center justify-center py-16 bg-white dark:bg-gray-900 rounded-lg">
-      <div class="w-16 h-16 border-4 border-[#fb7299] border-t-transparent rounded-full animate-spin mb-4"></div>
+      <div class="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4"></div>
       <h3 class="text-xl font-medium text-gray-600 dark:text-gray-300 mb-2">加载中</h3>
       <p class="text-gray-500 dark:text-gray-400">正在获取视频列表...</p>
     </div>

@@ -5,7 +5,7 @@
       <div class="flex space-x-2">
         <button
           @click="resetConfig"
-          class="inline-flex items-center px-3 py-1.5 text-[11px] font-medium text-[#fb7299] md:text-sm bg-[#fb7299]/5 dark:bg-[#fb7299]/10 rounded-lg hover:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20"
+          class="inline-flex items-center px-3 py-1.5 text-[11px] font-medium text-accent md:text-sm bg-accent/5 dark:bg-accent/10 rounded-lg hover:bg-accent/10 dark:hover:bg-accent/20"
         >
           <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -14,11 +14,11 @@
         </button>
         <button
           @click="saveConfig"
-          class="inline-flex items-center px-3 py-1.5 text-[11px] font-medium text-white md:text-sm bg-[#fb7299] rounded-lg hover:bg-[#fb7299]/90"
+          class="inline-flex items-center px-3 py-1.5 text-[11px] font-medium text-white md:text-sm bg-accent rounded-lg hover:bg-accent/90"
         >保存</button>
         <button
           @click="testPush"
-          class="inline-flex items-center px-3 py-1.5 text-[11px] font-medium text-white md:text-sm bg-[#fb7299] rounded-lg hover:bg-[#fb7299]/90"
+          class="inline-flex items-center px-3 py-1.5 text-[11px] font-medium text-white md:text-sm bg-accent rounded-lg hover:bg-accent/90"
           :disabled="!config.enabled || urlList.length === 0"
         >测试</button>
       </div>
@@ -32,7 +32,7 @@
         </div>
         <label class="relative inline-flex shrink-0 cursor-pointer items-center">
           <input type="checkbox" v-model="config.enabled" class="peer sr-only">
-          <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
+          <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-accent/20 dark:bg-gray-600"></div>
         </label>
       </div>
 
@@ -41,14 +41,14 @@
         <textarea
           v-model="config.urls"
           rows="4"
-          class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
+          class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm"
           placeholder="每行一个地址，例如：&#10;bark://api.day.app/your-key&#10;tgram://bot-token/chat-id/&#10;smtp://user:pass@host:port/from@example.com/to@example.com&#10;discord://token@id"
         ></textarea>
       </div>
 
       <p class="text-[10px] text-gray-500 dark:text-gray-400 md:text-xs">
         完整服务列表请查看
-        <a href="https://containrrr.dev/shoutrrr/services/overview/" target="_blank" rel="noopener noreferrer" class="text-[#fb7299] hover:underline">Shoutrrr 支持的服务</a>
+        <a href="https://containrrr.dev/shoutrrr/services/overview/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">Shoutrrr 支持的服务</a>
       </p>
     </div>
   </div>

@@ -14,7 +14,7 @@
     <div>
       <!-- 下载数据加载中的占位 -->
       <div v-if="isLoading" class="flex flex-col items-center justify-center py-12">
-        <svg class="animate-spin h-8 w-8 text-[#fb7299] mb-4" fill="none" viewBox="0 0 24 24">
+        <svg class="animate-spin h-8 w-8 text-accent mb-4" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -39,7 +39,7 @@
         </p>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-          <div v-for="(video, index) in downloads.videos" :key="index" class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-md overflow-hidden border border-gray-200/50 dark:border-gray-700/50 hover:border-[#fb7299] hover:shadow-sm transition-all duration-200 relative group">
+          <div v-for="(video, index) in downloads.videos" :key="index" class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-md overflow-hidden border border-gray-200/50 dark:border-gray-700/50 hover:border-accent hover:shadow-sm transition-all duration-200 relative group">
             <!-- 视频封面 -->
             <div class="relative pb-[56.25%] overflow-hidden cursor-pointer group" @click="handleVideoClick(video)">
               <img
@@ -55,7 +55,7 @@
                 <button
                   v-if="video.files && video.files.length > 0 && !video.files[0].is_audio_only"
                   @click.stop="playVideo(video.files[0].file_path)"
-                  class="w-8 h-8 rounded-full bg-[#fb7299]/80 text-white flex items-center justify-center backdrop-blur-sm"
+                  class="w-8 h-8 rounded-full bg-accent/80 text-white flex items-center justify-center backdrop-blur-sm"
                 >
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -82,7 +82,7 @@
 
               <!-- 多文件角标 -->
               <div v-if="video.files && video.files.length > 1"
-                   class="absolute left-1 top-1 rounded bg-[#fb7299] px-1 py-0.5 text-[10px] text-white">
+                   class="absolute left-1 top-1 rounded bg-accent px-1 py-0.5 text-[10px] text-white">
                 {{ video.files.length }}
               </div>
             </div>
@@ -105,7 +105,7 @@
                   onerror="this.style.display='none'"
                   @click.stop="handleAuthorClick(video)"
                 />
-                <span class="text-[10px] text-gray-600 dark:text-gray-400 truncate hover:text-[#fb7299] cursor-pointer" @click.stop="handleAuthorClick(video)">
+                <span class="text-[10px] text-gray-600 dark:text-gray-400 truncate hover:text-accent cursor-pointer" @click.stop="handleAuthorClick(video)">
                   {{ video.author_name || '未知UP主' }}
                 </span>
               </div>
@@ -175,7 +175,7 @@
               <input
                 type="checkbox"
                 v-model="deleteDirectory"
-                class="w-4 h-4 text-[#fb7299] border-gray-300 dark:border-gray-600 rounded focus:ring-[#fb7299]"
+                class="w-4 h-4 text-accent border-gray-300 dark:border-gray-600 rounded focus:ring-accent"
               >
               <span>同时删除整个目录（包含所有相关文件）</span>
             </label>

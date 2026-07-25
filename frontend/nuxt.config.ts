@@ -43,7 +43,7 @@ export default defineNuxtConfig({
       title: 'Bilibili 历史记录管理',
       script: [
         {
-          innerHTML: `(function(){try{var s=localStorage.getItem('darkMode');var d=s?s==='dark'||(s==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark')}catch(e){}})()`,
+          innerHTML: `(function(){try{var s=localStorage.getItem('darkMode');var d=s?s==='dark'||(s==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');var t=localStorage.getItem('themeColor');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
         },
       ],
       meta: [

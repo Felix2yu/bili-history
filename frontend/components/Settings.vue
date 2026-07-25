@@ -46,7 +46,7 @@
                       :disabled="isMcpConfigLoading || isMcpConfigSaving"
                       @change="handleMcpEnabledChange"
                     >
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
+                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-accent/20 dark:bg-gray-600"></div>
                   </label>
                 </div>
 
@@ -59,11 +59,11 @@
                           :value="mcpUrl"
                           readonly
                           type="text"
-                          class="block min-w-0 flex-1 rounded-md border-gray-300 bg-gray-50 text-[11px] shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
+                          class="block min-w-0 flex-1 rounded-md border-gray-300 bg-gray-50 text-[11px] shadow-sm focus:border-accent focus:ring-accent dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
                         />
                         <button
                           @click="copyText(mcpUrl, 'MCP URL')"
-                          class="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#fb7299]/5 px-2.5 py-2 text-[11px] font-medium text-[#fb7299] hover:bg-[#fb7299]/10 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:text-sm"
+                          class="inline-flex shrink-0 items-center justify-center rounded-lg bg-accent/5 px-2.5 py-2 text-[11px] font-medium text-accent hover:bg-accent/10 dark:bg-accent/10 dark:hover:bg-accent/20 md:text-sm"
                           title="复制MCP URL"
                         >
                           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -80,13 +80,13 @@
                           :value="mcpConfig.token"
                           readonly
                           type="password"
-                          class="block min-w-0 flex-1 rounded-md border-gray-300 bg-gray-50 text-[11px] shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
+                          class="block min-w-0 flex-1 rounded-md border-gray-300 bg-gray-50 text-[11px] shadow-sm focus:border-accent focus:ring-accent dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
                           placeholder="未配置Token"
                         />
                         <button
                           @click="copyText(mcpConfig.token, 'Bearer Token')"
                           :disabled="!mcpConfig.token"
-                          class="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#fb7299]/5 px-2.5 py-2 text-[11px] font-medium text-[#fb7299] hover:bg-[#fb7299]/10 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:text-sm"
+                          class="inline-flex shrink-0 items-center justify-center rounded-lg bg-accent/5 px-2.5 py-2 text-[11px] font-medium text-accent hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-accent/10 dark:hover:bg-accent/20 md:text-sm"
                           title="复制Bearer Token"
                         >
                           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -102,7 +102,7 @@
                       <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">AI连接提示词</label>
                       <button
                         @click="copyText(mcpConnectionPrompt, 'AI连接提示词')"
-                        class="inline-flex shrink-0 items-center rounded-lg bg-[#fb7299]/5 px-2.5 py-1.5 text-[11px] font-medium text-[#fb7299] hover:bg-[#fb7299]/10 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:text-sm"
+                        class="inline-flex shrink-0 items-center rounded-lg bg-accent/5 px-2.5 py-1.5 text-[11px] font-medium text-accent hover:bg-accent/10 dark:bg-accent/10 dark:hover:bg-accent/20 md:text-sm"
                       >
                         <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -114,7 +114,7 @@
                       :value="mcpConnectionPrompt"
                       readonly
                       rows="9"
-                      class="block w-full resize-y rounded-md border-gray-300 bg-gray-50 text-[11px] leading-5 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
+                      class="block w-full resize-y rounded-md border-gray-300 bg-gray-50 text-[11px] leading-5 shadow-sm focus:border-accent focus:ring-accent dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
                     ></textarea>
                   </div>
 
@@ -124,7 +124,7 @@
                       <button
                         @click="copyText(mcpConfig.skill_content, '配套 Skill')"
                         :disabled="!mcpConfig.skill_content"
-                        class="inline-flex shrink-0 items-center rounded-lg bg-[#fb7299]/5 px-2.5 py-1.5 text-[11px] font-medium text-[#fb7299] hover:bg-[#fb7299]/10 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:text-sm"
+                        class="inline-flex shrink-0 items-center rounded-lg bg-accent/5 px-2.5 py-1.5 text-[11px] font-medium text-accent hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-accent/10 dark:hover:bg-accent/20 md:text-sm"
                       >
                         <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -136,7 +136,7 @@
                       :value="mcpConfig.skill_content || '后端未找到配套 Skill 文件'"
                       readonly
                       rows="11"
-                      class="block w-full resize-y rounded-md border-gray-300 bg-gray-50 text-[11px] leading-5 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
+                      class="block w-full resize-y rounded-md border-gray-300 bg-gray-50 text-[11px] leading-5 shadow-sm focus:border-accent focus:ring-accent dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
                     ></textarea>
                   </div>
                 </div>
@@ -155,7 +155,7 @@
                   </div>
                   <label class="relative inline-flex shrink-0 cursor-pointer items-center">
                     <input type="checkbox" v-model="useLocalImages" class="peer sr-only" @change="handleImageSourceChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
+                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-accent/20 dark:bg-gray-600"></div>
                   </label>
                 </div>
               </div>
@@ -174,12 +174,41 @@
                       @click="darkMode = mode.value; handleDarkModeChange()"
                       class="px-2.5 py-1 text-[11px] font-medium rounded-md transition-all duration-200"
                       :class="darkMode === mode.value
-                        ? 'bg-white dark:bg-gray-600 text-[#fb7299] shadow-sm'
+                        ? 'bg-white dark:bg-gray-600 text-accent shadow-sm'
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
                     >
                       {{ mode.label }}
                     </button>
                   </div>
+                </div>
+              </div>
+
+              <!-- 主题色设置 -->
+              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
+                <div class="mb-3">
+                  <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">主题色</h3>
+                  <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">选择您喜欢的主题色彩，打造个性化界面</p>
+                </div>
+                <div class="flex flex-wrap gap-2.5">
+                  <button
+                    v-for="theme in themePresets"
+                    :key="theme.id"
+                    @click="handleThemeColorChange(theme.id)"
+                    class="relative group flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all duration-200"
+                    :class="themeColor === theme.id
+                      ? 'bg-accent/10 ring-2 ring-accent ring-offset-2 ring-offset-white dark:ring-offset-gray-800'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'"
+                  >
+                    <div
+                      class="w-9 h-9 rounded-full shadow-md transition-transform duration-200 group-hover:scale-110 flex items-center justify-center"
+                      :style="{ background: `linear-gradient(135deg, ${theme.color} 0%, ${theme.color}dd 100%)` }"
+                    >
+                      <svg v-if="themeColor === theme.id" class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span class="text-[10px] text-gray-600 dark:text-gray-400 font-medium">{{ theme.name }}</span>
+                  </button>
                 </div>
               </div>
 
@@ -192,7 +221,7 @@
                   </div>
                   <label class="relative inline-flex shrink-0 cursor-pointer items-center">
                     <input type="checkbox" v-model="showSidebar" class="peer sr-only" @change="handleSidebarChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
+                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-accent/20 dark:bg-gray-600"></div>
                   </label>
                 </div>
               </div>
@@ -206,7 +235,7 @@
                   </div>
                   <label class="relative inline-flex shrink-0 cursor-pointer items-center">
                     <input type="checkbox" v-model="isGridLayout" class="peer sr-only" @change="handleLayoutChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
+                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-accent/20 dark:bg-gray-600"></div>
                   </label>
                 </div>
               </div>
@@ -220,7 +249,7 @@
                   </div>
                   <label class="relative inline-flex shrink-0 cursor-pointer items-center">
                     <input type="checkbox" v-model="syncDeleted" class="peer sr-only" @change="handleSyncDeletedChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
+                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-accent/20 dark:bg-gray-600"></div>
                   </label>
                 </div>
               </div>
@@ -234,7 +263,7 @@
                   </div>
                   <label class="relative inline-flex shrink-0 cursor-pointer items-center">
                     <input type="checkbox" v-model="syncDeleteToBilibili" class="peer sr-only" @change="handleSyncDeleteToBilibiliChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
+                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-accent/20 dark:bg-gray-600"></div>
                   </label>
                 </div>
               </div>
@@ -248,7 +277,7 @@
                   </div>
                   <label class="relative inline-flex shrink-0 cursor-pointer items-center">
                     <input type="checkbox" v-model="checkIntegrityOnStartup" class="peer sr-only" @change="handleIntegrityCheckChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
+                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-accent/20 dark:bg-gray-600"></div>
                   </label>
                 </div>
               </div>
@@ -292,13 +321,13 @@
                   <input
                     v-model="serverUrl"
                     type="text"
-                    class="block min-w-0 flex-1 rounded-md border-gray-300 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-[11px] md:text-sm"
+                    class="block min-w-0 flex-1 rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-[11px] md:text-sm"
                     placeholder="例如：http://localhost:8899"
                   />
                   <div class="flex shrink-0 gap-1.5 md:gap-2">
                     <button
                       @click="resetServerUrl"
-                      class="inline-flex items-center justify-center rounded-lg bg-[#fb7299]/5 px-2.5 py-2 text-[11px] font-medium text-[#fb7299] md:text-sm hover:bg-[#fb7299]/10 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:px-3"
+                      class="inline-flex items-center justify-center rounded-lg bg-accent/5 px-2.5 py-2 text-[11px] font-medium text-accent md:text-sm hover:bg-accent/10 dark:bg-accent/10 dark:hover:bg-accent/20 md:px-3"
                     >
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -306,7 +335,7 @@
                     </button>
                     <button
                       @click="saveServerUrl"
-                      class="inline-flex items-center justify-center rounded-lg bg-[#fb7299] px-3 py-2 text-[11px] font-medium text-white md:text-sm hover:bg-[#fb7299]/90 md:px-4"
+                      class="inline-flex items-center justify-center rounded-lg bg-accent px-3 py-2 text-[11px] font-medium text-white md:text-sm hover:bg-accent/90 md:px-4"
                     >
                       保存
                     </button>
@@ -337,7 +366,7 @@
                         <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">年份</label>
                         <select
                           v-model="exportOptions.year"
-                          class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
+                          class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm"
                         >
                           <option v-for="year in availableYears" :key="year" :value="year">
                             {{ year }}年
@@ -350,7 +379,7 @@
                         <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">导出类型</label>
                         <select
                           v-model="exportOptions.exportType"
-                          class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
+                          class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm"
                         >
                           <option value="year">全年数据</option>
                           <option value="month">按月份</option>
@@ -363,7 +392,7 @@
                         <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">月份</label>
                         <select
                           v-model="exportOptions.month"
-                          class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
+                          class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm"
                         >
                           <option v-for="month in 12" :key="month" :value="month">
                             {{ month }}月
@@ -378,7 +407,7 @@
                           <input
                             type="date"
                             v-model="exportOptions.startDate"
-                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm"
                           />
                         </div>
 
@@ -387,7 +416,7 @@
                           <input
                             type="date"
                             v-model="exportOptions.endDate"
-                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm"
                           />
                         </div>
                       </template>
@@ -396,7 +425,7 @@
                       <button
                         @click="exportAndDownloadExcel"
                         :disabled="isExporting"
-                        class="inline-flex items-center px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-[#fb7299] rounded-lg hover:bg-[#fb7299]/90 disabled:opacity-50 h-10"
+                        class="inline-flex items-center px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-accent rounded-lg hover:bg-accent/90 disabled:opacity-50 h-10"
                       >
                         <svg v-if="isExporting" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -418,7 +447,7 @@
                   </div>
                   <button
                     @click="downloadSqlite"
-                    class="inline-flex w-full justify-center items-center sm:w-auto px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-[#fb7299] rounded-lg hover:bg-[#fb7299]/90"
+                    class="inline-flex w-full justify-center items-center sm:w-auto px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-accent rounded-lg hover:bg-accent/90"
                   >
                     <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -462,7 +491,7 @@
               <!-- 页面标题 -->
               <div class="mb-4 md:mb-6">
                 <h1 class="flex items-center text-sm font-bold text-gray-800 dark:text-gray-100 md:text-2xl">
-                  <span class="bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">关于本项目</span>
+                  <span class="bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">关于本项目</span>
                 </h1>
                 <p class="mt-1 text-[10px] text-gray-500 dark:text-gray-400 md:mt-2 md:text-sm">哔哩哔哩历史记录管理与分析工具</p>
               </div>
@@ -470,7 +499,7 @@
               <!-- 项目介绍卡片 -->
               <div class="mb-5 md:mb-6">
                 <h2 class="mb-2 flex items-center text-[13px] font-medium text-gray-800 dark:text-gray-100 md:mb-4 md:text-xl">
-                  <svg class="mr-1.5 h-3.5 w-3.5 text-[#fb7299] md:mr-2 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg class="mr-1.5 h-3.5 w-3.5 text-accent md:mr-2 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   项目简介
@@ -482,18 +511,18 @@
 
                   <div class="mt-3 space-y-2 md:mt-4 md:space-y-3">
                     <div class="flex items-center">
-                      <svg class="mr-1.5 h-3.5 w-3.5 text-[#fb7299] md:mr-2 md:h-5 md:w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <svg class="mr-1.5 h-3.5 w-3.5 text-accent md:mr-2 md:h-5 md:w-5" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
                       </svg>
                       <span class="w-16 shrink-0 text-gray-500 md:w-24">前端项目</span>
-                      <a href="https://github.com/2977094657/BiliHistoryFrontend" target="_blank" rel="noopener noreferrer" class="break-all text-[#fb7299] hover:underline">https://github.com/2977094657/BiliHistoryFrontend</a>
+                      <a href="https://github.com/2977094657/BiliHistoryFrontend" target="_blank" rel="noopener noreferrer" class="break-all text-accent hover:underline">https://github.com/2977094657/BiliHistoryFrontend</a>
                     </div>
                     <div class="flex items-center">
-                      <svg class="mr-1.5 h-3.5 w-3.5 text-[#fb7299] md:mr-2 md:h-5 md:w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <svg class="mr-1.5 h-3.5 w-3.5 text-accent md:mr-2 md:h-5 md:w-5" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
                       </svg>
                       <span class="w-16 shrink-0 text-gray-500 md:w-24">后端项目</span>
-                      <a href="https://github.com/2977094657/BilibiliHistoryFetcher" target="_blank" rel="noopener noreferrer" class="break-all text-[#fb7299] hover:underline">https://github.com/2977094657/BilibiliHistoryFetcher</a>
+                      <a href="https://github.com/2977094657/BilibiliHistoryFetcher" target="_blank" rel="noopener noreferrer" class="break-all text-accent hover:underline">https://github.com/2977094657/BilibiliHistoryFetcher</a>
                     </div>
                   </div>
                 </div>
@@ -502,7 +531,7 @@
               <!-- 技术致谢卡片 -->
               <div>
                 <h2 class="mb-2 flex items-center text-[13px] font-medium text-gray-800 dark:text-gray-100 md:mb-4 md:text-xl">
-                  <svg class="mr-1.5 h-3.5 w-3.5 text-[#fb7299] md:mr-2 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg class="mr-1.5 h-3.5 w-3.5 text-accent md:mr-2 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                   技术致谢
@@ -510,10 +539,10 @@
 
                 <div class="mt-2 space-y-2 text-[11px] text-gray-600 dark:text-gray-300 md:mt-4 md:space-y-4 md:text-sm">
                   <ul class="list-disc space-y-1.5 pl-4 md:space-y-2 md:pl-5">
-                    <li><a href="https://github.com/SocialSisterYi/bilibili-API-collect" target="_blank" rel="noopener noreferrer" class="text-[#fb7299] hover:underline">bilibili-API-collect</a> - 没有它就没有这个项目</li>
-                    <li><a href="https://yutto.nyakku.moe/" target="_blank" rel="noopener noreferrer" class="text-[#fb7299] hover:underline">Yutto</a> - 可爱的B站视频下载工具</li>
-                    <li><a href="https://github.com/zhw2590582/ArtPlayer" target="_blank" rel="noopener noreferrer" class="text-[#fb7299] hover:underline">ArtPlayer</a> - 强大且灵活的HTML5视频播放器</li>
-                    <li><a href="https://www.aicu.cc/" target="_blank" rel="noopener noreferrer" class="text-[#fb7299] hover:underline">aicu.cc</a> - 第三方B站用户评论API</li>
+                    <li><a href="https://github.com/SocialSisterYi/bilibili-API-collect" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">bilibili-API-collect</a> - 没有它就没有这个项目</li>
+                    <li><a href="https://yutto.nyakku.moe/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">Yutto</a> - 可爱的B站视频下载工具</li>
+                    <li><a href="https://github.com/zhw2590582/ArtPlayer" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">ArtPlayer</a> - 强大且灵活的HTML5视频播放器</li>
+                    <li><a href="https://www.aicu.cc/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">aicu.cc</a> - 第三方B站用户评论API</li>
                     <li>所有贡献者</li>
                   </ul>
                 </div>
@@ -551,18 +580,19 @@ import ShoutrrrSettings from './ShoutrrrSettings.vue'
 import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
 import { showDialog } from 'vant'
 import { useRoute } from 'vue-router'
+import { THEME_PRESETS } from '~/stores/darkMode'
 
 // 设置选项卡
 const settingTabs = [
   {
     key: 'basic',
     label: '基础设置',
-    icon: '<svg class="text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2m-2-4h.01M17 16h.01" /></svg>'
+    icon: '<svg class="text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2m-2-4h.01M17 16h.01" /></svg>'
   },
   {
     key: 'data',
     label: '数据管理',
-    icon: '<svg class="text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>'
+    icon: '<svg class="text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>'
   },
   {
     key: 'about',
@@ -714,6 +744,10 @@ const darkModeOptions = [
   { value: 'dark', label: '深色' },
 ]
 
+// 主题色设置
+const themePresets = THEME_PRESETS
+const themeColor = ref('sakura')
+
 // 处理深色模式变更
 const handleDarkModeChange = async () => {
   try {
@@ -742,6 +776,29 @@ const handleDarkModeChange = async () => {
     const modes = ['system', 'light', 'dark']
     const currentIndex = modes.indexOf(darkMode.value)
     darkMode.value = modes[(currentIndex + 2) % 3]
+  }
+}
+
+// 处理主题色变更
+const handleThemeColorChange = async (themeId) => {
+  const previousTheme = themeColor.value
+  themeColor.value = themeId
+  try {
+    const { useDarkMode } = await import('~/stores/darkMode')
+    const themeStore = useDarkMode()
+    await themeStore.setThemeColor(themeId)
+    const theme = themePresets.find(t => t.id === themeId)
+    showNotify({
+      type: 'success',
+      message: `已切换到${theme?.name || '自定义'}主题`
+    })
+  } catch (error) {
+    console.error('更新主题色失败:', error)
+    showNotify({
+      type: 'danger',
+      message: `更新主题色失败: ${error.message}`
+    })
+    themeColor.value = previousTheme
   }
 }
 
@@ -935,13 +992,15 @@ onMounted(async () => {
           const response = await getAppearanceConfig()
           if (response.data && response.data.success) {
             darkMode.value = response.data.dark_mode || 'system'
-            console.log('外观配置获取成功:', darkMode.value)
+            themeColor.value = response.data.theme_color || 'sakura'
+            console.log('外观配置获取成功:', darkMode.value, themeColor.value)
           } else {
             throw new Error(response.data?.message || '获取配置失败')
           }
         } catch (error) {
           console.error('获取外观配置失败:', error)
           darkMode.value = 'system'
+          themeColor.value = 'sakura'
         }
         console.log('外观配置获取完成')
       })()
@@ -1103,7 +1162,7 @@ const resetServerUrl = () => {
     showCancelButton: true,
     confirmButtonText: '确定',
     cancelButtonText: '取消',
-    confirmButtonColor: '#fb7299'
+    confirmButtonColor: 'var(--accent)'
   }).then((result) => {
     if (result === 'confirm') {
       serverUrl.value = DEFAULT_SERVER_URL

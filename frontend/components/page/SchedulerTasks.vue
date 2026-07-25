@@ -9,7 +9,7 @@
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">管理定时执行的数据同步和分析任务</p>
           </div>
           <button @click="openCreateTaskModal"
-            class="flex items-center gap-1.5 px-3 py-1.5 bg-[#fb7299] text-white rounded-lg text-sm font-medium hover:bg-[#fb7299]/90 transition-colors shadow-sm">
+            class="flex items-center gap-1.5 px-3 py-1.5 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors shadow-sm">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
             </svg>
@@ -19,13 +19,13 @@
 
         <!-- 加载状态 -->
         <div v-if="loading" class="flex justify-center items-center py-20">
-          <div class="animate-spin rounded-full h-8 w-8 border-2 border-[#fb7299] border-t-transparent"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-2 border-accent border-t-transparent"></div>
         </div>
 
         <!-- 空状态 -->
         <div v-else-if="tasks.length === 0" class="glass-card p-12 text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#fb7299]/10 flex items-center justify-center">
-            <svg class="w-8 h-8 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent/10 flex items-center justify-center">
+            <svg class="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -64,7 +64,7 @@
                 <!-- 启用/禁用开关 -->
                 <button @click="toggleTaskEnabled(task.task_id, !task.config?.enabled)"
                   class="relative w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0"
-                  :class="task.config?.enabled ? 'bg-[#fb7299]' : 'bg-gray-300 dark:bg-gray-600'">
+                  :class="task.config?.enabled ? 'bg-accent' : 'bg-gray-300 dark:bg-gray-600'">
                   <span class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200"
                     :class="{ 'translate-x-4': task.config?.enabled }"></span>
                 </button>
@@ -187,7 +187,7 @@
                 class="px-4 py-3 flex items-center justify-between hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors"
                 :class="{ 'border-b border-gray-100 dark:border-gray-700/50': idx < task.sub_tasks.length - 1 }">
                 <div class="flex items-center gap-2 min-w-0">
-                  <svg class="w-3.5 h-3.5 text-[#fb7299]/60 flex-shrink-0" fill="none" viewBox="0 0 24 24"
+                  <svg class="w-3.5 h-3.5 text-accent/60 flex-shrink-0" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round"
                       d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
@@ -201,7 +201,7 @@
                   </span>
                   <button @click="toggleTaskEnabled(sub.task_id, !sub.config?.enabled)"
                     class="relative w-7 h-4 rounded-full transition-colors duration-200"
-                    :class="sub.config?.enabled ? 'bg-[#fb7299]' : 'bg-gray-300 dark:bg-gray-600'">
+                    :class="sub.config?.enabled ? 'bg-accent' : 'bg-gray-300 dark:bg-gray-600'">
                     <span class="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform duration-200"
                       :class="{ 'translate-x-3': sub.config?.enabled }"></span>
                   </button>
@@ -403,7 +403,7 @@ const confirmDeleteTask = (taskId, parentTaskId = null) => {
     showCancelButton: true,
     confirmButtonText: '确定',
     cancelButtonText: '取消',
-    confirmButtonColor: '#fb7299',
+    confirmButtonColor: 'var(--accent)',
   }).then(() => deleteTask(taskId, parentTaskId))
 }
 

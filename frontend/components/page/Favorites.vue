@@ -2,7 +2,7 @@
 <template>
   <div class="min-h-screen bg-gray-50/30 dark:bg-gray-900 pb-20 md:pb-0">
     <div class="py-4">
-      <div class="max-w-7xl mx-auto px-3 sm:px-6">
+      <div class="mx-auto sm:px-2 lg:px-8">
         <!-- 主内容卡片 -->
         <div class="glass-card overflow-hidden">
           <!-- 标签导航 -->
@@ -117,7 +117,7 @@
                 </template>
               </div>
 
-              <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 stagger-children">
+              <div v-else class="grid gap-4 px-4 mx-auto stagger-children" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
                 <!-- 收藏夹卡片 -->
                 <div
                   v-for="folder in favorites"
@@ -222,7 +222,7 @@
                 </div>
 
                 <!-- 内容列表 - 网格布局 -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 stagger-children">
+                <div class="grid gap-4 px-4 mx-auto stagger-children" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
                   <div
                     v-for="item in folderContents"
                     :key="item.id || item.bvid"

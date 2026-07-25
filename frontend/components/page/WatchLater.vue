@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50/30 dark:bg-gray-900 pb-20 md:pb-0">
     <div class="py-6">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto sm:px-2 lg:px-8">
         <div class="glass-card overflow-hidden">
           <div class="border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
             <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">稍后再看</h2>
@@ -106,7 +106,7 @@
               <p class="text-gray-500 dark:text-gray-400">没有匹配的视频</p>
             </div>
 
-            <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            <div v-else class="grid gap-4 px-4 mx-auto" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
               <VideoGridCard
                 v-for="video in filteredVideos"
                 :key="video.bvid"

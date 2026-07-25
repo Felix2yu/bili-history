@@ -421,7 +421,7 @@ watch(activeTab, () => {
   fetchFavorites()
 })
 
-// SSR: 初始数据在服务端获取
+// SSR: 初始数据在服务端获取（仅读取本地数据，避免调用远程B站API导致超时）
 const { data: initialData } = await useAsyncData('favorites-initial', async () => {
   try {
     const loginResponse = await getLoginStatus()
@@ -431,12 +431,8 @@ const { data: initialData } = await useAsyncData('favorites-initial', async () =
       return { isLoggedIn: false, favorites: [], totalItems: 0 }
     }
 
-    // 优先读本地
-    let response = await getLocalFavoriteFolders({ page: 1, size: 50 })
-    // 本地没有数据时，从B站在线获取
-    if (!response || response.data.status !== 'success' || !response.data.data.list || response.data.data.list.length === 0) {
-      response = await getCreatedFavoriteFolders()
-    }
+    // SSR 阶段仅读取本地数据，不调用远程B站API避免504超时
+    const response = await getLocalFavoriteFolders({ page: 1, size: 50 })
     const favorites = response.data.status === 'success' ? (response.data.data.list || []) : []
     const totalItems = response.data.status === 'success' ? (response.data.data.count || 0) : 0
 

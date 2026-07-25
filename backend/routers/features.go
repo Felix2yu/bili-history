@@ -535,20 +535,6 @@ func getFavoriteList(c *gin.Context) {
 		return
 	}
 
-	// 为没有封面的收藏夹获取第一个视频的封面
-	for i := range data.List {
-		if data.List[i].Cover != "" || data.List[i].MediaCount == 0 {
-			continue
-		}
-		res, err := client.GetFavoriteResources(data.List[i].ID, 1, 1)
-		if err != nil {
-			continue
-		}
-		if res != nil && len(res.Media) > 0 && res.Media[0].Cover != "" {
-			data.List[i].Cover = res.Media[0].Cover
-		}
-	}
-
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
 		"list":  data.List,
 		"total": data.Count,

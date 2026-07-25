@@ -167,7 +167,7 @@
               <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">尝试调整筛选条件</p>
             </div>
 
-            <div v-else class="grid gap-4 mx-auto stagger-children" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+            <div v-else class="grid gap-3 mx-auto stagger-children" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
               <VideoGridCard
                 v-for="video in filteredVideos"
                 :key="video.bvid"

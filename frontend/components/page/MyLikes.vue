@@ -133,7 +133,7 @@
               <p class="mt-4 text-gray-500 dark:text-gray-400">暂无点赞视频</p>
             </div>
 
-            <div v-else class="grid gap-4 px-4 mx-auto" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+            <div v-else class="grid gap-3 px-4 mx-auto" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
               <VideoGridCard
                 v-for="video in videos"
                 :key="video.bvid"

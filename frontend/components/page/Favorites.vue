@@ -139,7 +139,7 @@
                 </template>
               </div>
 
-              <div v-else class="grid gap-4 px-4 mx-auto stagger-children" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
+              <div v-else class="grid gap-3 px-4 mx-auto stagger-children" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
                 <!-- 收藏夹卡片 -->
                 <div
                   v-for="folder in favorites"
@@ -245,7 +245,7 @@
                 </div>
 
                 <!-- 内容列表 - 网格布局 -->
-                <div class="grid gap-4 px-4 mx-auto stagger-children" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+                <div class="grid gap-3 px-4 mx-auto stagger-children" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
                   <div
                     v-for="item in folderContents"
                     :key="item.id || item.bvid"

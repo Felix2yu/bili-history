@@ -1,39 +1,61 @@
 <!-- 收藏夹页面 -->
 <template>
-  <div class="min-h-screen bg-gray-50/30 dark:bg-gray-900 pb-20 md:pb-0">
-    <div class="py-4">
+  <div class="min-h-screen bg-gradient-to-b from-[#fef6f9] to-[#fff9fa] dark:from-gray-900 dark:to-gray-950 pb-20 md:pb-0 relative overflow-hidden">
+    <!-- 背景装饰 -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-accent/10 to-accent/70/10 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-[#fc9b7a]/10 to-accent/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="relative py-6">
       <div class="mx-auto sm:px-2 lg:px-8">
+        <!-- 页面标题区 -->
+        <div class="mb-6" v-if="!showFolderContents">
+          <div class="flex items-end justify-between flex-wrap gap-4">
+            <div>
+              <h1 class="text-3xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
+                我的收藏
+              </h1>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                共 <span class="font-medium text-gray-700 dark:text-gray-300">{{ totalItems }}</span> 个收藏夹
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- 主内容卡片 -->
         <div class="glass-card overflow-hidden">
-          <!-- 标签导航 -->
-          <div class="border-b border-glass-border" v-if="!showFolderContents">
-            <nav class="-mb-px flex gap-1 px-3 overflow-x-auto py-2" aria-label="收藏夹选项卡">
-              <button
-                @click="activeTab = 'created'"
-                class="py-2 px-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200"
-                :class="activeTab === 'created'
-                  ? 'bg-accent/10 text-accent'
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5 hover:text-gray-700 dark:hover:text-gray-300'"
-              >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                </svg>
-                <span>我创建的</span>
-              </button>
+          <!-- 标签导航 - 胶囊样式 -->
+          <div class="px-4 py-3" v-if="!showFolderContents">
+            <div class="flex justify-center">
+              <nav class="inline-flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1" aria-label="收藏夹选项卡">
+                <button
+                  @click="activeTab = 'created'"
+                  class="py-2 px-5 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-2"
+                  :class="activeTab === 'created'
+                    ? 'bg-white dark:bg-gray-700 text-accent shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                  </svg>
+                  <span>我创建的</span>
+                </button>
 
-              <button
-                @click="activeTab = 'collected'"
-                class="py-2 px-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200"
-                :class="activeTab === 'collected'
-                  ? 'bg-accent/10 text-accent'
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5 hover:text-gray-700 dark:hover:text-gray-300'"
-              >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-                <span>我收藏的</span>
-              </button>
-            </nav>
+                <button
+                  @click="activeTab = 'collected'"
+                  class="py-2 px-5 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-2"
+                  :class="activeTab === 'collected'
+                    ? 'bg-white dark:bg-gray-700 text-accent shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  <span>我收藏的</span>
+                </button>
+              </nav>
+            </div>
           </div>
 
           <!-- 文件夹内容标题栏 -->
@@ -142,10 +164,11 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
                     </button>
-                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                      <p class="text-white text-sm font-medium truncate">{{ folder.title }}</p>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-3">
+                      <p class="text-white text-sm font-semibold truncate drop-shadow-sm">{{ folder.title }}</p>
                       <div class="flex items-center mt-1">
-                        <span class="text-white/80 text-xs">{{ folder.media_count }}个内容</span>
+                        <span class="text-white/85 text-xs font-medium">{{ folder.media_count }}个内容</span>
                       </div>
                     </div>
                   </div>

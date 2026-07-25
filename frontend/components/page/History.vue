@@ -1,60 +1,105 @@
 <template>
-  <div class="pb-20 md:pb-0">
-    <Navbar
-      v-if="currentContent === 'history' && !showRemarks"
-      @refresh-data="refreshData"
-      v-model:date="date"
-      v-model:category="category"
-      v-model:business="business"
-      v-model:businessLabel="businessLabel"
-      :total="total"
-      @click-date="show = true"
-      :layout="layout"
-      @change-layout="layout = $event"
-      :is-batch-mode="isBatchMode"
-      :show-remarks="showRemarks"
-      @toggle-batch-mode="isBatchMode = !isBatchMode"
-      @toggle-remarks="showRemarks = !showRemarks"
-    />
+  <div class="relative min-h-screen overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+      <div class="absolute -top-32 -right-20 w-96 h-96 bg-gradient-to-br from-accent/5 to-rose-500/5 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/4 -left-32 w-80 h-80 bg-gradient-to-tr from-sky-500/5 to-accent/5 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-0 right-1/4 w-72 h-72 bg-gradient-to-tl from-amber-500/5 to-emerald-500/5 rounded-full blur-3xl"></div>
+    </div>
 
-    <div>
-      <div class="mx-auto sm:px-2 lg:px-8">
-        <!-- 日期分页 - 顶部 -->
-        <div v-if="currentContent === 'history' && !showRemarks && availableDates.length > 0" class="mx-auto mb-4 max-w-4xl mt-4">
-          <DatePagination
-            :current-date="currentDate"
-            :available-dates="availableDates"
-            :record-count="recordCount"
-            @date-change="handleDateChange"
-          />
+    <div class="relative z-10">
+      <Navbar
+        v-if="currentContent === 'history' && !showRemarks"
+        @refresh-data="refreshData"
+        v-model:date="date"
+        v-model:category="category"
+        v-model:business="business"
+        v-model:businessLabel="businessLabel"
+        :total="total"
+        @click-date="show = true"
+        :layout="layout"
+        @change-layout="layout = $event"
+        :is-batch-mode="isBatchMode"
+        :show-remarks="showRemarks"
+        @toggle-batch-mode="isBatchMode = !isBatchMode"
+        @toggle-remarks="showRemarks = !showRemarks"
+      />
+
+      <div v-if="currentContent === 'history' && !showRemarks" class="mx-auto transition-all duration-300 ease-in-out px-3 sm:px-4 lg:px-8 py-4 md:py-6" :class="{'max-w-4xl': layout === 'list', 'max-w-6xl': layout === 'grid'}">
+        <div class="relative overflow-hidden rounded-2xl bg-white/70 dark:bg-gray-800/60 backdrop-blur-md border border-gray-100 dark:border-gray-700/50 shadow-sm">
+          <div class="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-rose-500/5"></div>
+          <div class="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-accent/10 to-transparent rounded-full blur-2xl"></div>
+          <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-tr from-sky-500/10 to-transparent rounded-full blur-2xl"></div>
+
+          <div class="relative p-4 md:p-6">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+              <div class="flex items-center gap-3 md:gap-4">
+                <div class="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-md shadow-accent/20">
+                  <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <div class="text-[11px] md:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">今日浏览</div>
+                  <div class="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
+                    {{ currentDate.slice(0, 4) }}年{{ Number(currentDate.slice(4, 6)) }}月{{ Number(currentDate.slice(6, 8)) }}日
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-4 md:gap-6">
+                <div class="text-right">
+                  <div class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400">当前筛选</div>
+                  <div class="text-base md:text-lg font-bold text-accent">{{ total }} <span class="text-xs md:text-sm font-normal text-gray-500 dark:text-gray-400">条</span></div>
+                </div>
+                <div class="h-10 w-px bg-gray-200 dark:bg-gray-700/50 hidden sm:block"></div>
+                <div class="text-right hidden sm:block">
+                  <div class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400">今日总计</div>
+                  <div class="text-base md:text-lg font-bold text-gray-900 dark:text-white">{{ recordCount }} <span class="text-xs md:text-sm font-normal text-gray-500 dark:text-gray-400">条</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div class="">
-          <HistoryContent
-            v-if="currentContent === 'history' && !showRemarks"
-            ref="historyContentRef"
-            :selected-year="selectedYear"
-            :current-date="currentDate"
-            :page="1"
-            :page-size="9999"
-            @update:total-pages="() => {}"
-            @update:total="total = $event"
-            @update:record-count="recordCount = $event"
-            @update:date="date = $event"
-            @update:category="category = $event"
-            @update:category-type="categoryType = $event"
-            v-model:show="show"
-            v-model:showBottom="showBottom"
-            :layout="layout"
-            :date="date"
-            :category="category"
-            :category-type="categoryType"
-            :business="business"
-            :is-batch-mode="isBatchMode"
-          />
+      <div class="px-3 sm:px-4 lg:px-8 pb-6 md:pb-8">
+        <div class="mx-auto transition-all duration-300 ease-in-out" :class="{'max-w-4xl': layout === 'list', 'max-w-6xl': layout === 'grid'}">
+          <div v-if="currentContent === 'history' && !showRemarks && availableDates.length > 0" class="mb-4 md:mb-6">
+            <DatePagination
+              :current-date="currentDate"
+              :available-dates="availableDates"
+              :record-count="recordCount"
+              @date-change="handleDateChange"
+            />
+          </div>
 
-          <Remarks v-else-if="showRemarks" />
-          <Settings v-else-if="currentContent === 'settings'" />
+          <div>
+            <HistoryContent
+              v-if="currentContent === 'history' && !showRemarks"
+              ref="historyContentRef"
+              :selected-year="selectedYear"
+              :current-date="currentDate"
+              :page="1"
+              :page-size="9999"
+              @update:total-pages="() => {}"
+              @update:total="total = $event"
+              @update:record-count="recordCount = $event"
+              @update:date="date = $event"
+              @update:category="category = $event"
+              @update:category-type="categoryType = $event"
+              v-model:show="show"
+              v-model:showBottom="showBottom"
+              :layout="layout"
+              :date="date"
+              :category="category"
+              :category-type="categoryType"
+              :business="business"
+              :is-batch-mode="isBatchMode"
+            />
+
+            <Remarks v-else-if="showRemarks" />
+            <Settings v-else-if="currentContent === 'settings'" />
+          </div>
         </div>
       </div>
     </div>

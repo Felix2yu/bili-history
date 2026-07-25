@@ -85,6 +85,7 @@ import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import { useDarkMode } from '~/stores/darkMode'
 import { formatDurationShort } from '~/utils/format'
+import { getTimeSlotColor } from '~/utils/chartColors'
 
 const props = defineProps({
   viewingData: {
@@ -132,14 +133,6 @@ const getNightWatchCount = () => {
     }
   })
   return nightCount
-}
-
-const getTimeSlotColor = (hour) => {
-  const h = parseInt(hour.replace('时', ''))
-  if (h >= 6 && h < 12) return '#7afc8c'
-  if (h >= 12 && h < 18) return '#fc9b7a'
-  if (h >= 18 && h < 24) return 'var(--accent)'
-  return '#7a9efc'
 }
 
 const barOption = computed(() => {
@@ -202,13 +195,7 @@ const barOption = computed(() => {
       data: counts.map((count, index) => ({
         value: count,
         itemStyle: {
-          color: {
-            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [
-              { offset: 0, color: getTimeSlotColor(`${index}时`) },
-              { offset: 1, color: getTimeSlotColor(`${index}时`) + '80' }
-            ]
-          }
+          color: getTimeSlotColor(index)
         }
       })),
       barWidth: '60%'

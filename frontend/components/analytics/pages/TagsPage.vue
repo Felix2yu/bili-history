@@ -38,6 +38,7 @@ import gsap from 'gsap'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts/core'
 import { useDarkMode } from '~/stores/darkMode'
+import { getChartColor, getChartColors } from '~/utils/chartColors'
 
 const props = defineProps({
   viewingData: {
@@ -100,15 +101,7 @@ const tagDistributionOption = computed(() => {
     series: [{
       name: '视频数量',
       type: 'bar',
-      data: data.map((item, index) => ({
-        value: item.value,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
-            { offset: 0, color: `rgba(251, 114, 153, ${Math.max(0.4, 0.9 - index * 0.05)})` },
-            { offset: 1, color: `rgba(252, 155, 122, ${Math.max(0.4, 0.9 - index * 0.05)})` }
-          ])
-        }
-      })),
+      data: data.map((item, index) => ({ value: item.value, itemStyle: { color: getChartColor(index) } })),
       label: {
         show: true,
         position: 'right',
@@ -180,12 +173,7 @@ const tagCompletionOption = computed(() => {
       data: data.map((item, index) => ({
         value: item.completion,
         count: item.count,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
-            { offset: 0, color: `rgba(64, 169, 255, ${Math.max(0.4, 0.9 - index * 0.05)})` },
-            { offset: 1, color: `rgba(128, 208, 255, ${Math.max(0.4, 0.9 - index * 0.05)})` }
-          ])
-        }
+        itemStyle: { color: getChartColor(index) }
       })),
       label: {
         show: true,

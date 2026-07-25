@@ -27,6 +27,7 @@ import gsap from 'gsap'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts/core'
 import { useDarkMode } from '~/stores/darkMode'
+import { DURATION_COLORS } from '~/utils/chartColors'
 
 const props = defineProps({
   viewingData: {
@@ -54,18 +55,9 @@ const durationDistributionOption = computed(() => {
   }).flat()
 
   const typeColors = {
-    '短视频': {
-      from: 'rgba(251, 114, 153, 0.9)',
-      to: 'rgba(252, 155, 122, 0.9)'
-    },
-    '中等视频': {
-      from: 'rgba(64, 169, 255, 0.9)',
-      to: 'rgba(128, 208, 255, 0.9)'
-    },
-    '长视频': {
-      from: 'rgba(82, 196, 26, 0.9)',
-      to: 'rgba(144, 217, 79, 0.9)'
-    }
+    '短视频': DURATION_COLORS['短视频'],
+    '中等视频': DURATION_COLORS['中等视频'],
+    '长视频': DURATION_COLORS['长视频']
   }
 
   const isDark = !!(isDarkMode && isDarkMode.value)
@@ -129,10 +121,7 @@ const durationDistributionOption = computed(() => {
         focus: 'series'
       },
       itemStyle: {
-        color: new echarts.graphic.LinearGradient(0, 1, 0, 0, [
-          { offset: 0, color: typeColors[type].from },
-          { offset: 1, color: typeColors[type].to }
-        ])
+        color: typeColors[type]
       },
       data: periods.map(period => {
         return data.find(d => d.period === period && d.type === type)

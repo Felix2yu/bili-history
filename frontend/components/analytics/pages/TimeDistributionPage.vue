@@ -35,8 +35,8 @@
 import { ref, computed, onMounted } from 'vue'
 import gsap from 'gsap'
 import VChart from 'vue-echarts'
-import * as echarts from 'echarts/core'
 import { useDarkMode } from '~/stores/darkMode'
+import { getChartColor, getTimeSlotColor } from '~/utils/chartColors'
 
 const props = defineProps({
   viewingData: {
@@ -84,14 +84,15 @@ const weeklyOption = computed(() => {
       splitLine: { lineStyle: { color: (isDarkMode && isDarkMode.value) ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.1)' } }
     },
     series: [{
-      data: data,
+      data: data.map((value, index) => ({
+        value,
+        itemStyle: {
+          color: getChartColor(index)
+        }
+      })),
       type: 'bar',
       barWidth: '60%',
       itemStyle: {
-        color: new echarts.graphic.LinearGradient(0, 1, 0, 0, [
-          { offset: 0, color: 'rgba(251, 114, 153, 0.9)' },
-          { offset: 1, color: 'rgba(252, 155, 122, 0.9)' }
-        ]),
         borderRadius: [8, 8, 0, 0]
       },
       label: {
@@ -153,10 +154,7 @@ const seasonalOption = computed(() => {
       data: data.map((item, index) => ({
         ...item,
         itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 1, 0, 0, [
-            { offset: 0, color: `rgba(251, 114, 153, ${Math.max(0.4, 0.9 - index * 0.05)})` },
-            { offset: 1, color: `rgba(252, 155, 122, ${Math.max(0.4, 0.9 - index * 0.05)})` }
-          ])
+          color: getChartColor(index)
         }
       })),
       type: 'bar',

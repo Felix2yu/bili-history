@@ -41,6 +41,7 @@ import gsap from 'gsap'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts/core'
 import { useDarkMode } from '~/stores/darkMode'
+import { getChartColor } from '~/utils/chartColors'
 
 const props = defineProps({
   viewingData: {
@@ -154,7 +155,7 @@ const completionDistributionOption = computed(() => {
       data: data.map((item, index) => ({
         ...item,
         itemStyle: {
-          color: ['var(--accent)', 'var(--accent)', 'var(--accent)', 'var(--accent)', 'var(--accent)', 'var(--accent)', 'var(--accent)'][index % 7]
+          color: getChartColor(index)
         }
       }))
     }]
@@ -245,13 +246,10 @@ const durationCompletionOption = computed(() => {
       name: '完成率',
       type: 'bar',
       barWidth: '20%',
-      data: data.map((item, index) => ({
+      data: data.map((item) => ({
         value: item.completion,
         itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 1, 0, 0, [
-            { offset: 0, color: `rgba(251, 114, 153, ${Math.max(0.4, 0.9 - index * 0.2)})` },
-            { offset: 1, color: `rgba(252, 155, 122, ${Math.max(0.4, 0.9 - index * 0.2)})` }
-          ])
+          color: getChartColor(0)
         }
       })),
       label: {
@@ -265,13 +263,10 @@ const durationCompletionOption = computed(() => {
       name: '完整观看率',
       type: 'bar',
       barWidth: '20%',
-      data: data.map((item, index) => ({
+      data: data.map((item) => ({
         value: item.fully_watched_rate,
         itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 1, 0, 0, [
-            { offset: 0, color: `rgba(64, 169, 255, ${Math.max(0.4, 0.9 - index * 0.2)})` },
-            { offset: 1, color: `rgba(128, 208, 255, ${Math.max(0.4, 0.9 - index * 0.2)})` }
-          ])
+          color: getChartColor(2)
         }
       })),
       label: {

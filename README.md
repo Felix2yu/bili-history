@@ -1,4 +1,4 @@
-# BiliHistory
+# 拾帧集 (BiliHistory)
 
 Bilibili 观看历史记录管理与分析工具
 
@@ -53,29 +53,30 @@ Bilibili 观看历史记录管理与分析工具
 
 | 层级 | 技术 |
 |------|------|
-| 前端 | Nuxt 3 + Vue 3 + Vant 4 + Tailwind CSS + ECharts |
+| 前端 | Nuxt 3 (SSG 静态化) + Vue 3 + Vant 4 + Tailwind CSS + ECharts |
 | 后端 | Go + Gin + SQLite |
-| 部署 | Docker + docker-compose |
+| 部署 | Docker 单容器 (前后端一体) + docker-compose |
 
 ## 快速开始
 
 ### Docker 部署（推荐）
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
-- 前端：`http://localhost:3000`
-- 后端 API：`http://localhost:8899`
+访问：`http://localhost:8899`（前后端统一端口，API 走 `/api/*` 前缀）
 
-### 后端
+### 本地开发
+
+#### 后端
 
 ```bash
 cd backend
 go run ./cmd/main.go
 ```
 
-### 前端
+#### 前端
 
 ```bash
 cd frontend
@@ -83,15 +84,14 @@ bun install
 bun run dev
 ```
 
+> 开发模式下前端默认通过代理将 `/api` 请求转发到后端 `localhost:8899`
+
 ## 目录结构
 
 ```
 bili-history/
-├── frontend/          # Nuxt 3 + Vue 3 前端
+├── frontend/          # Nuxt 3 (SSG) + Vue 3 前端
 │   ├── components/    # Vue 组件
-│   │   ├── page/      # 页面级组件
-│   │   ├── analytics/ # 年度分析子页面
-│   │   └── layout/    # 布局组件
 │   ├── pages/         # Nuxt 路由页面
 │   ├── utils/         # 工具函数
 │   └── stores/        # Pinia 状态管理
@@ -100,7 +100,9 @@ bili-history/
 │   ├── database/      # 数据库操作
 │   ├── routers/       # API 路由
 │   ├── services/      # 业务逻辑
-│   └── scheduler/     # 定时任务
+│   ├── scheduler/     # 定时任务
+│   └── web/           # 前端静态资源嵌入 (Go embed)
+├── Dockerfile         # 单容器多阶段构建
 ├── docker-compose.yml
 ├── LICENSE            # MIT 许可证
 ├── NOTICE             # 原始项目归属声明
@@ -109,24 +111,23 @@ bili-history/
 
 ## 架构说明
 
-### SSR（服务端渲染）
+### 单容器架构（前后端一体）
 
-前端使用 Nuxt 3 的 SSR 能力，在服务端预取初始数据，提升首屏加载速度：
+项目采用单容器部署，前端通过 Nuxt SSG 静态化后由 Go 后端直接提供服务：
 
-- **HistoryContent**：登录状态 + 历史记录列表
-- **Favorites**：收藏夹列表
-- **WatchLater**：稍后再看列表
-- **MyLikes**：点赞列表
-- **Search**：搜索结果
+```
+浏览器 → Go Gin (单端口 8899)
+           ├── /api/*       → 后端业务 API
+           ├── /mcp         → MCP Streamable HTTP 服务
+           ├── /health      → 健康检查
+           └── /*           → 前端静态页面 (SPA, Go embed)
+```
 
-### 非 SSR 组件
-
-以下组件因技术限制（DOM 依赖、浏览器 API）保持客户端渲染：
-
-- **Analytics 页面**（20+ 个）：ECharts 图表可视化
-- **VideoPlayer**：ArtPlayer 视频播放器 + 弹幕系统
-- **PWA**：Service Worker 离线缓存
-- **客户端状态管理**：Pinia stores
+**核心设计：**
+- **前端 SSG 静态化**：Nuxt 3 `ssr: false`，构建产出纯静态 HTML/CSS/JS
+- **Go embed 嵌入**：前端产物通过 `//go:embed` 嵌入 Go 二进制，无需额外文件服务
+- **单端口统一入口**：页面访问与 API 调用同源，无需配置 CORS 或 API 服务器地址
+- **SPA 路由回退**：所有非 API/MCP 路径均返回 `index.html`，由 Vue Router 处理前端路由
 
 ### 图片懒加载
 

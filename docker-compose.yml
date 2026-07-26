@@ -1,9 +1,6 @@
 services:
   bili-history:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: ghcr.io/felix2yu/bili-history:local
+    image: ghcr.io/felix2yu/bili-history:latest
     container_name: bili-history
     restart: unless-stopped
     volumes:

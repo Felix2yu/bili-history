@@ -1,7 +1,7 @@
 <template>
   <div class="sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
     <nav class="glass border-b border-glass-border">
-      <div class="mx-auto transition-all duration-300 ease-in-out" :class="{'max-w-4xl': layout === 'list', 'max-w-6xl': layout === 'grid'}">
+      <div class="max-w-[1800px] mx-auto transition-all duration-300 ease-in-out">
         <div class="flex items-center justify-between px-3 py-2.5 gap-3">
           <!-- Left: action buttons -->
           <div class="flex items-center gap-1.5">
@@ -90,7 +90,7 @@
         </div>
 
         <!-- Filter area -->
-        <div class="mx-auto transition-all duration-300 ease-in-out" :class="{'max-w-4xl': layout === 'list', 'max-w-6xl': layout === 'grid'}">
+        <div class="max-w-[1800px] mx-auto transition-all duration-300 ease-in-out">
           <FilterDropdown
             ref="filterDropdownRef"
             :business="business"

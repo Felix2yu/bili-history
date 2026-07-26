@@ -210,12 +210,12 @@ func (s *Scheduler) initDefaultTasks() {
 	s.mu.Unlock()
 
 	defaults := []database.MainTask{
-		{TaskID: "sessdata_health_check", Name: "SESSDATA 健康检查", Endpoint: "/login/check-and-notify", Method: "GET", ScheduleType: "interval", IntervalValue: 10, IntervalUnit: "minutes", Enabled: 1, TaskType: "main"},
-		{TaskID: "sync_likes", Name: "同步点赞列表", Endpoint: "/like/list", Method: "GET", ScheduleType: "interval", IntervalValue: 1, IntervalUnit: "hours", Enabled: 0, TaskType: "main"},
-		{TaskID: "fetch_history", Name: "获取B站历史记录", Endpoint: "/fetch/bili-history", Method: "GET", ScheduleType: "daily", ScheduleTime: "00:00", Enabled: 0, TaskType: "main"},
-		{TaskID: "import_data", Name: "导入数据", Endpoint: "/importSqlite/import_data_sqlite", Method: "POST", ScheduleType: "chain", DependsOn: "fetch_history", Enabled: 0, TaskType: "main"},
-		{TaskID: "analyze_data", Name: "分析数据", Endpoint: "/analysis/analyze", Method: "POST", ScheduleType: "chain", DependsOn: "import_data", Enabled: 0, TaskType: "main"},
-		{TaskID: "send_daily_report", Name: "发送每日报告", Endpoint: "/log/send", Method: "POST", ScheduleType: "chain", DependsOn: "analyze_data", Enabled: 0, TaskType: "main"},
+		{TaskID: "sessdata_health_check", Name: "SESSDATA 健康检查", Endpoint: "/api/login/check-and-notify", Method: "GET", ScheduleType: "interval", IntervalValue: 10, IntervalUnit: "minutes", Enabled: 1, TaskType: "main"},
+		{TaskID: "sync_likes", Name: "同步点赞列表", Endpoint: "/api/like/list", Method: "GET", ScheduleType: "interval", IntervalValue: 1, IntervalUnit: "hours", Enabled: 0, TaskType: "main"},
+		{TaskID: "fetch_history", Name: "获取B站历史记录", Endpoint: "/api/fetch/bili-history", Method: "GET", ScheduleType: "daily", ScheduleTime: "00:00", Enabled: 0, TaskType: "main"},
+		{TaskID: "import_data", Name: "导入数据", Endpoint: "/api/importSqlite/import_data_sqlite", Method: "POST", ScheduleType: "chain", DependsOn: "fetch_history", Enabled: 0, TaskType: "main"},
+		{TaskID: "analyze_data", Name: "分析数据", Endpoint: "/api/analysis/analyze", Method: "POST", ScheduleType: "chain", DependsOn: "import_data", Enabled: 0, TaskType: "main"},
+		{TaskID: "send_daily_report", Name: "发送每日报告", Endpoint: "/api/log/send", Method: "POST", ScheduleType: "chain", DependsOn: "analyze_data", Enabled: 0, TaskType: "main"},
 	}
 
 	addedCount := 0
@@ -261,6 +261,26 @@ func (s *Scheduler) initDefaultTasks() {
 			} else {
 				s.mu.Lock()
 				existing.DependsOn = d.DependsOn
+				s.mu.Unlock()
+			}
+		}
+	}
+
+	// 迁移：修正旧版任务的 endpoint（缺少 /api 前缀）
+	for _, d := range defaults {
+		s.mu.RLock()
+		existing, exists := s.tasks[d.TaskID]
+		s.mu.RUnlock()
+		if !exists {
+			continue
+		}
+		if !strings.HasPrefix(existing.Endpoint, "/api/") && strings.HasPrefix(d.Endpoint, "/api/") {
+			utils.LogInfo("修正任务 endpoint: %s %s -> %s", d.TaskID, existing.Endpoint, d.Endpoint)
+			if err := database.UpdateTaskEndpoint(d.TaskID, d.Endpoint); err != nil {
+				utils.LogError("修正任务 endpoint 失败: %s: %v", d.TaskID, err)
+			} else {
+				s.mu.Lock()
+				existing.Endpoint = d.Endpoint
 				s.mu.Unlock()
 			}
 		}

@@ -63,7 +63,7 @@ func main() {
 				params.Path,
 			)
 		},
-		SkipPaths: []string{"/health"},
+		SkipPaths: []string{"/health", "/api/images/proxy"},
 	}))
 	r.Use(gin.Recovery())
 	// task_id may contain "/" (e.g., "/fetch/bili-history").
@@ -222,15 +222,35 @@ func main() {
 func registerFrontendRoutes(r *gin.Engine, distFS fs.FS) {
 	fileServer := http.FileServer(http.FS(distFS))
 
+	apiPrefixes := []string{
+		"/fetch/", "/importSqlite/", "/importMysql/", "/analysis/",
+		"/daily/", "/heatmap/", "/viewing/", "/log/", "/clean/",
+		"/data_sync/", "/scheduler/", "/config/", "/export/",
+		"/login/", "/like/", "/delete/", "/bilibili/", "/interactions/",
+		"/report/", "/images/", "/download/", "/favorite/",
+		"/history/", "/categories/", "/video_details/", "/title_analytics/",
+		"/mcp",
+	}
+
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
+		acceptHeader := c.GetHeader("Accept")
+		contentType := c.GetHeader("Content-Type")
 
 		if strings.HasPrefix(path, "/api/") || path == "/api" {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 			return
 		}
 
-		if strings.HasPrefix(path, "/mcp") {
+		for _, prefix := range apiPrefixes {
+			if strings.HasPrefix(path, prefix) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
+				return
+			}
+		}
+
+		if strings.Contains(acceptHeader, "application/json") ||
+			strings.Contains(contentType, "application/json") {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 			return
 		}

@@ -1,5 +1,7 @@
 package routers
 
+import "strings"
+
 // EndpointMeta 描述一个 API 端点的元信息。
 // 用于 /scheduler/available-endpoints 接口，向调用方（如前端的任务创建页面）
 // 展示每个端点的用途说明。
@@ -22,10 +24,18 @@ func RegisterEndpointMeta(method, path string, meta EndpointMeta) {
 
 // GetEndpointMeta 查找指定路由的元信息。
 // 若未注册则返回零值（空 summary / 空 tags）。
+// 自动兼容带 /api 前缀和不带前缀的路径。
 func GetEndpointMeta(method, path string) EndpointMeta {
 	key := method + " " + path
 	if meta, ok := endpointRegistry[key]; ok {
 		return meta
+	}
+	stripped := strings.TrimPrefix(path, "/api")
+	if stripped != path {
+		key2 := method + " " + stripped
+		if meta, ok := endpointRegistry[key2]; ok {
+			return meta
+		}
 	}
 	return EndpointMeta{
 		Summary:     "",

@@ -452,6 +452,16 @@ func UpdateTaskDependsOn(taskID, dependsOn string) error {
 	return err
 }
 
+// UpdateTaskEndpoint updates the Endpoint field for a task.
+func UpdateTaskEndpoint(taskID, endpoint string) error {
+	db := GetSchedulerDB()
+	if db == nil {
+		return fmt.Errorf("scheduler database not available")
+	}
+	_, err := db.Exec("UPDATE main_tasks SET endpoint = ? WHERE task_id = ?", endpoint, taskID)
+	return err
+}
+
 // GetExecutionHistory returns recent execution records, optionally filtered by task_id.
 func GetExecutionHistory(taskID string, limit int) ([]map[string]interface{}, error) {
 	db := GetSchedulerDB()

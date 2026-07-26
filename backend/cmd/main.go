@@ -130,29 +130,11 @@ func main() {
 		utils.LogSuccess("MCP 服务已启用，路径: %s", mcpPath)
 	}
 
-	r.GET("/health", func(c *gin.Context) {
-		schedStatus := sched.GetStatus()
-		c.JSON(200, gin.H{
-			"status":           "running",
-			"timestamp":        time.Now().Format(time.RFC3339),
-			"scheduler_status": schedStatus["running"],
-		})
-	})
+	r.GET("/health", healthHandler(sched))
+	api.GET("/health", healthHandler(sched))
 
-	r.GET("/routes", func(c *gin.Context) {
-		routes := r.Routes()
-		var routeList []map[string]interface{}
-		for _, route := range routes {
-			routeList = append(routeList, map[string]interface{}{
-				"method": route.Method,
-				"path":   route.Path,
-			})
-		}
-		c.JSON(200, gin.H{
-			"total":  len(routeList),
-			"routes": routeList,
-		})
-	})
+	r.GET("/routes", routesHandler(r))
+	api.GET("/routes", routesHandler(r))
 
 	r.GET("/scheduler/available-endpoints", availableEndpointsHandler(r))
 	api.GET("/scheduler/available-endpoints", availableEndpointsHandler(r))
@@ -182,14 +164,52 @@ func main() {
 	}
 }
 
+func healthHandler(sched *scheduler.Scheduler) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		schedStatus := sched.GetStatus()
+		c.JSON(200, gin.H{
+			"status":           "running",
+			"timestamp":        time.Now().Format(time.RFC3339),
+			"scheduler_status": schedStatus["running"],
+		})
+	}
+}
+
+func routesHandler(r *gin.Engine) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		routes := r.Routes()
+		var routeList []map[string]interface{}
+		for _, route := range routes {
+			routeList = append(routeList, map[string]interface{}{
+				"method": route.Method,
+				"path":   route.Path,
+			})
+		}
+		c.JSON(200, gin.H{
+			"total":  len(routeList),
+			"routes": routeList,
+		})
+	}
+}
+
 func availableEndpointsHandler(r *gin.Engine) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		routes := r.Routes()
 		endpoints := make([]map[string]interface{}, 0)
 
 		skipPaths := map[string]bool{
-			"/health": true,
-			"/routes": true,
+			"/health":     true,
+			"/routes":     true,
+			"/api/health": true,
+			"/api/routes": true,
+		}
+
+		apiRoutes := make(map[string]bool)
+		for _, route := range routes {
+			if strings.HasPrefix(route.Path, "/api/") {
+				normalized := strings.TrimPrefix(route.Path, "/api")
+				apiRoutes[route.Method+"|"+normalized] = true
+			}
 		}
 
 		for _, route := range routes {
@@ -200,6 +220,17 @@ func availableEndpointsHandler(r *gin.Engine) gin.HandlerFunc {
 				continue
 			}
 
+			displayPath := route.Path
+			if !strings.HasPrefix(displayPath, "/api/") {
+				normalized := displayPath
+				if apiRoutes[route.Method+"|"+normalized] {
+					continue
+				}
+				if !strings.HasPrefix(displayPath, "/mcp") {
+					displayPath = "/api" + displayPath
+				}
+			}
+
 			meta := routers.GetEndpointMeta(route.Method, route.Path)
 			tags := meta.Tags
 			if tags == nil {
@@ -207,7 +238,7 @@ func availableEndpointsHandler(r *gin.Engine) gin.HandlerFunc {
 			}
 
 			endpoints = append(endpoints, map[string]interface{}{
-				"path":        route.Path,
+				"path":        displayPath,
 				"method":      route.Method,
 				"summary":     meta.Summary,
 				"tags":        tags,

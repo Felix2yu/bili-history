@@ -285,6 +285,55 @@ func (s *Scheduler) initDefaultTasks() {
 			}
 		}
 	}
+
+	// 迁移：对所有任务（含用户自定义任务）检查 endpoint，缺少 /api 前缀的自动补上
+	apiPrefixList := []string{
+		"/fetch/", "/importSqlite/", "/importMysql/", "/analysis/",
+		"/daily/", "/heatmap/", "/viewing/", "/log/", "/clean/",
+		"/data_sync/", "/scheduler/", "/config/", "/export/",
+		"/login/", "/like/", "/delete/", "/bilibili/", "/interactions/",
+		"/report/", "/images/", "/download/", "/favorite/",
+		"/history/", "/categories/", "/video_details/", "/title_analytics/",
+		"/watchlater/", "/dynamic/",
+	}
+	s.mu.RLock()
+	tasksSnapshot := make([]*ScheduleTask, 0, len(s.tasks))
+	for _, t := range s.tasks {
+		tasksSnapshot = append(tasksSnapshot, t)
+	}
+	s.mu.RUnlock()
+	for _, task := range tasksSnapshot {
+		endpoint := task.Endpoint
+		if endpoint == "" || strings.HasPrefix(endpoint, "/api/") {
+			continue
+		}
+		if strings.HasPrefix(endpoint, "http://") || strings.HasPrefix(endpoint, "https://") {
+			continue
+		}
+		needsPrefix := false
+		for _, prefix := range apiPrefixList {
+			if strings.HasPrefix(endpoint, prefix) {
+				needsPrefix = true
+				break
+			}
+		}
+		if !needsPrefix && strings.HasPrefix(endpoint, "/") && !strings.HasPrefix(endpoint, "/api/") {
+			needsPrefix = true
+		}
+		if needsPrefix {
+			newEndpoint := "/api" + endpoint
+			utils.LogInfo("修正任务 endpoint: %s %s -> %s", task.ID, endpoint, newEndpoint)
+			if err := database.UpdateTaskEndpoint(task.ID, newEndpoint); err != nil {
+				utils.LogError("修正任务 endpoint 失败: %s: %v", task.ID, err)
+			} else {
+				s.mu.Lock()
+				if t, ok := s.tasks[task.ID]; ok {
+					t.Endpoint = newEndpoint
+				}
+				s.mu.Unlock()
+			}
+		}
+	}
 }
 
 func (s *Scheduler) Start() {

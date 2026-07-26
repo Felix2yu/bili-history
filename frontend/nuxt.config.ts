@@ -40,7 +40,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Bilibili 历史记录管理',
+      title: '拾帧集',
       script: [
         {
           innerHTML: `(function(){try{var s=localStorage.getItem('darkMode');var d=s?s==='dark'||(s==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');var t=localStorage.getItem('themeColor');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
@@ -52,11 +52,11 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#1e293b' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-        { name: 'apple-mobile-web-app-title', content: 'Bili历史' },
-        { name: 'description', content: '获取和管理B站历史记录' },
+        { name: 'apple-mobile-web-app-title', content: '拾帧集' },
+        { name: 'description', content: '拾起每帧画面，珍藏B站回忆' },
         { name: 'format-detection', content: 'telephone=no' },
-        { property: 'og:title', content: 'Bilibili 历史记录管理' },
-        { property: 'og:description', content: '获取和管理B站历史记录' },
+        { property: 'og:title', content: '拾帧集' },
+        { property: 'og:description', content: '拾起每帧画面，珍藏B站回忆' },
         { property: 'og:type', content: 'website' },
         { property: 'og:image', content: '/icons/icon-512x512.png' },
       ],
@@ -75,9 +75,9 @@ export default defineNuxtConfig({
     registerType: 'autoUpdate',
     manifest: {
       id: '/',
-      name: 'Bilibili 历史记录管理',
-      short_name: 'Bili历史',
-      description: '获取和管理B站历史记录',
+      name: '拾帧集',
+      short_name: '拾帧集',
+      description: '拾起每帧画面，珍藏B站回忆',
       theme_color: '#1e293b',
       background_color: '#0f172a',
       display: 'standalone',

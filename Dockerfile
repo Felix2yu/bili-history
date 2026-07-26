@@ -68,7 +68,7 @@ WORKDIR /app
 
 COPY --link --from=backend-builder /app/backend/bili-history /app/bili-history
 COPY --link --from=backend-builder /app/backend/config /app/config
-COPY --link backend/docker/entrypoint.sh /entrypoint.sh
+COPY --link entrypoint.sh /entrypoint.sh
 
 RUN mkdir -p /app/output && \
     chmod +x /entrypoint.sh

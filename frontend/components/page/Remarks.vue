@@ -265,7 +265,7 @@ defineOptions({
   padding: 12px 16px;
   background-color: rgba(251, 114, 153, 0.03);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.6;
   color: #4b5563;
   transition: all 0.2s ease;

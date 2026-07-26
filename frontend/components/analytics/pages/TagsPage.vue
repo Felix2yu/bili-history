@@ -1,7 +1,7 @@
 <!-- 标签分析页组件 -->
 <template>
   <div class="space-y-6" v-if="viewingData">
-    <h3 class="text-4xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
+    <h3 class="text-4xl font-bold text-center text-accent">
       标签分析
     </h3>
 
@@ -15,7 +15,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- 标签分布图表 -->
       <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-        <h4 class="text-xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-4">观看分布</h4>
+        <h4 class="text-xl font-bold text-accent mb-4">观看分布</h4>
         <div class="h-[280px]">
           <v-chart ref="distributionChartRef" class="h-full w-full" :option="tagDistributionOption" autoresize />
         </div>
@@ -23,7 +23,7 @@
 
       <!-- 标签完成率图表 -->
       <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-        <h4 class="text-xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-4">完成率排行</h4>
+        <h4 class="text-xl font-bold text-accent mb-4">完成率排行</h4>
         <div class="h-[280px]">
           <v-chart ref="completionChartRef" class="h-full w-full" :option="tagCompletionOption" autoresize />
         </div>

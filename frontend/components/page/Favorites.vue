@@ -1,62 +1,64 @@
 <!-- 收藏夹页面 -->
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-[#fef6f9] to-[#fff9fa] dark:from-gray-900 dark:to-gray-950 pb-20 md:pb-0 relative overflow-hidden">
-    <!-- 背景装饰 -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-accent/10 to-accent/70/10 rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-[#fc9b7a]/10 to-accent/10 rounded-full blur-3xl"></div>
+  <div class="min-h-screen pb-20 md:pb-0 relative overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute -top-32 -right-20 w-96 h-96 bg-accent/5 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/4 -left-32 w-80 h-80 bg-accent/3 rounded-full blur-3xl"></div>
     </div>
 
     <div class="relative py-6">
       <div class="max-w-[1800px] mx-auto sm:px-2 lg:px-8">
         <!-- 页面标题区 -->
         <div class="mb-6" v-if="!showFolderContents">
-          <div class="flex items-end justify-between flex-wrap gap-4">
-            <div>
-              <h1 class="text-3xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
-                我的收藏
-              </h1>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                共 <span class="font-medium text-gray-700 dark:text-gray-300">{{ totalItems }}</span> 个收藏夹
-              </p>
+          <div class="glass-card overflow-hidden">
+            <div class="px-5 md:px-6 py-4 md:py-5">
+              <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-3 md:gap-4">
+                  <div class="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-accent flex items-center justify-center shadow-md shadow-accent/20">
+                    <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">我的收藏</h1>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-0.5">共 <span class="font-medium text-gray-700 dark:text-gray-300">{{ totalItems }}</span> 个收藏夹</p>
+                  </div>
+                </div>
+                <nav class="inline-flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1" aria-label="收藏夹选项卡">
+                  <button
+                    @click="activeTab = 'created'"
+                    class="py-1.5 px-3 md:py-2 md:px-4 text-xs md:text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5"
+                    :class="activeTab === 'created'
+                      ? 'bg-white dark:bg-gray-700 text-accent shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                  >
+                    <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    </svg>
+                    <span class="hidden sm:inline">我创建的</span>
+                    <span class="sm:hidden">创建</span>
+                  </button>
+                  <button
+                    @click="activeTab = 'collected'"
+                    class="py-1.5 px-3 md:py-2 md:px-4 text-xs md:text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5"
+                    :class="activeTab === 'collected'
+                      ? 'bg-white dark:bg-gray-700 text-accent shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                  >
+                    <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                    <span class="hidden sm:inline">我收藏的</span>
+                    <span class="sm:hidden">收藏</span>
+                  </button>
+                </nav>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- 主内容卡片 -->
         <div class="glass-card overflow-hidden">
-          <!-- 标签导航 - 胶囊样式 -->
-          <div class="px-4 py-3" v-if="!showFolderContents">
-            <div class="flex justify-center">
-              <nav class="inline-flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1" aria-label="收藏夹选项卡">
-                <button
-                  @click="activeTab = 'created'"
-                  class="py-2 px-5 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-2"
-                  :class="activeTab === 'created'
-                    ? 'bg-white dark:bg-gray-700 text-accent shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-                >
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                  </svg>
-                  <span>我创建的</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'collected'"
-                  class="py-2 px-5 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-2"
-                  :class="activeTab === 'collected'
-                    ? 'bg-white dark:bg-gray-700 text-accent shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-                >
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                  </svg>
-                  <span>我收藏的</span>
-                </button>
-              </nav>
-            </div>
-          </div>
 
           <!-- 文件夹内容标题栏 -->
           <div class="border-b border-gray-200 dark:border-gray-700" v-if="showFolderContents">

@@ -1,31 +1,29 @@
 <template>
-  <div class="min-h-screen bg-gray-50/30 dark:bg-gray-900 pb-20 md:pb-0 relative overflow-hidden">
+  <div class="min-h-screen pb-20 md:pb-0 relative overflow-hidden">
     <div class="absolute inset-0 pointer-events-none">
-      <div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-accent/5 blur-3xl"></div>
-      <div class="absolute top-1/4 -right-24 w-80 h-80 rounded-full bg-accent/3 blur-3xl"></div>
-      <div class="absolute bottom-0 left-1/3 w-72 h-72 rounded-full bg-accent/4 blur-3xl"></div>
+      <div class="absolute -top-32 -right-20 w-96 h-96 bg-accent/5 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/4 -left-32 w-80 h-80 bg-accent/3 rounded-full blur-3xl"></div>
     </div>
 
     <div class="relative py-6">
       <div class="max-w-[1800px] mx-auto sm:px-2 lg:px-8">
-        <div class="mb-5">
-          <div class="glass-card overflow-hidden relative">
-            <div class="absolute top-0 right-0 w-40 h-40 bg-accent-gradient opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="px-6 py-5 relative">
-              <div class="flex items-start justify-between flex-wrap gap-4">
-                <div class="flex items-center gap-4">
-                  <div class="w-12 h-12 rounded-2xl bg-accent-gradient flex items-center justify-center shadow-lg shadow-accent/25">
-                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+        <div class="mb-6">
+          <div class="glass-card overflow-hidden">
+            <div class="px-5 md:px-6 py-4 md:py-5">
+              <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-3 md:gap-4">
+                  <div class="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-accent flex items-center justify-center shadow-md shadow-accent/20">
+                    <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                     </svg>
                   </div>
                   <div>
-                    <h1 class="text-2xl font-bold text-accent-gradient bg-clip-text text-transparent">我的点赞</h1>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">记录你在 B 站点赞过的所有精彩视频</p>
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">我的点赞</h1>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-0.5">记录你在 B 站点赞过的所有精彩视频</p>
                   </div>
                 </div>
-                <div class="flex items-center gap-3 flex-wrap">
-                  <div class="glass-card !shadow-sm px-4 py-2.5 flex items-center gap-2.5">
+                <div class="flex items-center gap-3 md:gap-4 flex-wrap">
+                  <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
                       <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -34,10 +32,11 @@
                     </div>
                     <div class="flex flex-col">
                       <span class="text-[10px] text-gray-500 dark:text-gray-400 leading-none">视频总数</span>
-                      <span class="text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight mt-0.5">{{ totalCount }}</span>
+                      <span class="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight mt-0.5">{{ totalCount }}</span>
                     </div>
                   </div>
-                  <div class="glass-card !shadow-sm px-4 py-2.5 flex items-center gap-2.5">
+                  <div class="w-px h-8 bg-gray-200 dark:bg-gray-700 hidden md:block"></div>
+                  <div class="flex items-center gap-2.5 hidden md:flex">
                     <div class="w-8 h-8 rounded-lg flex items-center justify-center" :class="syncing ? 'bg-accent/10' : 'bg-emerald-500/10 dark:bg-emerald-500/20'">
                       <svg v-if="syncing" class="w-4 h-4 text-accent animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -55,9 +54,9 @@
                   <button
                     @click="syncFromBilibili"
                     :disabled="syncing"
-                    class="px-5 py-2.5 text-sm font-medium rounded-xl bg-accent text-white hover:bg-accent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-accent/25 hover:shadow-accent/40 btn-press flex items-center gap-2"
+                    class="px-4 py-2 md:px-5 md:py-2.5 text-xs md:text-sm font-medium rounded-xl bg-accent text-white hover:bg-accent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-accent/20 flex items-center gap-1.5 md:gap-2"
                   >
-                    <svg class="w-4 h-4" :class="{'animate-spin': syncing}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg class="w-3.5 h-3.5 md:w-4 md:h-4" :class="{'animate-spin': syncing}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                     <span>{{ syncing ? '同步中...' : '立即同步' }}</span>
@@ -69,9 +68,9 @@
         </div>
 
         <div class="glass-card overflow-hidden">
-          <div class="border-b border-glass-border px-5 py-3.5 flex items-center justify-between bg-gradient-to-r from-accent/[0.03] to-transparent dark:from-accent/[0.06]">
+          <div class="border-b border-glass-border px-5 py-3.5 flex items-center justify-between bg-white/30 dark:bg-white/5">
             <div class="flex items-center gap-2.5">
-              <div class="w-1.5 h-5 rounded-full bg-accent-gradient"></div>
+              <div class="w-1.5 h-5 rounded-full bg-accent"></div>
               <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">点赞视频列表</h2>
             </div>
             <div class="flex items-center gap-2">

@@ -7,7 +7,7 @@
       <Transition name="scale">
         <div v-if="show" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] z-10 flex flex-col overflow-hidden">
           <!-- 顶部装饰 -->
-          <div class="h-1.5 bg-gradient-to-r from-accent via-accent/70 to-accent/40"></div>
+          <div class="h-1.5 bg-accent"></div>
 
           <!-- 标题栏 -->
           <div class="flex items-center justify-between px-5 md:px-6 py-4 md:py-5 border-b border-gray-100 dark:border-gray-700/50">

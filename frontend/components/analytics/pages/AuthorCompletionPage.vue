@@ -3,7 +3,7 @@
   <div class="space-y-4" v-if="viewingData">
     <div class="max-w-7xl w-full mx-auto px-2 py-4">
         <div class="space-y-4">
-          <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
+          <h3 class="text-3xl font-bold text-center text-accent">
             UP主完成率分析
           </h3>
 
@@ -22,7 +22,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <!-- 最喜欢的UP主 -->
             <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-gray-300/50 dark:border-gray-500/50">
-              <h4 class="text-base font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-3">
+              <h4 class="text-base font-bold text-center text-accent mb-3">
                 最喜欢的UP主
               </h4>
               <div class="space-y-2">
@@ -34,7 +34,7 @@
                       <span class="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">{{ item.score.toFixed(1) }}分</span>
                     </div>
                     <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div class="h-full bg-gradient-to-r from-accent to-accent/70 rounded-full" :style="{ width: `${(item.score / topScore) * 100}%` }"></div>
+                      <div class="h-full bg-accent rounded-full" :style="{ width: `${(item.score / topScore) * 100}%` }"></div>
                     </div>
                     <div class="flex gap-3 mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
                       <span>完播 {{ item.completion }}%</span>
@@ -49,7 +49,7 @@
 
             <!-- 观看最多的UP主 -->
             <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-gray-300/50 dark:border-gray-500/50">
-              <h4 class="text-base font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-3">
+              <h4 class="text-base font-bold text-center text-accent mb-3">
                 观看最多的UP主
               </h4>
               <div class="space-y-2">
@@ -61,7 +61,7 @@
                       <span class="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">{{ item.videos }}个视频</span>
                     </div>
                     <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div class="h-full bg-gradient-to-r from-[#40a9ff] to-[#69c0ff] rounded-full" :style="{ width: `${(item.videos / topVideoCount) * 100}%` }"></div>
+                      <div class="h-full bg-blue-500 rounded-full" :style="{ width: `${(item.videos / topVideoCount) * 100}%` }"></div>
                     </div>
                     <div class="flex gap-3 mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
                       <span>完播 {{ item.completion }}%</span>

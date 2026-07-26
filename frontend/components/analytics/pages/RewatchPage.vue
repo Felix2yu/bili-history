@@ -3,7 +3,7 @@
   <div class="space-y-4" v-if="viewingData">
     <div class="max-w-7xl w-full mx-auto px-2 py-6">
       <div class="space-y-4">
-          <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
+          <h3 class="text-3xl font-bold text-center text-accent">
             最爱重温的视频
           </h3>
 
@@ -27,7 +27,7 @@
 
           <!-- 第一名 -->
           <div v-else-if="viewingData.watch_counts.most_watched_videos[0]"
-            class="bg-gradient-to-br from-white/50 via-accent/10 to-accent/70/20 dark:from-white/5 dark:via-accent/20 dark:to-accent/70/30 backdrop-blur-sm rounded-lg p-3 transform hover:scale-[1.01] transition-transform cursor-pointer video-item relative overflow-hidden border border-gray-300/50 dark:border-gray-500/50"
+            class="bg-accent/15 dark:bg-accent/20 backdrop-blur-sm rounded-lg p-3 transform hover:scale-[1.01] transition-transform cursor-pointer video-item relative overflow-hidden border border-gray-300/50 dark:border-gray-500/50"
             @click="handleVideoClick(viewingData.watch_counts.most_watched_videos[0].bvid)"
           >
             <div class="flex items-start space-x-4">
@@ -42,7 +42,7 @@
                 </div>
               </div>
               <div class="flex flex-col items-center justify-center bg-white/30 dark:bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-gray-300/50 dark:border-gray-500/50">
-                <div class="text-lg font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent rewatch-interval whitespace-nowrap">
+                <div class="text-lg font-bold text-accent rewatch-interval whitespace-nowrap">
                   {{ Math.round(viewingData.watch_counts.most_watched_videos[0].avg_interval / 3600 / 24) }}
                 </div>
                 <div class="text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">天/次</div>
@@ -56,8 +56,8 @@
               :key="video.bvid"
               class="backdrop-blur-sm rounded-lg p-2.5 transform hover:scale-[1.02] transition-transform cursor-pointer video-item relative overflow-hidden border border-gray-300/50 dark:border-gray-500/50"
               :class="{
-                'bg-gradient-to-br from-white/50 via-accent/20/10 to-[#fcd07a]/20 dark:from-white/5 dark:via-accent/20/20 dark:to-[#fcd07a]/30': index === 0,
-                'bg-gradient-to-br from-white/50 via-[#fcd07a]/10 to-[#fce07a]/20 dark:from-white/5 dark:via-[#fcd07a]/20 dark:to-[#fce07a]/30': index === 1,
+                'bg-amber-50/60 dark:bg-amber-900/20': index === 0,
+                'bg-yellow-50/60 dark:bg-yellow-900/20': index === 1,
                 'bg-white/50 dark:bg-white/5': index > 1
               }"
               @click="handleVideoClick(video.bvid)"
@@ -74,7 +74,7 @@
                   <div class="text-[10px] text-gray-500 dark:text-gray-400">{{ video.tag_name }}</div>
                 </div>
                 <div class="flex flex-col items-center justify-center bg-white/30 dark:bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1 ml-1 border border-gray-300/50 dark:border-gray-500/50">
-                  <div class="text-sm font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent rewatch-interval whitespace-nowrap">
+                  <div class="text-sm font-bold text-accent rewatch-interval whitespace-nowrap">
                     {{ Math.round(video.avg_interval / 3600 / 24) }}
                   </div>
                   <div class="text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">天/次</div>

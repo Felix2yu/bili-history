@@ -1,9 +1,8 @@
 <template>
   <div class="relative min-h-screen overflow-hidden">
     <div class="absolute inset-0 pointer-events-none overflow-hidden">
-      <div class="absolute -top-32 -right-20 w-96 h-96 bg-gradient-to-br from-accent/5 to-rose-500/5 rounded-full blur-3xl"></div>
-      <div class="absolute top-1/4 -left-32 w-80 h-80 bg-gradient-to-tr from-sky-500/5 to-accent/5 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-0 right-1/4 w-72 h-72 bg-gradient-to-tl from-amber-500/5 to-emerald-500/5 rounded-full blur-3xl"></div>
+      <div class="absolute -top-32 -right-20 w-96 h-96 bg-accent/5 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/4 -left-32 w-80 h-80 bg-accent/3 rounded-full blur-3xl"></div>
     </div>
 
     <div class="relative z-10">
@@ -26,14 +25,14 @@
 
       <div v-if="currentContent === 'history' && !showRemarks" class="max-w-[1800px] mx-auto transition-all duration-300 ease-in-out px-3 sm:px-4 lg:px-8 py-4 md:py-6">
         <div class="relative overflow-hidden rounded-2xl bg-white/70 dark:bg-gray-800/60 backdrop-blur-md border border-gray-100 dark:border-gray-700/50 shadow-sm">
-          <div class="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-rose-500/5"></div>
-          <div class="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-accent/10 to-transparent rounded-full blur-2xl"></div>
-          <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-tr from-sky-500/10 to-transparent rounded-full blur-2xl"></div>
+          <div class="absolute inset-0 bg-accent/[0.03]"></div>
+          <div class="absolute -top-10 -right-10 w-40 h-40 bg-accent/10 rounded-full blur-2xl"></div>
+          <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-accent/5 rounded-full blur-2xl"></div>
 
           <div class="relative p-3 md:p-4">
             <div class="flex items-center justify-between gap-2 md:gap-4">
               <div class="flex items-center gap-2 md:gap-3 min-w-0">
-                <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-md shadow-accent/20 shrink-0">
+                <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-accent flex items-center justify-center shadow-md shadow-accent/20 shrink-0">
                   <svg class="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>

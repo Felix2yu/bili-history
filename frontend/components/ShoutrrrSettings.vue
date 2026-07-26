@@ -3,7 +3,7 @@
     <div class="px-5 md:px-6 py-5 border-b border-gray-100 dark:border-gray-700/50">
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-3 min-w-0">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shrink-0">
             <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0M3.124 7.5A8.969 8.969 0 0112 5.25a8.969 8.969 0 018.876 2.25" />
             </svg>
@@ -25,11 +25,11 @@
           </button>
           <button
             @click="saveConfig"
-            class="inline-flex items-center px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-gradient-to-r from-accent to-accent/80 rounded-xl hover:shadow-lg hover:shadow-accent/25 transition-all"
+            class="inline-flex items-center px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-accent rounded-xl hover:shadow-lg hover:shadow-accent/25 transition-all"
           >保存</button>
           <button
             @click="testPush"
-            class="inline-flex items-center px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all"
+            class="inline-flex items-center px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-emerald-500 rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all"
             :disabled="!config.enabled || urlList.length === 0"
           >测试</button>
         </div>

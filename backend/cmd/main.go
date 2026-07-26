@@ -51,7 +51,21 @@ func main() {
 	utils.LogSuccess("调度器已启动")
 
 	gin.SetMode(gin.ReleaseMode)
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
+		Formatter: func(params gin.LogFormatterParams) string {
+			return fmt.Sprintf("[GIN] %s | %3d | %13v | %15s | %7s %s\n",
+				params.TimeStamp.Format("2006/01/02 - 15:04:05"),
+				params.StatusCode,
+				params.Latency,
+				params.ClientIP,
+				params.Method,
+				params.Path,
+			)
+		},
+		SkipPaths: []string{"/health"},
+	}))
+	r.Use(gin.Recovery())
 	// task_id may contain "/" (e.g., "/fetch/bili-history").
 	// The frontend URL-encodes slashes as %2F. With UseRawPath=true Gin
 	// matches routes against the raw path, so %2F is treated as a single

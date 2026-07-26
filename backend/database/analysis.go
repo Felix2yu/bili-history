@@ -116,11 +116,11 @@ func AnalyzeHistory(year int) (*AnalysisResult, error) {
 	var avgDuration float64
 
 	err := conn.QueryRow(fmt.Sprintf(`
-		SELECT 
+		SELECT
 			COUNT(*) as total_count,
-			COALESCE(SUM(duration), 0) as total_duration,
+			COALESCE(SUM(CASE WHEN progress = -1 THEN duration ELSE progress END), 0) as total_duration,
 			COUNT(DISTINCT author_mid) as unique_authors,
-			COALESCE(AVG(duration), 0) as avg_duration
+			COALESCE(AVG(CASE WHEN progress = -1 THEN duration ELSE progress END), 0) as avg_duration
 		FROM %s
 		WHERE view_at >= ? AND view_at < ?
 	`, tableName), yearStartTS, yearEndTS).Scan(&totalVideos, &totalDuration, &uniqueAuthors, &avgDuration)
@@ -194,11 +194,11 @@ func AnalyzeHistory(year int) (*AnalysisResult, error) {
 		var monthCompleted int
 
 		err := conn.QueryRow(fmt.Sprintf(`
-			SELECT 
+			SELECT
 				COUNT(*) as total_count,
-				COALESCE(SUM(duration), 0) as total_duration,
+				COALESCE(SUM(CASE WHEN progress = -1 THEN duration ELSE progress END), 0) as total_duration,
 				COUNT(DISTINCT author_mid) as unique_authors,
-				COALESCE(AVG(duration), 0) as avg_duration,
+				COALESCE(AVG(CASE WHEN progress = -1 THEN duration ELSE progress END), 0) as avg_duration,
 				COALESCE(AVG(CAST(progress AS FLOAT) / NULLIF(duration, 0)), 0) as avg_completion_rate,
 				COUNT(CASE WHEN progress >= duration * 0.9 AND duration > 0 THEN 1 END) as completed_videos
 			FROM %s
@@ -228,12 +228,12 @@ func AnalyzeHistory(year int) (*AnalysisResult, error) {
 	}
 
 	dailyRows, err := conn.Query(fmt.Sprintf(`
-		SELECT 
+		SELECT
 			DATE(view_at, 'unixepoch', 'localtime') as date,
 			COUNT(*) as total_count,
 			COUNT(DISTINCT author_mid) as unique_authors,
-			COALESCE(SUM(duration), 0) as total_duration,
-			COALESCE(AVG(duration), 0) as avg_duration,
+			COALESCE(SUM(CASE WHEN progress = -1 THEN duration ELSE progress END), 0) as total_duration,
+			COALESCE(AVG(CASE WHEN progress = -1 THEN duration ELSE progress END), 0) as avg_duration,
 			COALESCE(AVG(CAST(progress AS FLOAT) / NULLIF(duration, 0)), 0) as avg_completion_rate,
 			COUNT(CASE WHEN progress >= duration * 0.9 AND duration > 0 THEN 1 END) as completed_videos
 		FROM %s
@@ -528,7 +528,7 @@ func GetViewingAnalytics(year int) (*ViewingStats, error) {
 	var totalVideos int
 
 	err := conn.QueryRow(fmt.Sprintf(`
-		SELECT COALESCE(SUM(progress), 0) as total_watch_time, COUNT(*) as total_videos
+		SELECT COALESCE(SUM(CASE WHEN progress = -1 THEN duration ELSE progress END), 0) as total_watch_time, COUNT(*) as total_videos
 		FROM %s
 		WHERE view_at >= ? AND view_at < ?
 	`, tableName), yearStartTS, yearEndTS).Scan(&totalDuration, &totalVideos)

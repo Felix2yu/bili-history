@@ -458,11 +458,7 @@
               <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
                 <div class="px-5 md:px-6 py-8 md:py-10 text-center relative overflow-hidden">
                   <div class="relative">
-                    <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-3xl bg-accent flex items-center justify-center shadow-xl shadow-accent/30">
-                      <svg class="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v.01M12 12v5M12 21a9 9 0 110-18 9 9 0 010 18z" />
-                      </svg>
-                    </div>
+                    <img src="/logo.svg" class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 object-contain drop-shadow-xl" alt="拾帧集" />
                     <h1 class="text-xl md:text-2xl font-bold">
                       <span class="text-accent">BiliHistory</span>
                     </h1>

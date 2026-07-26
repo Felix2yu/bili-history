@@ -1,11 +1,14 @@
+# syntax=docker/dockerfile:1.7
+
 # ===== 阶段 1: 构建前端 =====
 FROM oven/bun:1 AS frontend-builder
 WORKDIR /app/frontend
 
-COPY frontend/package.json frontend/bun.lock* ./
-RUN bun install
+COPY --link frontend/package.json frontend/bun.lock* ./
+RUN --mount=type=cache,target=/root/.bun/install/cache,sharing=locked \
+    bun install --frozen-lockfile
 
-COPY frontend/ .
+COPY --link frontend/ .
 RUN bun run generate
 
 # ===== 阶段 2: 构建后端 Go 二进制 =====
@@ -20,16 +23,21 @@ RUN apk add --no-cache gcc musl-dev git
 
 WORKDIR /app/backend
 
-COPY backend/go.mod backend/go.sum ./
-RUN go mod download
+COPY --link backend/go.mod backend/go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
+    go mod download
 
-# 先拷贝前端构建产物到 web/dist
-COPY --from=frontend-builder /app/frontend/.output/public ./web/dist
+# 拷贝前端构建产物到 web/dist
+COPY --link --from=frontend-builder /app/frontend/.output/public ./web/dist
 
-COPY backend/ .
-RUN go mod tidy
+COPY --link backend/ .
 
-RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o bili-history ./cmd/main.go
+RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
+    --mount=type=cache,target=/root/.cache/go-build,sharing=locked \
+    CGO_ENABLED=1 GOOS=linux go build \
+      -trimpath \
+      -ldflags="-s -w" \
+      -o bili-history ./cmd/main.go
 
 # ===== 阶段 3: 最终运行镜像 =====
 FROM alpine:3.24
@@ -47,18 +55,24 @@ ENV DEDE_USER_ID_CKMD5=""
 ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=8899
 
-RUN apk add --no-cache tzdata ca-certificates tini ffmpeg shadow su-exec
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    apk add --no-cache \
+      tzdata \
+      ca-certificates \
+      tini \
+      ffmpeg \
+      shadow \
+      su-exec
 
 WORKDIR /app
 
-COPY --from=backend-builder /app/backend/bili-history /app/bili-history
-COPY --from=backend-builder /app/backend/config /app/config
+COPY --link --from=backend-builder /app/backend/bili-history /app/bili-history
+COPY --link --from=backend-builder /app/backend/config /app/config
+COPY --link backend/docker/entrypoint.sh /entrypoint.sh
 
-RUN mkdir -p /app/output
-
-COPY backend/docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN mkdir -p /app/output && \
+    chmod +x /entrypoint.sh
 
 EXPOSE 8899
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]

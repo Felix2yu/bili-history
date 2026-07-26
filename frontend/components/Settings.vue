@@ -515,8 +515,8 @@
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-accent mt-0.5">•</span>
-                      <a href="https://yutto.nyakku.moe/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">Yutto</a>
-                      <span class="text-gray-500 dark:text-gray-400">- 可爱的B站视频下载工具</span>
+                      <a href="https://github.com/Felix2yu/bili-dl" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">bili-dl</a>
+                      <span class="text-gray-500 dark:text-gray-400">- B站视频下载库</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-accent mt-0.5">•</span>

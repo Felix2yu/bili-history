@@ -42,34 +42,6 @@ shoutrrr:
 # 日志文件夹
 log_folder: "logs"
 
-# yutto 下载器配置
-yutto:
-  basic:
-    # 设置下载目录
-    dir: "./output/download_video"
-    # 设置临时文件目录
-    tmp_dir: "./output/tmp_video"
-    # 设置大会员严格校验
-    vip_strict: false
-    # 设置登录严格校验
-    login_strict: false
-  
-  resource:
-    # 下载字幕
-    require_subtitle: true
-    # 默认是否仅下载音频
-    only_audio: false
-  
-  danmaku:
-    # 设置弹幕字体大小
-    font_size: 30
-    # 设置弹幕屏蔽关键词
-    block_keyword_patterns: []
-  
-  batch:
-    # 下载额外剧集
-    with_section: true
-
 # 服务器配置
 server:
   # 说明：0.0.0.0/:: 为“监听所有网卡”的绑定地址，客户端访问请使用 localhost/127.0.0.1。

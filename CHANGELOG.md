@@ -88,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 #### 视频功能
 - ArtPlayer 视频播放器 + 弹幕系统
-- 视频下载（Yutto 集成）
+- 视频下载（bili-dl 集成，支持批量下载、UP主视频下载）
 - 动态下载
 
 #### 计划任务

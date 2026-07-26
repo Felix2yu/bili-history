@@ -120,7 +120,7 @@ func FetchHistory(taskID string, skipExists bool) (map[string]interface{}, error
 	})
 
 	go func() {
-		utils.LogInfo("[%s] 后台抓取协程已启动, skipExists=%v", taskID, skipExists)
+		utils.LogWarning("[%s] 后台抓取协程已启动, skipExists=%v", taskID, skipExists)
 		defer func() {
 			if r := recover(); r != nil {
 				utils.LogError("[%s] 协程 panic: %v", taskID, r)
@@ -155,7 +155,7 @@ func FetchHistory(taskID string, skipExists bool) (map[string]interface{}, error
 			if err == nil && !latestDate.IsZero() {
 				cutoffTimestamp = time.Date(latestDate.Year(), latestDate.Month(), latestDate.Day(), 0, 0, 0, 0, time.Local).Unix()
 			}
-			utils.LogInfo("[%s] 增量模式: latestDate=%v, cutoffTimestamp=%d", taskID, latestDate, cutoffTimestamp)
+			utils.LogWarning("[%s] 增量模式: latestDate=%v, cutoffTimestamp=%d", taskID, latestDate, cutoffTimestamp)
 		}
 
 		var allEntries []biliapi.HistoryEntry
@@ -169,7 +169,7 @@ func FetchHistory(taskID string, skipExists bool) (map[string]interface{}, error
 		maxConsecutiveErrors := 3
 		consecutiveErrors := 0
 
-		utils.LogInfo("[%s] 开始抓取历史记录...", taskID)
+		utils.LogWarning("[%s] 开始抓取历史记录...", taskID)
 		for {
 			pageCount++
 
@@ -189,7 +189,7 @@ func FetchHistory(taskID string, skipExists bool) (map[string]interface{}, error
 				continue
 			}
 			consecutiveErrors = 0
-			utils.LogInfo("[%s] 第 %d 页: 获取到 %d 条记录", taskID, pageCount, len(data.List))
+			utils.LogWarning("[%s] 第 %d 页: 获取到 %d 条记录", taskID, pageCount, len(data.List))
 
 			status.CurrentPage = pageCount
 			status.LastUpdateTime = time.Now().Unix()
@@ -223,6 +223,7 @@ func FetchHistory(taskID string, skipExists bool) (map[string]interface{}, error
 			setFetchTaskStatus(taskID, status)
 
 			if !hasNew && cutoffTimestamp > 0 {
+				utils.LogWarning("[%s] 没有新数据(cutoff=%d), 停止抓取", taskID, cutoffTimestamp)
 				break
 			}
 

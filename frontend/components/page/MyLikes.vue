@@ -31,7 +31,7 @@
                       </svg>
                     </div>
                     <div class="flex flex-col">
-                      <span class="text-[10px] text-gray-500 dark:text-gray-400 leading-none">视频总数</span>
+                      <span class="text-[0.625rem] text-gray-500 dark:text-gray-400 leading-none">视频总数</span>
                       <span class="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight mt-0.5">{{ totalCount }}</span>
                     </div>
                   </div>
@@ -47,7 +47,7 @@
                       </svg>
                     </div>
                     <div class="flex flex-col">
-                      <span class="text-[10px] text-gray-500 dark:text-gray-400 leading-none">同步状态</span>
+                      <span class="text-[0.625rem] text-gray-500 dark:text-gray-400 leading-none">同步状态</span>
                       <span class="text-sm font-semibold leading-tight mt-0.5" :class="syncing ? 'text-accent' : 'text-emerald-500'">{{ syncing ? '同步中...' : '已同步' }}</span>
                     </div>
                   </div>

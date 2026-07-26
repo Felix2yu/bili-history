@@ -33,7 +33,7 @@
               loading="lazy"
             />
             <!-- 视频时长 -->
-            <div class="absolute bottom-1 right-1 rounded bg-black/50 px-1 py-1 text-[10px] font-semibold text-white">
+            <div class="absolute bottom-1 right-1 rounded bg-black/50 px-1 py-1 text-[0.625rem] font-semibold text-white">
               {{ video.length }}
             </div>
           </div>

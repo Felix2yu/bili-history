@@ -10,13 +10,13 @@
           </div>
           <div class="min-w-0">
             <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white truncate">通知设置</h2>
-            <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">配置 Shoutrrr 通知推送服务</p>
+            <p class="text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">配置 Shoutrrr 通知推送服务</p>
           </div>
         </div>
         <div class="flex gap-2 shrink-0">
           <button
             @click="resetConfig"
-            class="inline-flex items-center px-3 py-2 text-[11px] font-medium text-accent md:text-sm bg-accent/10 rounded-xl hover:bg-accent/20 transition-colors"
+            class="inline-flex items-center px-3 py-2 text-[0.6875rem] font-medium text-accent md:text-sm bg-accent/10 rounded-xl hover:bg-accent/20 transition-colors"
           >
             <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -25,11 +25,11 @@
           </button>
           <button
             @click="saveConfig"
-            class="inline-flex items-center px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-accent rounded-xl hover:shadow-lg hover:shadow-accent/25 transition-all"
+            class="inline-flex items-center px-4 py-2 text-[0.6875rem] font-medium text-white md:text-sm bg-accent rounded-xl hover:shadow-lg hover:shadow-accent/25 transition-all"
           >保存</button>
           <button
             @click="testPush"
-            class="inline-flex items-center px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-emerald-500 rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all"
+            class="inline-flex items-center px-4 py-2 text-[0.6875rem] font-medium text-white md:text-sm bg-emerald-500 rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all"
             :disabled="!config.enabled || urlList.length === 0"
           >测试</button>
         </div>
@@ -45,26 +45,26 @@
       />
 
       <div class="pt-2">
-        <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-2">通知地址列表</label>
+        <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-2">通知地址列表</label>
         <textarea
           v-model="config.urls"
           rows="5"
-          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm resize-y"
+          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm resize-y"
           placeholder="每行一个地址，例如：&#10;bark://api.day.app/your-key&#10;tgram://bot-token/chat-id/&#10;smtp://user:pass@host:port/from@example.com/to@example.com&#10;discord://token@id"
         ></textarea>
-        <p class="text-[11px] text-gray-500 dark:text-gray-400 md:text-xs mt-2">
+        <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400 md:text-xs mt-2">
           完整服务列表请查看
           <a href="https://containrrr.dev/shoutrrr/services/overview/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline font-medium">Shoutrrr 支持的服务</a>
         </p>
       </div>
 
       <div v-if="urlList.length > 0" class="pt-2">
-        <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-2">已配置服务</label>
+        <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-2">已配置服务</label>
         <div class="flex flex-wrap gap-2">
           <div
             v-for="(url, idx) in urlList"
             :key="idx"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/10 text-accent text-[10px] md:text-[11px] font-medium"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/10 text-accent text-[0.625rem] md:text-[0.6875rem] font-medium"
           >
             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />

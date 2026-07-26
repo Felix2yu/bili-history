@@ -52,7 +52,7 @@
                 v-for="(tab, index) in settingTabs"
                 :key="index"
                 @click="activeTab = tab.key"
-                class="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-medium transition-all duration-200 whitespace-nowrap"
+                class="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[0.75rem] font-medium transition-all duration-200 whitespace-nowrap"
                 :class="activeTab === tab.key
                   ? 'bg-white dark:bg-gray-700 text-accent shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
@@ -80,7 +80,7 @@
                     </div>
                     <div>
                       <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">外观设置</h2>
-                      <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">定制您的视觉体验</p>
+                      <p class="text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">定制您的视觉体验</p>
                     </div>
                   </div>
                 </div>
@@ -89,15 +89,15 @@
                 <div class="px-5 md:px-6 py-4 border-b border-gray-50 dark:border-gray-700/30">
                   <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0 flex-1">
-                      <h3 class="text-[13px] md:text-sm font-medium text-gray-900 dark:text-gray-100">深色模式</h3>
-                      <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 md:text-xs">切换应用的显示主题，跟随系统将自动匹配系统设置</p>
+                      <h3 class="text-[0.8125rem] md:text-sm font-medium text-gray-900 dark:text-gray-100">深色模式</h3>
+                      <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400 mt-0.5 md:text-xs">切换应用的显示主题，跟随系统将自动匹配系统设置</p>
                     </div>
                     <div class="flex bg-gray-100 dark:bg-gray-700/60 rounded-xl p-0.5 shrink-0">
                       <button
                         v-for="mode in darkModeOptions"
                         :key="mode.value"
                         @click="darkMode = mode.value; handleDarkModeChange()"
-                        class="px-2.5 md:px-3 py-1.5 text-[11px] md:text-xs font-medium rounded-lg transition-all duration-200"
+                        class="px-2.5 md:px-3 py-1.5 text-[0.6875rem] md:text-xs font-medium rounded-lg transition-all duration-200"
                         :class="darkMode === mode.value
                           ? 'bg-white dark:bg-gray-600 text-accent shadow-sm'
                           : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
@@ -111,8 +111,8 @@
                 <!-- 主题色 -->
                 <div class="px-5 md:px-6 py-4 md:py-5">
                   <div class="mb-4">
-                    <h3 class="text-[13px] md:text-sm font-medium text-gray-900 dark:text-gray-100">主题色</h3>
-                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 md:text-xs">选择您喜欢的主题色彩，打造个性化界面</p>
+                    <h3 class="text-[0.8125rem] md:text-sm font-medium text-gray-900 dark:text-gray-100">主题色</h3>
+                    <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400 mt-0.5 md:text-xs">选择您喜欢的主题色彩，打造个性化界面</p>
                   </div>
                   <div class="flex flex-wrap gap-2.5 md:gap-3">
                     <button
@@ -132,8 +132,31 @@
                           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <span class="text-[10px] md:text-[11px] text-gray-600 dark:text-gray-400 font-medium">{{ theme.name }}</span>
+                      <span class="text-[0.625rem] md:text-[0.6875rem] text-gray-600 dark:text-gray-400 font-medium">{{ theme.name }}</span>
                     </button>
+                  </div>
+                </div>
+
+                <!-- 字体大小 -->
+                <div class="px-5 md:px-6 py-4 border-b border-gray-50 dark:border-gray-700/30">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0 flex-1">
+                      <h3 class="text-[0.8125rem] md:text-sm font-medium text-gray-900 dark:text-gray-100">字体大小</h3>
+                      <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400 mt-0.5 md:text-xs">调整页面文字大小，提升阅读体验</p>
+                    </div>
+                    <div class="flex bg-gray-100 dark:bg-gray-700/60 rounded-xl p-0.5 shrink-0">
+                      <button
+                        v-for="preset in fontSizePresets"
+                        :key="preset.id"
+                        @click="handleFontSizeChange(preset.id)"
+                        class="px-2.5 md:px-3 py-1.5 text-[0.6875rem] md:text-xs font-medium rounded-lg transition-all duration-200"
+                        :class="fontSize === preset.id
+                          ? 'bg-white dark:bg-gray-600 text-accent shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                      >
+                        {{ preset.label }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -149,7 +172,7 @@
                     </div>
                     <div>
                       <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">通用设置</h2>
-                      <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">界面显示与数据同步选项</p>
+                      <p class="text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">界面显示与数据同步选项</p>
                     </div>
                   </div>
                 </div>
@@ -174,7 +197,7 @@
                       </div>
                       <div class="min-w-0">
                         <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white truncate">MCP服务</h2>
-                        <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">允许AI客户端通过MCP协议读取本地历史记录</p>
+                        <p class="text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">允许AI客户端通过MCP协议读取本地历史记录</p>
                       </div>
                     </div>
                     <label
@@ -196,17 +219,17 @@
                 <div v-if="mcpConfigAvailable" class="px-5 md:px-6 py-5 space-y-4 md:space-y-5">
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label class="mb-1.5 block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">MCP URL</label>
+                      <label class="mb-1.5 block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm">MCP URL</label>
                       <div class="flex gap-2">
                         <input
                           :value="mcpUrl"
                           readonly
                           type="text"
-                          class="block min-w-0 flex-1 rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[11px] md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
+                          class="block min-w-0 flex-1 rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                         />
                         <button
                           @click="copyText(mcpUrl, 'MCP URL')"
-                          class="inline-flex shrink-0 items-center justify-center rounded-xl bg-accent/10 px-3 text-[11px] font-medium text-accent hover:bg-accent/20 md:text-sm transition-colors"
+                          class="inline-flex shrink-0 items-center justify-center rounded-xl bg-accent/10 px-3 text-[0.6875rem] font-medium text-accent hover:bg-accent/20 md:text-sm transition-colors"
                           title="复制MCP URL"
                         >
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -217,19 +240,19 @@
                     </div>
 
                     <div>
-                      <label class="mb-1.5 block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">Bearer Token</label>
+                      <label class="mb-1.5 block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm">Bearer Token</label>
                       <div class="flex gap-2">
                         <input
                           :value="mcpConfig.token"
                           readonly
                           type="password"
-                          class="block min-w-0 flex-1 rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[11px] md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
+                          class="block min-w-0 flex-1 rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                           placeholder="未配置Token"
                         />
                         <button
                           @click="copyText(mcpConfig.token, 'Bearer Token')"
                           :disabled="!mcpConfig.token"
-                          class="inline-flex shrink-0 items-center justify-center rounded-xl bg-accent/10 px-3 text-[11px] font-medium text-accent hover:bg-accent/20 disabled:opacity-50 disabled:cursor-not-allowed md:text-sm transition-colors"
+                          class="inline-flex shrink-0 items-center justify-center rounded-xl bg-accent/10 px-3 text-[0.6875rem] font-medium text-accent hover:bg-accent/20 disabled:opacity-50 disabled:cursor-not-allowed md:text-sm transition-colors"
                           title="复制Bearer Token"
                         >
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -242,10 +265,10 @@
 
                   <div>
                     <div class="mb-1.5 flex items-center justify-between gap-2">
-                      <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">AI连接提示词</label>
+                      <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm">AI连接提示词</label>
                       <button
                         @click="copyText(mcpConnectionPrompt, 'AI连接提示词')"
-                        class="inline-flex shrink-0 items-center rounded-xl bg-accent/10 px-3 py-1.5 text-[11px] font-medium text-accent hover:bg-accent/20 md:text-sm transition-colors"
+                        class="inline-flex shrink-0 items-center rounded-xl bg-accent/10 px-3 py-1.5 text-[0.6875rem] font-medium text-accent hover:bg-accent/20 md:text-sm transition-colors"
                       >
                         <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -257,17 +280,17 @@
                       :value="mcpConnectionPrompt"
                       readonly
                       rows="8"
-                      class="block w-full resize-y rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[11px] leading-5 md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
+                      class="block w-full resize-y rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] leading-5 md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                     ></textarea>
                   </div>
 
                   <div>
                     <div class="mb-1.5 flex items-center justify-between gap-2">
-                      <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">配套 Skill</label>
+                      <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm">配套 Skill</label>
                       <button
                         @click="copyText(mcpConfig.skill_content, '配套 Skill')"
                         :disabled="!mcpConfig.skill_content"
-                        class="inline-flex shrink-0 items-center rounded-xl bg-accent/10 px-3 py-1.5 text-[11px] font-medium text-accent hover:bg-accent/20 disabled:opacity-50 disabled:cursor-not-allowed md:text-sm transition-colors"
+                        class="inline-flex shrink-0 items-center rounded-xl bg-accent/10 px-3 py-1.5 text-[0.6875rem] font-medium text-accent hover:bg-accent/20 disabled:opacity-50 disabled:cursor-not-allowed md:text-sm transition-colors"
                       >
                         <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -279,12 +302,12 @@
                       :value="mcpConfig.skill_content || '后端未找到配套 Skill 文件'"
                       readonly
                       rows="10"
-                      class="block w-full resize-y rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[11px] leading-5 md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
+                      class="block w-full resize-y rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] leading-5 md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                     ></textarea>
                   </div>
                 </div>
 
-                <p v-else-if="!isMcpConfigLoading" class="px-5 md:px-6 py-4 text-[11px] md:text-sm text-amber-600 dark:text-amber-300">
+                <p v-else-if="!isMcpConfigLoading" class="px-5 md:px-6 py-4 text-[0.6875rem] md:text-sm text-amber-600 dark:text-amber-300">
                   配置详情加载失败，请确保后端已更新并重启。
                 </p>
               </div>
@@ -309,7 +332,7 @@
                     </div>
                     <div>
                       <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">数据导出</h2>
-                      <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">导出历史记录数据到Excel文件</p>
+                      <p class="text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">导出历史记录数据到Excel文件</p>
                     </div>
                   </div>
                 </div>
@@ -318,10 +341,10 @@
                   <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700/50 p-4 md:p-5 rounded-2xl">
                     <div class="flex flex-wrap items-end gap-4">
                       <div class="w-full sm:w-32">
-                        <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">年份</label>
+                        <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">年份</label>
                         <select
                           v-model="exportOptions.year"
-                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm py-2"
+                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm py-2"
                         >
                           <option v-for="year in availableYears" :key="year" :value="year">
                             {{ year }}年
@@ -330,10 +353,10 @@
                       </div>
 
                       <div class="w-full sm:w-40">
-                        <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">导出类型</label>
+                        <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">导出类型</label>
                         <select
                           v-model="exportOptions.exportType"
-                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm py-2"
+                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm py-2"
                         >
                           <option value="year">全年数据</option>
                           <option value="month">按月份</option>
@@ -342,10 +365,10 @@
                       </div>
 
                       <div v-if="exportOptions.exportType === 'month'" class="w-full sm:w-28">
-                        <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">月份</label>
+                        <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">月份</label>
                         <select
                           v-model="exportOptions.month"
-                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm py-2"
+                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm py-2"
                         >
                           <option v-for="month in 12" :key="month" :value="month">
                             {{ month }}月
@@ -355,20 +378,20 @@
 
                       <template v-if="exportOptions.exportType === 'dateRange'">
                         <div class="w-full sm:w-40">
-                          <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">开始日期</label>
+                          <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">开始日期</label>
                           <input
                             type="date"
                             v-model="exportOptions.startDate"
-                            class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm py-2"
+                            class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm py-2"
                           />
                         </div>
 
                         <div class="w-full sm:w-40">
-                          <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">结束日期</label>
+                          <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">结束日期</label>
                           <input
                             type="date"
                             v-model="exportOptions.endDate"
-                            class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm py-2"
+                            class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm py-2"
                           />
                         </div>
                       </template>
@@ -376,7 +399,7 @@
                       <button
                         @click="exportAndDownloadExcel"
                         :disabled="isExporting"
-                        class="inline-flex items-center px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-accent rounded-xl hover:shadow-lg hover:shadow-accent/25 disabled:opacity-50 transition-all"
+                        class="inline-flex items-center px-5 py-2.5 text-[0.6875rem] font-medium text-white md:text-sm bg-accent rounded-xl hover:shadow-lg hover:shadow-accent/25 disabled:opacity-50 transition-all"
                       >
                         <svg v-if="isExporting" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -403,13 +426,13 @@
                         </svg>
                       </div>
                       <div>
-                        <h3 class="text-[13px] md:text-sm font-medium text-gray-900 dark:text-gray-100">数据库下载</h3>
-                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 md:text-xs">下载完整的SQLite数据库文件，包含所有历史记录数据</p>
+                        <h3 class="text-[0.8125rem] md:text-sm font-medium text-gray-900 dark:text-gray-100">数据库下载</h3>
+                        <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400 mt-0.5 md:text-xs">下载完整的SQLite数据库文件，包含所有历史记录数据</p>
                       </div>
                     </div>
                     <button
                       @click="downloadSqlite"
-                      class="inline-flex w-full justify-center items-center sm:w-auto px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-blue-500 rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all"
+                      class="inline-flex w-full justify-center items-center sm:w-auto px-5 py-2.5 text-[0.6875rem] font-medium text-white md:text-sm bg-blue-500 rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all"
                     >
                       <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -431,7 +454,7 @@
                     </div>
                     <div>
                       <h2 class="text-base md:text-lg font-semibold text-red-600 dark:text-red-400">危险操作</h2>
-                      <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">此操作不可逆，请谨慎操作</p>
+                      <p class="text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">此操作不可逆，请谨慎操作</p>
                     </div>
                   </div>
                   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border border-red-100 dark:border-red-900/40 rounded-2xl bg-red-50/50 dark:bg-red-900/10">
@@ -441,7 +464,7 @@
                     </div>
                     <button
                       @click="handleResetDatabase"
-                      class="inline-flex items-center px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-red-500 rounded-xl hover:shadow-lg hover:shadow-red-500/25 transition-all"
+                      class="inline-flex items-center px-5 py-2.5 text-[0.6875rem] font-medium text-white md:text-sm bg-red-500 rounded-xl hover:shadow-lg hover:shadow-red-500/25 transition-all"
                     >
                       <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -468,13 +491,13 @@
 
                 <div class="px-5 md:px-6 py-5 space-y-5 md:space-y-6 border-t border-gray-100 dark:border-gray-700/50">
                   <div>
-                    <h2 class="mb-3 flex items-center text-[13px] font-medium text-gray-800 dark:text-gray-100 md:mb-4 md:text-base">
+                    <h2 class="mb-3 flex items-center text-[0.8125rem] font-medium text-gray-800 dark:text-gray-100 md:mb-4 md:text-base">
                       <svg class="mr-1.5 h-4 w-4 text-accent md:mr-2 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       项目简介
                     </h2>
-                    <p class="text-[12px] text-gray-600 dark:text-gray-300 md:text-sm leading-relaxed">
+                    <p class="text-[0.75rem] text-gray-600 dark:text-gray-300 md:text-sm leading-relaxed">
                       此项目是一个哔哩哔哩历史记录管理与分析工具，帮助用户更好地管理和分析自己的B站观看历史。基于Vue 3构建，通过现代的界面设计提供强大的功能，包括历史记录查询、视频下载、数据分析等多项功能。
                     </p>
                   </div>
@@ -484,13 +507,13 @@
               <!-- 技术致谢卡片 -->
               <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
                 <div class="px-5 md:px-6 py-5">
-                  <h2 class="mb-4 flex items-center text-[13px] font-medium text-gray-800 dark:text-gray-100 md:text-base">
+                  <h2 class="mb-4 flex items-center text-[0.8125rem] font-medium text-gray-800 dark:text-gray-100 md:text-base">
                     <svg class="mr-1.5 h-4 w-4 text-accent md:mr-2 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                     技术致谢
                   </h2>
-                  <ul class="space-y-2.5 text-[12px] text-gray-600 dark:text-gray-300 md:text-sm list-none">
+                  <ul class="space-y-2.5 text-[0.75rem] text-gray-600 dark:text-gray-300 md:text-sm list-none">
                     <li class="flex items-start gap-2">
                       <span class="text-accent mt-0.5">•</span>
                       <a href="https://github.com/2977094657/BiliHistoryFrontend" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">BiliHistoryFrontend</a>
@@ -561,7 +584,7 @@ import ShoutrrrSettings from './ShoutrrrSettings.vue'
 import SettingToggle from './SettingToggle.vue'
 import { showDialog } from 'vant'
 import { useRoute } from 'vue-router'
-import { THEME_PRESETS, useDarkMode } from '~/stores/darkMode'
+import { THEME_PRESETS, FONT_SIZE_PRESETS, useDarkMode } from '~/stores/darkMode'
 
 import { storeToRefs } from 'pinia'
 
@@ -719,7 +742,7 @@ const handleSyncDeleteToBilibiliChange = async () => {
 
 // 深色模式设置
 const appearanceStore = useDarkMode()
-const { darkMode, themeColor } = storeToRefs(appearanceStore)
+const { darkMode, themeColor, fontSize } = storeToRefs(appearanceStore)
 const darkModeOptions = [
   { value: 'system', label: '跟随系统' },
   { value: 'light', label: '浅色' },
@@ -728,6 +751,28 @@ const darkModeOptions = [
 
 // 主题色设置
 const themePresets = THEME_PRESETS
+
+// 字体大小设置
+const fontSizePresets = FONT_SIZE_PRESETS
+
+const handleFontSizeChange = async (sizeId) => {
+  const previousSize = fontSize.value
+  try {
+    await appearanceStore.setFontSize(sizeId)
+    const sizeLabels = { small: '小号字体', default: '默认字体', large: '大号字体' }
+    showNotify({
+      type: 'success',
+      message: `已切换到${sizeLabels[sizeId]}`
+    })
+  } catch (error) {
+    console.error('更新字体大小失败:', error)
+    showNotify({
+      type: 'danger',
+      message: `更新字体大小失败: ${error.message}`
+    })
+    await appearanceStore.setFontSize(previousSize)
+  }
+}
 
 // 处理深色模式变更
 const handleDarkModeChange = async () => {

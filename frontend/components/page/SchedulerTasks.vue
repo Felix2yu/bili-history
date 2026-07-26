@@ -45,10 +45,10 @@
               <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center" :class="stat.iconBg">
                 <svg v-html="stat.icon" class="w-4 h-4 md:w-5 md:h-5" :class="stat.iconColor"></svg>
               </div>
-              <span v-if="stat.trend" class="text-[10px] md:text-xs font-medium px-2 py-0.5 rounded-full" :class="stat.trendClass">{{ stat.trend }}</span>
+              <span v-if="stat.trend" class="text-[0.625rem] md:text-xs font-medium px-2 py-0.5 rounded-full" :class="stat.trendClass">{{ stat.trend }}</span>
             </div>
             <div class="text-2xl md:text-3xl font-bold" :class="stat.valueColor">{{ stat.value }}</div>
-            <div class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ stat.label }}</div>
+            <div class="text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ stat.label }}</div>
           </div>
         </div>
       </div>
@@ -146,14 +146,14 @@
                         {{ task.config?.name || task.task_id }}
                       </h3>
                       <span v-if="task.sub_tasks && task.sub_tasks.length > 0"
-                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-medium bg-accent/10 text-accent">
+                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] md:text-xs font-medium bg-accent/10 text-accent">
                         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>
                         {{ task.sub_tasks.length }} 子任务
                       </span>
                     </div>
-                    <p class="text-[11px] md:text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-mono truncate">
+                    <p class="text-[0.6875rem] md:text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-mono truncate">
                       {{ task.config?.endpoint || '-' }}
                     </p>
                   </div>
@@ -174,17 +174,17 @@
 
               <!-- 信息行 -->
               <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-4">
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] md:text-xs font-medium"
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[0.6875rem] md:text-xs font-medium"
                   :class="getScheduleTypeBadge(task.config?.schedule_type)">
                   {{ getScheduleTypeLabel(task.config?.schedule_type) }}
                 </span>
-                <span class="inline-flex items-center gap-1 text-[11px] md:text-xs text-gray-500 dark:text-gray-400">
+                <span class="inline-flex items-center gap-1 text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400">
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   {{ getScheduleTimeDisplay(task) }}
                 </span>
-                <span v-if="task.execution?.next_run && task.task_type === 'main'" class="inline-flex items-center gap-1 text-[11px] md:text-xs text-gray-500 dark:text-gray-400">
+                <span v-if="task.execution?.next_run && task.task_type === 'main'" class="inline-flex items-center gap-1 text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400">
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                   </svg>
@@ -222,9 +222,9 @@
                         }"
                         :style="{ width: `${Math.round(task.execution.success_rate)}%` }"></div>
                     </div>
-                    <span class="text-[10px] md:text-xs text-gray-400 whitespace-nowrap">{{ task.execution.total_runs }}次</span>
+                    <span class="text-[0.625rem] md:text-xs text-gray-400 whitespace-nowrap">{{ task.execution.total_runs }}次</span>
                   </template>
-                  <span v-else class="text-[10px] md:text-xs text-gray-400">尚未执行</span>
+                  <span v-else class="text-[0.625rem] md:text-xs text-gray-400">尚未执行</span>
                 </div>
 
                 <!-- 操作按钮 -->
@@ -275,7 +275,7 @@
               <!-- 子任务展开 -->
               <div v-if="task.sub_tasks && task.sub_tasks.length > 0" class="mt-4">
                 <button @click="task.isExpanded = !task.isExpanded"
-                  class="flex items-center gap-2 text-[11px] md:text-xs text-gray-500 dark:text-gray-400 hover:text-accent transition-colors">
+                  class="flex items-center gap-2 text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400 hover:text-accent transition-colors">
                   <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-90': task.isExpanded }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
@@ -300,7 +300,7 @@
                       <span class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate block">
                         {{ sub.config?.name || sub.task_id }}
                       </span>
-                      <span class="text-[10px] text-gray-400 truncate block">链式 · 依赖上一任务</span>
+                      <span class="text-[0.625rem] text-gray-400 truncate block">链式 · 依赖上一任务</span>
                     </div>
                   </div>
                   <div class="flex items-center gap-2">

@@ -5,19 +5,19 @@
       <img v-if="displayFaceUrl" :src="displayFaceUrl" class="w-6 h-6 rounded-full object-cover border" alt="face" />
       <div class="ml-2 min-w-0">
         <div class="text-sm font-medium truncate">{{ item.author_name || `UID ${item.host_mid || ''}` }}</div>
-        <div v-if="formattedTime !== '-'" class="text-[11px] text-gray-500 truncate">{{ formattedTime }}</div>
+        <div v-if="formattedTime !== '-'" class="text-[0.6875rem] text-gray-500 truncate">{{ formattedTime }}</div>
       </div>
       <div class="ml-auto flex items-center space-x-2">
         <button
           v-if="item.id_str"
           type="button"
-          class="text-[11px] text-accent hover:underline"
+          class="text-[0.6875rem] text-accent hover:underline"
           @click="openLink(opusUrl)"
         >查看动态</button>
         <button
           v-if="item.id_str"
           type="button"
-          class="text-[11px] text-red-500 hover:underline"
+          class="text-[0.6875rem] text-red-500 hover:underline"
           @click.stop="handleDelete"
         >删除</button>
       </div>
@@ -37,7 +37,7 @@
             <img v-if="coverUrl" :src="coverUrl" class="block w-full h-full object-cover" alt="cover" loading="lazy" />
             <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs">no cover</div>
           </div>
-          <div v-if="item.bvid" class="absolute bottom-1 left-1 text-[10px] bg-black/60 text-white px-1.5 py-0.5 rounded">{{ item.bvid }}</div>
+          <div v-if="item.bvid" class="absolute bottom-1 left-1 text-[0.625rem] bg-black/60 text-white px-1.5 py-0.5 rounded">{{ item.bvid }}</div>
         </div>
         <div class="ml-3 flex-1 min-w-0">
           <div

@@ -93,7 +93,7 @@
               :key="day.date"
               class="flex-1 flex flex-col items-center group relative h-full"
             >
-              <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+              <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[0.625rem] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                 {{ day.date.slice(5) }}: {{ day.count }}个视频
               </div>
               <div class="w-full mt-auto rounded-t transition-all duration-300 hover:opacity-80"
@@ -102,7 +102,7 @@
             </div>
           </div>
         </div>
-        <div class="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-1">
+        <div class="flex justify-between text-[0.5625rem] text-gray-400 dark:text-gray-500 mt-1">
           <span v-for="day in summary.daily_breakdown.filter((_, i) => i % Math.max(Math.floor(summary.daily_breakdown.length / 5), 1) === 0 || i === summary.daily_breakdown.length - 1)" :key="day.date">{{ day.date.slice(8) }}</span>
         </div>
       </div>
@@ -121,7 +121,7 @@
               :key="hour - 1"
               class="flex-1 flex flex-col items-center group relative h-full"
             >
-              <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+              <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[0.625rem] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                 {{ hour - 1 }}时: {{ summary.hour_dist[hour - 1] || 0 }}次
               </div>
               <div
@@ -131,7 +131,7 @@
             </div>
           </div>
         </div>
-        <div class="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-1">
+        <div class="flex justify-between text-[0.5625rem] text-gray-400 dark:text-gray-500 mt-1">
           <span>0时</span><span>6时</span><span>12时</span><span>18时</span><span>23时</span>
         </div>
       </div>
@@ -209,11 +209,11 @@
           <span
             v-for="(kw, index) in summary.title_keywords.slice(0, 15)"
             :key="kw.word"
-            class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium"
+            class="inline-flex items-center px-2 py-0.5 rounded-full text-[0.6875rem] font-medium"
             :style="{ backgroundColor: getChartColor(index) + '25', color: getChartColor(index) }"
           >
             {{ kw.word }}
-            <span class="ml-1 text-[9px] opacity-60">{{ kw.count }}</span>
+            <span class="ml-1 text-[0.5625rem] opacity-60">{{ kw.count }}</span>
           </span>
         </div>
       </div>
@@ -227,13 +227,13 @@
         </h4>
         <div class="space-y-1.5">
           <div v-for="(day, idx) in summary.weekday_dist" :key="day.name" class="flex items-center gap-2">
-            <span class="text-[10px] text-gray-500 dark:text-gray-400 w-6 text-right flex-shrink-0">{{ day.name }}</span>
+            <span class="text-[0.625rem] text-gray-500 dark:text-gray-400 w-6 text-right flex-shrink-0">{{ day.name }}</span>
             <div class="flex-1 h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
               <div class="h-full rounded-full transition-all duration-300"
                    :style="{ width: `${Math.max((day.count / maxWeekdayCount) * 100, 2)}%`, backgroundColor: getChartColor(idx) }"
               ></div>
             </div>
-            <span class="text-[10px] text-gray-500 dark:text-gray-400 w-5 text-right flex-shrink-0">{{ day.count }}</span>
+            <span class="text-[0.625rem] text-gray-500 dark:text-gray-400 w-5 text-right flex-shrink-0">{{ day.count }}</span>
           </div>
         </div>
       </div>
@@ -242,27 +242,27 @@
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <div v-if="summary.late_night_ratio !== undefined" class="glass-card p-3 text-center">
         <div class="text-lg font-bold text-purple-500">{{ (summary.late_night_ratio * 100).toFixed(0) }}%</div>
-        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">深夜观看</div>
+        <div class="text-[0.625rem] text-gray-500 dark:text-gray-400 mt-0.5">深夜观看</div>
       </div>
       <div v-if="summary.favorite_rate !== undefined" class="glass-card p-3 text-center">
         <div class="text-lg font-bold text-amber-500">{{ (summary.favorite_rate * 100).toFixed(0) }}%</div>
-        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">收藏率</div>
+        <div class="text-[0.625rem] text-gray-500 dark:text-gray-400 mt-0.5">收藏率</div>
       </div>
       <div v-if="summary.abandon_rate !== undefined" class="glass-card p-3 text-center">
         <div class="text-lg font-bold text-rose-500">{{ (summary.abandon_rate * 100).toFixed(0) }}%</div>
-        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">弃看率</div>
+        <div class="text-[0.625rem] text-gray-500 dark:text-gray-400 mt-0.5">弃看率</div>
       </div>
       <div v-if="summary.golden_slot_ratio !== undefined" class="glass-card p-3 text-center">
         <div class="text-lg font-bold text-orange-500">{{ (summary.golden_slot_ratio * 100).toFixed(0) }}%</div>
-        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">黄金3h集中度</div>
+        <div class="text-[0.625rem] text-gray-500 dark:text-gray-400 mt-0.5">黄金3h集中度</div>
       </div>
       <div v-if="summary.up_diversity !== undefined" class="glass-card p-3 text-center">
         <div class="text-lg font-bold text-cyan-500">{{ (summary.up_diversity * 100).toFixed(0) }}%</div>
-        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">UP主多样性</div>
+        <div class="text-[0.625rem] text-gray-500 dark:text-gray-400 mt-0.5">UP主多样性</div>
       </div>
       <div v-if="summary.rewatch_stats?.total_rewatched" class="glass-card p-3 text-center">
         <div class="text-lg font-bold text-emerald-500">{{ summary.rewatch_stats.total_rewatched }}</div>
-        <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">重刷次数</div>
+        <div class="text-[0.625rem] text-gray-500 dark:text-gray-400 mt-0.5">重刷次数</div>
       </div>
     </div>
 
@@ -274,7 +274,7 @@
           <div class="transition-all" :style="{ width: `${summary.duration_pref.mid_ratio * 100}%`, backgroundColor: DURATION_COLORS['中等视频'] }" title="中视频"></div>
           <div class="transition-all" :style="{ width: `${summary.duration_pref.long_ratio * 100}%`, backgroundColor: DURATION_COLORS['长视频'] }" title="长视频"></div>
         </div>
-        <div class="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 mt-2">
+        <div class="flex justify-between text-[0.625rem] text-gray-500 dark:text-gray-400 mt-2">
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full inline-block" :style="{ backgroundColor: DURATION_COLORS['短视频'] }"></span>短(&lt;5min) {{ summary.duration_pref.short }}</span>
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full inline-block" :style="{ backgroundColor: DURATION_COLORS['中等视频'] }"></span>中(5-20min) {{ summary.duration_pref.mid }}</span>
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full inline-block" :style="{ backgroundColor: DURATION_COLORS['长视频'] }"></span>长(&gt;20min) {{ summary.duration_pref.long }}</span>
@@ -285,11 +285,11 @@
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">完播率分布</h4>
         <div class="space-y-1.5">
           <div v-for="(item, idx) in summary.completion_dist" :key="item.range" class="flex items-center gap-2">
-            <span class="text-[10px] text-gray-500 dark:text-gray-400 w-12 text-right">{{ item.range }}</span>
+            <span class="text-[0.625rem] text-gray-500 dark:text-gray-400 w-12 text-right">{{ item.range }}</span>
             <div class="flex-1 h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
               <div class="h-full rounded-full" :style="{ width: `${(item.count / maxCompCount) * 100}%`, backgroundColor: getChartColor(idx) }"></div>
             </div>
-            <span class="text-[10px] text-gray-500 dark:text-gray-400 w-6">{{ item.count }}</span>
+            <span class="text-[0.625rem] text-gray-500 dark:text-gray-400 w-6">{{ item.count }}</span>
           </div>
         </div>
       </div>
@@ -339,7 +339,7 @@
           </div>
           <div class="text-right flex-shrink-0">
             <div class="text-sm font-semibold" :style="{ color: getChartColor(index) }">{{ video.count }}次</div>
-            <div class="text-[10px] text-gray-400">{{ formatDurationShort(video.total_duration) }}</div>
+            <div class="text-[0.625rem] text-gray-400">{{ formatDurationShort(video.total_duration) }}</div>
           </div>
         </div>
       </div>
@@ -371,7 +371,7 @@
           </div>
           <div class="text-right flex-shrink-0">
             <div class="text-sm font-semibold" :style="{ color: getChartColor(index) }">{{ formatDurationShort(video.duration) }}</div>
-            <div class="text-[10px] text-gray-400">{{ formatTimestamp(video.view_at) }}</div>
+            <div class="text-[0.625rem] text-gray-400">{{ formatTimestamp(video.view_at) }}</div>
           </div>
         </div>
       </div>

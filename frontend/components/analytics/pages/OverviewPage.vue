@@ -19,7 +19,7 @@
             </div>
           </div>
           <div class="text-2xl md:text-3xl font-bold text-rose-600 dark:text-rose-400">{{ viewingData.total_videos || 0 }}</div>
-          <div class="text-[11px] md:text-xs text-rose-500/70 dark:text-rose-400/70 mt-0.5">观看视频数</div>
+          <div class="text-[0.6875rem] md:text-xs text-rose-500/70 dark:text-rose-400/70 mt-0.5">观看视频数</div>
         </div>
       </div>
 
@@ -34,7 +34,7 @@
             </div>
           </div>
           <div class="text-2xl md:text-3xl font-bold text-amber-600 dark:text-amber-400">{{ formatDurationShort(viewingData.total_duration || 0) }}</div>
-          <div class="text-[11px] md:text-xs text-amber-500/70 dark:text-amber-400/70 mt-0.5">总观看时长</div>
+          <div class="text-[0.6875rem] md:text-xs text-amber-500/70 dark:text-amber-400/70 mt-0.5">总观看时长</div>
         </div>
       </div>
 
@@ -49,7 +49,7 @@
             </div>
           </div>
           <div class="text-2xl md:text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{ viewingData.active_days || 0 }}</div>
-          <div class="text-[11px] md:text-xs text-emerald-500/70 dark:text-emerald-400/70 mt-0.5">活跃天数</div>
+          <div class="text-[0.6875rem] md:text-xs text-emerald-500/70 dark:text-emerald-400/70 mt-0.5">活跃天数</div>
         </div>
       </div>
 
@@ -64,7 +64,7 @@
             </div>
           </div>
           <div class="text-2xl md:text-3xl font-bold text-sky-600 dark:text-sky-400">{{ viewingData.unique_authors || 0 }}</div>
-          <div class="text-[11px] md:text-xs text-sky-500/70 dark:text-sky-400/70 mt-0.5">UP主数量</div>
+          <div class="text-[0.6875rem] md:text-xs text-sky-500/70 dark:text-sky-400/70 mt-0.5">UP主数量</div>
         </div>
       </div>
     </div>
@@ -166,14 +166,14 @@
           <span
             v-for="(kw, index) in viewingData.title_keywords.slice(0, 15)"
             :key="kw.word"
-            class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium"
+            class="inline-flex items-center px-2.5 py-1 rounded-full text-[0.6875rem] font-medium"
             :style="{
               backgroundColor: getChartColor(index) + '20',
               color: getChartColor(index)
             }"
           >
             {{ kw.word }}
-            <span class="ml-1 text-[10px] opacity-60">{{ kw.count }}</span>
+            <span class="ml-1 text-[0.625rem] opacity-60">{{ kw.count }}</span>
           </span>
         </div>
       </div>
@@ -186,15 +186,15 @@
           <div class="transition-all" :style="{ width: `${viewingData.duration_preference.long_ratio * 100}%`, backgroundColor: DURATION_COLORS['长视频'] }" title="长视频"></div>
         </div>
         <div class="space-y-1.5">
-          <div class="flex items-center justify-between text-[11px]">
+          <div class="flex items-center justify-between text-[0.6875rem]">
             <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full inline-block" :style="{ backgroundColor: DURATION_COLORS['短视频'] }"></span>短视频(&lt;5min)</span>
             <span class="font-semibold text-gray-700 dark:text-gray-300">{{ viewingData.duration_preference.short }}</span>
           </div>
-          <div class="flex items-center justify-between text-[11px]">
+          <div class="flex items-center justify-between text-[0.6875rem]">
             <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full inline-block" :style="{ backgroundColor: DURATION_COLORS['中等视频'] }"></span>中视频(5-20min)</span>
             <span class="font-semibold text-gray-700 dark:text-gray-300">{{ viewingData.duration_preference.mid }}</span>
           </div>
-          <div class="flex items-center justify-between text-[11px]">
+          <div class="flex items-center justify-between text-[0.6875rem]">
             <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full inline-block" :style="{ backgroundColor: DURATION_COLORS['长视频'] }"></span>长视频(&gt;20min)</span>
             <span class="font-semibold text-gray-700 dark:text-gray-300">{{ viewingData.duration_preference.long }}</span>
           </div>
@@ -216,7 +216,7 @@
           <span class="text-xs text-gray-500 dark:text-gray-400 w-10 text-right shrink-0">{{ day.name }}</span>
           <div class="flex-1 h-6 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
             <div class="h-full rounded-lg transition-all duration-500 flex items-center justify-end pr-2" :style="{ width: `${Math.max((day.count / maxWeekdayCount) * 100, 8)}%`, backgroundColor: getChartColor(index % 7) }">
-              <span v-if="day.count > 0" class="text-[10px] font-semibold text-white">{{ day.count }}</span>
+              <span v-if="day.count > 0" class="text-[0.625rem] font-semibold text-white">{{ day.count }}</span>
             </div>
           </div>
         </div>

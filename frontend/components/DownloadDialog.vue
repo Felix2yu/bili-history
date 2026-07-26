@@ -29,7 +29,7 @@
           <div class="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
             <div class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-accent font-bold text-lg">👾</div>
             <div class="flex flex-col">
-              <p class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">下载功能基于 <a href="https://github.com/Felix2yu/bili-dl"
+              <p class="text-[0.625rem] md:text-xs text-gray-700 dark:text-gray-300">下载功能基于 <a href="https://github.com/Felix2yu/bili-dl"
                                                                                    target="_blank"
                                                                                    class="text-accent hover:text-accent/80 font-medium">bili-dl</a>
               </p>
@@ -39,12 +39,12 @@
           <!-- FFmpeg 状态 -->
           <div v-if="ffmpegStatus" class="flex-shrink min-w-0 ml-1">
             <span v-if="ffmpegStatus.installed"
-                  class="inline-flex items-center space-x-1 px-2 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded text-[10px] md:text-xs">
+                  class="inline-flex items-center space-x-1 px-2 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded text-[0.625rem] md:text-xs">
               <span>FFmpeg</span>
               <span>✓</span>
             </span>
             <a v-else href="https://ffmpeg.org/download.html" target="_blank"
-               class="inline-flex items-center space-x-1 px-2 py-0.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-[10px] md:text-xs hover:underline">
+               class="inline-flex items-center space-x-1 px-2 py-0.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-[0.625rem] md:text-xs hover:underline">
               <span>FFmpeg</span>
               <span>✗</span>
             </a>
@@ -66,13 +66,13 @@
                 {{ videoInfo.title }}
               </p>
               <!-- 收藏夹视频总数 -->
-              <p v-if="isFavoriteFolder" class="text-[10px] md:text-sm text-gray-500 dark:text-gray-400 mt-0.5 md:mt-1">
+              <p v-if="isFavoriteFolder" class="text-[0.625rem] md:text-sm text-gray-500 dark:text-gray-400 mt-0.5 md:mt-1">
                 共 {{ favoritePageInfo.totalCount || props.videoInfo.total_videos || favoriteVideos.length }}
                 个视频，当前进度：{{ currentVideoIndex + 1
                 }}/{{ favoritePageInfo.totalCount || props.videoInfo.total_videos || favoriteVideos.length }}
               </p>
               <!-- 批量下载视频总数 -->
-              <p v-if="props.isBatchDownload" class="text-[10px] md:text-sm text-gray-500 dark:text-gray-400 mt-0.5 md:mt-1">
+              <p v-if="props.isBatchDownload" class="text-[0.625rem] md:text-sm text-gray-500 dark:text-gray-400 mt-0.5 md:mt-1">
                 共 {{ props.batchVideos.length }} 个视频，当前进度：{{ props.currentVideoIndex + 1
                 }}/{{ props.batchVideos.length }}
               </p>
@@ -87,9 +87,9 @@
               </div>
               <!-- 视频信息 -->
               <div class="space-y-1">
-                <p v-if="!isFavoriteFolder" class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate">
+                <p v-if="!isFavoriteFolder" class="text-[0.625rem] md:text-xs text-gray-500 dark:text-gray-400 truncate">
                   UP主：{{ props.isBatchDownload ? currentVideoAuthor : props.videoInfo.author || '未知' }}</p>
-                <p v-if="!isFavoriteFolder" class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate">
+                <p v-if="!isFavoriteFolder" class="text-[0.625rem] md:text-xs text-gray-500 dark:text-gray-400 truncate">
                   BV号：{{ props.isBatchDownload ? currentVideoBvid : props.videoInfo.bvid || '未知' }}</p>
               </div>
             </div>
@@ -102,13 +102,13 @@
                   v-model="onlyAudio"
                   class="w-3.5 h-3.5 md:w-4 md:h-4 text-accent border-gray-300 rounded focus:ring-accent"
                 >
-                <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">仅下载音频</span>
+                <span class="text-[0.625rem] md:text-xs text-gray-700 dark:text-gray-300">仅下载音频</span>
               </label>
 
               <!-- 画质选择 -->
               <div class="flex-1 min-w-[150px]" v-if="streamOptions.length > 1">
                 <select v-model="selectedStreamId"
-                        class="w-full text-[10px] md:text-xs px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-accent">
+                        class="w-full text-[0.625rem] md:text-xs px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-accent">
                   <option v-for="opt in streamOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </option>
@@ -119,7 +119,7 @@
             <!-- 下载日志 -->
             <div
               v-if="downloadStarted"
-              class="w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-2 pb-0 font-mono text-[10px] md:text-[11px] overflow-y-auto border border-gray-200 dark:border-gray-700 h-[80px]"
+              class="w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-2 pb-0 font-mono text-[0.625rem] md:text-[0.6875rem] overflow-y-auto border border-gray-200 dark:border-gray-700 h-[80px]"
               ref="logContainer">
               <div v-for="(log, index) in downloadLogs" :key="index" class="whitespace-pre break-all leading-5 py-0.5 last:pb-0"
                    :class="{
@@ -135,7 +135,7 @@
 
         <!-- 页脚区域：状态和按钮 -->
         <div class="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-2 px-3 md:px-6 flex items-center justify-between">
-          <div class="text-[10px] md:text-xs font-medium" :class="{
+          <div class="text-[0.625rem] md:text-xs font-medium" :class="{
  'text-gray-500 dark:text-gray-400': !downloadStarted,
  'text-red-500 dark:text-red-400': downloadError,
  'text-green-500 dark:text-green-400': !isDownloading && downloadStarted && !downloadError,

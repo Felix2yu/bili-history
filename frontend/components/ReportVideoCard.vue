@@ -14,7 +14,7 @@
         </svg>
       </div>
       <!-- 时长角标 -->
-      <div class="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
+      <div class="absolute bottom-1 right-1 bg-black/70 text-white text-[0.625rem] px-1.5 py-0.5 rounded">
         {{ formatDuration(video.duration) }}
       </div>
     </div>
@@ -41,14 +41,14 @@
         <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
           <span
             v-if="video.main_category || video.tag_name"
-            class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent"
+            class="inline-flex items-center px-1.5 py-0.5 rounded text-[0.625rem] font-medium bg-accent/10 text-accent"
           >
             {{ video.main_category || video.tag_name }}
           </span>
-          <span class="text-[10px] text-gray-400 dark:text-gray-500">
+          <span class="text-[0.625rem] text-gray-400 dark:text-gray-500">
             {{ getDeviceName(video.dt) }}
           </span>
-          <span class="text-[10px] text-gray-400 dark:text-gray-500">
+          <span class="text-[0.625rem] text-gray-400 dark:text-gray-500">
             {{ getBusinessType(video.business) }}
           </span>
         </div>
@@ -56,7 +56,7 @@
 
       <!-- 底部信息 -->
       <div class="flex items-center justify-between mt-2">
-        <div class="flex items-center gap-3 text-[11px] text-gray-400 dark:text-gray-500">
+        <div class="flex items-center gap-3 text-[0.6875rem] text-gray-400 dark:text-gray-500">
           <span>{{ formatTimestamp(video.view_at) }}</span>
         </div>
 
@@ -69,7 +69,7 @@
               :style="{ width: `${Math.min(completionRate, 100)}%` }"
             ></div>
           </div>
-          <span class="text-[10px] text-gray-400 dark:text-gray-500">{{ completionRateText }}</span>
+          <span class="text-[0.625rem] text-gray-400 dark:text-gray-500">{{ completionRateText }}</span>
         </div>
       </div>
     </div>

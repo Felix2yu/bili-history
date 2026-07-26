@@ -10,7 +10,7 @@
     @click="handleClick"
   >
     <!-- Deleted badge -->
-    <div v-if="record.status === 1" class="absolute top-2 left-2 z-20 bg-red-500/80 text-white text-[10px] px-1.5 py-0.5 rounded">
+    <div v-if="record.status === 1" class="absolute top-2 left-2 z-20 bg-red-500/80 text-white text-[0.625rem] px-1.5 py-0.5 rounded">
       已删除
     </div>
     <!-- Article type: full-width cover -->
@@ -40,19 +40,19 @@
         </div>
         <!-- Downloaded badge -->
         <div v-if="isDownloaded && record.business === 'archive'" class="absolute left-0 top-0 z-10">
-          <div class="glass-badge !bg-green-500/90 !text-white !border-0 rounded-br-lg rounded-tl-none text-[10px]">
+          <div class="glass-badge !bg-green-500/90 !text-white !border-0 rounded-br-lg rounded-tl-none text-[0.625rem]">
             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
             <span>已下载</span>
           </div>
         </div>
         <!-- Favorited badge -->
         <div v-if="isVideoFavorited && record.business !== 'live'" class="absolute right-0 top-0 z-10">
-          <div class="glass-badge !bg-amber-500/90 !text-white !border-0 rounded-tl-lg rounded-br-none text-[10px]">
+          <div class="glass-badge !bg-amber-500/90 !text-white !border-0 rounded-tl-lg rounded-br-none text-[0.625rem]">
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
             <span>已收藏</span>
           </div>
         </div>
-        <div v-if="record.tag_name || record.tname" class="absolute top-1 left-1 bg-accent/80 px-1 py-0.5 rounded text-white text-[10px]" :class="isBatchMode ? 'ml-6' : ''">
+        <div v-if="record.tag_name || record.tname" class="absolute top-1 left-1 bg-accent/80 px-1 py-0.5 rounded text-white text-[0.625rem]" :class="isBatchMode ? 'ml-6' : ''">
           {{ record.tag_name || record.tname }}
         </div>
         <img v-if="imgLoaded" :src="normalizeImageUrl(record.cover || record.covers[0])" class="h-full w-full object-cover" alt="" />
@@ -63,9 +63,9 @@
           <span class="cursor-pointer hover:text-accent transition-colors" @click="handleAuthorClick" v-html="highlightedAuthorName"></span>
         </div>
         <div class="flex items-center gap-2">
-          <span v-if="record.dt === 1 || record.dt === 3 || record.dt === 5 || record.dt === 7" class="text-[10px]">📱</span>
-          <span v-else-if="record.dt === 2 || record.dt === 33" class="text-[10px]">🖥</span>
-          <span v-else-if="record.dt === 4 || record.dt === 6" class="text-[10px]">📟</span>
+          <span v-if="record.dt === 1 || record.dt === 3 || record.dt === 5 || record.dt === 7" class="text-[0.625rem]">📱</span>
+          <span v-else-if="record.dt === 2 || record.dt === 33" class="text-[0.625rem]">🖥</span>
+          <span v-else-if="record.dt === 4 || record.dt === 6" class="text-[0.625rem]">📟</span>
           <span>{{ formatTimestamp(record.view_at) }}</span>
         </div>
       </div>
@@ -81,13 +81,13 @@
           </div>
         </div>
         <div v-if="isDownloaded && record.business === 'archive'" class="absolute left-0 top-0 z-10">
-          <div class="glass-badge !bg-green-500/90 !text-white !border-0 rounded-br-lg rounded-tl-none text-[10px]">
+          <div class="glass-badge !bg-green-500/90 !text-white !border-0 rounded-br-lg rounded-tl-none text-[0.625rem]">
             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
             <span>已下载</span>
           </div>
         </div>
         <div v-if="isVideoFavorited && record.business !== 'live'" class="absolute right-0 top-0 z-10">
-          <div class="glass-badge !bg-amber-500/90 !text-white !border-0 rounded-tl-lg rounded-br-none text-[10px]">
+          <div class="glass-badge !bg-amber-500/90 !text-white !border-0 rounded-tl-lg rounded-br-none text-[0.625rem]">
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
             <span>已收藏</span>
           </div>
@@ -98,13 +98,13 @@
         </div>
         <!-- Tag badge on cover -->
         <div v-if="record.tag_name || record.tname"
-             class="absolute top-1 left-1 bg-accent/80 px-1 py-0.5 rounded text-white text-[10px]"
+             class="absolute top-1 left-1 bg-accent/80 px-1 py-0.5 rounded text-white text-[0.625rem]"
              :class="isBatchMode ? 'ml-6' : ''">
           {{ record.tag_name || record.tname }}
         </div>
         <!-- Duration & progress -->
         <div v-if="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live'">
-          <div class="absolute bottom-1 right-1 rounded-lg bg-black/60 backdrop-blur-sm px-1.5 py-0.5 text-[10px] font-medium text-white">
+          <div class="absolute bottom-1 right-1 rounded-lg bg-black/60 backdrop-blur-sm px-1.5 py-0.5 text-[0.625rem] font-medium text-white">
             <span>{{ formatDuration(record.progress) }}</span>
             <span class="opacity-50 mx-0.5">/</span>
             <span>{{ formatDuration(record.duration) }}</span>
@@ -139,11 +139,11 @@
           <!-- Remark -->
           <div class="flex-1 relative" @click.stop>
             <div class="flex items-center gap-1">
-              <span class="text-[10px] text-accent">备注:</span>
+              <span class="text-[0.625rem] text-accent">备注:</span>
               <input type="text" v-model="remarkContent" @focus="handleRemarkFocus" @blur="handleRemarkBlur"
                 placeholder="添加备注..."
-                class="flex-1 min-w-0 px-1.5 py-0.5 text-[10px] text-accent bg-transparent border-b border-transparent hover:border-gray-200 dark:hover:border-gray-600 focus:border-accent focus:ring-0 transition-colors placeholder-accent/40" />
-              <span v-if="remarkTime" class="text-[10px] text-gray-400">{{ formatRemarkTime(remarkTime) }}</span>
+                class="flex-1 min-w-0 px-1.5 py-0.5 text-[0.625rem] text-accent bg-transparent border-b border-transparent hover:border-gray-200 dark:hover:border-gray-600 focus:border-accent focus:ring-0 transition-colors placeholder-accent/40" />
+              <span v-if="remarkTime" class="text-[0.625rem] text-gray-400">{{ formatRemarkTime(remarkTime) }}</span>
             </div>
           </div>
         </div>
@@ -155,9 +155,9 @@
             <span class="cursor-pointer hover:text-accent transition-colors truncate" @click="handleAuthorClick" v-html="highlightedAuthorName"></span>
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">
-            <span v-if="record.dt === 1 || record.dt === 3 || record.dt === 5 || record.dt === 7" class="text-[10px]">📱</span>
-            <span v-else-if="record.dt === 2 || record.dt === 33" class="text-[10px]">🖥</span>
-            <span v-else-if="record.dt === 4 || record.dt === 6" class="text-[10px]">📟</span>
+            <span v-if="record.dt === 1 || record.dt === 3 || record.dt === 5 || record.dt === 7" class="text-[0.625rem]">📱</span>
+            <span v-else-if="record.dt === 2 || record.dt === 33" class="text-[0.625rem]">🖥</span>
+            <span v-else-if="record.dt === 4 || record.dt === 6" class="text-[0.625rem]">📟</span>
             <span>{{ formatTimestamp(record.view_at) }}</span>
           </div>
         </div>

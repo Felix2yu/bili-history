@@ -16,7 +16,7 @@
         <div class="flex items-center gap-2">
           <div class="w-1 h-4 rounded-full bg-accent"></div>
           <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">高级筛选</span>
-          <span v-if="activeFilterCount > 0" class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-accent rounded-full">{{ activeFilterCount }}</span>
+          <span v-if="activeFilterCount > 0" class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[0.625rem] font-bold text-white bg-accent rounded-full">{{ activeFilterCount }}</span>
         </div>
         <button @click="closeFilterPopup" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100/80 dark:bg-gray-800/80 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 active:scale-95">
           <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -29,19 +29,19 @@
         <!-- 活跃筛选标签 -->
         <div v-if="activeFilterCount > 0" class="mb-4 animate-fade-in">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400">当前筛选</span>
-            <button @click="clearAllFilters" class="text-[11px] font-medium text-accent hover:text-accent/80 active:scale-95 transition-all duration-200">清除全部</button>
+            <span class="text-[0.6875rem] font-medium text-gray-500 dark:text-gray-400">当前筛选</span>
+            <button @click="clearAllFilters" class="text-[0.6875rem] font-medium text-accent hover:text-accent/80 active:scale-95 transition-all duration-200">清除全部</button>
           </div>
           <div class="flex flex-wrap gap-1.5">
-            <span v-if="business" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-accent bg-accent/8 dark:bg-accent/15 rounded-full cursor-pointer hover:bg-accent/15 dark:hover:bg-accent/25 transition-colors duration-200 active:scale-95" @click="clearBusiness">
+            <span v-if="business" class="inline-flex items-center gap-1 px-2.5 py-1 text-[0.6875rem] font-medium text-accent bg-accent/8 dark:bg-accent/15 rounded-full cursor-pointer hover:bg-accent/15 dark:hover:bg-accent/25 transition-colors duration-200 active:scale-95" @click="clearBusiness">
               {{ businessLabel || '条目类型' }}
               <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </span>
-            <span v-if="date" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-accent bg-accent/8 dark:bg-accent/15 rounded-full cursor-pointer hover:bg-accent/15 dark:hover:bg-accent/25 transition-colors duration-200 active:scale-95" @click="clearDate">
+            <span v-if="date" class="inline-flex items-center gap-1 px-2.5 py-1 text-[0.6875rem] font-medium text-accent bg-accent/8 dark:bg-accent/15 rounded-full cursor-pointer hover:bg-accent/15 dark:hover:bg-accent/25 transition-colors duration-200 active:scale-95" @click="clearDate">
               日期区间
               <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </span>
-            <span v-if="category" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-accent bg-accent/8 dark:bg-accent/15 rounded-full cursor-pointer hover:bg-accent/15 dark:hover:bg-accent/25 transition-colors duration-200 active:scale-95" @click="clearCategory">
+            <span v-if="category" class="inline-flex items-center gap-1 px-2.5 py-1 text-[0.6875rem] font-medium text-accent bg-accent/8 dark:bg-accent/15 rounded-full cursor-pointer hover:bg-accent/15 dark:hover:bg-accent/25 transition-colors duration-200 active:scale-95" @click="clearCategory">
               {{ category }}
               <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </span>
@@ -51,11 +51,11 @@
         <!-- 条目类型筛选 -->
         <div class="mb-5">
           <div class="flex items-center justify-between mb-2.5">
-            <h4 class="text-[13px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+            <h4 class="text-[0.8125rem] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
               条目类型
             </h4>
-            <button v-if="business" @click="clearBusiness" class="text-[11px] font-medium text-accent active:scale-95 transition-all duration-200">重置</button>
+            <button v-if="business" @click="clearBusiness" class="text-[0.6875rem] font-medium text-accent active:scale-95 transition-all duration-200">重置</button>
           </div>
 
           <div class="flex flex-wrap gap-2">
@@ -68,7 +68,7 @@
                 : 'border-gray-200/60 dark:border-gray-700/60 text-gray-600 dark:text-gray-400 bg-white/50 dark:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-white/80 dark:hover:bg-gray-700/50'"
               @click="selectBusinessFromPopup(type)"
             >
-              <span class="text-[12px] font-medium">{{ label }}</span>
+              <span class="text-[0.75rem] font-medium">{{ label }}</span>
             </div>
           </div>
         </div>
@@ -79,34 +79,34 @@
         <!-- 日期筛选 -->
         <div class="mb-5">
           <div class="flex items-center justify-between mb-2.5">
-            <h4 class="text-[13px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+            <h4 class="text-[0.8125rem] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               日期区间
             </h4>
-            <button v-if="date" @click="clearDate" class="text-[11px] font-medium text-accent active:scale-95 transition-all duration-200">重置</button>
+            <button v-if="date" @click="clearDate" class="text-[0.6875rem] font-medium text-accent active:scale-95 transition-all duration-200">重置</button>
           </div>
 
           <div class="flex items-center gap-2">
             <div class="flex-1">
-              <label class="text-[10px] mb-1 pl-1 text-gray-500 dark:text-gray-400 block">开始日期</label>
+              <label class="text-[0.625rem] mb-1 pl-1 text-gray-500 dark:text-gray-400 block">开始日期</label>
               <input
                 type="date"
                 v-model="startDate"
                 @change="onDateChange"
-                class="w-full px-3 py-2 text-[12px] border border-gray-200/60 dark:border-gray-700/60 bg-white/50 dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent cursor-pointer transition-all duration-200 backdrop-blur-sm"
+                class="w-full px-3 py-2 text-[0.75rem] border border-gray-200/60 dark:border-gray-700/60 bg-white/50 dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent cursor-pointer transition-all duration-200 backdrop-blur-sm"
                 :max="endDate || undefined"
               />
             </div>
             <div class="flex-none mt-5">
-              <span class="text-[12px] font-semibold text-accent/60">至</span>
+              <span class="text-[0.75rem] font-semibold text-accent/60">至</span>
             </div>
             <div class="flex-1">
-              <label class="text-[10px] mb-1 pl-1 text-gray-500 dark:text-gray-400 block">结束日期</label>
+              <label class="text-[0.625rem] mb-1 pl-1 text-gray-500 dark:text-gray-400 block">结束日期</label>
               <input
                 type="date"
                 v-model="endDate"
                 @change="onDateChange"
-                class="w-full px-3 py-2 text-[12px] border border-gray-200/60 dark:border-gray-700/60 bg-white/50 dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent cursor-pointer transition-all duration-200 backdrop-blur-sm"
+                class="w-full px-3 py-2 text-[0.75rem] border border-gray-200/60 dark:border-gray-700/60 bg-white/50 dark:bg-gray-800/50 text-gray-800 dark:text-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent cursor-pointer transition-all duration-200 backdrop-blur-sm"
                 :min="startDate || undefined"
               />
             </div>
@@ -119,11 +119,11 @@
         <!-- 视频分区筛选 -->
         <div class="pb-4">
           <div class="flex items-center justify-between mb-2.5">
-            <h4 class="text-[13px] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+            <h4 class="text-[0.8125rem] font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
               视频分区
             </h4>
-            <button v-if="category" @click="clearCategory" class="text-[11px] font-medium text-accent active:scale-95 transition-all duration-200">重置</button>
+            <button v-if="category" @click="clearCategory" class="text-[0.6875rem] font-medium text-accent active:scale-95 transition-all duration-200">重置</button>
           </div>
 
           <!-- 分区选择器 -->
@@ -134,7 +134,7 @@
                 <div
                   v-for="(categoryItem, index) in videoCategories"
                   :key="categoryItem.text"
-                  class="py-2.5 px-3 text-[12px] cursor-pointer transition-all duration-200 truncate relative"
+                  class="py-2.5 px-3 text-[0.75rem] cursor-pointer transition-all duration-200 truncate relative"
                   :class="activeMainCategory === index
                     ? 'bg-white dark:bg-gray-900 font-medium text-accent shadow-sm'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/30'"
@@ -150,7 +150,7 @@
                 <div class="grid grid-cols-2 gap-1.5">
                   <!-- 主分区选项 -->
                   <div
-                    class="py-1.5 px-2 text-[11px] text-center border rounded-full cursor-pointer transition-all duration-200 truncate active:scale-95"
+                    class="py-1.5 px-2 text-[0.6875rem] text-center border rounded-full cursor-pointer transition-all duration-200 truncate active:scale-95"
                     :class="category === videoCategories[activeMainCategory]?.text
                       ? 'border-accent bg-accent text-white font-medium shadow-sm shadow-accent/20'
                       : 'border-gray-200/60 dark:border-gray-700/60 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-700/50'"
@@ -163,7 +163,7 @@
                   <div
                     v-for="subCategory in videoCategories[activeMainCategory]?.children"
                     :key="subCategory.id"
-                    class="py-1.5 px-2 text-[11px] text-center border rounded-full cursor-pointer transition-all duration-200 truncate active:scale-95"
+                    class="py-1.5 px-2 text-[0.6875rem] text-center border rounded-full cursor-pointer transition-all duration-200 truncate active:scale-95"
                     :class="category === subCategory.text
                       ? 'border-accent bg-accent text-white font-medium shadow-sm shadow-accent/20'
                       : 'border-gray-200/60 dark:border-gray-700/60 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-700/50'"

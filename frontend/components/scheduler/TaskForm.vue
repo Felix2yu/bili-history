@@ -17,7 +17,7 @@
               <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {{ isEditing ? '编辑任务' : (parentTaskId ? '添加子任务' : '新建任务') }}
               </h3>
-              <p class="text-[11px] text-gray-500 dark:text-gray-400">
+              <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400">
                 {{ isEditing ? '修改任务配置' : (parentTaskId ? '创建链式子任务' : '配置定时执行任务') }}
               </p>
             </div>
@@ -80,7 +80,7 @@
                 <option :value="null">全部年份</option>
                 <option v-for="year in popularCleanupYearOptions" :key="year" :value="year">{{ year }}</option>
               </select>
-              <p v-if="popularCleanupDefaultYear" class="text-[11px] text-gray-400 mt-1">建议：{{ popularCleanupDefaultYear }}</p>
+              <p v-if="popularCleanupDefaultYear" class="text-[0.6875rem] text-gray-400 mt-1">建议：{{ popularCleanupDefaultYear }}</p>
             </div>
           </div>
 

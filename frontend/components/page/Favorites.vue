@@ -266,12 +266,12 @@
                       />
 
                       <!-- 视频时长标签 -->
-                      <div class="absolute bottom-1 right-1 bg-black/60 px-1 py-0.5 rounded text-white text-[10px]">
+                      <div class="absolute bottom-1 right-1 bg-black/60 px-1 py-0.5 rounded text-white text-[0.625rem]">
                         {{ formatDuration(item.duration) }}
                       </div>
 
                       <!-- 分区标签 -->
-                      <div v-if="item.tname" class="absolute top-1 left-1 bg-accent/80 px-1 py-0.5 rounded text-white text-[10px]">
+                      <div v-if="item.tname" class="absolute top-1 left-1 bg-accent/80 px-1 py-0.5 rounded text-white text-[0.625rem]">
                         {{ item.tname }}
                       </div>
 
@@ -295,13 +295,13 @@
                           onerror="this.style.display='none'"
                           @click.stop="openAuthorPage(item)"
                         />
-                        <span class="text-[10px] text-gray-600 dark:text-gray-400 truncate hover:text-accent cursor-pointer" @click.stop="openAuthorPage(item)">
+                        <span class="text-[0.625rem] text-gray-600 dark:text-gray-400 truncate hover:text-accent cursor-pointer" @click.stop="openAuthorPage(item)">
                           {{ getAuthorName(item) }}
                         </span>
                       </div>
 
                       <!-- 收藏时间（合集无收藏时间，不显示） -->
-                      <div v-if="item.fav_time" class="flex justify-between items-center text-[10px] text-gray-500">
+                      <div v-if="item.fav_time" class="flex justify-between items-center text-[0.625rem] text-gray-500">
                         <div class="flex items-center space-x-1">
                           <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

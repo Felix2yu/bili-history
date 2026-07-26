@@ -5,19 +5,19 @@
       <img v-if="displayFaceUrl" :src="displayFaceUrl" class="w-6 h-6 rounded-full object-cover border" alt="face" />
       <div class="ml-2 min-w-0">
         <div class="text-sm font-medium truncate">{{ item.author_name || `UID ${item.host_mid || ''}` }}</div>
-        <div v-if="formattedTime !== '-'" class="text-[11px] text-gray-500 truncate">{{ formattedTime }}</div>
+        <div v-if="formattedTime !== '-'" class="text-[0.6875rem] text-gray-500 truncate">{{ formattedTime }}</div>
       </div>
       <div class="ml-auto flex items-center space-x-2">
         <button
           v-if="item.id_str"
           type="button"
-          class="text-[11px] text-accent hover:underline"
+          class="text-[0.6875rem] text-accent hover:underline"
           @click="openLink(opusUrl)"
         >查看动态</button>
         <button
           v-if="item.id_str"
           type="button"
-          class="text-[11px] text-red-500 hover:underline"
+          class="text-[0.6875rem] text-red-500 hover:underline"
           @click.stop="handleDelete"
         >删除</button>
       </div>
@@ -96,7 +96,7 @@
                    :ref="el => setLiveRef(idx, el)"
             ></video>
             <!-- 右下角 实况 徽标 -->
-            <div class="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[10px] flex items-center rounded">
+            <div class="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[0.625rem] flex items-center rounded">
               <img src="/live.svg" class="w-3 h-3 mr-1 filter invert" alt="live" />
               <span>实况</span>
             </div>

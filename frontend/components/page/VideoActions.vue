@@ -33,7 +33,7 @@
           </div>
           <div
             v-if="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live'"
-            class="absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-white md:px-2 md:py-1 md:text-xs"
+            class="absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-[0.625rem] font-medium tracking-wide text-white md:px-2 md:py-1 md:text-xs"
           >
             {{ formatDuration(record.progress) }} / {{ formatDuration(record.duration) }}
           </div>
@@ -42,12 +42,12 @@
         <!-- Compact Metadata Block -->
         <div class="p-3 pb-2 md:p-5">
           <div
-            class="text-[15px] font-bold leading-snug text-gray-900 line-clamp-2 dark:text-gray-100 md:text-lg md:leading-6"
+            class="text-[0.9375rem] font-bold leading-snug text-gray-900 line-clamp-2 dark:text-gray-100 md:text-lg md:leading-6"
             v-html="record.title"
           ></div>
 
           <!-- Denser single line for Avatar, Name, Time, and Type -->
-          <div class="mt-2.5 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400 md:text-sm">
+          <div class="mt-2.5 flex items-center justify-between text-[0.6875rem] text-gray-500 dark:text-gray-400 md:text-sm">
             <div class="flex min-w-0 items-center gap-1.5 md:gap-2">
               <img
                 v-if="record.business !== 'cheese' && record.business !== 'pgc'"
@@ -63,10 +63,10 @@
             </div>
             
             <div class="flex flex-shrink-0 items-center justify-end gap-1.5">
-               <span class="rounded bg-pink-50/80 px-1.5 py-0.5 text-[9px] font-medium text-pink-600 dark:bg-pink-900/40 dark:text-pink-400 md:rounded-full md:px-2 md:py-1 md:text-xs">
+               <span class="rounded bg-pink-50/80 px-1.5 py-0.5 text-[0.5625rem] font-medium text-pink-600 dark:bg-pink-900/40 dark:text-pink-400 md:rounded-full md:px-2 md:py-1 md:text-xs">
                 {{ record.business === 'archive' ? record.tag_name : getBusinessType(record.business) }}
               </span>
-              <span v-if="isDownloaded && record.business === 'archive'" class="rounded bg-green-50/80 px-1.5 py-0.5 text-[9px] font-medium text-green-600 dark:bg-green-900/40 dark:text-green-400 md:rounded-full md:px-2 md:py-1 md:text-xs">
+              <span v-if="isDownloaded && record.business === 'archive'" class="rounded bg-green-50/80 px-1.5 py-0.5 text-[0.5625rem] font-medium text-green-600 dark:bg-green-900/40 dark:text-green-400 md:rounded-full md:px-2 md:py-1 md:text-xs">
                 已下载
               </span>
             </div>
@@ -103,7 +103,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400">播放</span>
+            <span class="text-[0.625rem] font-medium text-gray-500 dark:text-gray-400">播放</span>
           </button>
 
           <button
@@ -114,7 +114,7 @@
             <svg class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400">UP主页</span>
+            <span class="text-[0.625rem] font-medium text-gray-500 dark:text-gray-400">UP主页</span>
           </button>
 
           <button
@@ -125,14 +125,14 @@
              <svg class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400">下载</span>
+            <span class="text-[0.625rem] font-medium text-gray-500 dark:text-gray-400">下载</span>
           </button>
 
           <button class="flex flex-1 flex-col items-center justify-center gap-1 py-2 active:bg-gray-100 dark:active:bg-gray-800 transition-colors rounded-lg" @click="handleDelete">
             <svg class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400">删除</span>
+            <span class="text-[0.625rem] font-medium text-gray-500 dark:text-gray-400">删除</span>
           </button>
         </div>
       </div>
@@ -151,10 +151,10 @@
             @blur="handleRemarkBlur"
             rows="4"
             placeholder="写点属于你自己的学习记录或吐槽吧..."
-            class="w-full resize-none border-none bg-transparent p-0 text-[13px] leading-relaxed text-gray-800 outline-none focus:ring-0 dark:text-gray-100 md:text-sm"
+            class="w-full resize-none border-none bg-transparent p-0 text-[0.8125rem] leading-relaxed text-gray-800 outline-none focus:ring-0 dark:text-gray-100 md:text-sm"
           ></textarea>
         </div>
-        <div v-if="remarkTime" class="mt-2 text-right text-[10px] text-gray-400 md:text-xs">
+        <div v-if="remarkTime" class="mt-2 text-right text-[0.625rem] text-gray-400 md:text-xs">
           最后修改于 {{ formatRemarkTime(remarkTime) }}
         </div>
       </div>

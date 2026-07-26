@@ -30,7 +30,7 @@
               </div>
               <div class="min-w-0">
                 <h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white truncate">{{ task.config?.name }}</h3>
-                <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 font-mono">{{ task.task_id }}</p>
+                <p class="text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400 font-mono">{{ task.task_id }}</p>
               </div>
             </div>
             <div class="flex items-center gap-2">
@@ -70,19 +70,19 @@
               <div class="relative overflow-hidden p-3 md:p-4 rounded-2xl"
                 :class="successRateBgClass">
                 <div class="text-xl md:text-2xl font-bold" :class="successRateTextClass">{{ Math.round(executionInfo.successRate) }}%</div>
-                <div class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">成功率</div>
+                <div class="text-[0.625rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">成功率</div>
               </div>
               <div class="relative overflow-hidden p-3 md:p-4 rounded-2xl bg-gray-50 dark:bg-gray-700/50">
                 <div class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{{ executionInfo.totalRuns }}</div>
-                <div class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">总执行</div>
+                <div class="text-[0.625rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">总执行</div>
               </div>
               <div class="relative overflow-hidden p-3 md:p-4 rounded-2xl bg-gray-50 dark:bg-gray-700/50">
                 <div class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{{ executionInfo.avgDuration.toFixed(1) }}<span class="text-xs md:text-sm text-gray-500">s</span></div>
-                <div class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">平均耗时</div>
+                <div class="text-[0.625rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">平均耗时</div>
               </div>
             </div>
 
-            <div class="flex items-center gap-2 text-[11px] md:text-xs">
+            <div class="flex items-center gap-2 text-[0.6875rem] md:text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
               <span class="text-green-600 dark:text-green-400 font-medium">{{ executionInfo.successRuns }}</span>
               <span class="text-gray-400">成功</span>
@@ -94,22 +94,22 @@
 
             <!-- 基本信息 -->
             <div>
-              <h4 class="text-[11px] md:text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">基本信息</h4>
+              <h4 class="text-[0.6875rem] md:text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">基本信息</h4>
               <div class="grid grid-cols-2 gap-3 md:gap-4">
                 <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/30">
-                  <p class="text-[10px] md:text-xs text-gray-400 mb-1">API 端点</p>
+                  <p class="text-[0.625rem] md:text-xs text-gray-400 mb-1">API 端点</p>
                   <p class="text-xs md:text-sm text-gray-800 dark:text-gray-200 font-mono truncate" :title="task.config?.endpoint">{{ task.config?.endpoint }}</p>
                 </div>
                 <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/30">
-                  <p class="text-[10px] md:text-xs text-gray-400 mb-1">请求方法</p>
+                  <p class="text-[0.625rem] md:text-xs text-gray-400 mb-1">请求方法</p>
                   <p class="text-xs md:text-sm font-semibold" :class="methodClass">{{ task.config?.method }}</p>
                 </div>
                 <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/30">
-                  <p class="text-[10px] md:text-xs text-gray-400 mb-1">最后修改</p>
+                  <p class="text-[0.625rem] md:text-xs text-gray-400 mb-1">最后修改</p>
                   <p class="text-xs md:text-sm text-gray-800 dark:text-gray-200">{{ task.last_modified?.replace('T', ' ') }}</p>
                 </div>
                 <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/30">
-                  <p class="text-[10px] md:text-xs text-gray-400 mb-1">优先级</p>
+                  <p class="text-[0.625rem] md:text-xs text-gray-400 mb-1">优先级</p>
                   <p class="text-xs md:text-sm text-gray-800 dark:text-gray-200">{{ task.config?.priority || 0 }}</p>
                 </div>
               </div>
@@ -117,14 +117,14 @@
 
             <!-- 调度信息 -->
             <div>
-              <h4 class="text-[11px] md:text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">调度信息</h4>
+              <h4 class="text-[0.6875rem] md:text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">调度信息</h4>
               <div class="grid grid-cols-2 gap-3 md:gap-4">
                 <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/30">
-                  <p class="text-[10px] md:text-xs text-gray-400 mb-1">调度类型</p>
+                  <p class="text-[0.625rem] md:text-xs text-gray-400 mb-1">调度类型</p>
                   <p class="text-xs md:text-sm text-gray-800 dark:text-gray-200 font-medium">{{ scheduleTypeLabel }}</p>
                 </div>
                 <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/30">
-                  <p class="text-[10px] md:text-xs text-gray-400 mb-1">执行时间</p>
+                  <p class="text-[0.625rem] md:text-xs text-gray-400 mb-1">执行时间</p>
                   <p class="text-xs md:text-sm text-gray-800 dark:text-gray-200 font-medium">
                     <template v-if="task.task_type === 'main'">
                       {{ task.config?.schedule_type === 'interval' ? unitLabel : (task.config?.schedule_time || '未设置') }}
@@ -133,11 +133,11 @@
                   </p>
                 </div>
                 <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/30">
-                  <p class="text-[10px] md:text-xs text-gray-400 mb-1">上次执行</p>
+                  <p class="text-[0.625rem] md:text-xs text-gray-400 mb-1">上次执行</p>
                   <p class="text-xs md:text-sm text-gray-800 dark:text-gray-200">{{ task.execution?.last_run?.replace('T', ' ') || '从未执行' }}</p>
                 </div>
                 <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/30">
-                  <p class="text-[10px] md:text-xs text-gray-400 mb-1">下次执行</p>
+                  <p class="text-[0.625rem] md:text-xs text-gray-400 mb-1">下次执行</p>
                   <p class="text-xs md:text-sm text-gray-800 dark:text-gray-200">
                     <template v-if="task.task_type === 'main'">{{ task.execution?.next_run || '未排定' }}</template>
                     <template v-else>依赖主任务</template>
@@ -148,7 +148,7 @@
 
             <!-- 依赖任务 -->
             <div v-if="task.depends_on">
-              <h4 class="text-[11px] md:text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">依赖任务</h4>
+              <h4 class="text-[0.6875rem] md:text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">依赖任务</h4>
               <div class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
@@ -168,7 +168,7 @@
                 </div>
                 <div class="min-w-0 flex-1">
                   <h4 class="text-xs md:text-sm font-semibold text-red-600 dark:text-red-400 mb-1">最近错误</h4>
-                  <p class="text-[11px] md:text-xs text-red-600 dark:text-red-400 whitespace-pre-wrap font-mono break-all">{{ task.execution.last_error }}</p>
+                  <p class="text-[0.6875rem] md:text-xs text-red-600 dark:text-red-400 whitespace-pre-wrap font-mono break-all">{{ task.execution.last_error }}</p>
                 </div>
               </div>
             </div>

@@ -33,7 +33,7 @@ export default defineNuxtConfig({
       title: '拾帧集',
       script: [
         {
-          innerHTML: `(function(){try{var s=localStorage.getItem('darkMode');var d=s?s==='dark'||(s==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');var t=localStorage.getItem('themeColor');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
+          innerHTML: `(function(){try{var s=localStorage.getItem('darkMode');var d=s?s==='dark'||(s==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');var t=localStorage.getItem('themeColor');if(t)document.documentElement.setAttribute('data-theme',t);var f=localStorage.getItem('fontSize');var fs={'small':'14px','default':'16px','large':'18px'};if(f&&fs[f])document.documentElement.style.fontSize=fs[f]}catch(e){}})()`,
         },
       ],
       meta: [

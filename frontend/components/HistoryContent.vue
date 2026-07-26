@@ -94,14 +94,14 @@
               <template #cover-top-left="{ video: r }">
                 <div class="absolute top-1 left-1 z-10 flex flex-col gap-1" :class="isBatchMode ? 'ml-6' : ''">
                   <div v-if="isVideoDownloaded(r.cid) && r.business === 'archive'"
-                       class="bg-green-500 text-white font-semibold px-1.5 py-0.5 text-[10px] flex items-center space-x-1 rounded shadow-md">
+                       class="bg-green-500 text-white font-semibold px-1.5 py-0.5 text-[0.625rem] flex items-center space-x-1 rounded shadow-md">
                     <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     <span>已下载</span>
                   </div>
                   <div v-if="getCategoryName(r)"
-                       class="bg-accent/80 px-1 py-0.5 rounded text-white text-[10px]">
+                       class="bg-accent/80 px-1 py-0.5 rounded text-white text-[0.625rem]">
                     {{ getCategoryName(r) }}
                   </div>
                 </div>
@@ -111,7 +111,7 @@
                 <div v-if="isVideoFavorited(parseInt(r.aid || r.avid || (r.business === 'archive' ? r.oid : 0), 10)) && r.business !== 'live'"
                      class="absolute right-0 top-0 z-10">
                   <div
-                    class="bg-amber-500 text-white font-semibold px-1.5 py-0.5 text-[10px] flex items-center space-x-1 rounded-bl-md shadow-md">
+                    class="bg-amber-500 text-white font-semibold px-1.5 py-0.5 text-[0.625rem] flex items-center space-x-1 rounded-bl-md shadow-md">
                     <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                     </svg>
@@ -142,7 +142,7 @@
 
               <template #meta-top="{ video: r }">
                 <div v-if="r.business !== 'archive'" class="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center">
-                  <span class="inline-flex items-center rounded-md bg-[#f1f2f3] dark:bg-gray-700 px-2 py-0.5 text-[10px] text-[#71767d] dark:text-gray-300">
+                  <span class="inline-flex items-center rounded-md bg-[#f1f2f3] dark:bg-gray-700 px-2 py-0.5 text-[0.625rem] text-[#71767d] dark:text-gray-300">
                     {{ getBusinessType(r.business) }}
                   </span>
                 </div>
@@ -165,7 +165,7 @@
                        alt="Pad"
                        class="h-3 w-3"
                   />
-                  <span class="text-[10px]">{{ formatTimestamp(r.view_at) }}</span>
+                  <span class="text-[0.625rem]">{{ formatTimestamp(r.view_at) }}</span>
                 </div>
               </template>
             </VideoGridCard>

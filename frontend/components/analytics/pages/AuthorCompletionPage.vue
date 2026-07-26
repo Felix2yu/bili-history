@@ -36,7 +36,7 @@
                     <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div class="h-full bg-accent rounded-full" :style="{ width: `${(item.score / topScore) * 100}%` }"></div>
                     </div>
-                    <div class="flex gap-3 mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
+                    <div class="flex gap-3 mt-0.5 text-[0.625rem] text-gray-400 dark:text-gray-500">
                       <span>完播 {{ item.completion }}%</span>
                       <span>视频 {{ item.videos }}个</span>
                       <span>喜爱 {{ item.loyalty.toFixed(0) }}</span>
@@ -63,7 +63,7 @@
                     <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div class="h-full bg-blue-500 rounded-full" :style="{ width: `${(item.videos / topVideoCount) * 100}%` }"></div>
                     </div>
-                    <div class="flex gap-3 mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
+                    <div class="flex gap-3 mt-0.5 text-[0.625rem] text-gray-400 dark:text-gray-500">
                       <span>完播 {{ item.completion }}%</span>
                       <span>完整观看 {{ item.fullyWatched }}个</span>
                     </div>

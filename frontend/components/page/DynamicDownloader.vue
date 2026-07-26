@@ -71,7 +71,7 @@
             <img :src="h.face_path ? (h.face_path.startsWith('http') ? normalizeImageUrl(h.face_path) : toStaticUrl(h.face_path)) : ''" class="w-9 h-9 rounded-full object-cover border" alt="face" loading="lazy" />
             <div class="min-w-0 flex-1">
               <div class="text-xs font-medium truncate">{{ h.up_name || h.host_mid }}</div>
-              <div class="text-[11px] text-gray-500 truncate">动态：{{ h.item_count }} · 抓取：{{ formatTs(h.last_fetch_time) }}</div>
+              <div class="text-[0.6875rem] text-gray-500 truncate">动态：{{ h.item_count }} · 抓取：{{ formatTs(h.last_fetch_time) }}</div>
             </div>
           </div>
         </div>

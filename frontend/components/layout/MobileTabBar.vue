@@ -23,7 +23,7 @@
             class="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent"
           />
         </div>
-        <span class="text-[10px] leading-none font-medium">{{ tab.label }}</span>
+        <span class="text-[0.625rem] leading-none font-medium">{{ tab.label }}</span>
       </router-link>
     </div>
   </nav>

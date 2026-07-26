@@ -27,7 +27,7 @@
 
       <slot name="cover-top-left" :video="video">
         <div v-if="showCategory && categoryName"
-             class="absolute top-1 left-1 bg-accent/80 px-1 py-0.5 rounded text-white text-[10px]"
+             class="absolute top-1 left-1 bg-accent/80 px-1 py-0.5 rounded text-white text-[0.625rem]"
              :class="selectMode ? 'ml-6' : ''">
           {{ categoryName }}
         </div>
@@ -38,7 +38,7 @@
       <slot name="cover-bottom-left" :video="video"></slot>
 
       <slot name="cover-bottom-right" :video="video">
-        <div v-if="durationText" class="absolute bottom-1 right-1 bg-black/60 px-1 py-0.5 rounded text-white text-[10px]">
+        <div v-if="durationText" class="absolute bottom-1 right-1 bg-black/60 px-1 py-0.5 rounded text-white text-[0.625rem]">
           {{ durationText }}
         </div>
       </slot>
@@ -80,7 +80,7 @@
           @click.stop="handleOwnerClick"
         />
         <span
-          class="text-[10px] text-gray-600 dark:text-gray-400 truncate cursor-pointer hover:text-accent transition-colors"
+          class="text-[0.625rem] text-gray-600 dark:text-gray-400 truncate cursor-pointer hover:text-accent transition-colors"
           @click.stop="handleOwnerClick"
           :title="ownerName"
         >
@@ -88,7 +88,7 @@
         </span>
       </div>
 
-      <div class="flex justify-between items-center text-[10px] text-gray-500">
+      <div class="flex justify-between items-center text-[0.625rem] text-gray-500">
         <slot name="meta-bottom-left" :video="video">
           <span v-if="showViews">{{ viewsText }} 次观看</span>
         </slot>

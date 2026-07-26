@@ -38,7 +38,7 @@
                   </svg>
                 </div>
                 <div class="min-w-0">
-                  <div class="text-[10px] md:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">今日浏览</div>
+                  <div class="text-[0.625rem] md:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">今日浏览</div>
                   <div class="text-sm md:text-lg font-bold text-gray-900 dark:text-white truncate">
                     {{ currentDate.slice(0, 4) }}年{{ Number(currentDate.slice(4, 6)) }}月{{ Number(currentDate.slice(6, 8)) }}日
                   </div>
@@ -55,13 +55,13 @@
 
               <div class="flex items-center gap-3 md:gap-4 shrink-0">
                 <div class="text-right">
-                  <div class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">当前筛选</div>
-                  <div class="text-sm md:text-base font-bold text-accent">{{ total }} <span class="text-[10px] md:text-xs font-normal text-gray-500 dark:text-gray-400">条</span></div>
+                  <div class="text-[0.625rem] md:text-xs text-gray-500 dark:text-gray-400">当前筛选</div>
+                  <div class="text-sm md:text-base font-bold text-accent">{{ total }} <span class="text-[0.625rem] md:text-xs font-normal text-gray-500 dark:text-gray-400">条</span></div>
                 </div>
                 <div class="h-8 w-px bg-gray-200 dark:bg-gray-700/50 hidden md:block"></div>
                 <div class="text-right hidden md:block">
-                  <div class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">今日总计</div>
-                  <div class="text-sm md:text-base font-bold text-gray-900 dark:text-white">{{ recordCount }} <span class="text-[10px] md:text-xs font-normal text-gray-500 dark:text-gray-400">条</span></div>
+                  <div class="text-[0.625rem] md:text-xs text-gray-500 dark:text-gray-400">今日总计</div>
+                  <div class="text-sm md:text-base font-bold text-gray-900 dark:text-white">{{ recordCount }} <span class="text-[0.625rem] md:text-xs font-normal text-gray-500 dark:text-gray-400">条</span></div>
                 </div>
               </div>
             </div>

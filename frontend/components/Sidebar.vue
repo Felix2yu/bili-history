@@ -124,7 +124,7 @@
         </span>
       </button>
 
-      <div class="mt-2 px-3 text-[11px] text-gray-400 dark:text-gray-500">
+      <div class="mt-2 px-3 text-[0.6875rem] text-gray-400 dark:text-gray-500">
         <div class="flex items-center gap-1.5">
           <span class="w-1.5 h-1.5 rounded-full" :class="{ 'bg-green-400': integrityStatus.status === 'consistent', 'bg-yellow-400': integrityStatus.status === 'inconsistent', 'bg-gray-400': integrityStatus.status !== 'consistent' && integrityStatus.status !== 'inconsistent' }"></span>
           <span class="cursor-pointer hover:underline" @click="openDataSyncManager('integrity')">

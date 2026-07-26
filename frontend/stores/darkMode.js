@@ -11,11 +11,18 @@ export const THEME_PRESETS = [
   { id: 'crimson', name: '烈焰红', color: '#ef4444' },
 ]
 
+export const FONT_SIZE_PRESETS = [
+  { id: 'small', label: '小', size: '14px' },
+  { id: 'default', label: '中', size: '16px' },
+  { id: 'large', label: '大', size: '18px' },
+]
+
 export const useDarkMode = defineStore('darkMode', {
   state: () => ({
     isDarkMode: false,
     darkMode: 'system',
     themeColor: 'sakura',
+    fontSize: 'default',
     initialized: false,
     mediaQuery: null,
     mediaQueryHandler: null,
@@ -49,12 +56,18 @@ export const useDarkMode = defineStore('darkMode', {
         if (savedTheme && THEME_PRESETS.some(t => t.id === savedTheme)) {
           this.themeColor = savedTheme
         }
+        const savedFontSize = localStorage.getItem('fontSize')
+        if (savedFontSize && FONT_SIZE_PRESETS.some(t => t.id === savedFontSize)) {
+          this.fontSize = savedFontSize
+        }
         localStorage.setItem('darkMode', this.darkMode)
         localStorage.setItem('themeColor', this.themeColor)
+        localStorage.setItem('fontSize', this.fontSize)
       } catch(e) {}
 
       this.applyThemeColor()
       this.applyDarkMode()
+      this.applyFontSize()
       this.setupSystemListener()
       this.initialized = true
     },
@@ -74,6 +87,21 @@ export const useDarkMode = defineStore('darkMode', {
     applyThemeColor() {
       if (!process.client) return
       document.documentElement.setAttribute('data-theme', this.themeColor)
+    },
+
+    applyFontSize() {
+      if (!process.client) return
+      const preset = FONT_SIZE_PRESETS.find(t => t.id === this.fontSize) || FONT_SIZE_PRESETS[1]
+      document.documentElement.style.fontSize = preset.size
+    },
+
+    async setFontSize(sizeId) {
+      if (!FONT_SIZE_PRESETS.some(t => t.id === sizeId)) return
+
+      this.fontSize = sizeId
+      this.applyFontSize()
+
+      try { localStorage.setItem('fontSize', sizeId) } catch(e) {}
     },
 
     applyDarkMode() {

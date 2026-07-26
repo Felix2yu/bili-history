@@ -65,8 +65,8 @@
               </div>
 
               <!-- 文件信息标签 -->
-              <div class="absolute bottom-1 right-1 bg-black/60 backdrop-blur-sm px-1 py-0.5 rounded text-white text-[10px] flex items-center gap-1">
-                <span v-if="isUnsupportedFormat(video)" class="bg-amber-500/80 px-1 rounded text-[9px]">不支持播放</span>
+              <div class="absolute bottom-1 right-1 bg-black/60 backdrop-blur-sm px-1 py-0.5 rounded text-white text-[0.625rem] flex items-center gap-1">
+                <span v-if="isUnsupportedFormat(video)" class="bg-amber-500/80 px-1 rounded text-[0.5625rem]">不支持播放</span>
                 <div v-if="video.files && video.files.length > 0">
                   {{ video.files[0].size_mb.toFixed(1) }} MB
                 </div>
@@ -82,7 +82,7 @@
 
               <!-- 多文件角标 -->
               <div v-if="video.files && video.files.length > 1"
-                   class="absolute left-1 top-1 rounded bg-accent px-1 py-0.5 text-[10px] text-white">
+                   class="absolute left-1 top-1 rounded bg-accent px-1 py-0.5 text-[0.625rem] text-white">
                 {{ video.files.length }}
               </div>
             </div>
@@ -105,13 +105,13 @@
                   onerror="this.style.display='none'"
                   @click.stop="handleAuthorClick(video)"
                 />
-                <span class="text-[10px] text-gray-600 dark:text-gray-400 truncate hover:text-accent cursor-pointer" @click.stop="handleAuthorClick(video)">
+                <span class="text-[0.625rem] text-gray-600 dark:text-gray-400 truncate hover:text-accent cursor-pointer" @click.stop="handleAuthorClick(video)">
                   {{ video.author_name || '未知UP主' }}
                 </span>
               </div>
 
               <!-- 下载时间 -->
-              <div class="flex justify-between items-center text-[10px] text-gray-500 dark:text-gray-400">
+              <div class="flex justify-between items-center text-[0.625rem] text-gray-500 dark:text-gray-400">
                 <div class="flex items-center space-x-1">
                   <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

@@ -460,8 +460,7 @@
                   <div class="relative">
                     <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-3xl bg-accent flex items-center justify-center shadow-xl shadow-accent/30">
                       <svg class="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v.01M12 12v5M12 21a9 9 0 110-18 9 9 0 010 18z" />
                       </svg>
                     </div>
                     <h1 class="text-xl md:text-2xl font-bold">

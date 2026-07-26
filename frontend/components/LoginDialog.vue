@@ -47,7 +47,7 @@
         <button
           v-if="!qrcodeKey || qrcodeExpired"
           @click="refreshQRCode"
-          class="px-4 py-2 text-sm text-[#fb7299] hover:bg-[#fb7299]/5 rounded-md transition-colors duration-200"
+          class="px-4 py-2 text-sm text-accent hover:bg-accent/5 rounded-md transition-colors duration-200"
         >
           {{ qrcodeKey ? '重新获取二维码' : '获取登录二维码' }}
         </button>
@@ -108,7 +108,7 @@ const statusClass = computed(() => {
     case 86038:
       return 'text-red-500'
     case 86090:
-      return 'text-[#fb7299]'
+      return 'text-accent'
     default:
       return 'text-gray-500'
   }

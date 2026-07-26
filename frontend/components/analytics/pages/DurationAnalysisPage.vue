@@ -1,7 +1,7 @@
 <!-- 视频时长分析页组件 -->
 <template>
   <div class="space-y-6" v-if="viewingData">
-    <h3 class="text-4xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+    <h3 class="text-4xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
       视频时长分析
     </h3>
 
@@ -13,7 +13,7 @@
 
     <!-- 时长分布图表 -->
     <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-      <h4 class="text-xl font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-4">时长分布</h4>
+      <h4 class="text-xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-4">时长分布</h4>
       <div class="h-[300px]">
         <v-chart ref="chartRef" class="h-full w-full" :option="durationDistributionOption" autoresize />
       </div>
@@ -27,6 +27,7 @@ import gsap from 'gsap'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts/core'
 import { useDarkMode } from '~/stores/darkMode'
+import { DURATION_COLORS } from '~/utils/chartColors'
 
 const props = defineProps({
   viewingData: {
@@ -54,18 +55,9 @@ const durationDistributionOption = computed(() => {
   }).flat()
 
   const typeColors = {
-    '短视频': {
-      from: 'rgba(251, 114, 153, 0.9)',
-      to: 'rgba(252, 155, 122, 0.9)'
-    },
-    '中等视频': {
-      from: 'rgba(64, 169, 255, 0.9)',
-      to: 'rgba(128, 208, 255, 0.9)'
-    },
-    '长视频': {
-      from: 'rgba(82, 196, 26, 0.9)',
-      to: 'rgba(144, 217, 79, 0.9)'
-    }
+    '短视频': DURATION_COLORS['短视频'],
+    '中等视频': DURATION_COLORS['中等视频'],
+    '长视频': DURATION_COLORS['长视频']
   }
 
   const isDark = !!(isDarkMode && isDarkMode.value)
@@ -81,7 +73,7 @@ const durationDistributionOption = computed(() => {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
       backgroundColor: tooltipBg,
-      borderColor: '#fb7299',
+      borderColor: 'var(--accent)',
       textStyle: { color: tooltipText },
       formatter: (params) => {
         const period = params[0].axisValue
@@ -129,10 +121,7 @@ const durationDistributionOption = computed(() => {
         focus: 'series'
       },
       itemStyle: {
-        color: new echarts.graphic.LinearGradient(0, 1, 0, 0, [
-          { offset: 0, color: typeColors[type].from },
-          { offset: 1, color: typeColors[type].to }
-        ])
+        color: typeColors[type]
       },
       data: periods.map(period => {
         return data.find(d => d.period === period && d.type === type)
@@ -156,6 +145,6 @@ onMounted(() => {
 // 格式化洞察文本，为数字添加颜色
 const formatInsightText = (text) => {
   if (!text) return '';
-  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-[#fb7299]">$1</span>')
+  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-accent">$1</span>')
 }
 </script>

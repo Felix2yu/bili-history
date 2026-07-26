@@ -1,59 +1,109 @@
 <template>
-  <div class="min-h-screen bg-gray-50/30 dark:bg-gray-900 pb-20 md:pb-0">
-    <div class="py-6">
-      <div class="mx-auto sm:px-2 lg:px-8">
-        <div class="glass-card overflow-hidden">
-          <div class="border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
-            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">稍后再看</h2>
-            <div class="flex items-center space-x-3">
-              <span v-if="syncing" class="text-xs text-[#fb7299] flex items-center">
-                <svg class="animate-spin -ml-1 mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  <div class="min-h-screen pb-20 md:pb-0 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-pink-500/5 dark:from-accent/10 dark:via-transparent dark:to-pink-500/10 pointer-events-none"></div>
+    <div class="absolute top-20 -left-20 w-80 h-80 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-20 -right-20 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative py-6">
+      <div class="max-w-[1800px] mx-auto sm:px-2 lg:px-8">
+        <div class="mb-6">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center space-x-4">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center shadow-lg shadow-accent/30">
+                <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                同步中...
-              </span>
-              <span class="text-sm text-gray-500 dark:text-gray-400">共 {{ filteredVideos.length }} / {{ videos.length }} 个视频</span>
+              </div>
+              <div>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">稍后再看</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">保存你想稍后观看的视频</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="glass-card px-4 py-2.5 flex items-center gap-3">
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">视频总数</span>
+                  <span class="text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">{{ videos.length }}</span>
+                </div>
+                <div class="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">当前显示</span>
+                  <span class="text-lg font-bold text-accent leading-tight">{{ filteredVideos.length }}</span>
+                </div>
+                <div v-if="syncing" class="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
+                <div v-if="syncing" class="flex items-center gap-1.5 text-accent">
+                  <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span class="text-xs font-medium">同步中</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card overflow-hidden">
+          <div class="border-b border-glass-border px-5 py-3.5 flex items-center justify-between bg-white/30 dark:bg-white/5">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">视频列表</h2>
+            </div>
+            <div class="flex items-center space-x-3">
               <button
                 v-if="!selectMode && videos.length > 0"
                 @click="enterSelectMode"
-                class="px-3 py-1 text-xs rounded-md border border-[#fb7299] text-[#fb7299] hover:bg-[#fb7299]/10 transition-colors"
+                class="px-4 py-1.5 text-xs font-medium rounded-xl bg-accent/10 text-accent hover:bg-accent/20 transition-all duration-200 flex items-center gap-1.5"
               >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
                 批量管理
               </button>
             </div>
           </div>
 
-          <div v-if="selectMode" class="border-b border-gray-200 dark:border-gray-700 px-4 py-2 bg-[#fb7299]/5 flex items-center justify-between flex-wrap gap-2">
-            <div class="flex items-center space-x-3">
-              <label class="flex items-center space-x-1.5 cursor-pointer">
+          <div v-if="selectMode" class="border-b border-glass-border px-5 py-3 bg-gradient-to-r from-accent/10 to-transparent dark:from-accent/15 dark:to-transparent flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center space-x-2 cursor-pointer group">
                 <input
                   type="checkbox"
                   :checked="allFilteredSelected"
                   :indeterminate.prop="someFilteredSelected"
                   @change="toggleSelectAllFiltered"
-                  class="w-3.5 h-3.5 rounded border-gray-300 text-[#fb7299] focus:ring-[#fb7299]"
+                  class="w-4 h-4 rounded-lg border-gray-300 dark:border-gray-600 text-accent focus:ring-accent focus:ring-offset-0 transition-colors"
                 />
-                <span class="text-xs text-gray-700 dark:text-gray-300">全选当前 ({{ filteredVideos.length }})</span>
+                <span class="text-sm text-gray-700 dark:text-gray-300 font-medium group-hover:text-accent transition-colors">全选当前 ({{ filteredVideos.length }})</span>
               </label>
-              <span class="text-xs text-gray-500 dark:text-gray-400">已选 {{ selectedBvids.size }} 个</span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-accent/15 text-accent text-xs font-semibold rounded-lg">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                已选 {{ selectedBvids.size }} 个
+              </span>
             </div>
             <div class="flex items-center space-x-2">
               <button
                 @click="batchDeleteSelected"
                 :disabled="selectedBvids.size === 0 || deleting"
-                class="px-3 py-1 text-xs rounded-md bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-1"
+                class="px-4 py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-1.5 shadow-md shadow-red-500/20"
               >
-                <svg v-if="deleting" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                <svg v-if="deleting" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <svg v-else class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 <span>{{ deleting ? '删除中...' : '删除选中' }}</span>
               </button>
               <button
                 @click="exitSelectMode"
                 :disabled="deleting"
-                class="px-3 py-1 text-xs rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                class="px-4 py-1.5 text-xs font-semibold rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-all duration-200"
               >
                 取消
               </button>
@@ -71,42 +121,53 @@
             :all-owners="allOwners"
           />
 
-          <div class="p-5">
+          <div class="p-6">
             <div v-if="loading" class="flex justify-center py-20">
-              <div class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 rounded-md shadow text-gray-900 dark:text-gray-100">
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-[#fb7299]" fill="none" viewBox="0 0 24 24">
+              <div class="glass-card px-6 py-4 flex items-center gap-3">
+                <svg class="animate-spin h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>加载中...</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">加载中...</span>
               </div>
             </div>
 
             <div v-else-if="error" class="text-center py-20">
-              <svg class="w-16 h-16 mx-auto text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <p class="mt-4 text-red-500">{{ error }}</p>
+              <div class="w-20 h-20 mx-auto rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-4">
+                <svg class="w-10 h-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <p class="text-red-500 dark:text-red-400 font-medium">{{ error }}</p>
               <button
                 @click="fetchWatchLater"
-                class="mt-4 px-4 py-2 bg-[#fb7299] text-white rounded-md hover:bg-[#fb7299]/90 transition-colors"
+                class="mt-5 px-5 py-2.5 bg-gradient-to-r from-accent to-pink-500 text-white rounded-xl hover:from-accent/90 hover:to-pink-500/90 transition-all duration-200 font-medium shadow-lg shadow-accent/20"
               >
                 重试
               </button>
             </div>
 
             <div v-else-if="videos.length === 0" class="text-center py-20">
-              <svg class="w-16 h-16 mx-auto text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p class="mt-4 text-gray-500 dark:text-gray-400">稍后再看列表为空</p>
+              <div class="w-20 h-20 mx-auto rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                <svg class="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300">稍后再看列表为空</h3>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">在 B 站添加视频到稍后再看吧</p>
             </div>
 
             <div v-else-if="filteredVideos.length === 0" class="text-center py-20">
-              <p class="text-gray-500 dark:text-gray-400">没有匹配的视频</p>
+              <div class="w-20 h-20 mx-auto rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                <svg class="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300">没有匹配的视频</h3>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">尝试调整筛选条件</p>
             </div>
 
-            <div v-else class="grid gap-4 px-4 mx-auto" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+            <div v-else class="grid gap-3 stagger-children" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
               <VideoGridCard
                 v-for="video in filteredVideos"
                 :key="video.bvid"

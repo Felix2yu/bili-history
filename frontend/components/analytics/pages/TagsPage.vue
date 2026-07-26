@@ -1,7 +1,7 @@
 <!-- 标签分析页组件 -->
 <template>
   <div class="space-y-6" v-if="viewingData">
-    <h3 class="text-4xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+    <h3 class="text-4xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
       标签分析
     </h3>
 
@@ -15,7 +15,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- 标签分布图表 -->
       <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-        <h4 class="text-xl font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-4">观看分布</h4>
+        <h4 class="text-xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-4">观看分布</h4>
         <div class="h-[280px]">
           <v-chart ref="distributionChartRef" class="h-full w-full" :option="tagDistributionOption" autoresize />
         </div>
@@ -23,7 +23,7 @@
 
       <!-- 标签完成率图表 -->
       <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-        <h4 class="text-xl font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-4">完成率排行</h4>
+        <h4 class="text-xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-4">完成率排行</h4>
         <div class="h-[280px]">
           <v-chart ref="completionChartRef" class="h-full w-full" :option="tagCompletionOption" autoresize />
         </div>
@@ -38,6 +38,7 @@ import gsap from 'gsap'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts/core'
 import { useDarkMode } from '~/stores/darkMode'
+import { getChartColor, getChartColors } from '~/utils/chartColors'
 
 const props = defineProps({
   viewingData: {
@@ -74,7 +75,7 @@ const tagDistributionOption = computed(() => {
         type: 'shadow'
       },
       backgroundColor: tooltipBg,
-      borderColor: '#fb7299',
+      borderColor: 'var(--accent)',
       textStyle: { color: tooltipText }
     },
     grid: {
@@ -100,15 +101,7 @@ const tagDistributionOption = computed(() => {
     series: [{
       name: '视频数量',
       type: 'bar',
-      data: data.map((item, index) => ({
-        value: item.value,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
-            { offset: 0, color: `rgba(251, 114, 153, ${Math.max(0.4, 0.9 - index * 0.05)})` },
-            { offset: 1, color: `rgba(252, 155, 122, ${Math.max(0.4, 0.9 - index * 0.05)})` }
-          ])
-        }
-      })),
+      data: data.map((item, index) => ({ value: item.value, itemStyle: { color: getChartColor(index) } })),
       label: {
         show: true,
         position: 'right',
@@ -144,7 +137,7 @@ const tagCompletionOption = computed(() => {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
       backgroundColor: tooltipBg,
-      borderColor: '#fb7299',
+      borderColor: 'var(--accent)',
       textStyle: { color: tooltipText },
       formatter: (params) => {
         const data = params[0].data
@@ -180,12 +173,7 @@ const tagCompletionOption = computed(() => {
       data: data.map((item, index) => ({
         value: item.completion,
         count: item.count,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
-            { offset: 0, color: `rgba(64, 169, 255, ${Math.max(0.4, 0.9 - index * 0.05)})` },
-            { offset: 1, color: `rgba(128, 208, 255, ${Math.max(0.4, 0.9 - index * 0.05)})` }
-          ])
-        }
+        itemStyle: { color: getChartColor(index) }
       })),
       label: {
         show: true,
@@ -214,6 +202,6 @@ onMounted(() => {
 // 格式化洞察文本，为数字添加颜色
 const formatInsightText = (text) => {
   if (!text) return '';
-  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-[#fb7299]">$1</span>')
+  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-accent">$1</span>')
 }
 </script> 

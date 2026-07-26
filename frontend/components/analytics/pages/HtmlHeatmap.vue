@@ -62,7 +62,7 @@
         :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px', transform: 'translate(-50%, -100%)' }"
       >
         <div class="font-medium">{{ tooltip.cell.date }}</div>
-        <div class="text-[#fb7299]">{{ tooltip.cell.count }} 个视频</div>
+        <div class="text-accent">{{ tooltip.cell.count }} 个视频</div>
       </div>
     </Teleport>
   </div>

@@ -11,7 +11,7 @@
         <button
           v-if="item.id_str"
           type="button"
-          class="text-[11px] text-[#fb7299] hover:underline"
+          class="text-[11px] text-accent hover:underline"
           @click="openLink(opusUrl)"
         >查看动态</button>
         <button

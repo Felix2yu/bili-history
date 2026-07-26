@@ -41,7 +41,7 @@
         <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
           <span
             v-if="video.main_category || video.tag_name"
-            class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#fb7299]/10 text-[#fb7299]"
+            class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent"
           >
             {{ video.main_category || video.tag_name }}
           </span>
@@ -65,7 +65,7 @@
           <div class="w-16 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
               class="h-full rounded-full transition-all duration-300"
-              :class="completionRate >= 90 ? 'bg-green-500' : completionRate >= 50 ? 'bg-[#fb7299]' : 'bg-gray-400'"
+              :class="completionRate >= 90 ? 'bg-green-500' : completionRate >= 50 ? 'bg-accent' : 'bg-gray-400'"
               :style="{ width: `${Math.min(completionRate, 100)}%` }"
             ></div>
           </div>

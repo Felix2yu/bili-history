@@ -3,7 +3,7 @@
     <!-- 页面标题 -->
     <div class="flex items-center justify-between mb-8">
       <div class="flex items-center space-x-3 text-gray-900 dark:text-gray-100">
-        <svg class="w-7 h-7 text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="w-7 h-7 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
         <h1 class="text-2xl font-medium">我的备注</h1>
@@ -36,7 +36,7 @@
               <!-- 观看进度条 -->
               <div class="absolute bottom-0 left-0 w-full h-1 bg-gray-200 dark:bg-gray-700">
                 <div
-                  class="h-full bg-[#fb7299]"
+                  class="h-full bg-accent"
                   :style="{ width: getProgressWidth(record.progress, record.duration) }"
                 ></div>
               </div>
@@ -62,7 +62,7 @@
               <span>{{ formatTimestamp(record.view_at) }}</span>
               <button
                 @click="openVideo(record)"
-                class="inline-flex items-center space-x-1 text-[#fb7299] hover:text-[#fb7299]/80 transition-colors duration-200"
+                class="inline-flex items-center space-x-1 text-accent hover:text-accent/80 transition-colors duration-200"
               >
                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -100,7 +100,7 @@
       <h3 class="text-xl font-medium text-gray-600 dark:text-gray-300 mb-2">暂无备注</h3>
       <p class="text-gray-500 dark:text-gray-400 mb-6">当你添加备注后，将在这里显示</p>
       <button 
-        class="px-4 py-2 bg-[#fb7299] text-white rounded-md hover:bg-[#fb7299]/90 transition-colors duration-200 flex items-center space-x-2"
+        class="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 transition-colors duration-200 flex items-center space-x-2"
         @click="$router.push('/')">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -280,7 +280,7 @@ defineOptions({
 
 :deep(.remarks-field .van-field__control:focus) {
   background-color: rgba(251, 114, 153, 0.05);
-  border-color: #fb7299;
+  border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(251, 114, 153, 0.1);
   outline: none;
 }
@@ -311,7 +311,7 @@ defineOptions({
 
 :deep(.dark .remarks-field .van-field__control:focus) {
   background-color: rgba(251, 114, 153, 0.08);
-  border-color: #fb7299;
+  border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(251, 114, 153, 0.15);
   outline: none;
 }

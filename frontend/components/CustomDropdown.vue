@@ -5,7 +5,7 @@
       @click.stop="toggleDropdown" 
       type="button"
       :class="[
-        'custom-dropdown-trigger w-full py-1.5 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-xs text-gray-800 dark:text-gray-200 focus:border-[#fb7299] focus:outline-none focus:ring focus:ring-[#fb7299]/20 flex items-center justify-between bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200',
+        'custom-dropdown-trigger w-full py-1.5 px-2 border border-gray-300 dark:border-gray-600 rounded-md text-xs text-gray-800 dark:text-gray-200 focus:border-accent focus:outline-none focus:ring focus:ring-accent/20 flex items-center justify-between bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200',
         customClass,
         'whitespace-nowrap overflow-hidden'
       ]"
@@ -13,7 +13,7 @@
       <slot name="trigger-content">
         <span class="truncate mr-1">{{ selectedText }}</span>
       </slot>
-      <svg class="w-3 h-3 text-[#fb7299] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg class="w-3 h-3 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
       </svg>
     </button>
@@ -31,8 +31,8 @@
             v-for="(option, index) in options" 
             :key="index"
             @click.stop="selectOption(option.value)"
-            class="w-full px-2 py-1 text-xs text-left hover:bg-[#fb7299]/5 hover:text-[#fb7299] transition-colors flex items-center whitespace-nowrap"
-            :class="{'text-[#fb7299] bg-[#fb7299]/5 font-medium': modelValue === option.value}"
+            class="w-full px-2 py-1 text-xs text-left hover:bg-accent/5 hover:text-accent transition-colors flex items-center whitespace-nowrap"
+            :class="{'text-accent bg-accent/5 font-medium': modelValue === option.value}"
           >
             {{ option.label }}
           </button>

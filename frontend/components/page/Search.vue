@@ -13,8 +13,8 @@
 
           <!-- 显示总条数，和输入框左端对齐 -->
           <p class="p-1.5 text-lg text-gray-700 dark:text-gray-300 lm:text-sm">
-            共 <span class="text-[#fb7299]">{{ totalResults }}</span> 条数据和
-            <span class="text-[#fb7299]">{{ keyword }}</span> 相关
+            共 <span class="text-accent">{{ totalResults }}</span> 条数据和
+            <span class="text-accent">{{ keyword }}</span> 相关
           </p>
         </div>
       </div>

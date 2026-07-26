@@ -57,7 +57,7 @@
             <p class="text-white/70 mb-4">{{ errorMessage }}</p>
             <button 
               @click="handleClose"
-              class="px-4 py-2 bg-[#fb7299] text-white rounded-md hover:bg-[#fb7299]/90 transition-colors"
+              class="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 transition-colors"
             >
               关闭
             </button>

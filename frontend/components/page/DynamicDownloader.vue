@@ -66,7 +66,7 @@
       <div v-if="hostsLoading" class="text-xs text-gray-400">加载中...</div>
       <div v-else>
         <div v-if="hosts.length" class="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-          <div v-for="h in hosts" :key="h.host_mid" class="group border rounded-md p-2 flex items-center space-x-2 hover:border-[#fb7299] cursor-pointer dark:border-gray-700"
+          <div v-for="h in hosts" :key="h.host_mid" class="group border rounded-md p-2 flex items-center space-x-2 hover:border-accent cursor-pointer dark:border-gray-700"
                @click="selectHost(h.host_mid)">
             <img :src="h.face_path ? (h.face_path.startsWith('http') ? h.face_path : toStaticUrl(h.face_path)) : ''" class="w-9 h-9 rounded-full object-cover border" alt="face" loading="lazy" />
             <div class="min-w-0 flex-1">

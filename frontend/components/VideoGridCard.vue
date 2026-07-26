@@ -9,7 +9,7 @@
         type="checkbox"
         :checked="isSelected"
         @click.stop="$emit('toggle-select', video)"
-        class="w-4 h-4 rounded border-gray-300 text-[#fb7299] focus:ring-[#fb7299] bg-white/90"
+        class="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent bg-white/90"
       />
     </div>
 
@@ -27,7 +27,7 @@
 
       <slot name="cover-top-left" :video="video">
         <div v-if="showCategory && categoryName"
-             class="absolute top-1 left-1 bg-[#fb7299]/80 px-1 py-0.5 rounded text-white text-[10px]"
+             class="absolute top-1 left-1 bg-accent/80 px-1 py-0.5 rounded text-white text-[10px]"
              :class="selectMode ? 'ml-6' : ''">
           {{ categoryName }}
         </div>
@@ -45,7 +45,7 @@
 
       <div v-if="progress !== undefined && progress !== null" class="absolute bottom-0 left-0 w-full">
         <div class="absolute bottom-0 left-0 h-0.5 w-full bg-black/20">
-          <div class="h-full bg-[#fb7299] rounded-full" :style="{ width: progressWidth }"></div>
+          <div class="h-full bg-accent rounded-full" :style="{ width: progressWidth }"></div>
         </div>
       </div>
 
@@ -80,7 +80,7 @@
           @click.stop="handleOwnerClick"
         />
         <span
-          class="text-[10px] text-gray-600 dark:text-gray-400 truncate cursor-pointer hover:text-[#fb7299] transition-colors"
+          class="text-[10px] text-gray-600 dark:text-gray-400 truncate cursor-pointer hover:text-accent transition-colors"
           @click.stop="handleOwnerClick"
           :title="ownerName"
         >
@@ -200,10 +200,10 @@ const cardClasses = computed(() => {
 
   if (props.selectMode) {
     return props.isSelected
-      ? `${base} border-[#fb7299] ring-1 ring-[#fb7299]/40`
+      ? `${base} border-accent ring-1 ring-accent/40`
       : `${base} border-gray-200/50 dark:border-gray-700/50`
   }
-  return `${base} border-gray-200/50 dark:border-gray-700/50 hover:border-[#fb7299] hover:shadow-sm`
+  return `${base} border-gray-200/50 dark:border-gray-700/50 hover:border-accent hover:shadow-sm`
 })
 
 const handleClick = () => {

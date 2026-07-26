@@ -8,7 +8,7 @@
         <div class="flex flex-col md:flex-row gap-4">
           <!-- 搜索框容器 -->
           <div class="w-full flex">
-            <div class="flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus-within:border-[#fb7299] transition-colors duration-200 flex-grow">
+            <div class="flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus-within:border-accent transition-colors duration-200 flex-grow">
               <!-- 下载类型选择 -->
               <div class="h-10 pl-2 flex items-center">
                 <CustomDropdown
@@ -21,7 +21,7 @@
                   :use-fixed-width="false"
                 >
                   <template #trigger-content>
-                    <span class="text-[#fb7299] text-sm flex items-center whitespace-nowrap">{{ getDownloadTypeLabel(downloadType) }}</span>
+                    <span class="text-accent text-sm flex items-center whitespace-nowrap">{{ getDownloadTypeLabel(downloadType) }}</span>
                   </template>
                 </CustomDropdown>
               </div>
@@ -43,7 +43,7 @@
             <button
               @click="handleDownload"
               :disabled="!inputValue"
-              class="flex-shrink-0 bg-[#fb7299] hover:bg-[#fb7299]/90 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 flex items-center justify-center ml-4"
+              class="flex-shrink-0 bg-accent hover:bg-accent/90 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 flex items-center justify-center ml-4"
             >
               <span class="flex items-center">
                 <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -192,7 +192,7 @@
               <a
                 :href="`https://www.bilibili.com/video/${videoInfo.bvid}`"
                 target="_blank"
-                class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 line-clamp-2 hover:text-[#fb7299] transition-colors duration-200"
+                class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 line-clamp-2 hover:text-accent transition-colors duration-200"
               >
                 {{ videoInfo.title }}
               </a>
@@ -202,7 +202,7 @@
                 <a
                   :href="`https://space.bilibili.com/${videoInfo.owner.mid}`"
                   target="_blank"
-                  class="flex items-center space-x-2 hover:text-[#fb7299] transition-colors duration-200"
+                  class="flex items-center space-x-2 hover:text-accent transition-colors duration-200"
                 >
                   <img
                     v-if="videoInfo.owner.face"
@@ -332,7 +332,7 @@
           <div class="flex flex-col gap-3 mb-6">
             <button
               @click="handleCollectionChoice('single')"
-              class="w-full px-4 py-3 text-left border border-gray-200 dark:border-gray-700 rounded-md hover:border-[#fb7299] hover:bg-[#fb7299]/5 transition-colors"
+              class="w-full px-4 py-3 text-left border border-gray-200 dark:border-gray-700 rounded-md hover:border-accent hover:bg-accent/5 transition-colors"
             >
               <div class="font-medium text-gray-900 dark:text-gray-100">只下载当前视频</div>
               <div class="text-sm text-gray-500 dark:text-gray-400">仅下载当前播放的这个视频</div>
@@ -340,7 +340,7 @@
 
             <button
               @click="handleCollectionChoice('collection')"
-              class="w-full px-4 py-3 text-left border border-gray-200 dark:border-gray-700 rounded-md hover:border-[#fb7299] hover:bg-[#fb7299]/5 transition-colors"
+              class="w-full px-4 py-3 text-left border border-gray-200 dark:border-gray-700 rounded-md hover:border-accent hover:bg-accent/5 transition-colors"
             >
               <div class="font-medium text-gray-900 dark:text-gray-100">下载整个合集</div>
               <div class="text-sm text-gray-500 dark:text-gray-400">下载合集中的所有 {{ collectionInfo.total_videos }} 个视频</div>

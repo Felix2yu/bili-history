@@ -3,7 +3,7 @@
   <div class="space-y-4" v-if="viewingData">
     <div class="max-w-7xl w-full mx-auto px-2 py-6">
       <div class="space-y-4">
-          <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+          <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
             最爱重温的视频
           </h3>
 
@@ -27,12 +27,12 @@
 
           <!-- 第一名 -->
           <div v-else-if="viewingData.watch_counts.most_watched_videos[0]"
-            class="bg-gradient-to-br from-white/50 via-[#fb7299]/10 to-[#fc9b7a]/20 dark:from-white/5 dark:via-[#fb7299]/20 dark:to-[#fc9b7a]/30 backdrop-blur-sm rounded-lg p-3 transform hover:scale-[1.01] transition-transform cursor-pointer video-item relative overflow-hidden border border-gray-300/50 dark:border-gray-500/50"
+            class="bg-gradient-to-br from-white/50 via-accent/10 to-accent/70/20 dark:from-white/5 dark:via-accent/20 dark:to-accent/70/30 backdrop-blur-sm rounded-lg p-3 transform hover:scale-[1.01] transition-transform cursor-pointer video-item relative overflow-hidden border border-gray-300/50 dark:border-gray-500/50"
             @click="handleVideoClick(viewingData.watch_counts.most_watched_videos[0].bvid)"
           >
             <div class="flex items-start space-x-4">
               <div class="flex-1 min-w-0">
-                <div class="text-sm font-medium text-gray-800 dark:text-white hover:text-[#fb7299] transition-colors line-clamp-2">
+                <div class="text-sm font-medium text-gray-800 dark:text-white hover:text-accent transition-colors line-clamp-2">
                   {{ viewingData.watch_counts.most_watched_videos[0].title }}
                 </div>
                 <div class="mt-1.5 text-xs text-gray-600 dark:text-gray-400 flex items-center space-x-4">
@@ -42,7 +42,7 @@
                 </div>
               </div>
               <div class="flex flex-col items-center justify-center bg-white/30 dark:bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-gray-300/50 dark:border-gray-500/50">
-                <div class="text-lg font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent rewatch-interval whitespace-nowrap">
+                <div class="text-lg font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent rewatch-interval whitespace-nowrap">
                   {{ Math.round(viewingData.watch_counts.most_watched_videos[0].avg_interval / 3600 / 24) }}
                 </div>
                 <div class="text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">天/次</div>
@@ -56,7 +56,7 @@
               :key="video.bvid"
               class="backdrop-blur-sm rounded-lg p-2.5 transform hover:scale-[1.02] transition-transform cursor-pointer video-item relative overflow-hidden border border-gray-300/50 dark:border-gray-500/50"
               :class="{
-                'bg-gradient-to-br from-white/50 via-[#fc9b7a]/10 to-[#fcd07a]/20 dark:from-white/5 dark:via-[#fc9b7a]/20 dark:to-[#fcd07a]/30': index === 0,
+                'bg-gradient-to-br from-white/50 via-accent/20/10 to-[#fcd07a]/20 dark:from-white/5 dark:via-accent/20/20 dark:to-[#fcd07a]/30': index === 0,
                 'bg-gradient-to-br from-white/50 via-[#fcd07a]/10 to-[#fce07a]/20 dark:from-white/5 dark:via-[#fcd07a]/20 dark:to-[#fce07a]/30': index === 1,
                 'bg-white/50 dark:bg-white/5': index > 1
               }"
@@ -64,7 +64,7 @@
             >
               <div class="flex items-start space-x-3">
                 <div class="flex-1 min-w-0">
-                  <div class="text-xs font-medium text-gray-800 dark:text-white hover:text-[#fb7299] transition-colors line-clamp-2">
+                  <div class="text-xs font-medium text-gray-800 dark:text-white hover:text-accent transition-colors line-clamp-2">
                     {{ video.title }}
                   </div>
                   <div class="mt-1 text-[10px] text-gray-600 dark:text-gray-400 flex items-center justify-between">
@@ -74,7 +74,7 @@
                   <div class="text-[10px] text-gray-500 dark:text-gray-400">{{ video.tag_name }}</div>
                 </div>
                 <div class="flex flex-col items-center justify-center bg-white/30 dark:bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1 ml-1 border border-gray-300/50 dark:border-gray-500/50">
-                  <div class="text-sm font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent rewatch-interval whitespace-nowrap">
+                  <div class="text-sm font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent rewatch-interval whitespace-nowrap">
                     {{ Math.round(video.avg_interval / 3600 / 24) }}
                   </div>
                   <div class="text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">天/次</div>
@@ -147,7 +147,7 @@ onMounted(() => {
 // 格式化洞察文本，为数字添加颜色
 const formatInsightText = (text) => {
   if (!text) return '';
-  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-[#fb7299]">$1</span>')
+  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-accent">$1</span>')
 }
 </script>
 

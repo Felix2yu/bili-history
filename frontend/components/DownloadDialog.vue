@@ -27,11 +27,11 @@
         <div
           class="px-3 md:px-6 py-2 flex items-center justify-between bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 space-x-2">
           <div class="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
-            <div class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-[#fb7299] font-bold text-lg">👾</div>
+            <div class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-accent font-bold text-lg">👾</div>
             <div class="flex flex-col">
               <p class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">下载功能基于 <a href="https://github.com/Felix2yu/bili-dl"
                                                                                    target="_blank"
-                                                                                   class="text-[#fb7299] hover:text-[#fb7299]/80 font-medium">bili-dl</a>
+                                                                                   class="text-accent hover:text-accent/80 font-medium">bili-dl</a>
               </p>
             </div>
           </div>
@@ -100,7 +100,7 @@
                 <input
                   type="checkbox"
                   v-model="onlyAudio"
-                  class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#fb7299] border-gray-300 rounded focus:ring-[#fb7299]"
+                  class="w-3.5 h-3.5 md:w-4 md:h-4 text-accent border-gray-300 rounded focus:ring-accent"
                 >
                 <span class="text-[10px] md:text-xs text-gray-700 dark:text-gray-300">仅下载音频</span>
               </label>
@@ -108,7 +108,7 @@
               <!-- 画质选择 -->
               <div class="flex-1 min-w-[150px]" v-if="streamOptions.length > 1">
                 <select v-model="selectedStreamId"
-                        class="w-full text-[10px] md:text-xs px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-[#fb7299]">
+                        class="w-full text-[10px] md:text-xs px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-accent">
                   <option v-for="opt in streamOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </option>
@@ -139,7 +139,7 @@
  'text-gray-500 dark:text-gray-400': !downloadStarted,
  'text-red-500 dark:text-red-400': downloadError,
  'text-green-500 dark:text-green-400': !isDownloading && downloadStarted && !downloadError,
- 'text-[#fb7299]': isDownloading
+ 'text-accent': isDownloading
  }">
             {{ downloadStatus }}
           </div>
@@ -154,7 +154,7 @@
             <button
               v-if="!downloadStarted || downloadError"
               @click="startDownload"
-              class="px-3 py-1.5 text-xs font-medium text-white bg-[#fb7299] rounded-md hover:bg-[#fb7299]/90 disabled:opacity-50 transition-colors"
+              class="px-3 py-1.5 text-xs font-medium text-white bg-accent rounded-md hover:bg-accent/90 disabled:opacity-50 transition-colors"
               :disabled="isDownloading"
             >
               {{ downloadError ? '重试' : '开始下载' }}

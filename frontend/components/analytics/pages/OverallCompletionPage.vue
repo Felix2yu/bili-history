@@ -1,7 +1,7 @@
 <!-- 视频整体完成率分析页组件 -->
 <template>
   <div class="space-y-4" v-if="viewingData">
-    <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">
+    <h3 class="text-3xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
       视频完成率分析
     </h3>
 
@@ -12,7 +12,7 @@
         <span v-if="part.type === 'text'" v-html="part.content"></span>
         <span v-else :class="[
           'font-bold',
-          part.metric === 'average' ? 'text-[#fb7299]' : 
+          part.metric === 'average' ? 'text-accent' : 
           part.metric === 'fully' ? 'text-[#fc9b7a]' : 
           'text-[#40a9ff]'
         ]">{{ part.content }}</span>
@@ -22,13 +22,13 @@
     <div class="grid grid-cols-7 gap-4">
       <!-- 完成率分布图表 -->
       <div class="col-span-3 bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-gray-300/50 dark:border-gray-500/50">
-        <h4 class="text-lg font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-3">完成率分布</h4>
+        <h4 class="text-lg font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-3">完成率分布</h4>
         <v-chart ref="completionDistributionRef" class="h-[280px] w-full" :option="completionDistributionOption" autoresize />
       </div>
 
       <!-- 时长分布完成率 -->
       <div class="col-span-4 bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-gray-300/50 dark:border-gray-500/50">
-        <h4 class="text-lg font-bold bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent mb-3">时长分布完成率</h4>
+        <h4 class="text-lg font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-3">时长分布完成率</h4>
         <v-chart ref="durationCompletionRef" class="h-[280px] w-full" :option="durationCompletionOption" autoresize />
       </div>
     </div>
@@ -41,6 +41,7 @@ import gsap from 'gsap'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts/core'
 import { useDarkMode } from '~/stores/darkMode'
+import { getChartColor } from '~/utils/chartColors'
 
 const props = defineProps({
   viewingData: {
@@ -118,7 +119,7 @@ const completionDistributionOption = computed(() => {
     tooltip: {
       trigger: 'item',
       backgroundColor: tooltipBg,
-      borderColor: '#fb7299',
+      borderColor: 'var(--accent)',
       textStyle: { color: tooltipText },
       formatter: '{b}: {c} ({d}%)'
     },
@@ -154,7 +155,7 @@ const completionDistributionOption = computed(() => {
       data: data.map((item, index) => ({
         ...item,
         itemStyle: {
-          color: ['#fb7299', '#fc9b7a', '#ff6b6b', '#ffa07a', '#ff8c94', '#ffb3ba', '#ffc3a0'][index % 7]
+          color: getChartColor(index)
         }
       }))
     }]
@@ -192,7 +193,7 @@ const durationCompletionOption = computed(() => {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
       backgroundColor: tooltipBg,
-      borderColor: '#fb7299',
+      borderColor: 'var(--accent)',
       textStyle: { color: tooltipText },
       formatter: (params) => {
         const completion = params.find(p => p.seriesName === '完成率')
@@ -245,13 +246,10 @@ const durationCompletionOption = computed(() => {
       name: '完成率',
       type: 'bar',
       barWidth: '20%',
-      data: data.map((item, index) => ({
+      data: data.map((item) => ({
         value: item.completion,
         itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 1, 0, 0, [
-            { offset: 0, color: `rgba(251, 114, 153, ${Math.max(0.4, 0.9 - index * 0.2)})` },
-            { offset: 1, color: `rgba(252, 155, 122, ${Math.max(0.4, 0.9 - index * 0.2)})` }
-          ])
+          color: getChartColor(0)
         }
       })),
       label: {
@@ -265,13 +263,10 @@ const durationCompletionOption = computed(() => {
       name: '完整观看率',
       type: 'bar',
       barWidth: '20%',
-      data: data.map((item, index) => ({
+      data: data.map((item) => ({
         value: item.fully_watched_rate,
         itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 1, 0, 0, [
-            { offset: 0, color: `rgba(64, 169, 255, ${Math.max(0.4, 0.9 - index * 0.2)})` },
-            { offset: 1, color: `rgba(128, 208, 255, ${Math.max(0.4, 0.9 - index * 0.2)})` }
-          ])
+          color: getChartColor(2)
         }
       })),
       label: {

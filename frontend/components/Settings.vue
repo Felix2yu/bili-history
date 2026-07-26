@@ -1,72 +1,215 @@
 <template>
-  <div class="min-h-screen bg-gray-50/30 dark:bg-gray-900 pb-20 md:pb-0">
-    <div class="py-2 md:py-4">
-      <div class="mx-auto max-w-4xl px-0 md:px-4">
-        <!-- 设置导航 -->
-        <div class="mb-4 px-3 md:mb-6 md:px-0">
-          <div class="border-b border-glass-border">
-            <nav class="-mb-px flex gap-1 overflow-x-auto py-1" aria-label="设置选项卡">
+  <div class="min-h-screen pb-20 md:pb-0">
+    <!-- 背景装饰 -->
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+      <div class="absolute -top-40 -right-40 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/2 -left-40 w-96 h-96 bg-accent/5 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
+      <!-- 页面标题区 -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
+        <div class="flex items-center gap-4">
+          <div class="relative">
+            <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center shadow-lg shadow-accent/25">
+              <svg class="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">设置</h1>
+            <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-0.5">个性化您的体验，管理数据与通知</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col lg:flex-row gap-6">
+        <!-- 侧边栏导航 (桌面端) -->
+        <nav class="hidden lg:block w-56 flex-shrink-0">
+          <div class="sticky top-6 space-y-1">
+            <button
+              v-for="(tab, index) in settingTabs"
+              :key="index"
+              @click="activeTab = tab.key"
+              class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200"
+              :class="activeTab === tab.key
+                ? 'bg-accent/10 text-accent shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'"
+            >
+              <div class="w-5 h-5" v-html="tab.icon"></div>
+              <span>{{ tab.label }}</span>
+            </button>
+          </div>
+        </nav>
+
+        <!-- 移动端标签栏 -->
+        <div class="lg:hidden mb-2">
+          <div class="bg-gray-100 dark:bg-gray-800/60 rounded-2xl p-1.5">
+            <nav class="flex gap-1">
               <button
                 v-for="(tab, index) in settingTabs"
                 :key="index"
                 @click="activeTab = tab.key"
-                class="flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 md:text-sm whitespace-nowrap"
+                class="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-medium transition-all duration-200 whitespace-nowrap"
                 :class="activeTab === tab.key
-                  ? 'bg-accent/10 text-accent'
-                  : 'text-gray-500 hover:bg-white/10 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300'"
+                  ? 'bg-white dark:bg-gray-700 text-accent shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
               >
-                <div class="h-4 w-4 md:h-5 md:w-5" v-html="tab.icon"></div>
+                <div class="w-4 h-4" v-html="tab.icon"></div>
                 <span>{{ tab.label }}</span>
               </button>
             </nav>
           </div>
         </div>
 
-        <!-- 设置内容 -->
-        <div class="space-y-4">
+        <!-- 内容区域 -->
+        <div class="flex-1 min-w-0 space-y-5 md:space-y-6">
           <!-- 基础设置 -->
-          <section v-if="activeTab === 'basic'">
-            <div class="divide-y divide-gray-200 border-y border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 md:rounded-lg md:border md:border-x">
-
-              <!-- MCP配置 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0 flex-1">
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">MCP服务</h3>
-                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">允许AI客户端通过MCP协议读取本地历史记录，开关保存后需重启后端生效</p>
+          <Transition name="fade" mode="out-in">
+            <div v-if="activeTab === 'basic'" key="basic" class="space-y-5 md:space-y-6">
+              <!-- 外观设置卡片 -->
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
+                <div class="px-5 md:px-6 py-5 border-b border-gray-100 dark:border-gray-700/50">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">外观设置</h2>
+                      <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">定制您的视觉体验</p>
+                    </div>
                   </div>
-                  <label
-                    class="relative inline-flex shrink-0 items-center"
-                    :class="(isMcpConfigLoading || isMcpConfigSaving) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'"
-                  >
-                    <input
-                      type="checkbox"
-                      v-model="mcpConfig.enabled"
-                      class="peer sr-only"
-                      :disabled="isMcpConfigLoading || isMcpConfigSaving"
-                      @change="handleMcpEnabledChange"
-                    >
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
-                  </label>
                 </div>
 
-                <div v-if="mcpConfigAvailable" class="mt-3 space-y-3">
-                  <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <!-- 深色模式 -->
+                <div class="px-5 md:px-6 py-4 border-b border-gray-50 dark:border-gray-700/30">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0 flex-1">
+                      <h3 class="text-[13px] md:text-sm font-medium text-gray-900 dark:text-gray-100">深色模式</h3>
+                      <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 md:text-xs">切换应用的显示主题，跟随系统将自动匹配系统设置</p>
+                    </div>
+                    <div class="flex bg-gray-100 dark:bg-gray-700/60 rounded-xl p-0.5 shrink-0">
+                      <button
+                        v-for="mode in darkModeOptions"
+                        :key="mode.value"
+                        @click="darkMode = mode.value; handleDarkModeChange()"
+                        class="px-2.5 md:px-3 py-1.5 text-[11px] md:text-xs font-medium rounded-lg transition-all duration-200"
+                        :class="darkMode === mode.value
+                          ? 'bg-white dark:bg-gray-600 text-accent shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                      >
+                        {{ mode.label }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 主题色 -->
+                <div class="px-5 md:px-6 py-4 md:py-5">
+                  <div class="mb-4">
+                    <h3 class="text-[13px] md:text-sm font-medium text-gray-900 dark:text-gray-100">主题色</h3>
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 md:text-xs">选择您喜欢的主题色彩，打造个性化界面</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2.5 md:gap-3">
+                    <button
+                      v-for="theme in themePresets"
+                      :key="theme.id"
+                      @click="handleThemeColorChange(theme.id)"
+                      class="relative group flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all duration-200"
+                      :class="themeColor === theme.id
+                        ? 'bg-accent/10 ring-2 ring-accent ring-offset-2 ring-offset-white dark:ring-offset-gray-800'
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'"
+                    >
+                      <div
+                        class="w-9 h-9 md:w-10 md:h-10 rounded-full shadow-md transition-all duration-200 group-hover:scale-110 group-hover:shadow-lg flex items-center justify-center"
+                        :style="{ background: `linear-gradient(135deg, ${theme.color} 0%, ${theme.color}dd 100%)` }"
+                      >
+                        <svg v-if="themeColor === theme.id" class="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span class="text-[10px] md:text-[11px] text-gray-600 dark:text-gray-400 font-medium">{{ theme.name }}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 通用设置卡片 -->
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
+                <div class="px-5 md:px-6 py-5 border-b border-gray-100 dark:border-gray-700/50">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                      </svg>
+                    </div>
                     <div>
-                      <label class="mb-1 block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">MCP URL</label>
+                      <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">通用设置</h2>
+                      <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">界面显示与数据同步选项</p>
+                    </div>
+                  </div>
+                </div>
+
+                <SettingToggle label="使用本地图片源" description="选择使用本地图片源或在线图片源，本地图片源适合离线访问" :modelValue="useLocalImages" @update:modelValue="useLocalImages = $event; handleImageSourceChange()" />
+                <SettingToggle label="侧边栏显示" description="设置是否默认显示侧边栏，关闭后侧边栏将自动收起" :modelValue="showSidebar" @update:modelValue="showSidebar = $event; handleSidebarChange()" />
+                <SettingToggle label="首页默认网格布局" description="设置历史记录页面的默认展示方式，开启为网格视图，关闭为列表视图" :modelValue="isGridLayout" @update:modelValue="isGridLayout = $event; handleLayoutChange()" />
+                <SettingToggle label="同步已删除记录" description="开启后将同步已删除的历史记录，建议仅在需要恢复记录时开启" :modelValue="syncDeleted" @update:modelValue="syncDeleted = $event; handleSyncDeletedChange()" />
+                <SettingToggle label="同步删除B站历史记录" description="开启后删除本地历史记录时，同时删除B站服务器上的对应记录" :modelValue="syncDeleteToBilibili" @update:modelValue="syncDeleteToBilibili = $event; handleSyncDeleteToBilibiliChange()" />
+                <SettingToggle label="启动时数据完整性校验" description="开启后每次启动应用时都会进行数据完整性校验，关闭可加快启动速度" :modelValue="checkIntegrityOnStartup" @update:modelValue="checkIntegrityOnStartup = $event; handleIntegrityCheckChange()" />
+              </div>
+
+              <!-- MCP服务卡片 -->
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
+                <div class="px-5 md:px-6 py-5 border-b border-gray-100 dark:border-gray-700/50">
+                  <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 12l3 3m0 0l3-3m-3 3V6" />
+                        </svg>
+                      </div>
+                      <div class="min-w-0">
+                        <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white truncate">MCP服务</h2>
+                        <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">允许AI客户端通过MCP协议读取本地历史记录</p>
+                      </div>
+                    </div>
+                    <label
+                      class="relative inline-flex shrink-0 items-center"
+                      :class="(isMcpConfigLoading || isMcpConfigSaving) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'"
+                    >
+                      <input
+                        type="checkbox"
+                        v-model="mcpConfig.enabled"
+                        class="peer sr-only"
+                        :disabled="isMcpConfigLoading || isMcpConfigSaving"
+                        @change="handleMcpEnabledChange"
+                      >
+                      <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-accent peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-gray-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <div v-if="mcpConfigAvailable" class="px-5 md:px-6 py-5 space-y-4 md:space-y-5">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="mb-1.5 block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">MCP URL</label>
                       <div class="flex gap-2">
                         <input
                           :value="mcpUrl"
                           readonly
                           type="text"
-                          class="block min-w-0 flex-1 rounded-md border-gray-300 bg-gray-50 text-[11px] shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
+                          class="block min-w-0 flex-1 rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[11px] md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                         />
                         <button
                           @click="copyText(mcpUrl, 'MCP URL')"
-                          class="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#fb7299]/5 px-2.5 py-2 text-[11px] font-medium text-[#fb7299] hover:bg-[#fb7299]/10 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:text-sm"
+                          class="inline-flex shrink-0 items-center justify-center rounded-xl bg-accent/10 px-3 text-[11px] font-medium text-accent hover:bg-accent/20 md:text-sm transition-colors"
                           title="复制MCP URL"
                         >
-                          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
                         </button>
@@ -74,22 +217,22 @@
                     </div>
 
                     <div>
-                      <label class="mb-1 block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">Bearer Token</label>
+                      <label class="mb-1.5 block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">Bearer Token</label>
                       <div class="flex gap-2">
                         <input
                           :value="mcpConfig.token"
                           readonly
                           type="password"
-                          class="block min-w-0 flex-1 rounded-md border-gray-300 bg-gray-50 text-[11px] shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
+                          class="block min-w-0 flex-1 rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[11px] md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                           placeholder="未配置Token"
                         />
                         <button
                           @click="copyText(mcpConfig.token, 'Bearer Token')"
                           :disabled="!mcpConfig.token"
-                          class="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#fb7299]/5 px-2.5 py-2 text-[11px] font-medium text-[#fb7299] hover:bg-[#fb7299]/10 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:text-sm"
+                          class="inline-flex shrink-0 items-center justify-center rounded-xl bg-accent/10 px-3 text-[11px] font-medium text-accent hover:bg-accent/20 disabled:opacity-50 disabled:cursor-not-allowed md:text-sm transition-colors"
                           title="复制Bearer Token"
                         >
-                          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
                         </button>
@@ -98,11 +241,11 @@
                   </div>
 
                   <div>
-                    <div class="mb-1 flex items-center justify-between gap-2">
+                    <div class="mb-1.5 flex items-center justify-between gap-2">
                       <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">AI连接提示词</label>
                       <button
                         @click="copyText(mcpConnectionPrompt, 'AI连接提示词')"
-                        class="inline-flex shrink-0 items-center rounded-lg bg-[#fb7299]/5 px-2.5 py-1.5 text-[11px] font-medium text-[#fb7299] hover:bg-[#fb7299]/10 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:text-sm"
+                        class="inline-flex shrink-0 items-center rounded-xl bg-accent/10 px-3 py-1.5 text-[11px] font-medium text-accent hover:bg-accent/20 md:text-sm transition-colors"
                       >
                         <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -113,18 +256,18 @@
                     <textarea
                       :value="mcpConnectionPrompt"
                       readonly
-                      rows="9"
-                      class="block w-full resize-y rounded-md border-gray-300 bg-gray-50 text-[11px] leading-5 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
+                      rows="8"
+                      class="block w-full resize-y rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[11px] leading-5 md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                     ></textarea>
                   </div>
 
                   <div>
-                    <div class="mb-1 flex items-center justify-between gap-2">
+                    <div class="mb-1.5 flex items-center justify-between gap-2">
                       <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">配套 Skill</label>
                       <button
                         @click="copyText(mcpConfig.skill_content, '配套 Skill')"
                         :disabled="!mcpConfig.skill_content"
-                        class="inline-flex shrink-0 items-center rounded-lg bg-[#fb7299]/5 px-2.5 py-1.5 text-[11px] font-medium text-[#fb7299] hover:bg-[#fb7299]/10 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:text-sm"
+                        class="inline-flex shrink-0 items-center rounded-xl bg-accent/10 px-3 py-1.5 text-[11px] font-medium text-accent hover:bg-accent/20 disabled:opacity-50 disabled:cursor-not-allowed md:text-sm transition-colors"
                       >
                         <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -135,209 +278,108 @@
                     <textarea
                       :value="mcpConfig.skill_content || '后端未找到配套 Skill 文件'"
                       readonly
-                      rows="11"
-                      class="block w-full resize-y rounded-md border-gray-300 bg-gray-50 text-[11px] leading-5 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 md:text-sm"
+                      rows="10"
+                      class="block w-full resize-y rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[11px] leading-5 md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                     ></textarea>
                   </div>
                 </div>
 
-                <p v-else-if="!isMcpConfigLoading" class="mt-2 text-[10px] text-amber-600 dark:text-amber-300 md:text-sm">
+                <p v-else-if="!isMcpConfigLoading" class="px-5 md:px-6 py-4 text-[11px] md:text-sm text-amber-600 dark:text-amber-300">
                   配置详情加载失败，请确保后端已更新并重启。
                 </p>
               </div>
 
-              <!-- 图片源设置 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex-1">
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">使用本地图片源</h3>
-                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">选择使用本地图片源或在线图片源，本地图片源适合离线访问</p>
-                  </div>
-                  <label class="relative inline-flex shrink-0 cursor-pointer items-center">
-                    <input type="checkbox" v-model="useLocalImages" class="peer sr-only" @change="handleImageSourceChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
-                  </label>
-                </div>
+              <!-- 通知设置卡片 -->
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
+                <ShoutrrrSettings />
               </div>
 
-              <!-- 深色模式 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex-1">
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">深色模式</h3>
-                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">切换应用的显示主题，跟随系统将自动匹配系统设置</p>
-                  </div>
-                  <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5">
-                    <button
-                      v-for="mode in darkModeOptions"
-                      :key="mode.value"
-                      @click="darkMode = mode.value; handleDarkModeChange()"
-                      class="px-2.5 py-1 text-[11px] font-medium rounded-md transition-all duration-200"
-                      :class="darkMode === mode.value
-                        ? 'bg-white dark:bg-gray-600 text-[#fb7299] shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-                    >
-                      {{ mode.label }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 侧边栏设置 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex-1">
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">侧边栏显示</h3>
-                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">设置是否默认显示侧边栏，关闭后侧边栏将自动收起</p>
-                  </div>
-                  <label class="relative inline-flex shrink-0 cursor-pointer items-center">
-                    <input type="checkbox" v-model="showSidebar" class="peer sr-only" @change="handleSidebarChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- 首页默认布局设置 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex-1">
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">首页默认布局</h3>
-                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">设置历史记录页面的默认展示方式，开启为网格视图，关闭为列表视图</p>
-                  </div>
-                  <label class="relative inline-flex shrink-0 cursor-pointer items-center">
-                    <input type="checkbox" v-model="isGridLayout" class="peer sr-only" @change="handleLayoutChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- 同步已删除记录 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex-1">
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">同步已删除记录</h3>
-                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">开启后将同步已删除的历史记录，建议仅在需要恢复记录时开启</p>
-                  </div>
-                  <label class="relative inline-flex shrink-0 cursor-pointer items-center">
-                    <input type="checkbox" v-model="syncDeleted" class="peer sr-only" @change="handleSyncDeletedChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- 同步删除B站历史记录 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex-1">
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">同步删除B站历史记录</h3>
-                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">开启后删除本地历史记录时，同时删除B站服务器上的对应记录</p>
-                  </div>
-                  <label class="relative inline-flex shrink-0 cursor-pointer items-center">
-                    <input type="checkbox" v-model="syncDeleteToBilibili" class="peer sr-only" @change="handleSyncDeleteToBilibiliChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- 启动时数据完整性校验 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex-1">
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">启动时数据完整性校验</h3>
-                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">开启后每次启动应用时都会进行数据完整性校验，关闭可加快启动速度</p>
-                  </div>
-                  <label class="relative inline-flex shrink-0 cursor-pointer items-center">
-                    <input type="checkbox" v-model="checkIntegrityOnStartup" class="peer sr-only" @change="handleIntegrityCheckChange">
-                    <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-0 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#fb7299] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-[#fb7299]/20 dark:bg-gray-600"></div>
-                  </label>
-                </div>
-              </div>
-
-
-            </div>
-          </section>
-
-          <!-- Shoutrrr通知配置 -->
-          <section v-if="activeTab === 'basic'">
-            <div class="divide-y divide-gray-200 border-y border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 md:rounded-lg md:border md:border-x">
-              <ShoutrrrSettings />
-            </div>
-          </section>
-
-          <!-- 高级设置（折叠） -->
-          <section v-if="activeTab === 'basic'">
-            <div class="bg-white dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 dark:md:border-gray-700">
-              <button
-                @click="showAdvanced = !showAdvanced"
-                class="flex w-full items-center justify-between p-3 md:p-4 text-left transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                <div>
-                  <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">高级设置</h3>
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">服务器地址配置，通常无需修改</p>
-                </div>
-                <svg
-                  class="h-5 w-5 text-gray-400 transition-transform duration-200"
-                  :class="{ 'rotate-180': showAdvanced }"
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              <!-- 高级设置卡片（折叠） -->
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
+                <button
+                  @click="showAdvanced = !showAdvanced"
+                  class="flex w-full items-center justify-between px-5 md:px-6 py-5 text-left transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                 >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              <div v-if="showAdvanced" class="border-t border-gray-200 dark:border-gray-700 p-3 md:p-4">
-                <div class="mb-2">
-                  <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">API 服务器地址</label>
-                  <p class="text-[10px] text-gray-500 dark:text-gray-400 md:text-xs">修改后将自动刷新页面，仅本地开发时需要修改</p>
-                </div>
-                <div class="flex gap-2">
-                  <input
-                    v-model="serverUrl"
-                    type="text"
-                    class="block min-w-0 flex-1 rounded-md border-gray-300 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-[11px] md:text-sm"
-                    placeholder="例如：http://localhost:8899"
-                  />
-                  <div class="flex shrink-0 gap-1.5 md:gap-2">
-                    <button
-                      @click="resetServerUrl"
-                      class="inline-flex items-center justify-center rounded-lg bg-[#fb7299]/5 px-2.5 py-2 text-[11px] font-medium text-[#fb7299] md:text-sm hover:bg-[#fb7299]/10 dark:bg-[#fb7299]/10 dark:hover:bg-[#fb7299]/20 md:px-3"
-                    >
-                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
                       </svg>
-                    </button>
-                    <button
-                      @click="saveServerUrl"
-                      class="inline-flex items-center justify-center rounded-lg bg-[#fb7299] px-3 py-2 text-[11px] font-medium text-white md:text-sm hover:bg-[#fb7299]/90 md:px-4"
-                    >
-                      保存
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- 数据管理 -->
-          <section v-if="activeTab === 'data'">
-            <div class="divide-y divide-gray-200 border-y border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 md:rounded-lg md:border md:border-x">
-              <!-- 数据导出 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div>
-                  <div class="mb-3 flex items-center justify-between md:mb-4">
+                    </div>
                     <div>
-                      <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">数据导出</h3>
-                      <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">导出历史记录数据到Excel文件，支持按年份、月份或日期范围导出</p>
+                      <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">高级设置</h2>
+                      <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">服务器地址配置，通常无需修改</p>
                     </div>
                   </div>
+                  <svg
+                    class="h-5 w-5 text-gray-400 transition-transform duration-200"
+                    :class="{ 'rotate-180': showAdvanced }"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <Transition name="slide">
+                  <div v-if="showAdvanced" class="border-t border-gray-100 dark:border-gray-700/50 px-5 md:px-6 py-5">
+                    <div class="mb-3">
+                      <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">API 服务器地址</label>
+                      <p class="text-[11px] text-gray-500 dark:text-gray-400 md:text-xs mt-0.5">修改后将自动刷新页面，仅本地开发时需要修改</p>
+                    </div>
+                    <div class="flex gap-2">
+                      <input
+                        v-model="serverUrl"
+                        type="text"
+                        class="block min-w-0 flex-1 rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-[11px] md:text-sm shadow-sm focus:border-accent focus:ring-accent"
+                        placeholder="例如：http://localhost:8899"
+                      />
+                      <div class="flex shrink-0 gap-2">
+                        <button
+                          @click="resetServerUrl"
+                          class="inline-flex items-center justify-center rounded-xl bg-accent/10 px-3 py-2 text-[11px] font-medium text-accent md:text-sm hover:bg-accent/20 transition-colors"
+                        >
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        </button>
+                        <button
+                          @click="saveServerUrl"
+                          class="inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-[11px] font-medium text-white md:text-sm hover:bg-accent/90 transition-colors"
+                        >
+                          保存
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </Transition>
+              </div>
+            </div>
 
-                  <!-- 导出选项 -->
-                  <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 rounded-lg">
+            <!-- 数据管理 -->
+            <div v-if="activeTab === 'data'" key="data" class="space-y-5 md:space-y-6">
+              <!-- 数据导出卡片 -->
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
+                <div class="px-5 md:px-6 py-5 border-b border-gray-100 dark:border-gray-700/50">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">数据导出</h2>
+                      <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">导出历史记录数据到Excel文件</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="px-5 md:px-6 py-5">
+                  <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700/50 p-4 md:p-5 rounded-2xl">
                     <div class="flex flex-wrap items-end gap-4">
-                      <!-- 年份选择 (始终显示) -->
-                      <div class="w-32">
-                        <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">年份</label>
+                      <div class="w-full sm:w-32">
+                        <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">年份</label>
                         <select
                           v-model="exportOptions.year"
-                          class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
+                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm py-2"
                         >
                           <option v-for="year in availableYears" :key="year" :value="year">
                             {{ year }}年
@@ -345,12 +387,11 @@
                         </select>
                       </div>
 
-                      <!-- 导出类型选择 -->
-                      <div class="w-40">
-                        <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">导出类型</label>
+                      <div class="w-full sm:w-40">
+                        <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">导出类型</label>
                         <select
                           v-model="exportOptions.exportType"
-                          class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
+                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm py-2"
                         >
                           <option value="year">全年数据</option>
                           <option value="month">按月份</option>
@@ -358,12 +399,11 @@
                         </select>
                       </div>
 
-                      <!-- 按月选择框 -->
-                      <div v-if="exportOptions.exportType === 'month'" class="w-24">
-                        <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">月份</label>
+                      <div v-if="exportOptions.exportType === 'month'" class="w-full sm:w-28">
+                        <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">月份</label>
                         <select
                           v-model="exportOptions.month"
-                          class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
+                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm py-2"
                         >
                           <option v-for="month in 12" :key="month" :value="month">
                             {{ month }}月
@@ -371,36 +411,37 @@
                         </select>
                       </div>
 
-                      <!-- 日期范围选择框 -->
                       <template v-if="exportOptions.exportType === 'dateRange'">
-                        <div class="w-40">
-                          <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">开始日期</label>
+                        <div class="w-full sm:w-40">
+                          <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">开始日期</label>
                           <input
                             type="date"
                             v-model="exportOptions.startDate"
-                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
+                            class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm py-2"
                           />
                         </div>
 
-                        <div class="w-40">
-                          <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1">结束日期</label>
+                        <div class="w-full sm:w-40">
+                          <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">结束日期</label>
                           <input
                             type="date"
                             v-model="exportOptions.endDate"
-                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-[#fb7299] focus:ring-[#fb7299] text-[11px] md:text-sm"
+                            class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[11px] md:text-sm py-2"
                           />
                         </div>
                       </template>
 
-                      <!-- 导出按钮 -->
                       <button
                         @click="exportAndDownloadExcel"
                         :disabled="isExporting"
-                        class="inline-flex items-center px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-[#fb7299] rounded-lg hover:bg-[#fb7299]/90 disabled:opacity-50 h-10"
+                        class="inline-flex items-center px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-gradient-to-r from-accent to-accent/80 rounded-xl hover:shadow-lg hover:shadow-accent/25 disabled:opacity-50 transition-all"
                       >
                         <svg v-if="isExporting" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg v-else class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
                         </svg>
                         {{ isExporting ? '导出中...' : '导出Excel' }}
                       </button>
@@ -409,42 +450,59 @@
                 </div>
               </div>
 
-              <!-- 数据库下载 -->
-              <div class="p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 md:p-4">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h3 class="text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">数据库下载</h3>
-                    <p class="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400 md:mt-0 md:text-sm">下载完整的SQLite数据库文件，包含所有历史记录数据</p>
+              <!-- 数据库下载卡片 -->
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
+                <div class="px-5 md:px-6 py-5">
+                  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-start gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 class="text-[13px] md:text-sm font-medium text-gray-900 dark:text-gray-100">数据库下载</h3>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 md:text-xs">下载完整的SQLite数据库文件，包含所有历史记录数据</p>
+                      </div>
+                    </div>
+                    <button
+                      @click="downloadSqlite"
+                      class="inline-flex w-full justify-center items-center sm:w-auto px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all"
+                    >
+                      <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
+                      下载SQLite数据库
+                    </button>
                   </div>
-                  <button
-                    @click="downloadSqlite"
-                    class="inline-flex w-full justify-center items-center sm:w-auto px-4 py-2 text-[11px] font-medium text-white md:text-sm bg-[#fb7299] rounded-lg hover:bg-[#fb7299]/90"
-                  >
-                    <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    下载SQLite数据库
-                  </button>
                 </div>
               </div>
-            </div>
 
-            <!-- 危险操作 -->
-            <div class="mt-4">
-              <div class="border-y border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 md:rounded-lg md:border md:border-x">
-                <div class="p-3 transition-colors duration-200 hover:bg-red-50 dark:hover:bg-red-900/20 md:p-4 md:rounded-lg">
-                  <h3 class="mb-2 text-[13px] font-medium text-gray-900 dark:text-gray-100 md:text-base">危险操作</h3>
-                  <div class="flex items-center justify-between p-2 border border-red-100 dark:border-red-900/40 rounded-lg bg-red-50 dark:bg-red-900/10">
+              <!-- 危险操作卡片 -->
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-red-100 dark:border-red-900/30 overflow-hidden">
+                <div class="px-5 md:px-6 py-5">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 class="text-base md:text-lg font-semibold text-red-600 dark:text-red-400">危险操作</h2>
+                      <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">此操作不可逆，请谨慎操作</p>
+                    </div>
+                  </div>
+                  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border border-red-100 dark:border-red-900/40 rounded-2xl bg-red-50/50 dark:bg-red-900/10">
                     <div>
                       <h4 class="text-sm font-medium text-red-700 dark:text-red-300">数据库重置</h4>
-                      <p class="text-xs text-red-600 dark:text-red-300">删除现有数据库并重新导入数据（此操作不可逆）</p>
+                      <p class="text-xs text-red-600 dark:text-red-300/80 mt-0.5">删除现有数据库并重新导入数据（此操作不可逆）</p>
                     </div>
                     <button
                       @click="handleResetDatabase"
-                      class="inline-flex items-center px-3 py-1.5 text-[11px] font-medium text-white md:text-sm bg-red-500 rounded-lg hover:bg-red-600"
+                      class="inline-flex items-center px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-gradient-to-r from-red-500 to-red-600 rounded-xl hover:shadow-lg hover:shadow-red-500/25 transition-all"
                     >
-                      <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                       重置数据库
                     </button>
@@ -452,74 +510,96 @@
                 </div>
               </div>
             </div>
-          </section>
 
-
-
-          <!-- 关于页面 -->
-          <section v-if="activeTab === 'about'">
-            <div class="border-y border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 md:rounded-lg md:border md:border-x md:p-6">
-              <!-- 页面标题 -->
-              <div class="mb-4 md:mb-6">
-                <h1 class="flex items-center text-sm font-bold text-gray-800 dark:text-gray-100 md:text-2xl">
-                  <span class="bg-gradient-to-r from-[#fb7299] to-[#fc9b7a] bg-clip-text text-transparent">关于本项目</span>
-                </h1>
-                <p class="mt-1 text-[10px] text-gray-500 dark:text-gray-400 md:mt-2 md:text-sm">哔哩哔哩历史记录管理与分析工具</p>
-              </div>
-
-              <!-- 项目介绍卡片 -->
-              <div class="mb-5 md:mb-6">
-                <h2 class="mb-2 flex items-center text-[13px] font-medium text-gray-800 dark:text-gray-100 md:mb-4 md:text-xl">
-                  <svg class="mr-1.5 h-3.5 w-3.5 text-[#fb7299] md:mr-2 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  项目简介
-                </h2>
-                <div class="space-y-2 text-[11px] text-gray-600 dark:text-gray-300 md:space-y-3 md:text-sm">
-                  <p>
-                    此项目是一个哔哩哔哩历史记录管理与分析工具，帮助用户更好地管理和分析自己的B站观看历史。基于Vue 3构建，通过现代的界面设计提供强大的功能，包括历史记录查询、视频下载、数据分析等多项功能。
-                  </p>
-
-                  <div class="mt-3 space-y-2 md:mt-4 md:space-y-3">
-                    <div class="flex items-center">
-                      <svg class="mr-1.5 h-3.5 w-3.5 text-[#fb7299] md:mr-2 md:h-5 md:w-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+            <!-- 关于页面 -->
+            <div v-if="activeTab === 'about'" key="about" class="space-y-5 md:space-y-6">
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
+                <div class="px-5 md:px-6 py-8 md:py-10 text-center relative overflow-hidden">
+                  <div class="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent/5"></div>
+                  <div class="relative">
+                    <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center shadow-xl shadow-accent/30">
+                      <svg class="w-8 h-8 md:w-10 md:h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                       </svg>
-                      <span class="w-16 shrink-0 text-gray-500 md:w-24">前端项目</span>
-                      <a href="https://github.com/2977094657/BiliHistoryFrontend" target="_blank" rel="noopener noreferrer" class="break-all text-[#fb7299] hover:underline">https://github.com/2977094657/BiliHistoryFrontend</a>
                     </div>
-                    <div class="flex items-center">
-                      <svg class="mr-1.5 h-3.5 w-3.5 text-[#fb7299] md:mr-2 md:h-5 md:w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <h1 class="text-xl md:text-2xl font-bold">
+                      <span class="bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">BiliHistory</span>
+                    </h1>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-2">哔哩哔哩历史记录管理与分析工具</p>
+                  </div>
+                </div>
+
+                <div class="px-5 md:px-6 py-5 space-y-5 md:space-y-6 border-t border-gray-100 dark:border-gray-700/50">
+                  <div>
+                    <h2 class="mb-3 flex items-center text-[13px] font-medium text-gray-800 dark:text-gray-100 md:mb-4 md:text-base">
+                      <svg class="mr-1.5 h-4 w-4 text-accent md:mr-2 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      项目简介
+                    </h2>
+                    <p class="text-[12px] text-gray-600 dark:text-gray-300 md:text-sm leading-relaxed">
+                      此项目是一个哔哩哔哩历史记录管理与分析工具，帮助用户更好地管理和分析自己的B站观看历史。基于Vue 3构建，通过现代的界面设计提供强大的功能，包括历史记录查询、视频下载、数据分析等多项功能。
+                    </p>
+                  </div>
+
+                  <div class="space-y-2 md:space-y-3">
+                    <div class="flex items-center py-2">
+                      <svg class="mr-2.5 h-4 w-4 text-accent md:mr-3 md:h-5 md:w-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
                       </svg>
-                      <span class="w-16 shrink-0 text-gray-500 md:w-24">后端项目</span>
-                      <a href="https://github.com/2977094657/BilibiliHistoryFetcher" target="_blank" rel="noopener noreferrer" class="break-all text-[#fb7299] hover:underline">https://github.com/2977094657/BilibiliHistoryFetcher</a>
+                      <span class="w-20 shrink-0 text-gray-500 dark:text-gray-400 text-[12px] md:text-sm">前端项目</span>
+                      <a href="https://github.com/2977094657/BiliHistoryFrontend" target="_blank" rel="noopener noreferrer" class="break-all text-accent hover:underline text-[12px] md:text-sm">BiliHistoryFrontend</a>
+                    </div>
+                    <div class="flex items-center py-2">
+                      <svg class="mr-2.5 h-4 w-4 text-accent md:mr-3 md:h-5 md:w-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+                      </svg>
+                      <span class="w-20 shrink-0 text-gray-500 dark:text-gray-400 text-[12px] md:text-sm">后端项目</span>
+                      <a href="https://github.com/2977094657/BilibiliHistoryFetcher" target="_blank" rel="noopener noreferrer" class="break-all text-accent hover:underline text-[12px] md:text-sm">BilibiliHistoryFetcher</a>
                     </div>
                   </div>
                 </div>
               </div>
 
               <!-- 技术致谢卡片 -->
-              <div>
-                <h2 class="mb-2 flex items-center text-[13px] font-medium text-gray-800 dark:text-gray-100 md:mb-4 md:text-xl">
-                  <svg class="mr-1.5 h-3.5 w-3.5 text-[#fb7299] md:mr-2 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                  技术致谢
-                </h2>
-
-                <div class="mt-2 space-y-2 text-[11px] text-gray-600 dark:text-gray-300 md:mt-4 md:space-y-4 md:text-sm">
-                  <ul class="list-disc space-y-1.5 pl-4 md:space-y-2 md:pl-5">
-                    <li><a href="https://github.com/SocialSisterYi/bilibili-API-collect" target="_blank" rel="noopener noreferrer" class="text-[#fb7299] hover:underline">bilibili-API-collect</a> - 没有它就没有这个项目</li>
-                    <li><a href="https://yutto.nyakku.moe/" target="_blank" rel="noopener noreferrer" class="text-[#fb7299] hover:underline">Yutto</a> - 可爱的B站视频下载工具</li>
-                    <li><a href="https://github.com/zhw2590582/ArtPlayer" target="_blank" rel="noopener noreferrer" class="text-[#fb7299] hover:underline">ArtPlayer</a> - 强大且灵活的HTML5视频播放器</li>
-                    <li><a href="https://www.aicu.cc/" target="_blank" rel="noopener noreferrer" class="text-[#fb7299] hover:underline">aicu.cc</a> - 第三方B站用户评论API</li>
-                    <li>所有贡献者</li>
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
+                <div class="px-5 md:px-6 py-5">
+                  <h2 class="mb-4 flex items-center text-[13px] font-medium text-gray-800 dark:text-gray-100 md:text-base">
+                    <svg class="mr-1.5 h-4 w-4 text-accent md:mr-2 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    技术致谢
+                  </h2>
+                  <ul class="space-y-2.5 text-[12px] text-gray-600 dark:text-gray-300 md:text-sm list-none">
+                    <li class="flex items-start gap-2">
+                      <span class="text-accent mt-0.5">•</span>
+                      <a href="https://github.com/SocialSisterYi/bilibili-API-collect" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">bilibili-API-collect</a>
+                      <span class="text-gray-500 dark:text-gray-400">- 没有它就没有这个项目</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-accent mt-0.5">•</span>
+                      <a href="https://yutto.nyakku.moe/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">Yutto</a>
+                      <span class="text-gray-500 dark:text-gray-400">- 可爱的B站视频下载工具</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-accent mt-0.5">•</span>
+                      <a href="https://github.com/zhw2590582/ArtPlayer" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">ArtPlayer</a>
+                      <span class="text-gray-500 dark:text-gray-400">- 强大且灵活的HTML5视频播放器</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-accent mt-0.5">•</span>
+                      <a href="https://www.aicu.cc/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">aicu.cc</a>
+                      <span class="text-gray-500 dark:text-gray-400">- 第三方B站用户评论API</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-accent mt-0.5">•</span>
+                      <span>所有贡献者</span>
+                    </li>
                   </ul>
                 </div>
               </div>
             </div>
-          </section>
+          </Transition>
         </div>
       </div>
     </div>
@@ -548,26 +628,30 @@ import {
   updateAppearanceConfig
 } from '~/utils/api'
 import ShoutrrrSettings from './ShoutrrrSettings.vue'
+import SettingToggle from './SettingToggle.vue'
 import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
 import { showDialog } from 'vant'
 import { useRoute } from 'vue-router'
+import { THEME_PRESETS, useDarkMode } from '~/stores/darkMode'
+
+import { storeToRefs } from 'pinia'
 
 // 设置选项卡
 const settingTabs = [
   {
     key: 'basic',
     label: '基础设置',
-    icon: '<svg class="text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2m-2-4h.01M17 16h.01" /></svg>'
+    icon: '<svg class="text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2m-2-4h.01M17 16h.01" /></svg>'
   },
   {
     key: 'data',
     label: '数据管理',
-    icon: '<svg class="text-[#fb7299]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>'
+    icon: '<svg class="text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>'
   },
   {
     key: 'about',
     label: '关于',
-    icon: '<svg class="text-[#4D6BFE]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>'
+    icon: '<svg class="text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>'
   }
 ]
 
@@ -707,41 +791,54 @@ const handleSyncDeleteToBilibiliChange = async () => {
 }
 
 // 深色模式设置
-const darkMode = ref('system')
+const appearanceStore = useDarkMode()
+const { darkMode, themeColor } = storeToRefs(appearanceStore)
 const darkModeOptions = [
   { value: 'system', label: '跟随系统' },
   { value: 'light', label: '浅色' },
   { value: 'dark', label: '深色' },
 ]
 
+// 主题色设置
+const themePresets = THEME_PRESETS
+
 // 处理深色模式变更
 const handleDarkModeChange = async () => {
+  const previousMode = darkMode.value
   try {
-    const response = await updateAppearanceConfig({ dark_mode: darkMode.value })
-    if (response.data && response.data.success) {
-      // 同步到 darkMode store
-      const { useDarkMode } = await import('~/stores/darkMode')
-      const darkModeStore = useDarkMode()
-      await darkModeStore.setDarkMode(darkMode.value)
-
-      const modeLabels = { system: '跟随系统', light: '浅色模式', dark: '深色模式' }
-      showNotify({
-        type: 'success',
-        message: `已切换到${modeLabels[darkMode.value]}`
-      })
-    } else {
-      throw new Error(response.data?.message || '更新配置失败')
-    }
+    await appearanceStore.setDarkMode(darkMode.value)
+    const modeLabels = { system: '跟随系统', light: '浅色模式', dark: '深色模式' }
+    showNotify({
+      type: 'success',
+      message: `已切换到${modeLabels[darkMode.value]}`
+    })
   } catch (error) {
     console.error('更新外观配置失败:', error)
     showNotify({
       type: 'danger',
       message: `更新配置失败: ${error.message}`
     })
-    // 恢复原值
-    const modes = ['system', 'light', 'dark']
-    const currentIndex = modes.indexOf(darkMode.value)
-    darkMode.value = modes[(currentIndex + 2) % 3]
+    await appearanceStore.setDarkMode(previousMode)
+  }
+}
+
+// 处理主题色变更
+const handleThemeColorChange = async (themeId) => {
+  const previousTheme = themeColor.value
+  try {
+    await appearanceStore.setThemeColor(themeId)
+    const theme = themePresets.find(t => t.id === themeId)
+    showNotify({
+      type: 'success',
+      message: `已切换到${theme?.name || '自定义'}主题`
+    })
+  } catch (error) {
+    console.error('更新主题色失败:', error)
+    showNotify({
+      type: 'danger',
+      message: `更新主题色失败: ${error.message}`
+    })
+    await appearanceStore.setThemeColor(previousTheme)
   }
 }
 
@@ -773,10 +870,6 @@ const handleIntegrityCheckChange = async () => {
 
 // 首页默认布局设置 - 网格布局或列表布局
 const isGridLayout = ref(localStorage.getItem('defaultLayout') === 'list' ? false : true) // 默认为网格视图
-
-
-
-
 
 // 处理布局变更
 const handleLayoutChange = () => {
@@ -832,7 +925,6 @@ onMounted(async () => {
   try {
     serverUrl.value = getCurrentBaseUrl()
     console.log('当前服务器地址:', serverUrl.value)
-
 
     // 监听侧边栏切换事件
     window.addEventListener('sidebar-toggle-changed', handleSidebarToggleEvent)
@@ -930,20 +1022,13 @@ onMounted(async () => {
         console.log('同步删除配置获取完成')
       })(),
       (async () => {
-        console.log('开始获取外观配置')
+        console.log('同步外观配置')
         try {
-          const response = await getAppearanceConfig()
-          if (response.data && response.data.success) {
-            darkMode.value = response.data.dark_mode || 'system'
-            console.log('外观配置获取成功:', darkMode.value)
-          } else {
-            throw new Error(response.data?.message || '获取配置失败')
-          }
+          await appearanceStore.initDarkMode()
         } catch (error) {
-          console.error('获取外观配置失败:', error)
-          darkMode.value = 'system'
+          console.error('外观配置初始化失败:', error)
         }
-        console.log('外观配置获取完成')
+        console.log('外观配置同步完成')
       })()
     ])
     console.log('Settings组件初始化完成')
@@ -1103,7 +1188,7 @@ const resetServerUrl = () => {
     showCancelButton: true,
     confirmButtonText: '确定',
     cancelButtonText: '取消',
-    confirmButtonColor: '#fb7299'
+    confirmButtonColor: 'var(--accent)'
   }).then((result) => {
     if (result === 'confirm') {
       serverUrl.value = DEFAULT_SERVER_URL

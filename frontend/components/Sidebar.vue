@@ -3,7 +3,7 @@
     <!-- Header with logo and close -->
     <div class="flex items-center justify-between px-4 py-3 border-b border-white/10 dark:border-white/5">
       <router-link to="/" @click="emit('navigate')" class="flex items-center gap-2">
-        <img src="/logo.png" class="h-7 object-contain" alt="Logo" />
+        <img src="/logo-text.svg" class="h-8 object-contain" alt="拾帧集" />
       </router-link>
       <button @click="emit('navigate')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 dark:hover:bg-white/5 transition-colors text-gray-500 md:hidden">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -188,7 +188,7 @@ const handleLoginClick = () => {
   } else {
     showDialog({
       title: '确认退出', message: '确定要退出登录吗？',
-      showCancelButton: true, confirmButtonText: '确认', cancelButtonText: '取消', confirmButtonColor: '#fb7299'
+      showCancelButton: true, confirmButtonText: '确认', cancelButtonText: '取消', confirmButtonColor: 'var(--accent)'
     }).then(() => handleLogout()).catch(() => {})
   }
 }

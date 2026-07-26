@@ -154,7 +154,36 @@ func main() {
 		})
 	})
 
-	r.GET("/scheduler/available-endpoints", func(c *gin.Context) {
+	r.GET("/scheduler/available-endpoints", availableEndpointsHandler(r))
+	api.GET("/scheduler/available-endpoints", availableEndpointsHandler(r))
+
+	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	utils.LogSuccess("服务启动成功，监听地址: %s", addr)
+	utils.LogSuccess("=== 应用启动完成 ===")
+
+	if cfg.Server.DataIntegrity.CheckOnStartup {
+		go func() {
+			utils.LogInfo("启动时数据完整性检查...")
+			result, err := services.RunIntegrityCheck(false)
+			if err != nil {
+				utils.LogWarning("启动时完整性检查失败: %v", err)
+			} else {
+				utils.LogInfo("完整性检查完成: JSON=%d条, DB=%d条, 差异=%d",
+					result.TotalJSONRecords, result.TotalDBRecords, result.Difference)
+			}
+		}()
+	}
+
+	if cfg.Server.SSLEnabled && cfg.Server.SSLCertFile != "" && cfg.Server.SSLKeyFile != "" {
+		utils.LogInfo("使用HTTPS启动服务")
+		r.RunTLS(addr, cfg.Server.SSLCertFile, cfg.Server.SSLKeyFile)
+	} else {
+		r.Run(addr)
+	}
+}
+
+func availableEndpointsHandler(r *gin.Engine) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		routes := r.Routes()
 		endpoints := make([]map[string]interface{}, 0)
 
@@ -192,30 +221,6 @@ func main() {
 			"total":     len(endpoints),
 			"endpoints": endpoints,
 		})
-	})
-
-	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-	utils.LogSuccess("服务启动成功，监听地址: %s", addr)
-	utils.LogSuccess("=== 应用启动完成 ===")
-
-	if cfg.Server.DataIntegrity.CheckOnStartup {
-		go func() {
-			utils.LogInfo("启动时数据完整性检查...")
-			result, err := services.RunIntegrityCheck(false)
-			if err != nil {
-				utils.LogWarning("启动时完整性检查失败: %v", err)
-			} else {
-				utils.LogInfo("完整性检查完成: JSON=%d条, DB=%d条, 差异=%d",
-					result.TotalJSONRecords, result.TotalDBRecords, result.Difference)
-			}
-		}()
-	}
-
-	if cfg.Server.SSLEnabled && cfg.Server.SSLCertFile != "" && cfg.Server.SSLKeyFile != "" {
-		utils.LogInfo("使用HTTPS启动服务")
-		r.RunTLS(addr, cfg.Server.SSLCertFile, cfg.Server.SSLKeyFile)
-	} else {
-		r.Run(addr)
 	}
 }
 

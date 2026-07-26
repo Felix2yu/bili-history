@@ -25,7 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 #### 设置页面
 - 移除"API 服务器地址"配置项（单容器架构下前端与后端同源，无需配置）
-- MCP URL 显示改为自动使用当前页面的 origin
+- MCP URL 显示改为自动使用当前页面的 origin，兼容反向代理场景
+- 新增页面字体大小设置（小 / 中 / 大三档），全局 rem 单位缩放
+
+### Fixed
+- 修复年度观看时长统计：使用实际观看进度(progress)替代视频总时长(duration)累加
+- 修复 Tailwind fontSize 和 CSS 硬编码 px 值不跟随字体大小设置缩放的问题
 
 ### Added
 

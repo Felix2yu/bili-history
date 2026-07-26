@@ -4,6 +4,7 @@ Bilibili 观看历史记录管理与分析工具
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](#docker-部署)
+[![Release](https://img.shields.io/github/v/release/Felix2yu/bili-history?label=Release)](https://github.com/Felix2yu/bili-history/releases)
 
 ## 功能特性
 
@@ -46,6 +47,7 @@ Bilibili 观看历史记录管理与分析工具
 ### 其他
 - PWA 支持（离线缓存）
 - 深色模式（跟随系统 / 浅色 / 深色）
+- 字体大小设置（小 / 中 / 大三档）
 - 数据导出 Excel、SQLite 数据库下载
 - Docker 部署支持
 

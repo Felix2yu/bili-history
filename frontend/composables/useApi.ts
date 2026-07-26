@@ -1,18 +1,13 @@
 import { ref, computed } from 'vue'
 
-const DEFAULT_FALLBACK_URL = 'http://localhost:8899'
+const DEFAULT_FALLBACK_URL = '/api'
 
 export const useApiBase = () => {
   const config = useRuntimeConfig()
 
   const getBaseUrl = () => {
-    if (import.meta.server) {
-      return config.backendUrl || config.public.defaultBackendUrl || DEFAULT_FALLBACK_URL
-    }
-    if (process.client) {
-      const stored = localStorage.getItem('baseUrl')
-      if (stored) return stored
-    }
+    const stored = localStorage.getItem('baseUrl')
+    if (stored) return stored
     return config.public.defaultBackendUrl || DEFAULT_FALLBACK_URL
   }
 
@@ -20,6 +15,7 @@ export const useApiBase = () => {
 
   const serverUrls = computed(() => {
     const urls = [
+      '/api',
       'http://127.0.0.1:8899',
       'http://localhost:8899',
       'http://0.0.0.0:8899',
@@ -32,23 +28,15 @@ export const useApiBase = () => {
   })
 
   const setBaseUrl = (url: string) => {
-    if (process.client) {
-      localStorage.setItem('baseUrl', url)
-    }
+    localStorage.setItem('baseUrl', url)
     baseUrl.value = url
-    if (process.client) {
-      window.location.reload()
-    }
+    window.location.reload()
   }
 
   const resetBaseUrl = () => {
-    if (process.client) {
-      localStorage.removeItem('baseUrl')
-    }
+    localStorage.removeItem('baseUrl')
     baseUrl.value = config.public.defaultBackendUrl || DEFAULT_FALLBACK_URL
-    if (process.client) {
-      window.location.reload()
-    }
+    window.location.reload()
   }
 
   return {

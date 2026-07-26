@@ -7,7 +7,7 @@
       <Transition name="scale">
         <div v-if="show" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] z-10 flex flex-col overflow-hidden">
           <!-- 顶部装饰 -->
-          <div class="h-1.5 bg-gradient-to-r from-accent via-accent/70 to-accent/40"></div>
+          <div class="h-1.5 bg-accent"></div>
 
           <!-- 标题栏 -->
           <div class="flex items-center justify-between px-5 md:px-6 py-4 md:py-5 border-b border-gray-100 dark:border-gray-700/50">
@@ -35,7 +35,7 @@
             </div>
             <div class="flex items-center gap-2">
               <button @click="$emit('view-history', task.task_id)"
-                class="px-3 md:px-3.5 py-1.5 md:py-2 text-xs md:text-sm font-medium text-white bg-gradient-to-r from-accent to-accent/80 rounded-xl hover:shadow-md hover:shadow-accent/25 transition-all">
+                class="px-3 md:px-3.5 py-1.5 md:py-2 text-xs md:text-sm font-medium text-white bg-accent rounded-xl hover:shadow-md hover:shadow-accent/25 transition-all">
                 历史
               </button>
               <button @click="$emit('update:show', false)"
@@ -193,7 +193,7 @@
                 {{ task.config?.enabled ? '禁用' : '启用' }}
               </button>
               <button @click="$emit('edit-task', task.task_id)"
-                class="inline-flex items-center gap-1.5 px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-white bg-gradient-to-r from-accent to-accent/80 rounded-xl hover:shadow-md hover:shadow-accent/25 transition-all">
+                class="inline-flex items-center gap-1.5 px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-white bg-accent rounded-xl hover:shadow-md hover:shadow-accent/25 transition-all">
                 编辑
               </button>
             </div>

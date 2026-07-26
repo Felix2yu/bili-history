@@ -75,7 +75,7 @@
       <div v-if="currentTab === 'integrity'">
         <!-- 报告概览卡片 -->
         <div v-if="reportData" class="mb-6">
-          <div class="bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 p-4 rounded-lg border border-pink-100 dark:border-pink-800/30 mb-4">
+          <div class="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-lg border border-pink-100 dark:border-pink-800/30 mb-4">
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm text-gray-500 dark:text-gray-400">数据库总记录</p>

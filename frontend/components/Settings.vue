@@ -11,7 +11,7 @@
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
         <div class="flex items-center gap-4">
           <div class="relative">
-            <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center shadow-lg shadow-accent/25">
+            <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-accent flex items-center justify-center shadow-lg shadow-accent/25">
               <svg class="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -73,7 +73,7 @@
               <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
                 <div class="px-5 md:px-6 py-5 border-b border-gray-100 dark:border-gray-700/50">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
                       <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
                       </svg>
@@ -126,7 +126,7 @@
                     >
                       <div
                         class="w-9 h-9 md:w-10 md:h-10 rounded-full shadow-md transition-all duration-200 group-hover:scale-110 group-hover:shadow-lg flex items-center justify-center"
-                        :style="{ background: `linear-gradient(135deg, ${theme.color} 0%, ${theme.color}dd 100%)` }"
+                        :style="{ backgroundColor: theme.color }"
                       >
                         <svg v-if="themeColor === theme.id" class="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -142,7 +142,7 @@
               <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
                 <div class="px-5 md:px-6 py-5 border-b border-gray-100 dark:border-gray-700/50">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
                       <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
                       </svg>
@@ -167,7 +167,7 @@
                 <div class="px-5 md:px-6 py-5 border-b border-gray-100 dark:border-gray-700/50">
                   <div class="flex items-center justify-between gap-4">
                     <div class="flex items-center gap-3 min-w-0">
-                      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shrink-0">
+                      <div class="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center shrink-0">
                         <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 12l3 3m0 0l3-3m-3 3V6" />
                         </svg>
@@ -294,64 +294,6 @@
                 <ShoutrrrSettings />
               </div>
 
-              <!-- 高级设置卡片（折叠） -->
-              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
-                <button
-                  @click="showAdvanced = !showAdvanced"
-                  class="flex w-full items-center justify-between px-5 md:px-6 py-5 text-left transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                >
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center">
-                      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">高级设置</h2>
-                      <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">服务器地址配置，通常无需修改</p>
-                    </div>
-                  </div>
-                  <svg
-                    class="h-5 w-5 text-gray-400 transition-transform duration-200"
-                    :class="{ 'rotate-180': showAdvanced }"
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <Transition name="slide">
-                  <div v-if="showAdvanced" class="border-t border-gray-100 dark:border-gray-700/50 px-5 md:px-6 py-5">
-                    <div class="mb-3">
-                      <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">API 服务器地址</label>
-                      <p class="text-[11px] text-gray-500 dark:text-gray-400 md:text-xs mt-0.5">修改后将自动刷新页面，仅本地开发时需要修改</p>
-                    </div>
-                    <div class="flex gap-2">
-                      <input
-                        v-model="serverUrl"
-                        type="text"
-                        class="block min-w-0 flex-1 rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-[11px] md:text-sm shadow-sm focus:border-accent focus:ring-accent"
-                        placeholder="例如：http://localhost:8899"
-                      />
-                      <div class="flex shrink-0 gap-2">
-                        <button
-                          @click="resetServerUrl"
-                          class="inline-flex items-center justify-center rounded-xl bg-accent/10 px-3 py-2 text-[11px] font-medium text-accent md:text-sm hover:bg-accent/20 transition-colors"
-                        >
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
-                        </button>
-                        <button
-                          @click="saveServerUrl"
-                          class="inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-[11px] font-medium text-white md:text-sm hover:bg-accent/90 transition-colors"
-                        >
-                          保存
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </Transition>
-              </div>
             </div>
 
             <!-- 数据管理 -->
@@ -360,7 +302,7 @@
               <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
                 <div class="px-5 md:px-6 py-5 border-b border-gray-100 dark:border-gray-700/50">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center">
                       <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                       </svg>
@@ -434,7 +376,7 @@
                       <button
                         @click="exportAndDownloadExcel"
                         :disabled="isExporting"
-                        class="inline-flex items-center px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-gradient-to-r from-accent to-accent/80 rounded-xl hover:shadow-lg hover:shadow-accent/25 disabled:opacity-50 transition-all"
+                        class="inline-flex items-center px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-accent rounded-xl hover:shadow-lg hover:shadow-accent/25 disabled:opacity-50 transition-all"
                       >
                         <svg v-if="isExporting" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -455,7 +397,7 @@
                 <div class="px-5 md:px-6 py-5">
                   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div class="flex items-start gap-3">
-                      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shrink-0">
+                      <div class="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shrink-0">
                         <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                         </svg>
@@ -467,7 +409,7 @@
                     </div>
                     <button
                       @click="downloadSqlite"
-                      class="inline-flex w-full justify-center items-center sm:w-auto px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all"
+                      class="inline-flex w-full justify-center items-center sm:w-auto px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-blue-500 rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all"
                     >
                       <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -482,7 +424,7 @@
               <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-red-100 dark:border-red-900/30 overflow-hidden">
                 <div class="px-5 md:px-6 py-5">
                   <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center">
                       <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                       </svg>
@@ -499,7 +441,7 @@
                     </div>
                     <button
                       @click="handleResetDatabase"
-                      class="inline-flex items-center px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-gradient-to-r from-red-500 to-red-600 rounded-xl hover:shadow-lg hover:shadow-red-500/25 transition-all"
+                      class="inline-flex items-center px-5 py-2.5 text-[11px] font-medium text-white md:text-sm bg-red-500 rounded-xl hover:shadow-lg hover:shadow-red-500/25 transition-all"
                     >
                       <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -515,15 +457,10 @@
             <div v-if="activeTab === 'about'" key="about" class="space-y-5 md:space-y-6">
               <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
                 <div class="px-5 md:px-6 py-8 md:py-10 text-center relative overflow-hidden">
-                  <div class="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent/5"></div>
                   <div class="relative">
-                    <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center shadow-xl shadow-accent/30">
-                      <svg class="w-8 h-8 md:w-10 md:h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                      </svg>
-                    </div>
+                    <img src="/logo.svg" class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 object-contain drop-shadow-xl" alt="拾帧集" />
                     <h1 class="text-xl md:text-2xl font-bold">
-                      <span class="bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">BiliHistory</span>
+                      <span class="text-accent">BiliHistory</span>
                     </h1>
                     <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-2">哔哩哔哩历史记录管理与分析工具</p>
                   </div>
@@ -541,23 +478,6 @@
                       此项目是一个哔哩哔哩历史记录管理与分析工具，帮助用户更好地管理和分析自己的B站观看历史。基于Vue 3构建，通过现代的界面设计提供强大的功能，包括历史记录查询、视频下载、数据分析等多项功能。
                     </p>
                   </div>
-
-                  <div class="space-y-2 md:space-y-3">
-                    <div class="flex items-center py-2">
-                      <svg class="mr-2.5 h-4 w-4 text-accent md:mr-3 md:h-5 md:w-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
-                      </svg>
-                      <span class="w-20 shrink-0 text-gray-500 dark:text-gray-400 text-[12px] md:text-sm">前端项目</span>
-                      <a href="https://github.com/2977094657/BiliHistoryFrontend" target="_blank" rel="noopener noreferrer" class="break-all text-accent hover:underline text-[12px] md:text-sm">BiliHistoryFrontend</a>
-                    </div>
-                    <div class="flex items-center py-2">
-                      <svg class="mr-2.5 h-4 w-4 text-accent md:mr-3 md:h-5 md:w-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
-                      </svg>
-                      <span class="w-20 shrink-0 text-gray-500 dark:text-gray-400 text-[12px] md:text-sm">后端项目</span>
-                      <a href="https://github.com/2977094657/BilibiliHistoryFetcher" target="_blank" rel="noopener noreferrer" class="break-all text-accent hover:underline text-[12px] md:text-sm">BilibiliHistoryFetcher</a>
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -573,13 +493,23 @@
                   <ul class="space-y-2.5 text-[12px] text-gray-600 dark:text-gray-300 md:text-sm list-none">
                     <li class="flex items-start gap-2">
                       <span class="text-accent mt-0.5">•</span>
+                      <a href="https://github.com/2977094657/BiliHistoryFrontend" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">BiliHistoryFrontend</a>
+                      <span class="text-gray-500 dark:text-gray-400">- 原始前端项目</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-accent mt-0.5">•</span>
+                      <a href="https://github.com/2977094657/BilibiliHistoryFetcher" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">BilibiliHistoryFetcher</a>
+                      <span class="text-gray-500 dark:text-gray-400">- 原始后端项目</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-accent mt-0.5">•</span>
                       <a href="https://github.com/SocialSisterYi/bilibili-API-collect" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">bilibili-API-collect</a>
                       <span class="text-gray-500 dark:text-gray-400">- 没有它就没有这个项目</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-accent mt-0.5">•</span>
-                      <a href="https://yutto.nyakku.moe/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">Yutto</a>
-                      <span class="text-gray-500 dark:text-gray-400">- 可爱的B站视频下载工具</span>
+                      <a href="https://github.com/Felix2yu/bili-dl" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">bili-dl</a>
+                      <span class="text-gray-500 dark:text-gray-400">- B站视频下载库</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <span class="text-accent mt-0.5">•</span>
@@ -629,7 +559,6 @@ import {
 } from '~/utils/api'
 import ShoutrrrSettings from './ShoutrrrSettings.vue'
 import SettingToggle from './SettingToggle.vue'
-import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
 import { showDialog } from 'vant'
 import { useRoute } from 'vue-router'
 import { THEME_PRESETS, useDarkMode } from '~/stores/darkMode'
@@ -657,7 +586,6 @@ const settingTabs = [
 
 const route = useRoute()
 const activeTab = ref('basic')
-const showAdvanced = ref(false)
 
 // 监听路由参数变化，切换标签页
 watch(() => route.query.tab, (newTab) => {
@@ -677,7 +605,6 @@ const exportOptions = ref({
   endDate: '',
   exportType: 'year' // 默认导出全年数据
 })
-const serverUrl = ref('')
 const useLocalImages = ref(localStorage.getItem('useLocalImages') === 'true')
 const DEFAULT_MCP_CONFIG = {
   enabled: false,
@@ -710,7 +637,7 @@ const normalizeMcpPath = (path) => {
 }
 
 const mcpUrl = computed(() => {
-  const baseUrl = trimTrailingSlash(serverUrl.value || mcpConfig.value.server_url || getCurrentBaseUrl())
+  const baseUrl = trimTrailingSlash(mcpConfig.value.server_url || (typeof window !== 'undefined' ? window.location.origin : ''))
   const path = normalizeMcpPath(mcpConfig.value.path)
   return path === '/' ? `${baseUrl}/` : `${baseUrl}${path}/`
 })
@@ -918,13 +845,10 @@ const handleSidebarChange = () => {
   })
 }
 
-// 初始化服务器地址
 onMounted(async () => {
   console.log('Settings组件开始挂载')
 
   try {
-    serverUrl.value = getCurrentBaseUrl()
-    console.log('当前服务器地址:', serverUrl.value)
 
     // 监听侧边栏切换事件
     window.addEventListener('sidebar-toggle-changed', handleSidebarToggleEvent)
@@ -1148,57 +1072,6 @@ const downloadSqlite = async () => {
       message: `下载失败：${error.message}`
     })
   }
-}
-
-// 保存服务器地址
-const saveServerUrl = () => {
-  try {
-    const val = serverUrl.value.trim()
-    if (!val) {
-      showNotify({ type: 'danger', message: '请输入服务器地址' })
-      return
-    }
-    // 相对路径（如 /api）或完整 URL 均合法
-    const isRelative = val.startsWith('/')
-    if (!isRelative) {
-      new URL(val)
-    }
-    setBaseUrl(val)
-    showNotify({
-      type: 'success',
-      message: '服务器地址已更新，页面即将刷新'
-    })
-  } catch (error) {
-    showNotify({
-      type: 'danger',
-      message: '请输入有效的URL地址（如 http://localhost:8899 或 /api）'
-    })
-  }
-}
-
-// 在script setup部分添加重置功能
-const FALLBACK_DEFAULT_SERVER_URL = 'http://localhost:8899';
-const DEFAULT_SERVER_URL = import.meta.env.VITE_DEFAULT_BACKEND_URL || FALLBACK_DEFAULT_SERVER_URL;
-
-// 重置服务器地址
-const resetServerUrl = () => {
-  showDialog({
-    title: '重置服务器地址',
-    message: '确定要将服务器地址重置为默认值吗？',
-    showCancelButton: true,
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    confirmButtonColor: 'var(--accent)'
-  }).then((result) => {
-    if (result === 'confirm') {
-      serverUrl.value = DEFAULT_SERVER_URL
-      setBaseUrl(DEFAULT_SERVER_URL)
-      showNotify({
-        type: 'success',
-        message: '服务器地址已重置，页面即将刷新'
-      })
-    }
-  })
 }
 
 // 处理数据库重置

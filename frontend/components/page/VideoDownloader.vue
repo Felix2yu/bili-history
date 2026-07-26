@@ -206,7 +206,7 @@
                 >
                   <img
                     v-if="videoInfo.owner.face"
-                    :src="videoInfo.owner.face"
+                    :src="normalizeImageUrl(videoInfo.owner.face)"
                     :alt="videoInfo.owner.name"
                     class="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-700"
                   />

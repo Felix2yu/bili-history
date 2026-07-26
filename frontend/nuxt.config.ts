@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
+  ssr: false,
 
   modules: [
     '@pinia/nuxt',
@@ -24,17 +25,6 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       defaultBackendUrl: process.env.NUXT_PUBLIC_DEFAULT_BACKEND_URL || '/api',
-    },
-    backendUrl: process.env.NUXT_BACKEND_URL || 'http://localhost:8899',
-  },
-
-  nitro: {
-    devProxy: {
-      '/api': {
-        target: process.env.NUXT_BACKEND_URL || 'http://localhost:8899',
-        changeOrigin: true,
-        pathRewrite: { '^/api': '' },
-      },
     },
   },
 

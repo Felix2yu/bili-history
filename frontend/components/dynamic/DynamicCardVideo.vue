@@ -59,7 +59,7 @@
 <script setup>
 import { computed } from 'vue'
 import { openInBrowser } from '~/utils/openUrl'
-import { toStaticUrl } from '~/utils/imageUrl'
+import { toStaticUrl, normalizeImageUrl } from '~/utils/imageUrl'
 import { deleteDynamicItem } from '~/utils/api'
 
 const props = defineProps({
@@ -71,7 +71,7 @@ const props = defineProps({
 const displayFaceUrl = computed(() => {
   const face = props.item?.author_face || props.faceUrl || ''
   if (!face) return ''
-  if (face.startsWith('http://') || face.startsWith('https://')) return face
+  if (face.startsWith('http://') || face.startsWith('https://')) return normalizeImageUrl(face)
   return toStaticUrl(face)
 })
 

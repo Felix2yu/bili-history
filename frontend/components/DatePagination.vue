@@ -1,32 +1,33 @@
 <template>
-  <div class="mx-auto max-w-4xl">
-    <div class="glass-card px-4 py-3 flex items-center justify-between gap-2">
+  <div :class="compact ? '' : 'mx-auto max-w-4xl'">
+    <div :class="compact ? 'flex items-center justify-center gap-1 md:gap-2' : 'glass-card px-4 py-3 flex items-center justify-between gap-2'">
       <!-- 前一天 -->
       <button
         @click="goPrev"
         :disabled="!hasPrev"
-        class="flex shrink-0 items-center gap-1 px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-400 hover:bg-accent/10 hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+        :class="compact ? 'flex shrink-0 items-center gap-1 px-2 py-1.5 rounded-lg text-xs md:text-sm text-gray-600 dark:text-gray-400 hover:bg-accent/10 hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200' : 'flex shrink-0 items-center gap-1 px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-400 hover:bg-accent/10 hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200'"
       >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg :class="compact ? 'w-3.5 h-3.5' : 'w-4 h-4'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
-        <span class="hidden sm:inline">前一天</span>
+        <span :class="compact ? 'hidden md:inline' : 'hidden sm:inline'">前一天</span>
       </button>
 
       <!-- 日期显示 & 日历按钮 -->
-      <div class="flex min-w-0 flex-1 items-center justify-center gap-3">
+      <div :class="compact ? 'flex min-w-0 items-center justify-center gap-1 md:gap-2' : 'flex min-w-0 flex-1 items-center justify-center gap-3'">
         <button
           ref="dateBtnRef"
           @click="showCalendar = !showCalendar"
-          class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-accent/10 transition-all duration-200 cursor-pointer"
+          :class="compact ? 'flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-accent/10 transition-all duration-200 cursor-pointer' : 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-accent/10 transition-all duration-200 cursor-pointer'"
         >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg :class="compact ? 'w-3.5 h-3.5' : 'w-4 h-4'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <span>{{ formattedDate }}</span>
+          <span :class="compact ? 'hidden sm:inline' : ''">{{ formattedDate }}</span>
+          <span :class="compact ? 'sm:hidden' : 'hidden'">{{ shortDate }}</span>
         </button>
 
-        <span v-if="recordCount > 0" class="text-xs text-gray-400 dark:text-gray-500 shrink-0">
+        <span v-if="recordCount > 0 && !compact" class="text-xs text-gray-400 dark:text-gray-500 shrink-0">
           {{ recordCount }} 条
         </span>
       </div>
@@ -35,10 +36,10 @@
       <button
         @click="goNext"
         :disabled="!hasNext"
-        class="flex shrink-0 items-center gap-1 px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-400 hover:bg-accent/10 hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+        :class="compact ? 'flex shrink-0 items-center gap-1 px-2 py-1.5 rounded-lg text-xs md:text-sm text-gray-600 dark:text-gray-400 hover:bg-accent/10 hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200' : 'flex shrink-0 items-center gap-1 px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-400 hover:bg-accent/10 hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200'"
       >
-        <span class="hidden sm:inline">后一天</span>
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <span :class="compact ? 'hidden md:inline' : 'hidden sm:inline'">后一天</span>
+        <svg :class="compact ? 'w-3.5 h-3.5' : 'w-4 h-4'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </button>
@@ -206,6 +207,7 @@ const props = defineProps({
   currentDate: { type: String, required: true },
   availableDates: { type: Array, default: () => [] },
   recordCount: { type: Number, default: 0 },
+  compact: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['date-change'])
@@ -224,11 +226,17 @@ const today = computed(() => {
 const formattedDate = computed(() => {
   const d = parseDate(props.currentDate)
   if (!d) return props.currentDate
-  // getDay(): 0=周日,1=周一...6=周六 -> 转换为 0=周一,6=周日
   const weekdayIndex = (d.getDay() + 6) % 7
   const weekday = weekHeaders[weekdayIndex]
   const pad = (n) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} 周${weekday}`
+})
+
+const shortDate = computed(() => {
+  const d = parseDate(props.currentDate)
+  if (!d) return props.currentDate
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 })
 
 const hasPrev = computed(() => {

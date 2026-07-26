@@ -1,10 +1,10 @@
 <!-- 年度总结通用布局组件 -->
 <template>
-  <div class="bg-gradient-to-b from-[#fef6f9] to-[#fff9fa] dark:from-gray-900 dark:to-gray-950 overflow-hidden rounded-xl">
+  <div class="bg-gray-50/30 dark:from-gray-900 dark:to-gray-950 overflow-hidden rounded-xl">
     <!-- 背景装饰 -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-accent/10 to-accent/70/10 rounded-full blur-3xl animate-float"></div>
-      <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-[#fc9b7a]/10 to-accent/10 rounded-full blur-3xl animate-float-delay"></div>
+      <div class="absolute -top-40 -right-40 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float"></div>
+      <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-float-delay"></div>
     </div>
 
     <div class="relative py-6 pb-16 md:pb-6">

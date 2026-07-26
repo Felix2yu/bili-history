@@ -1,11 +1,11 @@
 <template>
   <div class="flex flex-col h-full">
     <!-- Header with logo and close -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-white/10 dark:border-white/5">
-      <router-link to="/" @click="emit('navigate')" class="flex items-center gap-2">
-        <img src="/logo-text.svg" class="h-8 object-contain" alt="拾帧集" />
+    <div class="flex items-center justify-between px-5 py-5 border-b border-white/10 dark:border-white/5">
+      <router-link to="/" @click="emit('navigate')" class="flex-1 flex items-center justify-center gap-2.5">
+        <img src="/logo-text.svg" class="h-10 md:h-11 w-auto object-contain" alt="拾帧集" />
       </router-link>
-      <button @click="emit('navigate')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 dark:hover:bg-white/5 transition-colors text-gray-500 md:hidden">
+      <button @click="emit('navigate')" class="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/10 dark:hover:bg-white/5 transition-colors text-gray-500 md:hidden ml-2">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -108,11 +108,11 @@
         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5 cursor-pointer"
       >
         <div class="relative flex-shrink-0">
-          <img v-if="isLoggedIn && userInfo?.face" :src="userInfo.face" alt="avatar"
+          <img v-if="avatarUrl" :src="avatarUrl" alt="avatar"
             class="w-6 h-6 rounded-full object-cover"
-            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+            @error="avatarLoadError = true"
           />
-          <div v-if="!isLoggedIn || !userInfo?.face" class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+          <div v-if="!avatarUrl" class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
             <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
@@ -124,11 +124,7 @@
         </span>
       </button>
 
-      <div class="mt-2 px-3 text-[11px] text-gray-400 dark:text-gray-500 space-y-1">
-        <div class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full" :class="serverStatus.isRunning ? 'bg-green-400' : 'bg-red-400'"></span>
-          <span>服务器 {{ serverStatus.isRunning ? '运行中' : '未连接' }}</span>
-        </div>
+      <div class="mt-2 px-3 text-[11px] text-gray-400 dark:text-gray-500">
         <div class="flex items-center gap-1.5">
           <span class="w-1.5 h-1.5 rounded-full" :class="{ 'bg-green-400': integrityStatus.status === 'consistent', 'bg-yellow-400': integrityStatus.status === 'inconsistent', 'bg-gray-400': integrityStatus.status !== 'consistent' && integrityStatus.status !== 'inconsistent' }"></span>
           <span class="cursor-pointer hover:underline" @click="openDataSyncManager('integrity')">
@@ -146,7 +142,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDarkMode } from '~/stores/darkMode.js'
-import { getLoginStatus, logout, checkServerHealth, checkDataIntegrity, getIntegrityCheckConfig } from '~/utils/api'
+import { getLoginStatus, logout, checkDataIntegrity, getIntegrityCheckConfig } from '~/utils/api'
+import { normalizeImageUrl } from '~/utils/imageUrl'
 import { showNotify, showDialog } from 'vant'
 import 'vant/es/notify/style'
 import 'vant/es/dialog/style'
@@ -206,15 +203,13 @@ const handleLogout = async () => {
   }
 }
 
-const serverStatus = ref({ isRunning: false })
 const integrityStatus = ref({ status: 'unknown' })
+const avatarLoadError = ref(false)
 
-const checkServerHealthStatus = async () => {
-  try {
-    const response = await checkServerHealth()
-    serverStatus.value.isRunning = response.data?.status === 'running'
-  } catch { serverStatus.value.isRunning = false }
-}
+const avatarUrl = computed(() => {
+  if (!isLoggedIn.value || !userInfo.value?.face || avatarLoadError.value) return ''
+  return normalizeImageUrl(userInfo.value.face)
+})
 
 const fetchIntegrityStatus = async () => {
   try {
@@ -235,16 +230,13 @@ const openDataSyncManager = (tab) => {
   window.dispatchEvent(new CustomEvent('open-data-sync-manager', { detail: { tab: tab || 'integrity' } }))
 }
 
-let healthCheckTimer = null
 onMounted(async () => {
   checkLoginStatus()
-  checkServerHealthStatus()
   await fetchIntegrityStatus()
-  healthCheckTimer = setInterval(checkServerHealthStatus, 30000)
   window.addEventListener('login-status-changed', (e) => {
-    if (e.detail?.isLoggedIn) { isLoggedIn.value = true; if (e.detail.userInfo) userInfo.value = e.detail.userInfo; else checkLoginStatus() }
+    if (e.detail?.isLoggedIn) { isLoggedIn.value = true; avatarLoadError.value = false; if (e.detail.userInfo) userInfo.value = e.detail.userInfo; else checkLoginStatus() }
     else checkLoginStatus()
   })
 })
-onUnmounted(() => { if (healthCheckTimer) clearInterval(healthCheckTimer) })
+onUnmounted(() => {})
 </script>

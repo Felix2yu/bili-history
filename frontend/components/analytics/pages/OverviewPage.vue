@@ -8,7 +8,7 @@
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-      <div class="relative overflow-hidden rounded-2xl p-4 md:p-5 bg-gradient-to-br from-rose-50 to-rose-100/50 dark:from-rose-900/20 dark:to-rose-900/10 border border-rose-100 dark:border-rose-900/30">
+      <div class="relative overflow-hidden rounded-2xl p-4 md:p-5 bg-rose-50 dark:from-rose-900/20 dark:to-rose-900/10 border border-rose-100 dark:border-rose-900/30">
         <div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-rose-200/50 dark:bg-rose-800/30"></div>
         <div class="relative">
           <div class="flex items-center justify-between mb-2">
@@ -23,7 +23,7 @@
         </div>
       </div>
 
-      <div class="relative overflow-hidden rounded-2xl p-4 md:p-5 bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-900/10 border border-amber-100 dark:border-amber-900/30">
+      <div class="relative overflow-hidden rounded-2xl p-4 md:p-5 bg-amber-50 dark:from-amber-900/20 dark:to-amber-900/10 border border-amber-100 dark:border-amber-900/30">
         <div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-amber-200/50 dark:bg-amber-800/30"></div>
         <div class="relative">
           <div class="flex items-center justify-between mb-2">
@@ -38,7 +38,7 @@
         </div>
       </div>
 
-      <div class="relative overflow-hidden rounded-2xl p-4 md:p-5 bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/20 dark:to-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
+      <div class="relative overflow-hidden rounded-2xl p-4 md:p-5 bg-emerald-50 dark:from-emerald-900/20 dark:to-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30">
         <div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-emerald-200/50 dark:bg-emerald-800/30"></div>
         <div class="relative">
           <div class="flex items-center justify-between mb-2">
@@ -53,7 +53,7 @@
         </div>
       </div>
 
-      <div class="relative overflow-hidden rounded-2xl p-4 md:p-5 bg-gradient-to-br from-sky-50 to-sky-100/50 dark:from-sky-900/20 dark:to-sky-900/10 border border-sky-100 dark:border-sky-900/30">
+      <div class="relative overflow-hidden rounded-2xl p-4 md:p-5 bg-sky-50 dark:from-sky-900/20 dark:to-sky-900/10 border border-sky-100 dark:border-sky-900/30">
         <div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-sky-200/50 dark:bg-sky-800/30"></div>
         <div class="relative">
           <div class="flex items-center justify-between mb-2">

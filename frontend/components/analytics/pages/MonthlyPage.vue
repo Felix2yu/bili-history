@@ -1,7 +1,7 @@
 <!-- 月度趋势页组件 -->
 <template>
   <div class="space-y-6" v-if="viewingData">
-    <h3 class="text-4xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
+    <h3 class="text-4xl font-bold text-center text-accent">
       月度观看趋势
     </h3>
 
@@ -13,7 +13,7 @@
 
     <!-- 月度趋势图表 -->
     <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-      <h4 class="text-xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-4">月度趋势</h4>
+      <h4 class="text-xl font-bold text-accent mb-4">月度趋势</h4>
       <div class="h-[220px]">
         <v-chart ref="chartRef" class="h-full w-full" :option="monthlyOption" autoresize />
       </div>

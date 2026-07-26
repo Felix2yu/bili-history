@@ -1,43 +1,47 @@
 <template>
   <div class="min-h-screen pb-20 md:pb-0 relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-pink-500/5 dark:from-accent/10 dark:via-transparent dark:to-pink-500/10 pointer-events-none"></div>
-    <div class="absolute top-20 -left-20 w-80 h-80 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute bottom-20 -right-20 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute -top-32 -right-20 w-96 h-96 bg-accent/5 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/4 -left-32 w-80 h-80 bg-accent/3 rounded-full blur-3xl"></div>
+    </div>
 
     <div class="relative py-6">
       <div class="max-w-[1800px] mx-auto sm:px-2 lg:px-8">
         <div class="mb-6">
-          <div class="flex items-center justify-between flex-wrap gap-4">
-            <div class="flex items-center space-x-4">
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center shadow-lg shadow-accent/30">
-                <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">稍后再看</h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">保存你想稍后观看的视频</p>
-              </div>
-            </div>
+          <div class="glass-card overflow-hidden">
+            <div class="px-5 md:px-6 py-4 md:py-5">
+              <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-3 md:gap-4">
+                  <div class="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-accent flex items-center justify-center shadow-md shadow-accent/20">
+                    <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">稍后再看</h1>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-0.5">保存你想稍后观看的视频</p>
+                  </div>
+                </div>
 
-            <div class="flex items-center gap-3">
-              <div class="glass-card px-4 py-2.5 flex items-center gap-3">
-                <div class="flex flex-col">
-                  <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">视频总数</span>
-                  <span class="text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">{{ videos.length }}</span>
-                </div>
-                <div class="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
-                <div class="flex flex-col">
-                  <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">当前显示</span>
-                  <span class="text-lg font-bold text-accent leading-tight">{{ filteredVideos.length }}</span>
-                </div>
-                <div v-if="syncing" class="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
-                <div v-if="syncing" class="flex items-center gap-1.5 text-accent">
-                  <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span class="text-xs font-medium">同步中</span>
+                <div class="flex items-center gap-3 md:gap-4">
+                  <div class="flex items-center gap-2.5">
+                    <div class="flex flex-col">
+                      <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">视频总数</span>
+                      <span class="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">{{ videos.length }}</span>
+                    </div>
+                    <div class="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
+                    <div class="flex flex-col">
+                      <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">当前显示</span>
+                      <span class="text-base md:text-lg font-bold text-accent leading-tight">{{ filteredVideos.length }}</span>
+                    </div>
+                  </div>
+                  <div v-if="syncing" class="flex items-center gap-1.5 text-accent px-2.5 py-1 rounded-full bg-accent/10">
+                    <svg class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-[11px] font-medium">同步中</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -66,7 +70,7 @@
             </div>
           </div>
 
-          <div v-if="selectMode" class="border-b border-glass-border px-5 py-3 bg-gradient-to-r from-accent/10 to-transparent dark:from-accent/15 dark:to-transparent flex items-center justify-between flex-wrap gap-2">
+          <div v-if="selectMode" class="border-b border-glass-border px-5 py-3 bg-accent/8 dark:bg-accent/12 flex items-center justify-between flex-wrap gap-2">
             <div class="flex items-center space-x-4">
               <label class="flex items-center space-x-2 cursor-pointer group">
                 <input
@@ -89,7 +93,7 @@
               <button
                 @click="batchDeleteSelected"
                 :disabled="selectedBvids.size === 0 || deleting"
-                class="px-4 py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-1.5 shadow-md shadow-red-500/20"
+                class="px-4 py-1.5 text-xs font-semibold rounded-xl bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-1.5 shadow-md shadow-red-500/20"
               >
                 <svg v-if="deleting" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -141,7 +145,7 @@
               <p class="text-red-500 dark:text-red-400 font-medium">{{ error }}</p>
               <button
                 @click="fetchWatchLater"
-                class="mt-5 px-5 py-2.5 bg-gradient-to-r from-accent to-pink-500 text-white rounded-xl hover:from-accent/90 hover:to-pink-500/90 transition-all duration-200 font-medium shadow-lg shadow-accent/20"
+                class="mt-5 px-5 py-2.5 bg-accent text-white rounded-xl hover:bg-accent/90 transition-all duration-200 font-medium shadow-lg shadow-accent/20"
               >
                 重试
               </button>

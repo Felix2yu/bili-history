@@ -1,7 +1,7 @@
 <template>
   <div class="px-2 sm:px-4 lg:px-6 py-6 space-y-6 max-w-[1600px] mx-auto">
     <!-- 标题 -->
-    <h2 class="text-2xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
+    <h2 class="text-2xl font-bold text-center text-accent">
       数据概览
     </h2>
 
@@ -28,7 +28,7 @@
       <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="handleSelectorClose"></div>
       <!-- 弹窗内容 -->
       <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 space-y-6">
-        <h3 class="text-xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
+        <h3 class="text-xl font-bold text-center text-accent">
           选择概览类型
         </h3>
         <div class="space-y-3">

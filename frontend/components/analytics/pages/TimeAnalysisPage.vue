@@ -1,7 +1,7 @@
 <!-- 时间分析页组件 -->
 <template>
   <div class="space-y-4" v-if="viewingData">
-    <h3 class="text-2xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
+    <h3 class="text-2xl font-bold text-center text-accent">
       观看时间分析
     </h3>
 
@@ -13,7 +13,7 @@
 
     <!-- 时间统计卡片矩阵 -->
     <div class="grid grid-cols-4 gap-3">
-      <div class="bg-gradient-to-br from-accent/10 to-accent/70/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
+      <div class="bg-accent/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-gray-600 dark:text-gray-400">单日最长</p>
@@ -27,7 +27,7 @@
         </div>
       </div>
 
-      <div class="bg-gradient-to-br from-[#fc9b7a]/10 to-accent/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
+      <div class="bg-accent/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-gray-600 dark:text-gray-400">日均时长</p>
@@ -41,7 +41,7 @@
         </div>
       </div>
 
-      <div class="bg-gradient-to-br from-accent/10 to-accent/70/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
+      <div class="bg-accent/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-gray-600 dark:text-gray-400">最活跃时段</p>
@@ -55,7 +55,7 @@
         </div>
       </div>
 
-      <div class="bg-gradient-to-br from-[#fc9b7a]/10 to-accent/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
+      <div class="bg-accent/10 backdrop-blur-sm rounded-lg p-3 border border-gray-300/30 dark:border-gray-500/30">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-gray-600 dark:text-gray-400">深夜观看</p>
@@ -72,7 +72,7 @@
 
     <!-- 24小时观看分布柱状图 -->
     <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-      <h4 class="text-xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent mb-4 text-center">24小时观看分布</h4>
+      <h4 class="text-xl font-bold text-accent mb-4 text-center">24小时观看分布</h4>
       <div class="h-[280px]">
         <v-chart class="h-full w-full" :option="barOption" autoresize />
       </div>

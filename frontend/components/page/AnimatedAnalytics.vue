@@ -6,7 +6,7 @@
         <div class="bg-white/5 backdrop-blur-md border-b border-white/10 dark:bg-black/5 dark:border-gray-800/50 rounded-t-xl">
           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-14">
-              <h1 class="text-2xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
+              <h1 class="text-2xl font-bold text-accent">
                 {{ selectedYear }}年度回顾
               </h1>
               <div class="flex items-center space-x-4">

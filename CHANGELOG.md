@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/).
 
+## [1.1.0] - 2026-07-26
+
+### Changed
+
+#### 架构简化：单容器前后端一体化
+- 前端从 Nuxt SSR 改为 **SSG 静态化** (`ssr: false`)，构建产出纯静态 SPA
+- 前后端合并为**单容器单端口**部署，统一通过 `8899` 端口访问
+- 前端静态资源通过 Go `embed` 嵌入后端二进制，无需额外文件服务
+- 所有后端 API 路由统一加 `/api` 前缀，MCP 服务保持 `/mcp` 路径
+- 移除前端独立 Dockerfile、Caddyfile、server API 代理等双容器相关文件
+- CI 工作流从双镜像构建合并为单镜像构建
+- 镜像名统一为 `ghcr.io/felix2yu/bili-history`
+
+#### 部署配置
+- `docker-compose.yml` 从 2 个服务（frontend + backend）简化为 1 个服务
+- 数据卷映射路径保持不变 (`./backend/config:/app/config`、`./output:/app/output`)，与旧架构完全兼容
+- 不再需要 `NUXT_*` 系列环境变量
+
+#### 设置页面
+- 移除"API 服务器地址"配置项（单容器架构下前端与后端同源，无需配置）
+- MCP URL 显示改为自动使用当前页面的 origin
+
+### Added
+
+- 新增 `backend/web/` 目录存放 Go embed 相关代码与前端构建产物
+- 新增 `Dockerfile`（根目录）：3 阶段多架构构建（前端 bun 构建 → Go 编译 embed → Alpine 运行）
+
+### Removed
+
+- 删除前端 `server/api/` 目录（API 代理层）
+- 删除前端 `server/middleware/` 目录
+- 删除前端 `plugins/*.server.ts`（SSR 专用插件）
+- 删除前端独立 `Dockerfile`、`entrypoint.sh`、`deploy/Caddyfile`
+- 删除前后端独立 CI 工作流文件
+
 ## [1.0.0] - 2026-07-12
 
 ### Added
@@ -53,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 #### 视频功能
 - ArtPlayer 视频播放器 + 弹幕系统
-- 视频下载（Yutto 集成）
+- 视频下载（bili-dl 集成，支持批量下载、UP主视频下载）
 - 动态下载
 
 #### 计划任务

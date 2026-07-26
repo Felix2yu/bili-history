@@ -11,7 +11,7 @@
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
         <div class="flex items-center gap-4">
           <div class="relative">
-            <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center shadow-lg shadow-accent/25">
+            <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-accent flex items-center justify-center shadow-lg shadow-accent/25">
               <svg class="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -25,7 +25,7 @@
         </div>
         <button @click="openCreateTaskModal"
           class="group relative inline-flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 rounded-xl font-medium text-sm text-white transition-all duration-300 overflow-hidden"
-          :class="'bg-gradient-to-r from-accent to-accent/80 hover:shadow-lg hover:shadow-accent/30 hover:-translate-y-0.5 active:translate-y-0'">
+          :class="'bg-accent hover:shadow-lg hover:shadow-accent/30 hover:-translate-y-0.5 active:translate-y-0'">
           <span class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
           <svg class="w-4 h-4 md:w-5 md:h-5 relative" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -88,7 +88,7 @@
       <div v-else-if="filteredTasks.length === 0 && tasks.length === 0" class="glass-card">
         <div class="relative py-16 md:py-20 text-center">
           <div class="relative mx-auto w-24 h-24 md:w-32 md:h-32 mb-6">
-            <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-accent/20 to-accent/5 animate-pulse-soft"></div>
+            <div class="absolute inset-0 rounded-3xl bg-accent/15 animate-pulse-soft"></div>
             <div class="absolute inset-2 rounded-3xl bg-white dark:bg-gray-800 flex items-center justify-center">
               <svg class="w-12 h-12 md:w-16 md:h-16 text-accent/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />

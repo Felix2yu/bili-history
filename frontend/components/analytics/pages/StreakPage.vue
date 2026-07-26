@@ -1,7 +1,7 @@
 <!-- 连续观看记录页组件 -->
 <template>
   <div class="space-y-6" v-if="viewingData">
-    <h3 class="text-4xl font-bold text-center bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
+    <h3 class="text-4xl font-bold text-center text-accent">
       连续观看记录
     </h3>
 
@@ -13,7 +13,7 @@
 
     <div v-if="viewingData?.viewing_continuity" class="grid grid-cols-2 gap-8">
       <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-        <div class="text-4xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent streak-number">{{ viewingData.viewing_continuity.max_streak || 0 }}天</div>
+        <div class="text-4xl font-bold text-accent streak-number">{{ viewingData.viewing_continuity.max_streak || 0 }}天</div>
         <div class="text-lg text-gray-600 dark:text-gray-400 mt-2">最长连续观看</div>
         <div v-if="viewingData.viewing_continuity.longest_streak_period" class="mt-4 text-sm text-gray-500">
           {{ viewingData.viewing_continuity.longest_streak_period.start }} 至
@@ -21,7 +21,7 @@
         </div>
       </div>
       <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-        <div class="text-4xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent streak-number">{{ viewingData.viewing_continuity.current_streak || 0 }}天</div>
+        <div class="text-4xl font-bold text-accent streak-number">{{ viewingData.viewing_continuity.current_streak || 0 }}天</div>
         <div class="text-lg text-gray-600 dark:text-gray-400 mt-2">当前连续观看</div>
         <div v-if="viewingData.viewing_continuity.current_streak_start" class="mt-4 text-sm text-gray-500">
           开始于 {{ viewingData.viewing_continuity.current_streak_start }}

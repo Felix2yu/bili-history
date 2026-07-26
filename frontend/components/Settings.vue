@@ -660,7 +660,7 @@ const normalizeMcpPath = (path) => {
 }
 
 const mcpUrl = computed(() => {
-  const baseUrl = trimTrailingSlash(mcpConfig.value.server_url || (typeof window !== 'undefined' ? window.location.origin : ''))
+  const baseUrl = trimTrailingSlash(typeof window !== 'undefined' ? window.location.origin : '')
   const path = normalizeMcpPath(mcpConfig.value.path)
   return path === '/' ? `${baseUrl}/` : `${baseUrl}${path}/`
 })

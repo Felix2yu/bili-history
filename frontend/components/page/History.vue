@@ -24,7 +24,7 @@
         @toggle-remarks="showRemarks = !showRemarks"
       />
 
-      <div v-if="currentContent === 'history' && !showRemarks" class="transition-all duration-300 ease-in-out px-3 sm:px-4 lg:px-8 py-4 md:py-6">
+      <div v-if="currentContent === 'history' && !showRemarks" class="max-w-[1800px] mx-auto transition-all duration-300 ease-in-out px-3 sm:px-4 lg:px-8 py-4 md:py-6">
         <div class="relative overflow-hidden rounded-2xl bg-white/70 dark:bg-gray-800/60 backdrop-blur-md border border-gray-100 dark:border-gray-700/50 shadow-sm">
           <div class="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-rose-500/5"></div>
           <div class="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-accent/10 to-transparent rounded-full blur-2xl"></div>
@@ -62,7 +62,7 @@
         </div>
       </div>
 
-      <div class="px-3 sm:px-4 lg:px-8 pb-6 md:pb-8">
+      <div class="max-w-[1800px] mx-auto px-3 sm:px-4 lg:px-8 pb-6 md:pb-8">
         <div class="transition-all duration-300 ease-in-out">
           <div v-if="currentContent === 'history' && !showRemarks && availableDates.length > 0" class="mb-4 md:mb-6">
             <DatePagination

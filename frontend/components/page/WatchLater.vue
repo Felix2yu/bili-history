@@ -5,7 +5,7 @@
     <div class="absolute bottom-20 -right-20 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
     <div class="relative py-6">
-      <div class="mx-auto sm:px-2 lg:px-8">
+      <div class="max-w-[1800px] mx-auto sm:px-2 lg:px-8">
         <div class="mb-6">
           <div class="flex items-center justify-between flex-wrap gap-4">
             <div class="flex items-center space-x-4">

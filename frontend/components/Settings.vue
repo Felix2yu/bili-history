@@ -632,7 +632,9 @@ import SettingToggle from './SettingToggle.vue'
 import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
 import { showDialog } from 'vant'
 import { useRoute } from 'vue-router'
-import { THEME_PRESETS } from '~/stores/darkMode'
+import { THEME_PRESETS, useDarkMode } from '~/stores/darkMode'
+
+import { storeToRefs } from 'pinia'
 
 // 设置选项卡
 const settingTabs = [
@@ -789,7 +791,8 @@ const handleSyncDeleteToBilibiliChange = async () => {
 }
 
 // 深色模式设置
-const darkMode = ref('system')
+const appearanceStore = useDarkMode()
+const { darkMode, themeColor } = storeToRefs(appearanceStore)
 const darkModeOptions = [
   { value: 'system', label: '跟随系统' },
   { value: 'light', label: '浅色' },
@@ -798,47 +801,32 @@ const darkModeOptions = [
 
 // 主题色设置
 const themePresets = THEME_PRESETS
-const themeColor = ref('sakura')
 
 // 处理深色模式变更
 const handleDarkModeChange = async () => {
+  const previousMode = darkMode.value
   try {
-    const response = await updateAppearanceConfig({ dark_mode: darkMode.value })
-    if (response.data && response.data.success) {
-      // 同步到 darkMode store
-      const { useDarkMode } = await import('~/stores/darkMode')
-      const darkModeStore = useDarkMode()
-      await darkModeStore.setDarkMode(darkMode.value)
-
-      const modeLabels = { system: '跟随系统', light: '浅色模式', dark: '深色模式' }
-      showNotify({
-        type: 'success',
-        message: `已切换到${modeLabels[darkMode.value]}`
-      })
-    } else {
-      throw new Error(response.data?.message || '更新配置失败')
-    }
+    await appearanceStore.setDarkMode(darkMode.value)
+    const modeLabels = { system: '跟随系统', light: '浅色模式', dark: '深色模式' }
+    showNotify({
+      type: 'success',
+      message: `已切换到${modeLabels[darkMode.value]}`
+    })
   } catch (error) {
     console.error('更新外观配置失败:', error)
     showNotify({
       type: 'danger',
       message: `更新配置失败: ${error.message}`
     })
-    // 恢复原值
-    const modes = ['system', 'light', 'dark']
-    const currentIndex = modes.indexOf(darkMode.value)
-    darkMode.value = modes[(currentIndex + 2) % 3]
+    await appearanceStore.setDarkMode(previousMode)
   }
 }
 
 // 处理主题色变更
 const handleThemeColorChange = async (themeId) => {
   const previousTheme = themeColor.value
-  themeColor.value = themeId
   try {
-    const { useDarkMode } = await import('~/stores/darkMode')
-    const themeStore = useDarkMode()
-    await themeStore.setThemeColor(themeId)
+    await appearanceStore.setThemeColor(themeId)
     const theme = themePresets.find(t => t.id === themeId)
     showNotify({
       type: 'success',
@@ -850,7 +838,7 @@ const handleThemeColorChange = async (themeId) => {
       type: 'danger',
       message: `更新主题色失败: ${error.message}`
     })
-    themeColor.value = previousTheme
+    await appearanceStore.setThemeColor(previousTheme)
   }
 }
 
@@ -1034,22 +1022,13 @@ onMounted(async () => {
         console.log('同步删除配置获取完成')
       })(),
       (async () => {
-        console.log('开始获取外观配置')
+        console.log('同步外观配置')
         try {
-          const response = await getAppearanceConfig()
-          if (response.data && response.data.success) {
-            darkMode.value = response.data.dark_mode || 'system'
-            themeColor.value = response.data.theme_color || 'sakura'
-            console.log('外观配置获取成功:', darkMode.value, themeColor.value)
-          } else {
-            throw new Error(response.data?.message || '获取配置失败')
-          }
+          await appearanceStore.initDarkMode()
         } catch (error) {
-          console.error('获取外观配置失败:', error)
-          darkMode.value = 'system'
-          themeColor.value = 'sakura'
+          console.error('外观配置初始化失败:', error)
         }
-        console.log('外观配置获取完成')
+        console.log('外观配置同步完成')
       })()
     ])
     console.log('Settings组件初始化完成')

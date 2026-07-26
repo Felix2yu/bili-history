@@ -7,7 +7,7 @@
     </div>
 
     <div class="relative py-6">
-      <div class="mx-auto sm:px-2 lg:px-8">
+      <div class="max-w-[1800px] mx-auto sm:px-2 lg:px-8">
         <div class="mb-5">
           <div class="glass-card overflow-hidden relative">
             <div class="absolute top-0 right-0 w-40 h-40 bg-accent-gradient opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>

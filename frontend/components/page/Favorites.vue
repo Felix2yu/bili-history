@@ -8,7 +8,7 @@
     </div>
 
     <div class="relative py-6">
-      <div class="mx-auto sm:px-2 lg:px-8">
+      <div class="max-w-[1800px] mx-auto sm:px-2 lg:px-8">
         <!-- 页面标题区 -->
         <div class="mb-6" v-if="!showFolderContents">
           <div class="flex items-end justify-between flex-wrap gap-4">

@@ -378,7 +378,9 @@ func FetchHistorySync(taskID string, skipExists bool) (map[string]interface{}, e
 		if err == nil && !latestDate.IsZero() {
 			cutoffTimestamp = time.Date(latestDate.Year(), latestDate.Month(), latestDate.Day(), 0, 0, 0, 0, time.Local).Unix()
 		}
+		fmt.Fprintf(os.Stderr, "[FETCH-SYNC] skipExists=true, latestDate=%v, cutoffTimestamp=%d\n", latestDate, cutoffTimestamp)
 	}
+	fmt.Fprintf(os.Stderr, "[FETCH-SYNC] 开始同步抓取, taskID=%s\n", taskID)
 
 	var allEntries []biliapi.HistoryEntry
 	pageCount := 0
@@ -403,6 +405,7 @@ func FetchHistorySync(taskID string, skipExists bool) (map[string]interface{}, e
 		}
 
 		data, err := client.GetHistory(max, viewAt, ps)
+		fmt.Fprintf(os.Stderr, "[FETCH-SYNC] page %d: err=%v, listLen=%d, cursorMax=%d\n", pageCount, err, len(data.List), data.Cursor.Max)
 		if err != nil {
 			consecutiveErrors++
 			lastErrMsg = err.Error()
@@ -452,6 +455,7 @@ func FetchHistorySync(taskID string, skipExists bool) (map[string]interface{}, e
 		setFetchTaskStatus(taskID, status)
 
 		if !hasNew && cutoffTimestamp > 0 {
+			fmt.Fprintf(os.Stderr, "[FETCH-SYNC] 没有新数据, cutoffTimestamp=%d, 停止\n", cutoffTimestamp)
 			break
 		}
 

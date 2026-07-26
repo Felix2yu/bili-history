@@ -123,7 +123,7 @@ func RegisterFetchRoutes(r *gin.RouterGroup) {
 
 func fetchBiliHistoryRealtime(c *gin.Context) {
 	taskID := c.Query("task_id")
-	result, err := services.FetchHistory(taskID, true)
+	result, err := services.FetchHistorySync(taskID, true)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "error",

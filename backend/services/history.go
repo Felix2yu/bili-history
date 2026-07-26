@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -119,11 +120,12 @@ func FetchHistory(taskID string, skipExists bool) (map[string]interface{}, error
 		StartTime: time.Now().Unix(),
 	})
 
+	fmt.Fprintf(os.Stderr, "[FETCH] About to start goroutine, taskID=%s\n", taskID)
 	go func() {
-		utils.LogWarning("[%s] 后台抓取协程已启动, skipExists=%v", taskID, skipExists)
+		fmt.Fprintf(os.Stderr, "[FETCH] goroutine started, taskID=%s, skipExists=%v\n", taskID, skipExists)
 		defer func() {
 			if r := recover(); r != nil {
-				utils.LogError("[%s] 协程 panic: %v", taskID, r)
+				fmt.Fprintf(os.Stderr, "[FETCH] goroutine PANIC: %v\n", r)
 				status := GetFetchTaskStatus(taskID)
 				if status != nil {
 					status.ErrorMessage = fmt.Sprintf("panic: %v", r)

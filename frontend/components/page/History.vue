@@ -30,31 +30,39 @@
           <div class="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-accent/10 to-transparent rounded-full blur-2xl"></div>
           <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-tr from-sky-500/10 to-transparent rounded-full blur-2xl"></div>
 
-          <div class="relative p-4 md:p-6">
-            <div class="flex items-center justify-between flex-wrap gap-3">
-              <div class="flex items-center gap-3 md:gap-4">
-                <div class="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-md shadow-accent/20">
-                  <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <div class="relative p-3 md:p-4">
+            <div class="flex items-center justify-between gap-2 md:gap-4">
+              <div class="flex items-center gap-2 md:gap-3 min-w-0">
+                <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-md shadow-accent/20 shrink-0">
+                  <svg class="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <div>
-                  <div class="text-[11px] md:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">今日浏览</div>
-                  <div class="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
+                <div class="min-w-0">
+                  <div class="text-[10px] md:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">今日浏览</div>
+                  <div class="text-sm md:text-lg font-bold text-gray-900 dark:text-white truncate">
                     {{ currentDate.slice(0, 4) }}年{{ Number(currentDate.slice(4, 6)) }}月{{ Number(currentDate.slice(6, 8)) }}日
                   </div>
                 </div>
               </div>
 
-              <div class="flex items-center gap-4 md:gap-6">
+              <DatePagination
+                :current-date="currentDate"
+                :available-dates="availableDates"
+                :record-count="recordCount"
+                @date-change="handleDateChange"
+                :compact="true"
+              />
+
+              <div class="flex items-center gap-3 md:gap-4 shrink-0">
                 <div class="text-right">
-                  <div class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400">当前筛选</div>
-                  <div class="text-base md:text-lg font-bold text-accent">{{ total }} <span class="text-xs md:text-sm font-normal text-gray-500 dark:text-gray-400">条</span></div>
+                  <div class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">当前筛选</div>
+                  <div class="text-sm md:text-base font-bold text-accent">{{ total }} <span class="text-[10px] md:text-xs font-normal text-gray-500 dark:text-gray-400">条</span></div>
                 </div>
-                <div class="h-10 w-px bg-gray-200 dark:bg-gray-700/50 hidden sm:block"></div>
-                <div class="text-right hidden sm:block">
-                  <div class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400">今日总计</div>
-                  <div class="text-base md:text-lg font-bold text-gray-900 dark:text-white">{{ recordCount }} <span class="text-xs md:text-sm font-normal text-gray-500 dark:text-gray-400">条</span></div>
+                <div class="h-8 w-px bg-gray-200 dark:bg-gray-700/50 hidden md:block"></div>
+                <div class="text-right hidden md:block">
+                  <div class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">今日总计</div>
+                  <div class="text-sm md:text-base font-bold text-gray-900 dark:text-white">{{ recordCount }} <span class="text-[10px] md:text-xs font-normal text-gray-500 dark:text-gray-400">条</span></div>
                 </div>
               </div>
             </div>
@@ -64,14 +72,6 @@
 
       <div class="max-w-[1800px] mx-auto px-3 sm:px-4 lg:px-8 pb-6 md:pb-8">
         <div class="transition-all duration-300 ease-in-out">
-          <div v-if="currentContent === 'history' && !showRemarks && availableDates.length > 0" class="mb-4 md:mb-6">
-            <DatePagination
-              :current-date="currentDate"
-              :available-dates="availableDates"
-              :record-count="recordCount"
-              @date-change="handleDateChange"
-            />
-          </div>
 
           <div>
             <HistoryContent

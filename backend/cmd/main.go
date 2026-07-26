@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io/fs"
 	"net/http"
+	"strings"
 	"time"
 
 	"bilibili-history-go/config"
@@ -11,6 +13,7 @@ import (
 	"bilibili-history-go/scheduler"
 	"bilibili-history-go/services"
 	"bilibili-history-go/utils"
+	"bilibili-history-go/web"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -64,7 +67,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	api := r.Group("")
+	api := r.Group("/api")
 	{
 		routers.RegisterHistoryRoutes(api)
 		routers.RegisterCategoryRoutes(api)
@@ -87,6 +90,14 @@ func main() {
 		routers.RegisterReportRoutes(api)
 		routers.RegisterImageRoutes(api)
 		routers.RegisterDownloadRoutes(api)
+	}
+
+	distFS := web.GetDistFS()
+	if distFS != nil {
+		registerFrontendRoutes(r, distFS)
+		utils.LogSuccess("前端静态资源已嵌入")
+	} else {
+		utils.LogWarning("前端静态资源未嵌入（开发模式）")
 	}
 
 	// MCP 服务
@@ -192,4 +203,32 @@ func main() {
 	} else {
 		r.Run(addr)
 	}
+}
+
+func registerFrontendRoutes(r *gin.Engine, distFS fs.FS) {
+	fileServer := http.FileServer(http.FS(distFS))
+
+	r.NoRoute(func(c *gin.Context) {
+		path := c.Request.URL.Path
+
+		if strings.HasPrefix(path, "/api/") || path == "/api" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
+			return
+		}
+
+		if strings.HasPrefix(path, "/mcp") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
+			return
+		}
+
+		if strings.HasPrefix(path, "/_nuxt/") ||
+			strings.HasPrefix(path, "/icons/") ||
+			strings.Contains(path, ".") {
+			fileServer.ServeHTTP(c.Writer, c.Request)
+			return
+		}
+
+		c.Request.URL.Path = "/"
+		fileServer.ServeHTTP(c.Writer, c.Request)
+	})
 }

@@ -2,16 +2,10 @@ import axios from 'axios'
 // 导入通知组件
 import 'vant/es/notify/style'
 
-const isClient = typeof window !== 'undefined' && typeof localStorage !== 'undefined'
-
-// 客户端默认走 /api 相对路径，通过 Nitro 代理转发到后端
-const CLIENT_DEFAULT_URL = (typeof process !== 'undefined' && process.env?.NUXT_PUBLIC_DEFAULT_BACKEND_URL) || '/api'
-// 服务端直接连后端
-const SERVER_DEFAULT_URL = (typeof process !== 'undefined' && process.env?.NUXT_BACKEND_URL) || 'http://localhost:8899'
+const DEFAULT_URL = (typeof process !== 'undefined' && process.env?.NUXT_PUBLIC_DEFAULT_BACKEND_URL) || '/api'
 
 const getBaseUrl = () => {
-  if (!isClient) return SERVER_DEFAULT_URL
-  return localStorage.getItem('baseUrl') || CLIENT_DEFAULT_URL
+  return localStorage.getItem('baseUrl') || DEFAULT_URL
 }
 
 const BASE_URL = getBaseUrl()
@@ -24,37 +18,30 @@ const SERVER_URLS = [
   'http://0.0.0.0:8899'
 ]
 
-const clientDefault = isClient ? CLIENT_DEFAULT_URL : SERVER_DEFAULT_URL
-if (!SERVER_URLS.includes(clientDefault)) {
-  SERVER_URLS.unshift(clientDefault)
+if (!SERVER_URLS.includes(DEFAULT_URL)) {
+  SERVER_URLS.unshift(DEFAULT_URL)
 }
 
 // 设置服务器地址
 export const setBaseUrl = (url) => {
-  if (isClient) {
-    localStorage.setItem('baseUrl', url)
-  }
+  localStorage.setItem('baseUrl', url)
   // 更新 axios 实例的 baseURL
   updateInstanceBaseUrl(url)
   // 触发API BASE URL更新事件，供其他API模块使用
-  if (isClient) {
-    try {
-      const event = new CustomEvent('api-baseurl-updated', { detail: { url } })
-      window.dispatchEvent(event)
-      console.log('已触发API BaseURL更新事件:', url)
-    } catch (error) {
-      console.error('触发API BaseURL更新事件失败:', error)
-    }
-    window.location.reload() // 刷新页面以应用新的baseUrl
+  try {
+    const event = new CustomEvent('api-baseurl-updated', { detail: { url } })
+    window.dispatchEvent(event)
+    console.log('已触发API BaseURL更新事件:', url)
+  } catch (error) {
+    console.error('触发API BaseURL更新事件失败:', error)
   }
+  window.location.reload() // 刷新页面以应用新的baseUrl
 }
 
 // 重置服务器地址
 export const resetBaseUrl = () => {
-  if (isClient) {
-    localStorage.removeItem('baseUrl')
-    window.location.reload()
-  }
+  localStorage.removeItem('baseUrl')
+  window.location.reload()
 }
 
 // 获取当前服务器地址
@@ -685,7 +672,7 @@ export const downloadVideo = async (bvid, sessdata = null, onMessage, downloadCo
   }
 
   // 从本地存储获取API密钥
-  const apiKey = isClient ? localStorage.getItem('apiKey') : null
+  const apiKey = localStorage.getItem('apiKey')
 
   // 准备请求头
   const headers = {

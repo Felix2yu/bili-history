@@ -1,16 +1,16 @@
 services:
-  backend:
+  bili-history:
     build:
-      context: ./backend
-      dockerfile: docker/Dockerfile
-    image: bili-history-backend:local
-    container_name: bili-history-backend
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/felix2yu/bili-history:local
+    container_name: bili-history
     restart: unless-stopped
     volumes:
       - ./backend/config:/app/config
       - ./output:/app/output
-    expose:
-      - "8899"
+    ports:
+      - "8899:8899"
     environment:
       - TZ=Asia/Shanghai
       - PUID=${PUID:-1000}
@@ -21,20 +21,3 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
-
-  frontend:
-    image: ghcr.io/felix2yu/bili-history-frontend:latest
-    container_name: bili-history-frontend
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    depends_on:
-      backend:
-        condition: service_healthy
-    environment:
-      - TZ=Asia/Shanghai
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - NUXT_BACKEND_URL=http://backend:8899
-      - NUXT_PUBLIC_DEFAULT_BACKEND_URL=/api
-      - NODE_ENV=production

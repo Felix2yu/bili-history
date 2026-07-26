@@ -7,4 +7,4 @@ adduser -D -u "$PUID" -G appuser appuser
 
 chown -R appuser:appuser /app/config /app/output
 
-exec su-exec "$PUID:$PGID" tini -- /app/bilibili-history-go
+exec su-exec "$PUID:$PGID" tini -- /app/bili-history

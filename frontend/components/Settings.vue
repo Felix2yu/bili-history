@@ -294,64 +294,6 @@
                 <ShoutrrrSettings />
               </div>
 
-              <!-- 高级设置卡片（折叠） -->
-              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
-                <button
-                  @click="showAdvanced = !showAdvanced"
-                  class="flex w-full items-center justify-between px-5 md:px-6 py-5 text-left transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                >
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center">
-                      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">高级设置</h2>
-                      <p class="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">服务器地址配置，通常无需修改</p>
-                    </div>
-                  </div>
-                  <svg
-                    class="h-5 w-5 text-gray-400 transition-transform duration-200"
-                    :class="{ 'rotate-180': showAdvanced }"
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <Transition name="slide">
-                  <div v-if="showAdvanced" class="border-t border-gray-100 dark:border-gray-700/50 px-5 md:px-6 py-5">
-                    <div class="mb-3">
-                      <label class="block text-[12px] font-medium text-gray-700 dark:text-gray-300 md:text-sm">API 服务器地址</label>
-                      <p class="text-[11px] text-gray-500 dark:text-gray-400 md:text-xs mt-0.5">修改后将自动刷新页面，仅本地开发时需要修改</p>
-                    </div>
-                    <div class="flex gap-2">
-                      <input
-                        v-model="serverUrl"
-                        type="text"
-                        class="block min-w-0 flex-1 rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-[11px] md:text-sm shadow-sm focus:border-accent focus:ring-accent"
-                        placeholder="例如：http://localhost:8899"
-                      />
-                      <div class="flex shrink-0 gap-2">
-                        <button
-                          @click="resetServerUrl"
-                          class="inline-flex items-center justify-center rounded-xl bg-accent/10 px-3 py-2 text-[11px] font-medium text-accent md:text-sm hover:bg-accent/20 transition-colors"
-                        >
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
-                        </button>
-                        <button
-                          @click="saveServerUrl"
-                          class="inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-[11px] font-medium text-white md:text-sm hover:bg-accent/90 transition-colors"
-                        >
-                          保存
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </Transition>
-              </div>
             </div>
 
             <!-- 数据管理 -->
@@ -629,7 +571,6 @@ import {
 } from '~/utils/api'
 import ShoutrrrSettings from './ShoutrrrSettings.vue'
 import SettingToggle from './SettingToggle.vue'
-import { setBaseUrl, getCurrentBaseUrl } from '~/utils/api'
 import { showDialog } from 'vant'
 import { useRoute } from 'vue-router'
 import { THEME_PRESETS, useDarkMode } from '~/stores/darkMode'
@@ -657,7 +598,6 @@ const settingTabs = [
 
 const route = useRoute()
 const activeTab = ref('basic')
-const showAdvanced = ref(false)
 
 // 监听路由参数变化，切换标签页
 watch(() => route.query.tab, (newTab) => {
@@ -677,7 +617,6 @@ const exportOptions = ref({
   endDate: '',
   exportType: 'year' // 默认导出全年数据
 })
-const serverUrl = ref('')
 const useLocalImages = ref(localStorage.getItem('useLocalImages') === 'true')
 const DEFAULT_MCP_CONFIG = {
   enabled: false,
@@ -710,7 +649,7 @@ const normalizeMcpPath = (path) => {
 }
 
 const mcpUrl = computed(() => {
-  const baseUrl = trimTrailingSlash(serverUrl.value || mcpConfig.value.server_url || getCurrentBaseUrl())
+  const baseUrl = trimTrailingSlash(mcpConfig.value.server_url || (typeof window !== 'undefined' ? window.location.origin : ''))
   const path = normalizeMcpPath(mcpConfig.value.path)
   return path === '/' ? `${baseUrl}/` : `${baseUrl}${path}/`
 })
@@ -918,13 +857,10 @@ const handleSidebarChange = () => {
   })
 }
 
-// 初始化服务器地址
 onMounted(async () => {
   console.log('Settings组件开始挂载')
 
   try {
-    serverUrl.value = getCurrentBaseUrl()
-    console.log('当前服务器地址:', serverUrl.value)
 
     // 监听侧边栏切换事件
     window.addEventListener('sidebar-toggle-changed', handleSidebarToggleEvent)
@@ -1148,57 +1084,6 @@ const downloadSqlite = async () => {
       message: `下载失败：${error.message}`
     })
   }
-}
-
-// 保存服务器地址
-const saveServerUrl = () => {
-  try {
-    const val = serverUrl.value.trim()
-    if (!val) {
-      showNotify({ type: 'danger', message: '请输入服务器地址' })
-      return
-    }
-    // 相对路径（如 /api）或完整 URL 均合法
-    const isRelative = val.startsWith('/')
-    if (!isRelative) {
-      new URL(val)
-    }
-    setBaseUrl(val)
-    showNotify({
-      type: 'success',
-      message: '服务器地址已更新，页面即将刷新'
-    })
-  } catch (error) {
-    showNotify({
-      type: 'danger',
-      message: '请输入有效的URL地址（如 http://localhost:8899 或 /api）'
-    })
-  }
-}
-
-// 在script setup部分添加重置功能
-const FALLBACK_DEFAULT_SERVER_URL = 'http://localhost:8899';
-const DEFAULT_SERVER_URL = import.meta.env.VITE_DEFAULT_BACKEND_URL || FALLBACK_DEFAULT_SERVER_URL;
-
-// 重置服务器地址
-const resetServerUrl = () => {
-  showDialog({
-    title: '重置服务器地址',
-    message: '确定要将服务器地址重置为默认值吗？',
-    showCancelButton: true,
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    confirmButtonColor: 'var(--accent)'
-  }).then((result) => {
-    if (result === 'confirm') {
-      serverUrl.value = DEFAULT_SERVER_URL
-      setBaseUrl(DEFAULT_SERVER_URL)
-      showNotify({
-        type: 'success',
-        message: '服务器地址已重置，页面即将刷新'
-      })
-    }
-  })
 }
 
 // 处理数据库重置

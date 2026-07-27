@@ -73,12 +73,13 @@ type TaskExecution struct {
 }
 
 type Scheduler struct {
-	tasks      map[string]*ScheduleTask
-	mu         sync.RWMutex
-	stopCh     chan struct{}
-	running    bool
-	wg         sync.WaitGroup
-	serverPort int
+	tasks       map[string]*ScheduleTask
+	mu          sync.RWMutex
+	stopCh      chan struct{}
+	running     bool
+	wg          sync.WaitGroup
+	serverPort  int
+	taskTimeout time.Duration
 }
 
 var (
@@ -89,13 +90,20 @@ var (
 func GetScheduler() *Scheduler {
 	once.Do(func() {
 		port := 8899
-		if cfg := config.GetConfig(); cfg != nil && cfg.Server.Port > 0 {
-			port = cfg.Server.Port
+		taskTimeout := 10 * time.Minute
+		if cfg := config.GetConfig(); cfg != nil {
+			if cfg.Server.Port > 0 {
+				port = cfg.Server.Port
+			}
+			if cfg.Scheduler.TaskTimeout > 0 {
+				taskTimeout = time.Duration(cfg.Scheduler.TaskTimeout) * time.Second
+			}
 		}
 		instance = &Scheduler{
-			tasks:      make(map[string]*ScheduleTask),
-			stopCh:     make(chan struct{}),
-			serverPort: port,
+			tasks:       make(map[string]*ScheduleTask),
+			stopCh:      make(chan struct{}),
+			serverPort:  port,
+			taskTimeout: taskTimeout,
 		}
 		instance.loadTasks()
 		instance.initDefaultTasks()
@@ -600,7 +608,7 @@ func normalizeEndpointPath(endpoint string) string {
 }
 
 func (s *Scheduler) doRequest(req *http.Request) (string, error) {
-	client := &http.Client{Timeout: 10 * time.Minute}
+	client := &http.Client{Timeout: s.taskTimeout}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err

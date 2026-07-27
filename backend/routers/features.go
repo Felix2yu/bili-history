@@ -12,6 +12,7 @@ import (
 	"bilibili-history-go/database"
 	"bilibili-history-go/models"
 	"bilibili-history-go/services"
+	"bilibili-history-go/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -548,16 +549,26 @@ func syncFavorites(c *gin.Context) {
 		return
 	}
 
+	go doSyncFavorites(cfg)
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"message": "收藏夹同步任务已启动，正在后台执行",
+	}))
+}
+
+func doSyncFavorites(cfg *config.Config) {
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+
+	utils.LogInfo("[FAVORITE-SYNC] 开始同步收藏夹")
 
 	// Fetch folder list
 	folderData, err := client.GetFavoriteFolderList()
 	if err != nil {
 		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
-			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+			utils.LogError("[FAVORITE-SYNC] Cookie 已过期，请重新登录")
 			return
 		}
-		c.JSON(http.StatusOK, models.ErrorResponse("获取收藏夹列表失败: "+err.Error()))
+		utils.LogError("[FAVORITE-SYNC] 获取收藏夹列表失败: %v", err)
 		return
 	}
 
@@ -747,10 +758,7 @@ func syncFavorites(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"folders_count":  len(folders),
-		"contents_total": totalContents,
-	}))
+	utils.LogInfo("[FAVORITE-SYNC] 同步完成: 收藏夹=%d, 内容=%d条", len(folders), totalContents)
 }
 
 func getLikeList(c *gin.Context) {
@@ -800,22 +808,36 @@ func syncLikes(c *gin.Context) {
 		c.JSON(http.StatusOK, models.ErrorResponse("未配置 SESSDATA，无法同步点赞"))
 		return
 	}
+	if cfg.DedeUserID == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("未配置 DedeUserID"))
+		return
+	}
 
+	go doSyncLikes(cfg)
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"message": "点赞同步任务已启动，正在后台执行",
+	}))
+}
+
+func doSyncLikes(cfg *config.Config) {
 	vmid, _ := strconv.ParseInt(cfg.DedeUserID, 10, 64)
 	if vmid == 0 {
-		c.JSON(http.StatusOK, models.ErrorResponse("未配置 DedeUserID"))
+		utils.LogError("[LIKE-SYNC] DedeUserID 无效")
 		return
 	}
 
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 
+	utils.LogInfo("[LIKE-SYNC] 开始同步点赞列表")
+
 	res, err := client.GetLikedVideos(vmid)
 	if err != nil {
 		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
-			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+			utils.LogError("[LIKE-SYNC] Cookie 已过期，请重新登录")
 			return
 		}
-		c.JSON(http.StatusOK, models.ErrorResponse("获取点赞列表失败: "+err.Error()))
+		utils.LogError("[LIKE-SYNC] 获取点赞列表失败: %v", err)
 		return
 	}
 
@@ -841,12 +863,10 @@ func syncLikes(c *gin.Context) {
 	}
 
 	if err := database.SaveLikedVideos(allVideos); err != nil {
-		_ = err // non-fatal
+		_ = err
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"total": len(allVideos),
-	}))
+	utils.LogInfo("[LIKE-SYNC] 同步完成: %d 条", len(allVideos))
 }
 
 type ToggleLikeRequest struct {

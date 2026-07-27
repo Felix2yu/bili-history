@@ -102,7 +102,7 @@ heatmap:
 
 # 在配置文件中添加任务超时设置
 scheduler:
-  task_timeout: 600  # 任务超时时间（秒）
+  task_timeout: 1800  # 任务超时时间（秒），默认30分钟
   retry_delay: 300   # 重试延迟时间（秒）
   max_retries: 3     # 最大重试次数
 

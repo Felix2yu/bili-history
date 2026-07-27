@@ -644,12 +644,17 @@ func doSyncFavorites(cfg *config.Config) {
 		}
 	}
 
-	// Fetch contents for each folder
+	// Fetch contents for each folder (incremental)
 	totalContents := 0
+	totalSkippedPages := 0
 	for _, folder := range folders {
 		if folder.MediaCount == 0 {
 			continue
 		}
+		syncState, _ := database.GetFolderSyncState(folder.MediaID)
+		isFirstSync := syncState == nil || syncState.Count == 0
+
+		folderContents := 0
 		for pn := 1; ; pn++ {
 			res, err := client.GetFavoriteResources(folder.MediaID, pn, 20)
 			if err != nil {
@@ -658,6 +663,24 @@ func doSyncFavorites(cfg *config.Config) {
 			if len(res.Media) == 0 {
 				break
 			}
+
+			allKnown := true
+			if !isFirstSync && syncState != nil {
+				for _, item := range res.Media {
+					if item.FavTime > syncState.LatestFavTime || !syncState.ContentIDs[item.ID] {
+						allKnown = false
+						break
+					}
+				}
+			} else {
+				allKnown = false
+			}
+
+			if allKnown {
+				totalSkippedPages++
+				break
+			}
+
 			contents := make([]database.FavoriteContent, 0, len(res.Media))
 			for _, item := range res.Media {
 				bvid := ""
@@ -699,12 +722,23 @@ func doSyncFavorites(cfg *config.Config) {
 			if err := database.SaveFavoriteContents(folder.MediaID, contents); err != nil {
 				_ = err
 			}
+			folderContents += len(contents)
 			totalContents += len(contents)
-			// Stop when all pages fetched
+
 			if res.Page.Size > 0 && res.Page.Total > 0 && pn*res.Page.Size >= res.Page.Total {
 				break
 			}
 		}
+		localCount := 0
+		if syncState != nil {
+			localCount = syncState.Count
+		}
+		utils.LogInfo("[FAVORITE-SYNC] 收藏夹[%s] 同步完成: 新增%d条 (本地原有%d, 远端%d)",
+			folder.Title, folderContents, localCount, folder.MediaCount)
+	}
+
+	if totalSkippedPages > 0 {
+		utils.LogInfo("[FAVORITE-SYNC] 增量模式: 跳过%d个无新内容的分页请求", totalSkippedPages)
 	}
 
 	// Sync collected folders (我收藏的)

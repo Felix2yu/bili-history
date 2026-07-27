@@ -742,6 +742,53 @@ func GetWatchLaterVideoByBvid(bvid string) (*WatchLaterVideo, error) {
 	return &v, nil
 }
 
+type FolderSyncState struct {
+	LatestFavTime int64
+	Count         int
+	ContentIDs    map[int64]bool
+}
+
+func GetFolderSyncState(mediaID int64) (*FolderSyncState, error) {
+	db := GetFavoritesDB()
+	if db == nil {
+		return nil, fmt.Errorf("favorites database not available")
+	}
+	state := &FolderSyncState{
+		ContentIDs: make(map[int64]bool),
+	}
+	err := db.QueryRow("SELECT MAX(fav_time), COUNT(*) FROM favorites_content WHERE media_id = ?",
+		mediaID).Scan(&state.LatestFavTime, &state.Count)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := db.Query("SELECT content_id FROM favorites_content WHERE media_id = ?", mediaID)
+	if err != nil {
+		return state, nil
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cid int64
+		if rows.Scan(&cid) == nil {
+			state.ContentIDs[cid] = true
+		}
+	}
+	return state, nil
+}
+
+func GetLatestLikeTime() (int64, int, error) {
+	db := GetLikesDB()
+	if db == nil {
+		return 0, 0, nil
+	}
+	var latest int64
+	var count int
+	err := db.QueryRow("SELECT COALESCE(MAX(pubdate), 0), COUNT(*) FROM liked_videos").Scan(&latest, &count)
+	if err != nil {
+		return 0, 0, err
+	}
+	return latest, count, nil
+}
+
 func GetFavoriteFolders(created bool) ([]map[string]interface{}, int, error) {
 	db := GetFavoritesDB()
 	if db == nil {

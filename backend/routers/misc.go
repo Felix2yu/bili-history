@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"bilibili-history-go/biliapi"
@@ -20,6 +23,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
 )
+
+var asyncExportFiles sync.Map
 
 func RegisterConfigRoutes(r *gin.RouterGroup) {
 	configGroup := r.Group("/config")
@@ -39,19 +44,37 @@ func RegisterSchedulerRoutes(r *gin.RouterGroup) {
 	{
 		scheduler.GET("/tasks", getSchedulerTasks)
 		scheduler.POST("/tasks", addSchedulerTask)
-		// task_id may contain "/" (e.g., "/fetch/bili-history").
-		// Frontend URL-encodes slashes as %2F; Gin UseRawPath handles this.
 		scheduler.PUT("/tasks/:id", updateSchedulerTask)
 		scheduler.DELETE("/tasks/:id", deleteSchedulerTask)
 		scheduler.POST("/tasks/:id/execute", runSchedulerTask)
 		scheduler.POST("/tasks/:id/enable", enableSchedulerTask)
-		// Frontend calls /tasks/history with task_id as a query param.
 		scheduler.GET("/tasks/history", getTaskHistory)
-		// Sub-task management (parent_id stored on the sub task).
 		scheduler.POST("/tasks/:id/subtasks", addSubTask)
 		scheduler.DELETE("/tasks/:id/subtasks/:subId", deleteSubTask)
 		scheduler.GET("/status", getSchedulerStatus)
 	}
+
+	r.GET("/task/:id/status", getAsyncTaskStatus)
+}
+
+func getAsyncTaskStatus(c *gin.Context) {
+	taskID := c.Param("id")
+	if taskID == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("task_id 不能为空"))
+		return
+	}
+
+	status := scheduler.GetAsyncTaskStatus(taskID)
+	if status == nil {
+		c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+			"task_id": taskID,
+			"status":  "not_found",
+			"message": "任务不存在或已过期",
+		}))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(status))
 }
 
 func RegisterDataSyncRoutes(r *gin.RouterGroup) {
@@ -75,6 +98,7 @@ func RegisterExportRoutes(r *gin.RouterGroup) {
 	export := r.Group("/export")
 	{
 		export.POST("/excel", exportToExcel)
+		export.GET("/download/:task_id", downloadExportFile)
 	}
 }
 
@@ -917,12 +941,34 @@ func checkDataIntegrity(c *gin.Context) {
 func syncData(c *gin.Context) {
 	c.ShouldBindJSON(&struct{}{})
 
+	taskID, _ := scheduler.StartAsyncTask("数据同步")
+
+	go doSyncData(taskID)
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"task_id": taskID,
+		"message": "数据同步任务已启动，正在后台执行",
+	}))
+}
+
+func doSyncData(taskID string) {
+	success := false
+	resultMsg := ""
+	errMsg := ""
+
+	defer func() {
+		scheduler.CompleteAsyncTask(taskID, success, resultMsg, errMsg)
+	}()
+
 	result, err := services.RunSyncData()
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
+		errMsg = err.Error()
 		return
 	}
-	c.JSON(http.StatusOK, result)
+
+	success = true
+	resultBytes, _ := json.Marshal(result)
+	resultMsg = string(resultBytes)
 }
 
 func getSyncResult(c *gin.Context) {
@@ -943,7 +989,6 @@ func exportToExcel(c *gin.Context) {
 	var body struct {
 		Years []int `json:"years"`
 	}
-	// Body is optional; if empty, export all years
 	_ = c.ShouldBindJSON(&body)
 
 	db := database.GetSQLiteDB()
@@ -952,16 +997,40 @@ func exportToExcel(c *gin.Context) {
 		return
 	}
 
-	availableYears, err := db.GetAvailableYears()
-	if err != nil || len(availableYears) == 0 {
-		c.JSON(http.StatusOK, models.ErrorResponse("未找到历史记录数据"))
+	taskID, _ := scheduler.StartAsyncTask("导出Excel")
+
+	go doExportToExcel(taskID, body.Years)
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"task_id": taskID,
+		"message": "Excel导出任务已启动，正在后台执行",
+	}))
+}
+
+func doExportToExcel(taskID string, years []int) {
+	success := false
+	resultMsg := ""
+	errMsg := ""
+
+	defer func() {
+		scheduler.CompleteAsyncTask(taskID, success, resultMsg, errMsg)
+	}()
+
+	db := database.GetSQLiteDB()
+	if db == nil {
+		errMsg = "数据库不可用"
 		return
 	}
 
-	// Filter to requested years
+	availableYears, err := db.GetAvailableYears()
+	if err != nil || len(availableYears) == 0 {
+		errMsg = "未找到历史记录数据"
+		return
+	}
+
 	yearSet := make(map[int]bool)
-	if len(body.Years) > 0 {
-		for _, y := range body.Years {
+	if len(years) > 0 {
+		for _, y := range years {
 			yearSet[y] = true
 		}
 	} else {
@@ -973,6 +1042,7 @@ func exportToExcel(c *gin.Context) {
 	f := excelize.NewFile()
 	defer f.Close()
 
+	totalRows := 0
 	firstSheet := true
 	for _, year := range availableYears {
 		if !yearSet[year] {
@@ -987,14 +1057,12 @@ func exportToExcel(c *gin.Context) {
 			f.NewSheet(sheetName)
 		}
 
-		// Header row
 		headers := []string{"日期", "时间", "标题", "UP主", "分区", "时长(秒)", "BVID", "CID", "链接"}
 		for i, h := range headers {
 			cell, _ := excelize.CoordinatesToCellName(i+1, 1)
 			f.SetCellValue(sheetName, cell, h)
 		}
 
-		// Query records
 		records, err := database.GetAllHistoryRecords(year)
 		if err != nil {
 			continue
@@ -1020,14 +1088,53 @@ func exportToExcel(c *gin.Context) {
 				cell, _ := excelize.CoordinatesToCellName(i+1, row)
 				f.SetCellValue(sheetName, cell, v)
 			}
+			totalRows++
 		}
+	}
+
+	tmpDir := os.TempDir()
+	fileName := fmt.Sprintf("bilibili_history_%s.xlsx", taskID)
+	filePath := filepath.Join(tmpDir, fileName)
+
+	if err := f.SaveAs(filePath); err != nil {
+		errMsg = "保存Excel失败: " + err.Error()
+		return
+	}
+
+	success = true
+	resultBytes, _ := json.Marshal(map[string]interface{}{
+		"total_rows": totalRows,
+		"download_url": fmt.Sprintf("/api/export/download/%s", taskID),
+		"file_name":    "bilibili_history.xlsx",
+	})
+	resultMsg = string(resultBytes)
+
+	asyncExportFiles.Store(taskID, filePath)
+}
+
+func downloadExportFile(c *gin.Context) {
+	taskID := c.Param("task_id")
+	if taskID == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("缺少 task_id 参数"))
+		return
+	}
+
+	filePathVal, ok := asyncExportFiles.Load(taskID)
+	if !ok {
+		c.JSON(http.StatusNotFound, models.ErrorResponse("文件不存在或已过期"))
+		return
+	}
+
+	filePath, _ := filePathVal.(string)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		asyncExportFiles.Delete(taskID)
+		c.JSON(http.StatusNotFound, models.ErrorResponse("文件不存在或已过期"))
+		return
 	}
 
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Header("Content-Disposition", "attachment; filename=bilibili_history.xlsx")
-	if err := f.Write(c.Writer); err != nil {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("导出失败: "+err.Error()))
-	}
+	c.File(filePath)
 }
 
 func importFromMysql(c *gin.Context) {

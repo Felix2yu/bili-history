@@ -1747,6 +1747,22 @@ export const syncLikes = () => {
 }
 
 /**
+ * 同步收藏夹数据到本地
+ * POST /favorite/sync
+ */
+export const syncFavorites = () => {
+  return instance.post('/favorite/sync')
+}
+
+/**
+ * 查询异步任务状态
+ * GET /task/:id/status
+ */
+export const getTaskStatus = (taskId) => {
+  return instance.get(`/task/${taskId}/status`)
+}
+
+/**
  * 从本地数据库获取点赞视频列表
  * GET /like/local
  */

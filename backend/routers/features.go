@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 	"bilibili-history-go/config"
 	"bilibili-history-go/database"
 	"bilibili-history-go/models"
+	"bilibili-history-go/scheduler"
 	"bilibili-history-go/services"
 	"bilibili-history-go/utils"
 
@@ -549,14 +551,25 @@ func syncFavorites(c *gin.Context) {
 		return
 	}
 
-	go doSyncFavorites(cfg)
+	taskID, _ := scheduler.StartAsyncTask("同步收藏夹")
+
+	go doSyncFavorites(cfg, taskID)
 
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"task_id": taskID,
 		"message": "收藏夹同步任务已启动，正在后台执行",
 	}))
 }
 
-func doSyncFavorites(cfg *config.Config) {
+func doSyncFavorites(cfg *config.Config, taskID string) {
+	success := false
+	resultMsg := ""
+	errMsg := ""
+
+	defer func() {
+		scheduler.CompleteAsyncTask(taskID, success, resultMsg, errMsg)
+	}()
+
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 
 	utils.LogInfo("[FAVORITE-SYNC] 开始同步收藏夹")
@@ -565,10 +578,12 @@ func doSyncFavorites(cfg *config.Config) {
 	folderData, err := client.GetFavoriteFolderList()
 	if err != nil {
 		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
-			utils.LogError("[FAVORITE-SYNC] Cookie 已过期，请重新登录")
+			errMsg = "Cookie 已过期，请重新登录"
+			utils.LogError("[FAVORITE-SYNC] %s", errMsg)
 			return
 		}
-		utils.LogError("[FAVORITE-SYNC] 获取收藏夹列表失败: %v", err)
+		errMsg = fmt.Sprintf("获取收藏夹列表失败: %v", err)
+		utils.LogError("[FAVORITE-SYNC] %s", errMsg)
 		return
 	}
 
@@ -793,6 +808,12 @@ func doSyncFavorites(cfg *config.Config) {
 	}
 
 	utils.LogInfo("[FAVORITE-SYNC] 同步完成: 收藏夹=%d, 内容=%d条", len(folders), totalContents)
+	success = true
+	resultBytes, _ := json.Marshal(map[string]interface{}{
+		"folders":  len(folders),
+		"contents": totalContents,
+	})
+	resultMsg = string(resultBytes)
 }
 
 func getLikeList(c *gin.Context) {
@@ -847,17 +868,29 @@ func syncLikes(c *gin.Context) {
 		return
 	}
 
-	go doSyncLikes(cfg)
+	taskID, _ := scheduler.StartAsyncTask("同步点赞列表")
+
+	go doSyncLikes(cfg, taskID)
 
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"task_id": taskID,
 		"message": "点赞同步任务已启动，正在后台执行",
 	}))
 }
 
-func doSyncLikes(cfg *config.Config) {
+func doSyncLikes(cfg *config.Config, taskID string) {
+	success := false
+	resultMsg := ""
+	errMsg := ""
+
+	defer func() {
+		scheduler.CompleteAsyncTask(taskID, success, resultMsg, errMsg)
+	}()
+
 	vmid, _ := strconv.ParseInt(cfg.DedeUserID, 10, 64)
 	if vmid == 0 {
-		utils.LogError("[LIKE-SYNC] DedeUserID 无效")
+		errMsg = "DedeUserID 无效"
+		utils.LogError("[LIKE-SYNC] %s", errMsg)
 		return
 	}
 
@@ -868,10 +901,12 @@ func doSyncLikes(cfg *config.Config) {
 	res, err := client.GetLikedVideos(vmid)
 	if err != nil {
 		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
-			utils.LogError("[LIKE-SYNC] Cookie 已过期，请重新登录")
+			errMsg = "Cookie 已过期，请重新登录"
+			utils.LogError("[LIKE-SYNC] %s", errMsg)
 			return
 		}
-		utils.LogError("[LIKE-SYNC] 获取点赞列表失败: %v", err)
+		errMsg = fmt.Sprintf("获取点赞列表失败: %v", err)
+		utils.LogError("[LIKE-SYNC] %s", errMsg)
 		return
 	}
 
@@ -901,6 +936,11 @@ func doSyncLikes(cfg *config.Config) {
 	}
 
 	utils.LogInfo("[LIKE-SYNC] 同步完成: %d 条", len(allVideos))
+	success = true
+	resultBytes, _ := json.Marshal(map[string]interface{}{
+		"total": len(allVideos),
+	})
+	resultMsg = string(resultBytes)
 }
 
 type ToggleLikeRequest struct {
@@ -1014,23 +1054,39 @@ func getWatchLaterLocal(c *gin.Context) {
 }
 
 func syncWatchLater(c *gin.Context) {
-	// /sync behaves identically to /list: pull the full remote list and refresh
-	// the local cache. Keeping a separate endpoint so the frontend can call it
-	// explicitly without changing the list response semantics.
 	cfg := config.GetConfig()
 	if cfg == nil || cfg.SESSDATA == "" {
 		c.JSON(http.StatusOK, models.ErrorResponse("未配置 SESSDATA，无法同步 B 站稍后再看"))
 		return
 	}
 
+	taskID, _ := scheduler.StartAsyncTask("同步稍后再看")
+
+	go doSyncWatchLater(cfg, taskID)
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"task_id": taskID,
+		"message": "稍后再看同步任务已启动，正在后台执行",
+	}))
+}
+
+func doSyncWatchLater(cfg *config.Config, taskID string) {
+	success := false
+	resultMsg := ""
+	errMsg := ""
+
+	defer func() {
+		scheduler.CompleteAsyncTask(taskID, success, resultMsg, errMsg)
+	}()
+
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 	data, err := client.GetWatchLaterList()
 	if err != nil {
 		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
-			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
+			errMsg = "Cookie 已过期，请重新登录"
 			return
 		}
-		c.JSON(http.StatusOK, models.ErrorResponse("同步稍后再看失败: "+err.Error()))
+		errMsg = fmt.Sprintf("同步稍后再看失败: %v", err)
 		return
 	}
 
@@ -1059,10 +1115,11 @@ func syncWatchLater(c *gin.Context) {
 		_ = saveErr
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"list":  localVideos,
+	success = true
+	resultBytes, _ := json.Marshal(map[string]interface{}{
 		"total": len(localVideos),
-	}))
+	})
+	resultMsg = string(resultBytes)
 }
 
 // deleteWatchLaterVideo removes a single video from B 站稍后再看 by bvid.

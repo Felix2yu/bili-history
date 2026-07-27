@@ -1009,3 +1009,104 @@ func paramsToString(p interface{}) string {
 		return string(data)
 	}
 }
+
+type asyncTaskRuntime struct {
+	TaskID    string
+	Name      string
+	StartTime time.Time
+	Status    string
+	Result    string
+	Error     string
+	EndTime   time.Time
+}
+
+var (
+	asyncTasksMu sync.RWMutex
+	asyncTasks   = make(map[string]*asyncTaskRuntime)
+)
+
+func StartAsyncTask(name string) (string, time.Time) {
+	asyncTasksMu.Lock()
+	defer asyncTasksMu.Unlock()
+
+	taskID := fmt.Sprintf("async_%d", time.Now().UnixNano())
+	start := time.Now()
+
+	rt := &asyncTaskRuntime{
+		TaskID:    taskID,
+		Name:      name,
+		StartTime: start,
+		Status:    "running",
+	}
+	asyncTasks[taskID] = rt
+
+	_ = database.RecordExecution(taskID, taskID, "running", "", "", start, start)
+
+	utils.LogInfo("[ASYNC-TASK] 任务已启动: %s (%s)", name, taskID)
+	return taskID, start
+}
+
+func CompleteAsyncTask(taskID string, success bool, result string, errMsg string) {
+	asyncTasksMu.Lock()
+	rt, ok := asyncTasks[taskID]
+	if !ok {
+		asyncTasksMu.Unlock()
+		return
+	}
+
+	end := time.Now()
+	rt.EndTime = end
+	if success {
+		rt.Status = "completed"
+		rt.Result = result
+		utils.LogSuccess("[ASYNC-TASK] 任务完成: %s (%s)", rt.Name, taskID)
+	} else {
+		rt.Status = "failed"
+		rt.Error = errMsg
+		utils.LogError("[ASYNC-TASK] 任务失败: %s (%s) - %s", rt.Name, taskID, errMsg)
+	}
+	asyncTasksMu.Unlock()
+
+	statusStr := "completed"
+	if !success {
+		statusStr = "failed"
+	}
+	resultStr := result
+	if len(resultStr) > 500 {
+		resultStr = resultStr[:500]
+	}
+	_ = database.RecordExecution(taskID, taskID, statusStr, resultStr, errMsg, rt.StartTime, end)
+}
+
+func GetAsyncTaskStatus(taskID string) map[string]interface{} {
+	asyncTasksMu.RLock()
+	rt, ok := asyncTasks[taskID]
+	asyncTasksMu.RUnlock()
+
+	if ok {
+		result := map[string]interface{}{
+			"task_id":    rt.TaskID,
+			"name":       rt.Name,
+			"status":     rt.Status,
+			"start_time": rt.StartTime.Format("2006-01-02 15:04:05"),
+		}
+		if rt.Status == "completed" || rt.Status == "failed" {
+			result["end_time"] = rt.EndTime.Format("2006-01-02 15:04:05")
+			result["duration"] = rt.EndTime.Sub(rt.StartTime).Seconds()
+		}
+		if rt.Result != "" {
+			result["result"] = rt.Result
+		}
+		if rt.Error != "" {
+			result["error"] = rt.Error
+		}
+		return result
+	}
+
+	history, _ := database.GetExecutionHistory(taskID, 1)
+	if len(history) > 0 {
+		return history[0]
+	}
+
+	return nil
+}

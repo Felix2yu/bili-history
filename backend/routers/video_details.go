@@ -9,6 +9,7 @@ import (
 
 	"bilibili-history-go/database"
 	"bilibili-history-go/models"
+	"bilibili-history-go/scheduler"
 	"bilibili-history-go/services"
 
 	"github.com/gin-gonic/gin"
@@ -373,13 +374,34 @@ func getVideoDetailProgress(c *gin.Context) {
 }
 
 func syncHistoryTagNames(c *gin.Context) {
+	taskID, _ := scheduler.StartAsyncTask("同步历史分区标签")
+
+	go doSyncHistoryTagNames(taskID)
+
+	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
+		"task_id": taskID,
+		"message": "历史分区标签同步任务已启动，正在后台执行",
+	}))
+}
+
+func doSyncHistoryTagNames(taskID string) {
+	success := false
+	resultMsg := ""
+	errMsg := ""
+
+	defer func() {
+		scheduler.CompleteAsyncTask(taskID, success, resultMsg, errMsg)
+	}()
+
 	updated, err := services.SyncHistoryTagNames()
 	if err != nil {
-		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		errMsg = err.Error()
 		return
 	}
-	c.JSON(http.StatusOK, models.SuccessResponse(gin.H{
+
+	success = true
+	resultBytes, _ := json.Marshal(map[string]interface{}{
 		"updated": updated,
-		"message": fmt.Sprintf("已更新 %d 条历史记录的分区标签", updated),
-	}))
+	})
+	resultMsg = string(resultBytes)
 }

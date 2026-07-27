@@ -186,7 +186,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAsyncData } from '#imports'
 import { showNotify } from 'vant'
 import 'vant/es/notify/style'
-import { getLikeList, getLikeLocal, syncLikes, batchCheckFavoriteStatus } from '~/utils/api'
+import { getLikeList, getLikeLocal, syncLikes, getTaskStatus, batchCheckFavoriteStatus } from '~/utils/api'
 import VideoGridCard from '../VideoGridCard.vue'
 import VideoFilterBar from '../VideoFilterBar.vue'
 import Pagination from '../Pagination.vue'
@@ -328,8 +328,20 @@ async function syncFromBilibili() {
   try {
     const response = await syncLikes()
     if (response.data.status === 'success') {
-      const total = response.data.data?.total || 0
-      showNotify({ type: 'success', message: `同步完成：共 ${total} 条点赞记录` })
+      const data = response.data.data || {}
+      if (data.task_id) {
+        const result = await pollTaskStatus(data.task_id)
+        if (result.status === 'success' || result.status === 'completed') {
+          const extra = parseResultJson(result.result)
+          const total = extra?.total || 0
+          showNotify({ type: 'success', message: `同步完成：共 ${total} 条点赞记录` })
+        } else {
+          showNotify({ type: 'warning', message: result.error || result.message || '同步失败' })
+        }
+      } else {
+        const total = data.total || 0
+        showNotify({ type: 'success', message: `同步完成：共 ${total} 条点赞记录` })
+      }
       await fetchLocal()
       loadFilterOptions()
     } else {
@@ -340,6 +352,32 @@ async function syncFromBilibili() {
   } finally {
     syncing.value = false
   }
+}
+
+function parseResultJson(result) {
+  if (!result) return null
+  if (typeof result === 'object') return result
+  try {
+    return JSON.parse(result)
+  } catch (e) {
+    return null
+  }
+}
+
+async function pollTaskStatus(taskId, maxAttempts = 60, interval = 2000) {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const response = await getTaskStatus(taskId)
+      const result = response.data.data || response.data
+      if (result.status === 'success' || result.status === 'failed' || result.status === 'completed') {
+        return result
+      }
+    } catch (e) {
+      console.warn('查询任务状态失败:', e)
+    }
+    await new Promise(resolve => setTimeout(resolve, interval))
+  }
+  return { status: 'timeout', message: '任务执行超时，请稍后查看结果' }
 }
 
 function isVideoFavorited(aid) {

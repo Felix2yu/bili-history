@@ -111,7 +111,7 @@
             <!-- 收藏夹列表 -->
             <div class="animate-fadeIn" v-if="!showFolderContents">
               <!-- 收藏夹列表显示区域 -->
-              <div v-if="loading" class="flex justify-center py-20">
+              <div v-if="initialLoading || loading" class="flex justify-center py-20">
                 <div class="glass-card px-5 py-4 flex items-center gap-3">
                   <div class="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
                   <span class="text-sm text-gray-700 dark:text-gray-300">加载中...</span>
@@ -392,6 +392,7 @@ const pageSize = ref(40)
 const totalItems = ref(0)
 const searchKeyword = ref('')
 const showFavoritesTip = ref(localStorage.getItem('favorites_tip_dismissed') !== 'true')
+const initialLoading = ref(true)
 
 function dismissFavoritesTip() {
   showFavoritesTip.value = false
@@ -446,8 +447,8 @@ watch(activeTab, () => {
   fetchFavorites()
 })
 
-// SSR: 初始数据在服务端获取（仅读取本地数据，避免调用远程B站API导致超时）
-const { data: initialData } = await useAsyncData('favorites-initial', async () => {
+// 非阻塞加载初始数据（仅读取本地数据，不调用远程B站API避免超时）
+const { data: initialData } = useAsyncData('favorites-initial', async () => {
   try {
     const loginResponse = await getLoginStatus()
     const loggedIn = loginResponse.data && loginResponse.data.code === 0 && loginResponse.data.data.isLogin
@@ -456,33 +457,44 @@ const { data: initialData } = await useAsyncData('favorites-initial', async () =
       return { isLoggedIn: false, favorites: [], totalItems: 0 }
     }
 
-    // SSR 阶段仅读取本地数据，不调用远程B站API避免504超时
     const response = await getLocalFavoriteFolders({ page: 1, size: 50 })
     const favorites = response.data.status === 'success' ? (response.data.data.list || []) : []
     const totalItems = response.data.status === 'success' ? (response.data.data.count || 0) : 0
 
     return { isLoggedIn: true, favorites, totalItems }
   } catch (error) {
-    console.error('SSR 获取收藏夹失败:', error)
+    console.error('获取初始收藏夹数据失败:', error)
     return { isLoggedIn: false, favorites: [], totalItems: 0 }
   }
 })
 
-// 从 SSR 数据初始化组件状态
-if (initialData.value) {
-  isLoggedIn.value = initialData.value.isLoggedIn
-  favorites.value = initialData.value.favorites
-  totalItems.value = initialData.value.totalItems
-}
+// initialData 异步解析完成后初始化组件状态
+watch(initialData, (val) => {
+  if (val) {
+    isLoggedIn.value = val.isLoggedIn
+    favorites.value = val.favorites
+    totalItems.value = val.totalItems
+    initialLoading.value = false
+  }
+})
 
 // 组件挂载时加载数据
 onMounted(() => {
-  if (!initialData.value?.isLoggedIn) {
+  if (initialData.value) {
+    initialLoading.value = false
+    if (!initialData.value.isLoggedIn) {
+      checkLoginStatus()
+    }
+    if (initialData.value.isLoggedIn && initialData.value.favorites.length === 0) {
+      fetchFavorites()
+    }
+  } else {
     checkLoginStatus()
   }
-  if (isLoggedIn.value && favorites.value.length === 0) {
-    fetchFavorites()
-  }
+
+  setTimeout(() => {
+    initialLoading.value = false
+  }, 8000)
 
   // 添加全局登录状态变化的监听
   window.addEventListener('login-status-changed', handleLoginStatusChange)
@@ -538,25 +550,27 @@ async function fetchFavorites() {
     let response
 
     if (activeTab.value === 'created') {
-      // 优先读本地
       response = await getLocalFavoriteFolders({
         page: currentPage.value,
         size: pageSize.value
       })
-      // 本地没有数据时，从B站在线获取
       if (!response || response.data.status !== 'success' || !response.data.data.list || response.data.data.list.length === 0) {
+        if (response && response.data.status !== 'success') {
+          console.warn('本地收藏夹读取失败，尝试从B站在线获取:', response.data.message)
+        }
         response = await getCreatedFavoriteFolders({
           keyword: searchKeyword.value || undefined
         })
       }
     } else if (activeTab.value === 'collected') {
-      // 优先读本地
       response = await getLocalCollectedFolders({
         page: currentPage.value,
         size: pageSize.value
       })
-      // 本地没有数据时，从B站在线获取
       if (!response || response.data.status !== 'success' || !response.data.data.list || response.data.data.list.length === 0) {
+        if (response && response.data.status !== 'success') {
+          console.warn('本地收藏夹读取失败，尝试从B站在线获取:', response.data.message)
+        }
         response = await getCollectedFavoriteFolders({
           pn: currentPage.value,
           ps: pageSize.value,
@@ -829,13 +843,13 @@ async function fetchAllContents() {
     fetchApi = (page) => {
       console.log(`请求收藏夹第${page}页, 参数:`, {
         media_id: folderId,
-        pn: page,
-        ps: contentsPageSize.value
+        page: page,
+        size: contentsPageSize.value
       })
       return getFavoriteContents({
         media_id: folderId,
-        pn: page,
-        ps: contentsPageSize.value
+        page: page,
+        size: contentsPageSize.value
       })
     }
 

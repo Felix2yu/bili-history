@@ -52,6 +52,7 @@ export const getCurrentBaseUrl = () => {
 // 创建一个 axios 实例
 export const instance = axios.create({
   baseURL: BASE_URL,
+  timeout: 15000,
 })
 
 // 请求拦截器

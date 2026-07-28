@@ -154,8 +154,8 @@ func batchCheckFavoriteStatus(c *gin.Context) {
 }
 
 func getLocalFavoriteFolders(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	page, _ := strconv.Atoi(c.DefaultQuery("page", c.DefaultQuery("pn", "1")))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", c.DefaultQuery("ps", "20")))
 
 	list, total, err := database.GetFavoriteFolders(true)
 	if err != nil {
@@ -182,8 +182,8 @@ func getLocalFavoriteFolders(c *gin.Context) {
 }
 
 func getLocalCollectedFolders(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	page, _ := strconv.Atoi(c.DefaultQuery("page", c.DefaultQuery("pn", "1")))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", c.DefaultQuery("ps", "20")))
 
 	list, total, err := database.GetFavoriteFoldersByType(1, page, size) // 1 = collected
 	if err != nil {
@@ -244,8 +244,18 @@ func getCollectedFavoriteFolders(c *gin.Context) {
 func getLocalFavoriteContents(c *gin.Context) {
 	mediaIDStr := c.Query("media_id")
 	mediaID, _ := strconv.ParseInt(mediaIDStr, 10, 64)
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	page := 1
+	if p, err := strconv.Atoi(c.DefaultQuery("page", "0")); err == nil && p > 0 {
+		page = p
+	} else if p, err := strconv.Atoi(c.DefaultQuery("pn", "1")); err == nil && p > 0 {
+		page = p
+	}
+	size := 20
+	if s, err := strconv.Atoi(c.DefaultQuery("size", "0")); err == nil && s > 0 {
+		size = s
+	} else if s, err := strconv.Atoi(c.DefaultQuery("ps", "20")); err == nil && s > 0 {
+		size = s
+	}
 
 	list, total, err := database.GetFavoriteContents(mediaID, page, size)
 	if err != nil {

@@ -26,7 +26,7 @@
         <span>历史记录</span>
       </router-link>
 
-      <router-link to="/favorites" @click="emit('navigate')"
+      <router-link v-if="!compact" to="/favorites" @click="emit('navigate')"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
         :class="currentContent === 'favorites' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
       >
@@ -36,7 +36,7 @@
         <span>我的收藏</span>
       </router-link>
 
-      <router-link to="/watchlater" @click="emit('navigate')"
+      <router-link v-if="!compact" to="/watchlater" @click="emit('navigate')"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
         :class="currentContent === 'watchlater' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
       >
@@ -46,7 +46,7 @@
         <span>稍后再看</span>
       </router-link>
 
-      <router-link to="/likes" @click="emit('navigate')"
+      <router-link v-if="!compact" to="/likes" @click="emit('navigate')"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
         :class="currentContent === 'likes' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
       >
@@ -149,6 +149,9 @@ import 'vant/es/notify/style'
 import 'vant/es/dialog/style'
 import LoginDialog from './LoginDialog.vue'
 
+const props = defineProps({
+  compact: { type: Boolean, default: false }
+})
 const emit = defineEmits(['navigate'])
 const route = useRoute()
 const router = useRouter()

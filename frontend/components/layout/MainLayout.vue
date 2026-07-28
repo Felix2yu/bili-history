@@ -27,7 +27,7 @@
           v-if="showSidebar"
           class="fixed top-0 left-0 bottom-0 z-[60] glass-sidebar w-64 flex flex-col md:hidden"
         >
-          <Sidebar @navigate="showSidebar = false" />
+          <Sidebar compact @navigate="showSidebar = false" />
         </div>
       </Transition>
     </Teleport>

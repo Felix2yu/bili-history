@@ -2,8 +2,26 @@
   <div class="flex flex-col h-full">
     <!-- Header with logo and close -->
     <div class="flex items-center justify-between px-5 py-5 border-b border-white/10 dark:border-white/5">
-      <router-link to="/" @click="emit('navigate')" class="flex-1 flex items-center justify-center gap-2.5">
-        <img src="/logo-text.svg" class="h-10 md:h-11 w-auto object-contain" alt="拾帧集" />
+      <router-link to="/" @click="emit('navigate')" class="flex-1 flex items-center justify-center gap-2.5 text-[#1a1a2e] dark:text-gray-200">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 52" class="h-10 md:h-11 w-auto object-contain">
+          <defs>
+            <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#fb7299"/>
+              <stop offset="100%" stop-color="#ff8fab"/>
+            </linearGradient>
+          </defs>
+          <g transform="translate(2 6)">
+            <rect x="0" y="6" width="34" height="30" rx="7" fill="url(#lg)"/>
+            <rect x="3" y="9" width="28" height="24" rx="4" fill="#1a1a2e"/>
+            <circle cx="17" cy="21" r="5" fill="none" stroke="#fff" stroke-width="1.8"/>
+            <path d="M17 18 L17 21 L20 23" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M12 5 L9 0" stroke="url(#lg)" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M22 5 L25 0" stroke="url(#lg)" stroke-width="2.5" stroke-linecap="round"/>
+          </g>
+          <text x="46" y="36" font-family="'PingFang SC', 'Noto Serif SC', 'Songti SC', serif" font-size="22" font-weight="600" fill="currentColor" letter-spacing="1.5">
+            拾帧集
+          </text>
+        </svg>
       </router-link>
       <button @click="emit('navigate')" class="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/10 dark:hover:bg-white/5 transition-colors text-gray-500 md:hidden ml-2">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

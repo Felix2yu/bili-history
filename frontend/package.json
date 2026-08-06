@@ -13,7 +13,7 @@
     "postinstall": "nuxt prepare && [ -f scripts/ignore-icloud.sh ] && bash scripts/ignore-icloud.sh || true"
   },
   "dependencies": {
-    "@pinia/nuxt": "^0.9.0",
+    "@pinia/nuxt": "^1.0.1",
     "@tailwindcss/forms": "^0.5.11",
     "@vueuse/core": "^14.3.0",
     "@vueuse/nuxt": "^14.3.0",
@@ -24,7 +24,7 @@
     "echarts-wordcloud": "^2.1.0",
     "gsap": "^3.15.0",
     "nuxt": "^3.15.0",
-    "pinia": "^3.0.0",
+    "pinia": "^4.0.2",
     "vant": "^4.9.24",
     "vue": "^3.5.39",
     "vue-echarts": "^8.0.1",

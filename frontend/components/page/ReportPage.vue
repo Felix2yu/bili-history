@@ -302,6 +302,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+@reference "../../assets/css/main.css";
 .glass-icon-btn {
   @apply w-10 h-10 rounded-full flex items-center justify-center
     bg-white/80 dark:bg-gray-800/80

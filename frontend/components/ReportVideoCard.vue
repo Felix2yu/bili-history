@@ -142,6 +142,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+@reference "../assets/css/main.css";
 .glass-card {
   @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm
     rounded-xl border border-gray-200/50 dark:border-gray-700/50

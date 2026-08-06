@@ -1,8 +1,5 @@
-import forms from '@tailwindcss/forms'
-
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: 'class',
   content: [
     './components/**/*.{vue,js,ts}',
     './layouts/**/*.vue',
@@ -192,5 +189,4 @@ export default {
       '3xl': '1920px',
     },
   },
-  plugins: [forms],
 }

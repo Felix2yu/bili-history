@@ -225,7 +225,7 @@
                           :value="mcpUrl"
                           readonly
                           type="text"
-                          class="block min-w-0 flex-1 rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
+                          class="block min-w-0 flex-1 rounded-xl px-3.5 py-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                         />
                         <button
                           @click="copyText(mcpUrl, 'MCP URL')"
@@ -246,7 +246,7 @@
                           :value="mcpConfig.token"
                           readonly
                           type="password"
-                          class="block min-w-0 flex-1 rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
+                          class="block min-w-0 flex-1 rounded-xl px-3.5 py-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                           placeholder="未配置Token"
                         />
                         <button
@@ -280,7 +280,7 @@
                       :value="mcpConnectionPrompt"
                       readonly
                       rows="8"
-                      class="block w-full resize-y rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] leading-5 md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
+                      class="block w-full resize-y rounded-xl px-3.5 py-2.5 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] leading-5 md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                     ></textarea>
                   </div>
 
@@ -302,7 +302,7 @@
                       :value="mcpConfig.skill_content || '后端未找到配套 Skill 文件'"
                       readonly
                       rows="10"
-                      class="block w-full resize-y rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] leading-5 md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
+                      class="block w-full resize-y rounded-xl px-3.5 py-2.5 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[0.6875rem] leading-5 md:text-sm focus:border-accent focus:ring-accent dark:text-gray-100"
                     ></textarea>
                   </div>
                 </div>
@@ -344,7 +344,7 @@
                         <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">年份</label>
                         <select
                           v-model="exportOptions.year"
-                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm py-2"
+                          class="block w-full rounded-xl px-3 py-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm"
                         >
                           <option v-for="year in availableYears" :key="year" :value="year">
                             {{ year }}年
@@ -356,7 +356,7 @@
                         <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">导出类型</label>
                         <select
                           v-model="exportOptions.exportType"
-                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm py-2"
+                          class="block w-full rounded-xl px-3 py-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm"
                         >
                           <option value="year">全年数据</option>
                           <option value="month">按月份</option>
@@ -368,7 +368,7 @@
                         <label class="block text-[0.75rem] font-medium text-gray-700 dark:text-gray-300 md:text-sm mb-1.5">月份</label>
                         <select
                           v-model="exportOptions.month"
-                          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm py-2"
+                          class="block w-full rounded-xl px-3 py-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm"
                         >
                           <option v-for="month in 12" :key="month" :value="month">
                             {{ month }}月
@@ -382,7 +382,7 @@
                           <input
                             type="date"
                             v-model="exportOptions.startDate"
-                            class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm py-2"
+                            class="block w-full rounded-xl px-3 py-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm"
                           />
                         </div>
 
@@ -391,7 +391,7 @@
                           <input
                             type="date"
                             v-model="exportOptions.endDate"
-                            class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm py-2"
+                            class="block w-full rounded-xl px-3 py-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm"
                           />
                         </div>
                       </template>

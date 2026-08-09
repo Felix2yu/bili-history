@@ -49,7 +49,7 @@
         <textarea
           v-model="config.urls"
           rows="5"
-          class="block w-full rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm resize-y"
+          class="block w-full rounded-xl px-3.5 py-2.5 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-accent focus:ring-accent text-[0.6875rem] md:text-sm resize-y"
           placeholder="每行一个地址，例如：&#10;bark://api.day.app/your-key&#10;tgram://bot-token/chat-id/&#10;smtp://user:pass@host:port/from@example.com/to@example.com&#10;discord://token@id"
         ></textarea>
         <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400 md:text-xs mt-2">

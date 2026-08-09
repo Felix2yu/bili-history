@@ -943,32 +943,16 @@ func syncData(c *gin.Context) {
 
 	taskID, _ := scheduler.StartAsyncTask("数据同步")
 
-	go doSyncData(taskID)
-
-	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"task_id": taskID,
-		"message": "数据同步任务已启动，正在后台执行",
-	}))
-}
-
-func doSyncData(taskID string) {
-	success := false
-	resultMsg := ""
-	errMsg := ""
-
-	defer func() {
-		scheduler.CompleteAsyncTask(taskID, success, resultMsg, errMsg)
-	}()
-
 	result, err := services.RunSyncData()
 	if err != nil {
-		errMsg = err.Error()
+		scheduler.CompleteAsyncTask(taskID, false, "", err.Error())
+		c.JSON(http.StatusOK, gin.H{"success": false, "message": err.Error()})
 		return
 	}
 
-	success = true
 	resultBytes, _ := json.Marshal(result)
-	resultMsg = string(resultBytes)
+	scheduler.CompleteAsyncTask(taskID, true, string(resultBytes), "")
+	c.JSON(http.StatusOK, result)
 }
 
 func getSyncResult(c *gin.Context) {

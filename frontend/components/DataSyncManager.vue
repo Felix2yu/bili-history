@@ -198,13 +198,18 @@ const startSync = async () => {
   isSyncing.value = true
   try {
     const response = await syncData()
+    const res = response.data
 
-    if (response.data.success) {
-      syncResult.value = response.data
-      showNotify({ type: 'success', message: response.data.message || '状态刷新完成' })
-      emit('sync-complete', response.data)
+    const isSuccess =
+      res && (res.success === true || (res.success === undefined && res.status === 'success'))
+
+    if (isSuccess) {
+      syncResult.value = res.success === true ? res : null
+      showNotify({ type: 'success', message: res.message || res.data?.message || '状态刷新完成' })
+      await fetchSyncResult()
+      emit('sync-complete', res)
     } else {
-      showNotify({ type: 'danger', message: response.data.message || '操作失败' })
+      showNotify({ type: 'danger', message: res?.message || res?.data?.message || '操作失败' })
     }
   } catch (error) {
     console.error('获取状态失败:', error)

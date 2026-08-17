@@ -7,7 +7,7 @@ require (
 	github.com/containrrr/shoutrrr v0.8.0
 	github.com/gin-contrib/cors v1.7.7
 	github.com/gin-gonic/gin v1.12.0
-	github.com/mark3labs/mcp-go v0.57.0
+	github.com/mark3labs/mcp-go v0.58.0
 	github.com/mattn/go-sqlite3 v1.14.49
 	github.com/xuri/excelize/v2 v2.11.0
 	gopkg.in/yaml.v3 v3.0.1

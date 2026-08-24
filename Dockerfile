@@ -14,7 +14,7 @@ COPY --link frontend/ .
 RUN pnpm run generate
 
 # ===== 阶段 2: 构建后端 Go 二进制 =====
-FROM golang:1.26-alpine AS backend-builder
+FROM golang:1.27-alpine AS backend-builder
 
 ARG PROXY=""
 ENV all_proxy=${PROXY}

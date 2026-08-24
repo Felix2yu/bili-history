@@ -51,7 +51,7 @@ docker-compose.override.yml
 htmlcov/
 backend/bilibili-history-go
 
-# npm lock file (project uses bun)
+# npm lock file (project uses pnpm)
 package-lock.json
 backend/main
 backend/fonts/

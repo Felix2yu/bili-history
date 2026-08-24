@@ -1,15 +1,17 @@
 # syntax=docker/dockerfile:1.7
 
 # ===== 阶段 1: 构建前端 =====
-FROM oven/bun:1 AS frontend-builder
+FROM node:22-slim AS frontend-builder
 WORKDIR /app/frontend
+ENV CI=true
+RUN corepack enable && corepack prepare pnpm@11.23.0 --activate
 
-COPY --link frontend/package.json frontend/bun.lock* ./
-RUN --mount=type=cache,target=/root/.bun/install/cache,sharing=locked \
-    bun install --frozen-lockfile
+COPY --link frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
+    pnpm install --frozen-lockfile
 
 COPY --link frontend/ .
-RUN bun run generate
+RUN pnpm run generate
 
 # ===== 阶段 2: 构建后端 Go 二进制 =====
 FROM golang:1.26-alpine AS backend-builder

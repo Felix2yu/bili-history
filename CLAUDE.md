@@ -1,10 +1,10 @@
 # Project Rules
 
 ## Package Manager
-- Use **bun** as the package manager for this project
-- Install dependencies: `bun install`
-- Never use `npm` or `yarn`
-- The lock file is `bun.lock`, never commit `package-lock.json`
+- Use **pnpm** as the package manager for this project
+- Install dependencies: `pnpm install`
+- Never use `npm`, `yarn`, or `bun`
+- The lock file is `pnpm-lock.yaml`, never commit `package-lock.json`
 
 ## Frontend
 - Framework: Nuxt 3

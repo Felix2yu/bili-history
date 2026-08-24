@@ -82,8 +82,8 @@ go run ./cmd/main.go
 
 ```bash
 cd frontend
-bun install
-bun run dev
+pnpm install
+pnpm dev
 ```
 
 > 开发模式下前端默认通过代理将 `/api` 请求转发到后端 `localhost:8899`

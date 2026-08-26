@@ -104,7 +104,7 @@ bili-history/
 │   ├── services/      # 业务逻辑
 │   ├── scheduler/     # 定时任务
 │   └── web/           # 前端静态资源嵌入 (Go embed)
-├── Dockerfile         # 单容器多阶段构建
+├── Dockerfile           # CI 运行时镜像（二进制预编译拼装）
 ├── docker-compose.yml
 ├── LICENSE            # MIT 许可证
 ├── NOTICE             # 原始项目归属声明

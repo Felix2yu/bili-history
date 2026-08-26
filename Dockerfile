@@ -1,51 +1,12 @@
 # syntax=docker/dockerfile:1.7
 
-# ===== 阶段 1: 构建前端 =====
-FROM node:22-slim AS frontend-builder
-WORKDIR /app/frontend
-ENV CI=true
-RUN corepack enable && corepack prepare pnpm@11.23.0 --activate
+# ===== 仅拼装的运行时镜像（CI 专用） =====
+# 二进制由 workflow 的 build job 在原生 runner 上用 musl 静态预编译
+# （amd64 / arm64 矩阵），经 artifact 下载到 ./bin 后直接 COPY 进镜像。
+# 这里没有任何 Node/Go 编译步骤，前端产物已通过 go:embed 嵌入二进制。
 
-COPY --link frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
-    pnpm install --frozen-lockfile
-
-COPY --link frontend/ .
-RUN pnpm run generate
-
-# ===== 阶段 2: 构建后端 Go 二进制 =====
-FROM golang:1.27-alpine AS backend-builder
-
-ARG PROXY=""
-ENV all_proxy=${PROXY}
-ENV http_proxy=${PROXY}
-ENV https_proxy=${PROXY}
-
-RUN apk add --no-cache gcc musl-dev git
-
-WORKDIR /app/backend
-
-COPY --link backend/go.mod backend/go.sum ./
-RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    go mod download
-
-# 拷贝前端构建产物到 web/dist
-COPY --link --from=frontend-builder /app/frontend/.output/public ./web/dist
-
-COPY --link backend/ .
-
-RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    --mount=type=cache,target=/root/.cache/go-build,sharing=locked \
-    CGO_ENABLED=1 GOOS=linux go build \
-      -trimpath \
-      -ldflags="-s -w" \
-      -o bili-history ./cmd/main.go
-
-# ===== 阶段 3: 最终运行镜像 =====
 FROM alpine:3.24
 
-ARG PROXY=""
-ENV all_proxy=${PROXY}
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 ENV TZ=Asia/Shanghai
@@ -69,12 +30,12 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
 
 WORKDIR /app
 
-COPY --link --from=backend-builder /app/backend/bili-history /app/bili-history
-COPY --link --from=backend-builder /app/backend/config /app/config
-COPY --link entrypoint.sh /entrypoint.sh
+COPY bin/bili-history /app/bili-history
+COPY backend/config /app/config
+COPY entrypoint.sh /entrypoint.sh
 
 RUN mkdir -p /app/output && \
-    chmod +x /entrypoint.sh
+    chmod +x /entrypoint.sh /app/bili-history
 
 EXPOSE 8899
 

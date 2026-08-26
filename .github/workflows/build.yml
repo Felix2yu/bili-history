@@ -116,7 +116,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: Dockerfile.runtime
+          file: Dockerfile
           platforms: ${{ matrix.platform }}
           push: true
           tags: ${{ env.IMAGE }}:${{ matrix.label }}

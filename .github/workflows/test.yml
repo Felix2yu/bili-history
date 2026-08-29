@@ -1,0 +1,53 @@
+name: Test & Coverage
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.27"
+
+jobs:
+  backend-test:
+    name: Backend Go tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: backend/go.sum
+
+      - name: Run tests with coverage
+        working-directory: backend
+        run: go test -coverprofile=coverage.out ./config/... ./utils/... ./models/...
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          # 公共仓库安装 Codecov GitHub App 后可省略 token；私有仓库请在
+          # Repository Settings -> Secrets 中配置 CODECOV_TOKEN。
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: backend/coverage.out
+          flags: backend-go
+          fail_ci_if_error: false
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/coverage.out
+          retention-days: 7

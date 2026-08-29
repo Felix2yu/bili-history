@@ -1,0 +1,38 @@
+# Codecov 配置
+#
+# 策略：仅对后端「重点纯逻辑模块」(config / utils / models) 设置 80% 覆盖率门槛，
+# 其余模块（routers、database、services 等）仅上报覆盖率，不卡 CI。
+#
+# 说明：Go 生成的覆盖率报告内路径为模块路径（bilibili-history-go/...），
+# 通过 fixes 映射到仓库实际位置（backend/...）。
+
+fixes:
+  - "bilibili-history-go/::backend/"
+
+coverage:
+  status:
+    project:
+      # 关闭全局状态，避免未覆盖模块拉低整体导致误报
+      default: off
+      # 重点模块合并状态：要求平均覆盖率 ≥ 80%
+      core:
+        target: 80%
+        threshold: 1%
+        paths:
+          - backend/config
+          - backend/utils
+          - backend/models
+    # 不阻塞 PR 的补丁覆盖率检查
+    patch: off
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: false
+
+flags:
+  backend-go:
+    paths:
+      - backend/config
+      - backend/utils
+      - backend/models

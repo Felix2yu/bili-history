@@ -1,6 +1,6 @@
 module bilibili-history-go
 
-go 1.27.0
+go 1.27
 
 require (
 	github.com/Felix2yu/bili-dl v1.0.0

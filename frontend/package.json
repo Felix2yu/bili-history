@@ -36,7 +36,7 @@
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.3.0",
     "@vite-pwa/nuxt": "^1.1.1",
-    "@vue/runtime-core": "^3.5.39",
+    "@vue/runtime-core": "^3.5.42",
     "postcss": "^8.5.3",
     "tailwindcss": "4.3.3"
   }

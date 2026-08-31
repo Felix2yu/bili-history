@@ -35,7 +35,7 @@ jobs:
         run: go test -coverprofile=coverage.out ./config/... ./utils/... ./models/...
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           # 公共仓库安装 Codecov GitHub App 后可省略 token；私有仓库请在
           # Repository Settings -> Secrets 中配置 CODECOV_TOKEN。

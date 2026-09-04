@@ -42,8 +42,8 @@ importers:
         specifier: ^4.0.2
         version: 4.0.3(@vue/devtools-api@8.2.1)(vue@3.5.42)
       vant:
-        specifier: ^4.9.24
-        version: 4.10.0(vue@3.5.42)
+        specifier: ^4.10.2
+        version: 4.10.2(vue@3.5.42)
       vue:
         specifier: ^3.5.42
         version: 3.5.42
@@ -4206,8 +4206,8 @@ packages:
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
-  vant@4.10.0:
-    resolution: {integrity: sha512-sJ85BY1QFSX0aESqyS0FGouXCXp8hbpj9o32ug0d8C1tKpx/0x41JBgXgS4HRTe6SfebQOLWcc0B4E0A+RWdHA==}
+  vant@4.10.2:
+    resolution: {integrity: sha512-7lm1KtFub11ozleFqQ6rL8oa3Z8i33G3IUEuJGWBXlQwPTRfu8BYWGGZ/GhA5QdWhERp5mtBq6TjpYEmLcwwow==}
     peerDependencies:
       vue: ^3.0.0
 
@@ -9210,11 +9210,11 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  vant@4.10.0(vue@3.5.42):
+  vant@4.10.2(vue@3.5.42):
     dependencies:
       '@vant/popperjs': 1.3.0
       '@vant/use': 1.6.0(vue@3.5.42)
-      '@vue/shared': 3.5.41
+      '@vue/shared': 3.5.42
       vue: 3.5.42
 
   verkit@0.3.2: {}

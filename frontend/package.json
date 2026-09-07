@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.4.1",
     "@vite-pwa/nuxt": "^1.1.1",
     "@vue/runtime-core": "^3.5.39",
     "postcss": "^8.5.3",

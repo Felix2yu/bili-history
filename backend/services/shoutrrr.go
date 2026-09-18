@@ -10,55 +10,41 @@ import (
 	"bilibili-history-go/database"
 	"bilibili-history-go/utils"
 
-	"github.com/containrrr/shoutrrr"
-	"github.com/containrrr/shoutrrr/pkg/router"
-	"github.com/containrrr/shoutrrr/pkg/types"
+	apprise "github.com/unraid/apprise-go"
 )
 
-var shoutrrrRouter *router.ServiceRouter
-
-func getShoutrrrRouter() (*router.ServiceRouter, error) {
-	if shoutrrrRouter != nil {
-		return shoutrrrRouter, nil
-	}
-
+func getNotifyURLs() ([]string, error) {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		return nil, fmt.Errorf("load config error: %w", err)
 	}
 
 	if !cfg.Shoutrrr.Enabled || len(cfg.Shoutrrr.URLs) == 0 {
-		return nil, fmt.Errorf("shoutrrr not configured")
+		return nil, fmt.Errorf("通知未配置")
 	}
 
 	validURLs := make([]string, 0, len(cfg.Shoutrrr.URLs))
 	for _, raw := range cfg.Shoutrrr.URLs {
 		if _, err := url.Parse(raw); err != nil {
-			utils.LogWarning("跳过无效的Shoutrrr URL: %s, error: %v", raw, err)
+			utils.LogWarning("跳过无效的通知 URL: %s, error: %v", raw, err)
 			continue
 		}
 		validURLs = append(validURLs, raw)
 	}
 
 	if len(validURLs) == 0 {
-		return nil, fmt.Errorf("no valid shoutrrr URLs")
+		return nil, fmt.Errorf("无有效的通知 URL")
 	}
 
-	r, err := shoutrrr.CreateSender(validURLs...)
-	if err != nil {
-		return nil, fmt.Errorf("create shoutrrr sender error: %w", err)
-	}
-
-	shoutrrrRouter = r
-	return shoutrrrRouter, nil
+	return validURLs, nil
 }
 
 func SendShoutrrrNotification(title, message string) error {
 	return SendShoutrrrNotificationWithParams(title, message, nil)
 }
 
-func SendShoutrrrNotificationWithParams(title, message string, params *types.Params) error {
-	r, err := getShoutrrrRouter()
+func SendShoutrrrNotificationWithParams(title, message string, _ map[string]string) error {
+	urls, err := getNotifyURLs()
 	if err != nil {
 		return err
 	}
@@ -68,26 +54,17 @@ func SendShoutrrrNotificationWithParams(title, message string, params *types.Par
 		body = title + "\n" + message
 	}
 
-	errors := r.Send(body, params)
-	if len(errors) > 0 {
-		var errMsgs []string
-		for i, e := range errors {
-			if e != nil {
-				errMsgs = append(errMsgs, fmt.Sprintf("url[%d]: %v", i, e))
-			}
-		}
-		if len(errMsgs) > 0 {
-			return fmt.Errorf("shoutrrr send errors: %v", errMsgs)
-		}
+	if err := apprise.Send(urls, body, apprise.WithTitle(title)); err != nil {
+		return fmt.Errorf("通知发送失败: %w", err)
 	}
 
-	utils.LogSuccess("Shoutrrr通知发送成功: %s", title)
+	utils.LogSuccess("通知发送成功: %s", title)
 	return nil
 }
 
 func SendTestShoutrrr() error {
 	title := "Bilibili历史记录管理 - 测试通知"
-	message := "这是一条测试通知，Shoutrrr配置正确。"
+	message := "这是一条测试通知，通知配置正确。"
 	return SendShoutrrrNotification(title, message)
 }
 
@@ -281,7 +258,7 @@ func SendSessdataExpiredNotification(username string) error {
 }
 
 func ResetShoutrrrRouter() {
-	shoutrrrRouter = nil
+	// apprise-go 无需缓存，保留空函数以兼容调用
 }
 
 // queryTopN queries top N items by count, returning a list of {group_key, display_name} pairs.

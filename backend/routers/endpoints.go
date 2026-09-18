@@ -377,17 +377,17 @@ func init() {
 
 	// ========== 系统配置 ==========
 	RegisterEndpointMeta("GET", "/config/shoutrrr", EndpointMeta{
-		Summary:     "获取Shoutrrr通知配置",
+		Summary:     "获取通知配置",
 		Tags:        tagConfig,
 		OperationID: "get_shoutrrr_config",
 	})
 	RegisterEndpointMeta("POST", "/config/shoutrrr", EndpointMeta{
-		Summary:     "保存Shoutrrr通知配置",
+		Summary:     "保存通知配置",
 		Tags:        tagConfig,
 		OperationID: "save_shoutrrr_config",
 	})
 	RegisterEndpointMeta("POST", "/config/shoutrrr/test", EndpointMeta{
-		Summary:     "测试Shoutrrr通知推送",
+		Summary:     "测试通知推送",
 		Tags:        tagConfig,
 		OperationID: "test_shoutrrr_config",
 	})

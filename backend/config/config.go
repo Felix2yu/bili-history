@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type ShoutrrrConfig struct {
+type NotifyConfig struct {
 	Enabled bool     `yaml:"enabled" json:"enabled"`
 	URLs    []string `yaml:"urls" json:"urls"`
 }
@@ -72,7 +72,7 @@ type Config struct {
 	LogFile          string          `yaml:"log_file" json:"log_file"`
 	CategoriesFile   string          `yaml:"categories_file" json:"categories_file"`
 	FieldsToRemove   []string        `yaml:"fields_to_remove" json:"fields_to_remove"`
-	Shoutrrr         ShoutrrrConfig  `yaml:"shoutrrr" json:"shoutrrr"`
+	Notify           NotifyConfig    `yaml:"notify" json:"notify"`
 	LogFolder        string          `yaml:"log_folder" json:"log_folder"`
 	Server           ServerConfig    `yaml:"server" json:"server"`
 	Scheduler        SchedulerConfig `yaml:"scheduler" json:"scheduler"`
@@ -281,8 +281,8 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 			valueNode.Value = cfg.DedeUserID
 		case "DedeUserID__ckMd5":
 			valueNode.Value = cfg.DedeUserIDCkMd5
-		case "shoutrrr":
-			updateShoutrrrNode(valueNode, &cfg.Shoutrrr)
+		case "shoutrrr", "notify":
+			updateNotifyNode(valueNode, &cfg.Notify)
 		case "server":
 			updateServerNode(valueNode, &cfg.Server)
 		case "sync":
@@ -296,9 +296,9 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 		}
 	}
 
-	if _, ok := existingKeys["shoutrrr"]; !ok {
-		node := getOrAddNode("shoutrrr")
-		updateShoutrrrNode(node, &cfg.Shoutrrr)
+	if _, ok := existingKeys["notify"]; !ok {
+		node := getOrAddNode("notify")
+		updateNotifyNode(node, &cfg.Notify)
 	}
 	if _, ok := existingKeys["server"]; !ok {
 		node := getOrAddNode("server")
@@ -322,7 +322,7 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 	}
 }
 
-func updateShoutrrrNode(node *yaml.Node, shoutrrr *ShoutrrrConfig) {
+func updateNotifyNode(node *yaml.Node, notify *NotifyConfig) {
 	if node.Kind != yaml.MappingNode {
 		return
 	}
@@ -379,11 +379,11 @@ func updateShoutrrrNode(node *yaml.Node, shoutrrr *ShoutrrrConfig) {
 	}
 
 	enabledNode := getOrAddScalar("enabled")
-	enabledNode.Value = fmt.Sprintf("%t", shoutrrr.Enabled)
+	enabledNode.Value = fmt.Sprintf("%t", notify.Enabled)
 
 	urlsNode := getOrAddSeq("urls")
 	urlsNode.Content = nil
-	for _, url := range shoutrrr.URLs {
+	for _, url := range notify.URLs {
 		urlsNode.Content = append(urlsNode.Content, &yaml.Node{
 			Kind:  yaml.ScalarNode,
 			Value: url,

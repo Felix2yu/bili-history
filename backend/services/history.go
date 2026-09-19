@@ -184,7 +184,7 @@ func FetchHistory(taskID string, skipExists bool) (map[string]interface{}, error
 					setFetchTaskStatus(taskID, status)
 					_ = database.SetTaskEnabled("fetch_history", false)
 					alertMsg := fmt.Sprintf("⚠️ 历史记录抓取已自动暂停\n\n任务: %s\n原因：连续 %d 页请求失败\n最后错误：%s\n已抓取：%d 页，%d 条记录\n\n请检查网络或代理设置后，在任务列表中重新启用。", taskID, consecutiveErrors, err.Error(), pageCount, len(allEntries))
-					_ = SendShoutrrrNotification("⚠️ B站历史抓取异常", alertMsg)
+					_ = SendNotification("⚠️ B站历史抓取异常", alertMsg)
 					break
 				}
 				time.Sleep(2 * time.Second)
@@ -415,7 +415,7 @@ func FetchHistorySync(taskID string, skipExists bool) (map[string]interface{}, e
 				setFetchTaskStatus(taskID, status)
 				_ = database.SetTaskEnabled("fetch_history", false)
 				alertMsg := fmt.Sprintf("⚠️ 历史记录抓取已自动暂停\n\n任务: %s\n原因：连续 %d 页请求失败\n最后错误：%s\n已抓取：%d 页，%d 条记录\n\n请检查网络或代理设置后，在任务列表中重新启用。", taskID, consecutiveErrors, lastErrMsg, pageCount, len(allEntries))
-				_ = SendShoutrrrNotification("⚠️ B站历史抓取异常", alertMsg)
+				_ = SendNotification("⚠️ B站历史抓取异常", alertMsg)
 				break
 			}
 			time.Sleep(2 * time.Second)

@@ -54,7 +54,7 @@ func fullConfig() *Config {
 		BiliJct:          "jct",
 		DedeUserID:       "uid",
 		DedeUserIDCkMd5:  "md5",
-		Shoutrrr:         ShoutrrrConfig{Enabled: true, URLs: []string{"url1", "url2"}},
+		Notify:           NotifyConfig{Enabled: true, URLs: []string{"url1", "url2"}},
 		Server:           ServerConfig{Host: "127.0.0.1", Port: 9000, SSLEnabled: true, SSLCertFile: "c.pem", SSLKeyFile: "k.pem", DataIntegrity: DataIntegrityConfig{CheckOnStartup: true}},
 		Sync:             SyncConfig{SyncDeleted: true, SyncDeleteToBilibili: true},
 		Appearance:       AppearanceConfig{DarkMode: "dark"},
@@ -237,7 +237,7 @@ func TestUpdateYamlNodeNonMapping(t *testing.T) {
 func TestUpdateNodesAddMissing(t *testing.T) {
 	empty := &yaml.Node{Kind: yaml.MappingNode}
 	cfg := fullConfig()
-	updateShoutrrrNode(empty, &cfg.Shoutrrr)
+	updateNotifyNode(empty, &cfg.Notify)
 	updateServerNode(empty, &cfg.Server)
 	updateSyncNode(empty, &cfg.Sync)
 	updateAppearanceNode(empty, &cfg.Appearance)
@@ -250,7 +250,7 @@ func TestUpdateNodesAddMissing(t *testing.T) {
 	enc := yaml.NewEncoder(&buf)
 	_ = enc.Encode(empty)
 	enc.Close()
-	if !strings.Contains(buf.String(), "shoutrrr") || !strings.Contains(buf.String(), "mcp") {
+	if !strings.Contains(buf.String(), "notify") || !strings.Contains(buf.String(), "mcp") {
 		t.Errorf("缺失节点未被添加:\n%s", buf.String())
 	}
 }
@@ -258,7 +258,7 @@ func TestUpdateNodesAddMissing(t *testing.T) {
 func TestUpdateNodesNonMapping(t *testing.T) {
 	s := &yaml.Node{Kind: yaml.ScalarNode, Value: "x"}
 	cfg := &Config{}
-	updateShoutrrrNode(s, &cfg.Shoutrrr)
+	updateNotifyNode(s, &cfg.Notify)
 	updateServerNode(s, &cfg.Server)
 	updateSyncNode(s, &cfg.Sync)
 	updateAppearanceNode(s, &cfg.Appearance)

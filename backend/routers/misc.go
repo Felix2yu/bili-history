@@ -29,9 +29,9 @@ var asyncExportFiles sync.Map
 func RegisterConfigRoutes(r *gin.RouterGroup) {
 	configGroup := r.Group("/config")
 	{
-		configGroup.GET("/shoutrrr", getShoutrrrConfig)
-		configGroup.POST("/shoutrrr", saveShoutrrrConfig)
-		configGroup.POST("/shoutrrr/test", testShoutrrrConfig)
+		configGroup.GET("/notify", getNotifyConfig)
+		configGroup.POST("/notify", saveNotifyConfig)
+		configGroup.POST("/notify/test", testNotifyConfig)
 		configGroup.GET("/server", getServerConfig)
 		configGroup.POST("/server", saveServerConfig)
 		configGroup.GET("/mcp-config", getMcpConfig)
@@ -389,51 +389,51 @@ func RegisterInteractionRoutes(r *gin.RouterGroup) {
 	}
 }
 
-func getShoutrrrConfig(c *gin.Context) {
+func getNotifyConfig(c *gin.Context) {
 	cfg := config.GetConfig()
 	if cfg == nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("配置加载失败"))
 		return
 	}
 
-	c.JSON(http.StatusOK, models.SuccessResponse(cfg.Shoutrrr))
+	c.JSON(http.StatusOK, models.SuccessResponse(cfg.Notify))
 }
 
-func saveShoutrrrConfig(c *gin.Context) {
-	var shoutrrrCfg config.ShoutrrrConfig
-	if err := c.ShouldBindJSON(&shoutrrrCfg); err != nil {
+func saveNotifyConfig(c *gin.Context) {
+	var notifyCfg config.NotifyConfig
+	if err := c.ShouldBindJSON(&notifyCfg); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
 		return
 	}
 
 	cfg, _ := config.LoadConfig()
-	cfg.Shoutrrr = shoutrrrCfg
+	cfg.Notify = notifyCfg
 	if err := config.SaveConfig(cfg); err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("保存失败: "+err.Error()))
 		return
 	}
 
-	services.ResetShoutrrrRouter()
+	services.ResetNotifyRouter()
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "Shoutrrr配置已保存",
+		"message": "通知配置已保存",
 	})
 }
 
-func testShoutrrrConfig(c *gin.Context) {
+func testNotifyConfig(c *gin.Context) {
 	cfg := config.GetConfig()
 	if cfg == nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("配置加载失败"))
 		return
 	}
 
-	if !cfg.Shoutrrr.Enabled || len(cfg.Shoutrrr.URLs) == 0 {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse("Shoutrrr未启用或未配置URL"))
+	if !cfg.Notify.Enabled || len(cfg.Notify.URLs) == 0 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("通知未启用或未配置URL"))
 		return
 	}
 
-	if err := services.SendTestShoutrrr(); err != nil {
+	if err := services.SendTestNotification(); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "error",
 			"message": "测试通知发送失败: " + err.Error(),

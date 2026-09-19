@@ -834,17 +834,17 @@ export const setTaskEnabled = (taskId, enabled) => {
   })
 }
 
-// Shoutrrr通知配置相关接口
-export const getShoutrrrConfig = () => {
-  return instance.get('/config/shoutrrr')
+// 通知配置相关接口
+export const getNotifyConfig = () => {
+  return instance.get('/config/notify')
 }
 
-export const updateShoutrrrConfig = (config) => {
-  return instance.post('/config/shoutrrr', config)
+export const updateNotifyConfig = (config) => {
+  return instance.post('/config/notify', config)
 }
 
-export const testShoutrrrPush = () => {
-  return instance.post('/config/shoutrrr/test')
+export const testNotifyPush = () => {
+  return instance.post('/config/notify/test')
 }
 
 // MCP配置相关接口

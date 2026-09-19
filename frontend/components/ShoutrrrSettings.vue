@@ -10,7 +10,7 @@
           </div>
           <div class="min-w-0">
             <h2 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white truncate">通知设置</h2>
-            <p class="text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">配置 Shoutrrr 通知推送服务</p>
+            <p class="text-[0.6875rem] md:text-xs text-gray-500 dark:text-gray-400 mt-0.5">配置 Apprise 通知推送服务</p>
           </div>
         </div>
         <div class="flex gap-2 shrink-0">
@@ -39,7 +39,7 @@
     <div class="px-5 md:px-6 py-5 space-y-4 md:space-y-5">
       <SettingToggle
         label="启用通知"
-        description="关闭后所有 Shoutrrr 通知将不会发送"
+        description="关闭后所有通知将不会发送"
         :modelValue="config.enabled"
         @update:modelValue="config.enabled = $event"
       />
@@ -54,7 +54,7 @@
         ></textarea>
         <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400 md:text-xs mt-2">
           完整服务列表请查看
-          <a href="https://containrrr.dev/shoutrrr/services/overview/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline font-medium">Shoutrrr 支持的服务</a>
+          <a href="https://appriseit.com/services/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline font-medium">Apprise 支持的服务</a>
         </p>
       </div>
 
@@ -80,7 +80,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { showNotify } from 'vant'
-import { getShoutrrrConfig, updateShoutrrrConfig, testShoutrrrPush } from '~/utils/api'
+import { getNotifyConfig, updateNotifyConfig, testNotifyPush } from '~/utils/api'
 import SettingToggle from './SettingToggle.vue'
 
 const config = ref({
@@ -106,7 +106,7 @@ const parseServiceName = (url) => {
 
 const loadConfig = async () => {
   try {
-    const response = await getShoutrrrConfig()
+    const response = await getNotifyConfig()
     let configData = null
 
     if (response.data && response.data.status === 'success' && response.data.data) {
@@ -127,14 +127,14 @@ const loadConfig = async () => {
       }
     }
   } catch (error) {
-    console.error('获取Shoutrrr配置失败:', error)
+    console.error('获取通知配置失败:', error)
   }
 }
 
 const saveConfig = async () => {
   try {
     const urls = urlList.value
-    const response = await updateShoutrrrConfig({
+    const response = await updateNotifyConfig({
       enabled: config.value.enabled,
       urls
     })
@@ -161,7 +161,7 @@ const testPush = async () => {
   }
   try {
     showNotify({ type: 'primary', message: '正在发送测试通知...' })
-    const response = await testShoutrrrPush()
+    const response = await testNotifyPush()
     if (response.data.status === 'success') {
       showNotify({ type: 'success', message: response.data.message || '测试通知已发送' })
     } else {

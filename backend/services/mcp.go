@@ -133,7 +133,7 @@ func registerMCPResources(s *server.MCPServer) {
 - 视频详情批量获取（标题、封面、分区、UP主信息等）
 - 数据分析：年度统计、热力图、时段分析、分类分析等
 - 支持搜索、收藏夹同步、稍后再看、点赞列表
-- Shoutrrr 多渠道通知（每日报告、SESSDATA 健康检查）
+- Apprise 多渠道通知（每日报告、SESSDATA 健康检查）
 - MCP 只读服务，供 AI 客户端查询
 
 ## 数据结构

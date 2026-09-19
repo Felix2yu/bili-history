@@ -376,20 +376,20 @@ func init() {
 	})
 
 	// ========== 系统配置 ==========
-	RegisterEndpointMeta("GET", "/config/shoutrrr", EndpointMeta{
+	RegisterEndpointMeta("GET", "/config/notify", EndpointMeta{
 		Summary:     "获取通知配置",
 		Tags:        tagConfig,
-		OperationID: "get_shoutrrr_config",
+		OperationID: "get_notify_config",
 	})
-	RegisterEndpointMeta("POST", "/config/shoutrrr", EndpointMeta{
+	RegisterEndpointMeta("POST", "/config/notify", EndpointMeta{
 		Summary:     "保存通知配置",
 		Tags:        tagConfig,
-		OperationID: "save_shoutrrr_config",
+		OperationID: "save_notify_config",
 	})
-	RegisterEndpointMeta("POST", "/config/shoutrrr/test", EndpointMeta{
+	RegisterEndpointMeta("POST", "/config/notify/test", EndpointMeta{
 		Summary:     "测试通知推送",
 		Tags:        tagConfig,
-		OperationID: "test_shoutrrr_config",
+		OperationID: "test_notify_config",
 	})
 	RegisterEndpointMeta("GET", "/config/server", EndpointMeta{
 		Summary:     "获取服务器配置",
@@ -404,7 +404,7 @@ func init() {
 
 	// ========== 日志管理 ==========
 	RegisterEndpointMeta("POST", "/log/send", EndpointMeta{
-		Summary:     "发送每日报告（Shoutrrr）",
+		Summary:     "发送每日报告（通知）",
 		Tags:        tagLog,
 		OperationID: "send_daily_report",
 	})

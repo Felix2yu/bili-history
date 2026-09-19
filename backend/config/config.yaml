@@ -34,8 +34,8 @@ fields_to_remove:
   - live_status   # 直播状态
 
 # 通知配置（支持多种推送渠道：Bark、Telegram、Discord、邮件、Webhook等）
-# URL格式参考：https://github.com/unraid/apprise-go
-shoutrrr:
+# URL格式参考：https://appriseit.com/services/
+notify:
   enabled: false
   urls:
 

@@ -19,12 +19,12 @@ func getNotifyURLs() ([]string, error) {
 		return nil, fmt.Errorf("load config error: %w", err)
 	}
 
-	if !cfg.Shoutrrr.Enabled || len(cfg.Shoutrrr.URLs) == 0 {
+	if !cfg.Notify.Enabled || len(cfg.Notify.URLs) == 0 {
 		return nil, fmt.Errorf("通知未配置")
 	}
 
-	validURLs := make([]string, 0, len(cfg.Shoutrrr.URLs))
-	for _, raw := range cfg.Shoutrrr.URLs {
+	validURLs := make([]string, 0, len(cfg.Notify.URLs))
+	for _, raw := range cfg.Notify.URLs {
 		if _, err := url.Parse(raw); err != nil {
 			utils.LogWarning("跳过无效的通知 URL: %s, error: %v", raw, err)
 			continue
@@ -39,11 +39,11 @@ func getNotifyURLs() ([]string, error) {
 	return validURLs, nil
 }
 
-func SendShoutrrrNotification(title, message string) error {
-	return SendShoutrrrNotificationWithParams(title, message, nil)
+func SendNotification(title, message string) error {
+	return SendNotificationWithParams(title, message, nil)
 }
 
-func SendShoutrrrNotificationWithParams(title, message string, _ map[string]string) error {
+func SendNotificationWithParams(title, message string, _ map[string]string) error {
 	urls, err := getNotifyURLs()
 	if err != nil {
 		return err
@@ -62,10 +62,10 @@ func SendShoutrrrNotificationWithParams(title, message string, _ map[string]stri
 	return nil
 }
 
-func SendTestShoutrrr() error {
+func SendTestNotification() error {
 	title := "Bilibili历史记录管理 - 测试通知"
 	message := "这是一条测试通知，通知配置正确。"
-	return SendShoutrrrNotification(title, message)
+	return SendNotification(title, message)
 }
 
 func SendDailyReport(stats map[string]interface{}) error {
@@ -117,7 +117,7 @@ func SendDailyReport(stats map[string]interface{}) error {
 	}
 
 	utils.LogInfo("发送每日报告: title=%s, message=%q", title, message)
-	err := SendShoutrrrNotification(title, message)
+	err := SendNotification(title, message)
 	if err != nil {
 		utils.LogError("发送每日报告失败: %v", err)
 	} else {
@@ -254,10 +254,10 @@ func SendSessdataExpiredNotification(username string) error {
 		message += fmt.Sprintf("上次登录用户：%s\n", username)
 	}
 	message += "请在前端设置页面重新扫码登录，否则历史记录同步等功能将无法正常使用。"
-	return SendShoutrrrNotification(title, message)
+	return SendNotification(title, message)
 }
 
-func ResetShoutrrrRouter() {
+func ResetNotifyRouter() {
 	// apprise-go 无需缓存，保留空函数以兼容调用
 }
 

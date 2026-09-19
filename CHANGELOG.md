@@ -51,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### 计划任务与通知
 
 - 定时抓取历史记录，链式任务编排
-- 每日报告推送（Shoutrrr 通知）
+- 每日报告推送（Apprise 通知）
 - 连续失败自动暂停 + 告警
 
 ### MCP 服务

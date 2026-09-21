@@ -6,7 +6,7 @@ require (
 	github.com/Felix2yu/bili-dl v1.0.0
 	github.com/gin-contrib/cors v1.7.8
 	github.com/gin-gonic/gin v1.12.0
-	github.com/mark3labs/mcp-go v1.0.0
+	github.com/mark3labs/mcp-go v1.1.0
 	github.com/mattn/go-sqlite3 v1.14.52
 	github.com/unraid/apprise-go v0.3.3
 	github.com/xuri/excelize/v2 v2.11.0

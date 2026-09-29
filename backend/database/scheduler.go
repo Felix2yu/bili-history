@@ -70,7 +70,7 @@ func GetSchedulerDB() *sql.DB {
 		schedulerDBPath := filepath.Join(utils.GetOutputPath("database"), "scheduler.db")
 		utils.LogInfo("调度器数据库路径: %s", schedulerDBPath)
 		var err error
-		schedulerDB, err = sql.Open("sqlite3", schedulerDBPath)
+		schedulerDB, err = sql.Open("sqlite", schedulerDBPath)
 		if err != nil {
 			utils.LogError("Failed to open scheduler database: %v", err)
 			schedulerDB = nil

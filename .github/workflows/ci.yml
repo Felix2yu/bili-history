@@ -26,9 +26,8 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       go-dir: backend
-      test-packages: ./config/... ./utils/... ./models/...
-      # SQLite 走 mattn/go-sqlite3，测试期必须开 CGO
-      test-cgo: '1'
+      # database 包内有纯 Go 驱动守卫测试，必须纳入
+      test-packages: ./config/... ./utils/... ./models/... ./database/...
       web-dir: frontend
       # Nuxt 用 generate 而非 build，产物落在 .output/public
       web-build-command: pnpm run generate
@@ -48,8 +47,8 @@ jobs:
       main-package: ./cmd
       binary-name: bili-history
       image-name: ghcr.io/felix2yu/bili-history
-      # 运行时镜像是 alpine，CGO 产物必须静态链接到 musl
-      cgo: musl
+      # SQLite 已换为纯 Go 驱动（modernc.org/sqlite），无需 cgo、可交叉编译；
+      # database/driver_purego_test.go 守卫这一点
       web-dir: frontend
       web-build-command: pnpm run generate
       frontend-stage-command: |
@@ -65,7 +64,6 @@ jobs:
       go-dir: backend
       main-package: ./cmd
       binary-name: bili-history
-      cgo: musl
       web-dir: frontend
       web-build-command: pnpm run generate
       frontend-stage-command: |

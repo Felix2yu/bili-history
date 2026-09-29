@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1.7
 
 # ===== 仅拼装的运行时镜像（CI 专用） =====
-# 二进制由 workflow 的 build job 在原生 runner 上用 musl 静态预编译
-# （amd64 / arm64 矩阵），经 artifact 下载到 ./bin 后直接 COPY 进镜像。
+# 二进制由 CI 预编译：SQLite 已换为纯 Go 驱动（modernc.org/sqlite），
+# CGO_ENABLED=0 出完全静态二进制，可交叉编译、与运行环境的 libc 无关。
 # 这里没有任何 Node/Go 编译步骤，前端产物已通过 go:embed 嵌入二进制。
 
 FROM alpine:3.24

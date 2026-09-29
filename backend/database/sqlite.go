@@ -9,7 +9,9 @@ import (
 
 	"bilibili-history-go/utils"
 
-	_ "github.com/mattn/go-sqlite3"
+	// 纯 Go SQLite 实现，无需 cgo：
+	// 注册名为 "sqlite"（注意不是 mattn 的 "sqlite3"）。
+	_ "modernc.org/sqlite"
 )
 
 type SQLiteDB struct {
@@ -35,7 +37,7 @@ func (s *SQLiteDB) init() {
 	dbPath := utils.GetDBFilePath()
 	s.path = dbPath
 
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		utils.LogError("Failed to open SQLite database: %v", err)
 		return

@@ -51,8 +51,11 @@ docker-compose.override.yml
 htmlcov/
 backend/bilibili-history-go
 
-# npm lock file (project uses pnpm)
+# 统一 pnpm：只有 pnpm-lock.yaml 入库，其余包管理器的锁一律不入库
 package-lock.json
+yarn.lock
+bun.lock
+bun.lockb
 backend/main
 backend/fonts/
 backend/coverage.out

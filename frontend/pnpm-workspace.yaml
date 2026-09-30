@@ -1,3 +1,8 @@
+# pnpm 的设置放在这里，不放在 package.json：package.json 顶层的 "overrides" 是 npm 的字段，
+# pnpm 不读它。迁移前它写着 brace-expansion: ">=2.1.2"，但从没生效过
+# （pnpm-lock.yaml 里没有 overrides: 段），而 lock 里已有的 2.1.4 / 5.0.9 都不在受影响版本内，
+# 所以这里没有补 override —— 补上会把 minimatch 依赖的 2.1.4 顶到 5.x，是一次无收益的大版本跳转。
+# 以后确实需要时写在本文件，别写回 package.json。
 packages:
   - "."
 

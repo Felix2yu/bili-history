@@ -4,6 +4,7 @@
   "description": "获取Bili历史记录应用 - Nuxt SSR 版本",
   "author": "46",
   "type": "module",
+  "packageManager": "pnpm@11.22.0",
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
@@ -28,9 +29,6 @@
     "vue": "^3.5.43",
     "vue-echarts": "^8.3.0",
     "vue-router": "^5.3.1"
-  },
-  "overrides": {
-    "brace-expansion": ">=2.1.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

@@ -281,7 +281,13 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 			valueNode.Value = cfg.DedeUserID
 		case "DedeUserID__ckMd5":
 			valueNode.Value = cfg.DedeUserIDCkMd5
-		case "shoutrrr", "notify":
+		case "shoutrrr":
+			// 旧版配置键：写回时原位改名为 notify，完成配置文件迁移
+			keyNode.Value = "notify"
+			delete(existingKeys, "shoutrrr")
+			existingKeys["notify"] = i
+			updateNotifyNode(valueNode, &cfg.Notify)
+		case "notify":
 			updateNotifyNode(valueNode, &cfg.Notify)
 		case "server":
 			updateServerNode(valueNode, &cfg.Server)

@@ -314,7 +314,7 @@
 
               <!-- 通知设置卡片 -->
               <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
-                <ShoutrrrSettings />
+                <NotifySettings />
               </div>
 
             </div>
@@ -580,7 +580,7 @@ import {
   getAppearanceConfig,
   updateAppearanceConfig
 } from '~/utils/api'
-import ShoutrrrSettings from './ShoutrrrSettings.vue'
+import NotifySettings from './NotifySettings.vue'
 import SettingToggle from './SettingToggle.vue'
 import { showDialog } from 'vant'
 import { useRoute } from 'vue-router'

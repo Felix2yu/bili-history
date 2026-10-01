@@ -1,10 +1,10 @@
 # Project Rules
 
 ## Package Manager
-- Use **pnpm** as the package manager for this project
-- Install dependencies: `pnpm install`
+- Use **pnpm 11.22.0** as the package manager for this project
+- Dependencies live in `frontend/`: run `pnpm install` from that directory
 - Never use `npm`, `yarn`, or `bun`
-- The lock file is `pnpm-lock.yaml`, never commit `package-lock.json`
+- The lock file is `frontend/pnpm-lock.yaml`, never commit `package-lock.json`
 
 ## Frontend
 - Framework: Nuxt 3

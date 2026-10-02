@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -67,7 +66,7 @@ CREATE INDEX IF NOT EXISTS idx_exec_history_start ON task_execution_history(star
 
 func GetSchedulerDB() *sql.DB {
 	schedulerDBOnce.Do(func() {
-		schedulerDBPath := filepath.Join(utils.GetOutputPath("database"), "scheduler.db")
+		schedulerDBPath := utils.GetDatabasePath("scheduler.db")
 		utils.LogInfo("调度器数据库路径: %s", schedulerDBPath)
 		var err error
 		schedulerDB, err = sql.Open("sqlite", schedulerDBPath)
@@ -439,6 +438,21 @@ func RecordExecution(id, taskID, status, result, errMsg string, start, end time.
 		VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		id, taskID, start.Format("2006-01-02 15:04:05"), end.Format("2006-01-02 15:04:05"),
 		status, result, errMsg)
+	return err
+}
+
+// FinishExecution closes out an execution row previously inserted by
+// RecordExecution (e.g. an async task started as "running"). RecordExecution
+// inserts, so reusing it here would collide with the row's PRIMARY KEY id.
+func FinishExecution(id, status, result, errMsg string, end time.Time) error {
+	db := GetSchedulerDB()
+	if db == nil {
+		return nil
+	}
+	_, err := db.Exec(`UPDATE task_execution_history
+		SET status = ?, result = ?, error = ?, end_time = ?
+		WHERE id = ?`,
+		status, result, errMsg, end.Format("2006-01-02 15:04:05"), id)
 	return err
 }
 

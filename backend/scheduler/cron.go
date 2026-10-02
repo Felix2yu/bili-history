@@ -43,17 +43,14 @@ func cronMatch(expr string, t time.Time) (bool, error) {
 		return false, err
 	}
 	// Go's Weekday: Sunday=0, Monday=1, ... Saturday=6 — same as cron.
+	// Cron also spells Sunday as 7, including inside ranges and lists
+	// ("5-7", "1,7"), so match the day against both spellings.
 	cronWD := int(t.Weekday())
-	// Normalize 7 -> 0 for Sunday (some cron users write 7 for Sunday).
-	wd := weekday
-	if wd == "7" {
-		wd = "0"
+	ok, err = matchField(weekday, 0, 7, cronWD)
+	if err != nil || ok {
+		return ok, err
 	}
-	ok, err = matchField(wd, 0, 7, cronWD)
-	if err != nil || !ok {
-		return false, err
-	}
-	return true, nil
+	return matchField(weekday, 0, 7, cronWD+7)
 }
 
 // matchField checks whether a single cron field matches the given value.

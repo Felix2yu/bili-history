@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const (
+var (
 	HistoryURL              = "https://api.bilibili.com/x/web-interface/history/cursor"
 	HistoryDelURL           = "https://api.bilibili.com/x/web-interface/history/del"
 	VideoInfoURL            = "https://api.bilibili.com/x/web-interface/view"
@@ -262,14 +262,31 @@ func (c *Client) FetchWbiKeys() error {
 	subURL := resp.Data.WbiImg.SubURL
 
 	// 提取文件名（去掉扩展名）作为 key
-	imgKey := imgURL[strings.LastIndex(imgURL, "/")+1:]
-	imgKey = imgKey[:strings.LastIndex(imgKey, ".")]
-	subKey := subURL[strings.LastIndex(subURL, "/")+1:]
-	subKey = subKey[:strings.LastIndex(subKey, ".")]
+	imgKey, err := wbiKeyFromURL(imgURL)
+	if err != nil {
+		return err
+	}
+	subKey, err := wbiKeyFromURL(subURL)
+	if err != nil {
+		return err
+	}
 
 	c.ImgKey = imgKey
 	c.SubKey = subKey
 	return nil
+}
+
+// wbiKeyFromURL extracts the key from a wbi CDN url
+// (https://i0.hdslb.com/bfs/wbi/<key>.png -> <key>). A missing path separator or
+// extension means an unexpected response shape, so it is reported as an error
+// rather than slicing out of range.
+func wbiKeyFromURL(urlStr string) (string, error) {
+	name := urlStr[strings.LastIndex(urlStr, "/")+1:]
+	dot := strings.LastIndex(name, ".")
+	if name == "" || dot <= 0 {
+		return "", fmt.Errorf("无法从 wbi 地址解析 key: %q", urlStr)
+	}
+	return name[:dot], nil
 }
 
 // SignWbi 对参数进行 wbi 签名（如果已获取到 keys）
@@ -557,7 +574,18 @@ func (c *Client) PostForm(urlStr string, form url.Values) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	respBody, err := io.ReadAll(resp.Body)
+	// 处理 gzip 压缩
+	var reader io.Reader = resp.Body
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		gz, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("gzip reader error: %w", err)
+		}
+		defer gz.Close()
+		reader = gz
+	}
+
+	respBody, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, fmt.Errorf("read body error: %w", err)
 	}

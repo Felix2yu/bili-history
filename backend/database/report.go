@@ -226,7 +226,9 @@ func queryReportVideos(startDate, endDate time.Time) ([]ReportVideo, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var videos []ReportVideo
+	// Empty slice, not nil: a week with no rows must serialise as [] so the
+	// client's `videos.length === 0` empty state fires instead of undefined.
+	videos := []ReportVideo{}
 	for rows.Next() {
 		var v ReportVideo
 		if err := rows.Scan(

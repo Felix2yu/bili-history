@@ -181,9 +181,12 @@ func convertTask(mt database.MainTask) *ScheduleTask {
 func buildCronExpr(t ScheduleTask) string {
 	switch t.ScheduleType {
 	case "daily":
-		if t.ScheduleTime != "" {
-			parts := strings.Split(t.ScheduleTime, ":")
-			if len(parts) == 2 {
+		// "25:99"-style times used to produce a cron expression that can never
+		// fire; fall back to midnight unless both parts parse in range.
+		if parts := strings.Split(t.ScheduleTime, ":"); len(parts) == 2 {
+			hour, herr := strconv.Atoi(parts[0])
+			minute, merr := strconv.Atoi(parts[1])
+			if herr == nil && merr == nil && hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 {
 				return fmt.Sprintf("%s %s * * *", parts[1], parts[0])
 			}
 		}
@@ -456,10 +459,11 @@ func (s *Scheduler) executeTask(taskID string, triggerChain bool) {
 	endpoint := task.Endpoint
 	method := task.Method
 	params := task.Params
+	name := task.Name
 	s.mu.Unlock()
 
 	start := time.Now()
-	utils.LogSuccess("开始执行任务: %s (%s) -> %s %s", task.Name, taskID, method, endpoint)
+	utils.LogSuccess("开始执行任务: %s (%s) -> %s %s", name, taskID, method, endpoint)
 
 	result, err := s.callEndpoint(method, endpoint, params)
 	duration := time.Since(start).Seconds()
@@ -469,28 +473,27 @@ func (s *Scheduler) executeTask(taskID string, triggerChain bool) {
 	task.Running = false
 	task.LastRunTime = start.Format("2006-01-02 15:04:05")
 	success := err == nil
+	lastStatus := "completed"
+	lastError := ""
 	if success {
-		task.LastStatus = "completed"
-		task.LastError = ""
-		utils.LogSuccess("任务执行完成: %s (%s)", task.Name, taskID)
+		task.LastStatus = lastStatus
+		task.LastError = lastError
+		utils.LogSuccess("任务执行完成: %s (%s)", name, taskID)
 	} else {
-		task.LastStatus = "failed"
-		task.LastError = err.Error()
-		utils.LogError("任务执行失败: %s (%s) - %v", task.Name, taskID, err)
+		lastStatus = "failed"
+		lastError = err.Error()
+		task.LastStatus = lastStatus
+		task.LastError = lastError
+		utils.LogError("任务执行失败: %s (%s) - %v", name, taskID, err)
 	}
 	dependents := s.findDependents(taskID)
 	s.mu.Unlock()
 
 	// Persist execution status and history.
-	_ = database.UpdateTaskStatus(taskID, task.LastStatus, task.LastError, duration, success)
+	_ = database.UpdateTaskStatus(taskID, lastStatus, lastError, duration, success)
 	execID := fmt.Sprintf("exec_%d", start.UnixNano())
-	statusStr := "completed"
-	errMsg := ""
 	resultStr := ""
-	if !success {
-		statusStr = "failed"
-		errMsg = err.Error()
-	} else if result != "" {
+	if success && result != "" {
 		// Truncate very long results for storage.
 		if len(result) > 500 {
 			resultStr = result[:500]
@@ -498,7 +501,7 @@ func (s *Scheduler) executeTask(taskID string, triggerChain bool) {
 			resultStr = result
 		}
 	}
-	_ = database.RecordExecution(execID, taskID, statusStr, resultStr, errMsg, start, end)
+	_ = database.RecordExecution(execID, taskID, lastStatus, resultStr, lastError, start, end)
 
 	// Reload runtime stats from DB into the in-memory task.
 	s.mu.Lock()
@@ -1075,7 +1078,9 @@ func CompleteAsyncTask(taskID string, success bool, result string, errMsg string
 	if len(resultStr) > 500 {
 		resultStr = resultStr[:500]
 	}
-	_ = database.RecordExecution(taskID, taskID, statusStr, resultStr, errMsg, rt.StartTime, end)
+	if err := database.FinishExecution(taskID, statusStr, resultStr, errMsg, end); err != nil {
+		utils.LogError("[ASYNC-TASK] 写入任务结束状态失败: %s - %v", taskID, err)
+	}
 }
 
 func GetAsyncTaskStatus(taskID string) map[string]interface{} {

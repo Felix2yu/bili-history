@@ -586,8 +586,10 @@ func TestRepMonthlyAndWeeklyExact(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetMonthlyReport jun: %v", err)
 	}
-	if jun.Summary.TotalVideos != 0 || jun.Summary.DeviceDist == nil || jun.Videos != nil {
-		t.Errorf("empty month wrong: total=%d", jun.Summary.TotalVideos)
+	// Videos must be an empty slice, not nil: JSON null breaks the client-side
+	// `videos.length === 0` empty state.
+	if jun.Summary.TotalVideos != 0 || jun.Summary.DeviceDist == nil || jun.Videos == nil || len(jun.Videos) != 0 {
+		t.Errorf("empty month wrong: total=%d videos=%v", jun.Summary.TotalVideos, jun.Videos)
 	}
 }
 

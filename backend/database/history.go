@@ -931,7 +931,7 @@ func GetDailyStats(date string, year string) (int, int, error) {
 	query := fmt.Sprintf(`
 		SELECT 
 			COUNT(*) as cnt,
-			SUM(CASE WHEN progress = -1 THEN duration ELSE progress END) as total_seconds
+			COALESCE(SUM(CASE WHEN progress = -1 THEN duration ELSE progress END), 0) as total_seconds
 		FROM %s
 		WHERE strftime('%%m%%d', datetime(view_at, 'unixepoch', 'localtime')) = ?
 	`, tableName)

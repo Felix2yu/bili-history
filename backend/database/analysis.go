@@ -555,7 +555,6 @@ func GetViewingAnalytics(year int) (*ViewingStats, error) {
 		LIMIT 1
 	`, tableName), yearStartTS, yearEndTS)
 	if err == nil {
-		defer peakRows.Close()
 		if peakRows.Next() {
 			var date string
 			var count int
@@ -564,6 +563,8 @@ func GetViewingAnalytics(year int) (*ViewingStats, error) {
 				stats.PeakDayCount = count
 			}
 		}
+		// MaxOpenConns=1：必须在下一次 Query 前归还连接，否则死锁
+		peakRows.Close()
 	}
 
 	timeRows, err := conn.Query(fmt.Sprintf(`

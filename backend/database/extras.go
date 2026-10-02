@@ -487,7 +487,8 @@ func SaveFavoriteContents(mediaID int64, contents []FavoriteContent) error {
 		// 如果新标题是"已失效视频"，尝试保留原标题
 		if c.Title == "已失效视频" || c.Title == "" {
 			var existingTitle string
-			err := db.QueryRow("SELECT title FROM favorites_content WHERE media_id = ? AND content_id = ?",
+			// 必须走 tx：连接池 MaxOpenConns=1，用 db 查询会在 tx 持锁时死锁
+			err := tx.QueryRow("SELECT title FROM favorites_content WHERE media_id = ? AND content_id = ?",
 				c.MediaID, c.ContentID).Scan(&existingTitle)
 			if err == nil && existingTitle != "" && existingTitle != "已失效视频" {
 				c.Title = existingTitle
@@ -756,7 +757,7 @@ func GetFolderSyncState(mediaID int64) (*FolderSyncState, error) {
 	state := &FolderSyncState{
 		ContentIDs: make(map[int64]bool),
 	}
-	err := db.QueryRow("SELECT MAX(fav_time), COUNT(*) FROM favorites_content WHERE media_id = ?",
+	err := db.QueryRow("SELECT COALESCE(MAX(fav_time), 0), COUNT(*) FROM favorites_content WHERE media_id = ?",
 		mediaID).Scan(&state.LatestFavTime, &state.Count)
 	if err != nil {
 		return nil, err

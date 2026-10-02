@@ -324,18 +324,15 @@ func SaveDynamics(hostMid string, items []DynamicItem) (int, error) {
 		}
 	}
 
-	// Update host stats
+	// Update host stats — 全量按库内该 host 的数据重算，
+	// 若用本批次数据会让增量保存把统计越刷越小。
 	if len(items) > 0 {
 		var maxPublishTS int64
-		coreCount := 0
-		for _, item := range items {
-			if item.PublishTS > maxPublishTS {
-				maxPublishTS = item.PublishTS
-			}
-			if item.Type == "DYNAMIC_TYPE_AV" || item.Type == "DYNAMIC_TYPE_DRAW" {
-				coreCount++
-			}
-		}
+		db.QueryRow("SELECT COALESCE(MAX(publish_ts), 0) FROM dynamics WHERE host_mid = ?", hostMid).Scan(&maxPublishTS)
+
+		var coreCount int
+		db.QueryRow("SELECT COUNT(*) FROM dynamics WHERE host_mid = ? AND (type = 'DYNAMIC_TYPE_AV' OR type = 'DYNAMIC_TYPE_DRAW')", hostMid).Scan(&coreCount)
+
 		var totalCount int
 		db.QueryRow("SELECT COUNT(*) FROM dynamics WHERE host_mid = ?", hostMid).Scan(&totalCount)
 

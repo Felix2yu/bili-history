@@ -225,11 +225,13 @@ func TestSVCGatherDailyReportNoTodayData(t *testing.T) {
 		t.Errorf("want error when notify disabled")
 	}
 
-	// 阶段 B：只留一条"昨天 23:00"的记录 → last_view_ago == 今天
-	yesterday := time.Now().Format("2006-01-02")
-	_ = yesterday
+	// 阶段 B：只留一条"今天之前最后一秒"的记录 → last_view_ago == 今天。
+	// gatherDailyReportData 用 int(now.Sub(last).Hours()/24)==0 判定"今天"，
+	// 所以这一行必须同时满足：落在 today 窗口 [todayStart, +86400) 之外，
+	// 且距今不足 24 小时。todayStart-1 是唯一在任意钟点都成立的取值
+	//（曾用 todayStart-3600，23:00 之后跑就会变成"1天前"）。
 	todayStart := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.Local).Unix()
-	rec := svcHistoryRecord("BVsvcNotifyLast1", "svc 昨夜视频", "archive", "科技", "科技", 7700022, "svc昨夜UP", todayStart-3600, 60, 60)
+	rec := svcHistoryRecord("BVsvcNotifyLast1", "svc 昨夜视频", "archive", "科技", "科技", 7700022, "svc昨夜UP", todayStart-1, 60, 60)
 	if err := svcSeedHistoryRows(svcCurrentYear, rec); err != nil {
 		t.Fatalf("seed last-view: %v", err)
 	}

@@ -95,20 +95,23 @@ func TestExtractOidFromKid(t *testing.T) {
 
 func TestTitleClassificationHelpers(t *testing.T) {
 	cases := []struct {
-		in             string
-		digit, alpha   bool
-		allAlpha, allD bool
+		in                  string
+		digit, alpha        bool
+		allChinese, hasHanz bool
+		allD                bool
 	}{
-		{"1024", true, false, false, true},
-		{"Hello World", false, true, true, false},
-		{"你好世界", false, false, false, false},
-		{"BV1xx411c7mu", true, true, false, false},
-		{"", false, false, false, false},
-		{"abc1", true, true, false, false},
-		// A single space is neither empty nor contains a disallowed rune, so
-		// isAllAlpha reports true; the "pure letter" bucket therefore also
-		// captures whitespace-only titles.
-		{" ", false, false, true, false},
+		{"1024", true, false, false, false, true},
+		{"Hello World", false, true, false, false, false},
+		{"你好世界", false, false, true, true, false},
+		{"BV1xx411c7mu", true, true, false, false, false},
+		{"", false, false, false, false, false},
+		{"abc1", true, true, false, false, false},
+		// Whitespace and full-width punctuation don't disqualify 纯中文, but a
+		// title without any hanzi never counts.
+		{" ", false, false, false, false, false},
+		{"好看吗？", false, false, true, true, false},
+		{"优秀,非常赞!", false, false, true, true, false},
+		{"！！！", false, false, false, false, false},
 	}
 	for _, c := range cases {
 		if got := containsDigit(c.in); got != c.digit {
@@ -117,8 +120,11 @@ func TestTitleClassificationHelpers(t *testing.T) {
 		if got := containsAlpha(c.in); got != c.alpha {
 			t.Fatalf("containsAlpha(%q) = %v, want %v", c.in, got, c.alpha)
 		}
-		if got := isAllAlpha(c.in); got != c.allAlpha {
-			t.Fatalf("isAllAlpha(%q) = %v, want %v", c.in, got, c.allAlpha)
+		if got := isAllChinese(c.in); got != c.allChinese {
+			t.Fatalf("isAllChinese(%q) = %v, want %v", c.in, got, c.allChinese)
+		}
+		if got := containsChinese(c.in); got != c.hasHanz {
+			t.Fatalf("containsChinese(%q) = %v, want %v", c.in, got, c.hasHanz)
 		}
 		if got := isAllDigit(c.in); got != c.allD {
 			t.Fatalf("isAllDigit(%q) = %v, want %v", c.in, got, c.allD)

@@ -515,13 +515,44 @@ func TestExtFavoriteFoldersSync(t *testing.T) {
 		t.Fatalf("folder not updated: %q", title)
 	}
 
-	// 空列表 → 清空全部分支
+	// 空列表 → 不裁剪：空切片说不出调用方管的是哪一类收藏夹，不能据此把整表清空。
 	if err := SaveFavoriteFolders([]FavoriteFolder{}); err != nil {
 		t.Fatalf("SaveFavoriteFolders empty: %v", err)
 	}
-	if n := extCount(t, db, "SELECT COUNT(*) FROM favorites_folder"); n != 0 {
-		t.Fatalf("empty list should clear table, got %d", n)
+	if n := extCount(t, db, "SELECT COUNT(*) FROM favorites_folder"); n != 2 {
+		t.Fatalf("empty list pruned rows: want the 2 upserted folders kept, got %d", n)
 	}
+
+	// 类型隔离：只保存收藏的（folder_type 1）时，创建的（folder_type 0）行必须
+	// 留下。routers/features.go:788 的那次保存过去会把上一次写入的创建收藏夹
+	// 全删掉。
+	c1 := f3
+	c1.MediaID, c1.Title, c1.Mtime = 71104, "EXT 合集D", 500
+	if err := SaveFavoriteFolders([]FavoriteFolder{c1}); err != nil {
+		t.Fatalf("SaveFavoriteFolders collected: %v", err)
+	}
+	if n := extCount(t, db, "SELECT COUNT(*) FROM favorites_folder WHERE media_id = 71101"); n != 1 {
+		t.Fatalf("created folder wiped by a collected-only save, got %d", n)
+	}
+	// 同一类型内部照旧裁剪：71103 是 type 1，但不在本次 type 1 列表里。
+	if n := extCount(t, db, "SELECT COUNT(*) FROM favorites_folder WHERE media_id = 71103"); n != 0 {
+		t.Fatalf("stale collected folder survived, got %d", n)
+	}
+
+	// 反向：只保存创建的（folder_type 0）时不动收藏的那一类。
+	f1b := f1
+	f1b.MediaID, f1b.Title, f1b.Mtime = 71105, "EXT 收藏夹E", 600
+	if err := SaveFavoriteFolders([]FavoriteFolder{f1b}); err != nil {
+		t.Fatalf("SaveFavoriteFolders created: %v", err)
+	}
+	if n := extCount(t, db, "SELECT COUNT(*) FROM favorites_folder WHERE media_id = 71104"); n != 1 {
+		t.Fatalf("collected folder wiped by a created-only save, got %d", n)
+	}
+	if n := extCount(t, db, "SELECT COUNT(*) FROM favorites_folder WHERE media_id = 71101"); n != 0 {
+		t.Fatalf("71101 should be pruned by the created-only save, got %d", n)
+	}
+	// 后续用例假设收藏夹表为空。
+	mustExec(t, db, `DELETE FROM favorites_folder`)
 }
 
 // TestExtFavoriteFolderNullColumns 直插含 NULL 文本列的收藏夹行，

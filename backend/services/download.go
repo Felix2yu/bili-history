@@ -555,7 +555,7 @@ func ListDownloadedVideos(search string, page, limit int) ([]DownloadedVideo, in
 		}
 
 		ext := strings.ToLower(filepath.Ext(path))
-		if ext != ".mp4" && ext != ".flv" && ext != ".mkv" && ext != ".webm" && ext != ".avi" {
+		if ext != ".mp4" && ext != ".flv" && ext != ".mkv" && ext != ".webm" && ext != ".avi" && ext != ".m4a" {
 			return nil
 		}
 
@@ -625,6 +625,14 @@ func ListDownloadedVideos(search string, page, limit int) ([]DownloadedVideo, in
 
 	total := len(videos)
 
+	// 与 routers 的分页守卫保持一致：page/limit 非法时会算出负的 start 或
+	// end<start，切片即 panic，而这个函数是导出的。
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 20
+	}
 	start := (page - 1) * limit
 	if start > total {
 		start = total

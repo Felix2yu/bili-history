@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -119,22 +120,24 @@ func batchCheckFavoriteStatus(c *gin.Context) {
 		folders := []interface{}{}
 
 		if favDB != nil {
+			// 收藏夹的行标识是 media_id（B站收藏夹 id），不是自增主键 id；
+			// LEFT JOIN 允许缺失标题，所以 title 必须按可空列扫描。
 			rows, err := favDB.Query(`
 				SELECT DISTINCT fc.media_id, ff.title
 				FROM favorites_content fc
-				LEFT JOIN favorites_folder ff ON fc.media_id = ff.id
+				LEFT JOIN favorites_folder ff ON fc.media_id = ff.media_id
 				WHERE CAST(fc.bvid AS INTEGER) = ?
 			`, oid)
 			if err == nil {
 				defer rows.Close()
 				for rows.Next() {
 					var mediaID int64
-					var title string
+					var title sql.NullString
 					if rows.Scan(&mediaID, &title) == nil {
 						isFavorited = true
 						folders = append(folders, map[string]interface{}{
 							"media_id": mediaID,
-							"title":    title,
+							"title":    title.String,
 						})
 					}
 				}
@@ -639,14 +642,18 @@ func doSyncFavorites(cfg *config.Config, taskID string) {
 		_ = err // non-fatal
 	}
 
-	// Diff: delete local folders no longer in remote list
+	// Diff: delete local folders no longer in remote list. Only the created
+	// folders (folder_type 0) are enumerated by this API call, so the stale set
+	// must be read and pruned within that type; otherwise a 我收藏的合集 folder
+	// that has not appeared in this response would be deleted together with its
+	// contents.
 	remoteMediaIDs := make(map[int64]bool, len(folders))
 	for _, f := range folders {
 		remoteMediaIDs[f.MediaID] = true
 	}
 	db := database.GetFavoritesDB()
 	if db != nil {
-		localRows, err := db.Query("SELECT media_id FROM favorites_folder")
+		localRows, err := db.Query("SELECT media_id FROM favorites_folder WHERE folder_type = 0")
 		if err == nil {
 			defer localRows.Close()
 			var staleIDs []int64
@@ -663,7 +670,7 @@ func doSyncFavorites(cfg *config.Config, taskID string) {
 					placeholders[i] = "?"
 					args[i] = id
 				}
-				db.Exec("DELETE FROM favorites_folder WHERE media_id IN ("+strings.Join(placeholders, ",")+")", args...)
+				db.Exec("DELETE FROM favorites_folder WHERE folder_type = 0 AND media_id IN ("+strings.Join(placeholders, ",")+")", args...)
 				db.Exec("DELETE FROM favorites_content WHERE media_id IN ("+strings.Join(placeholders, ",")+")", args...)
 			}
 		}

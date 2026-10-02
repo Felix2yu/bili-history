@@ -419,6 +419,7 @@ func SaveFavoriteFolders(folders []FavoriteFolder) error {
 	defer stmt.Close()
 
 	liveIDs := make([]int64, 0, len(folders))
+	liveTypes := make(map[int]bool, 2)
 	for _, f := range folders {
 		_, err := stmt.Exec(f.MediaID, f.Fid, f.Mid, f.Title, f.Cover, f.Attr, f.Intro,
 			f.Ctime, f.Mtime, f.State, f.MediaCount, f.FavState, f.LikeState, f.FolderType, now)
@@ -427,22 +428,31 @@ func SaveFavoriteFolders(folders []FavoriteFolder) error {
 			continue
 		}
 		liveIDs = append(liveIDs, f.MediaID)
+		liveTypes[f.FolderType] = true
 	}
 
+	// Prune only within the folder types this call actually enumerated: 我创建
+	// 的（folder_type 0）与我收藏的（folder_type 1）来自两个不同的接口，每次调
+	// 用只掌握其中一类。不加类型限定时，收藏合集的那次保存会把上一次写入的创
+	// 建收藏夹全部删掉。
+	// 空切片说明不了调用方管的是一类中的哪一类，所以什么都不裁剪；“远端已全部
+	// 移除”的清理由调用方自己按类型做差量（routers/features.go 的 doSyncFavorites）。
 	if len(liveIDs) > 0 {
+		typePlaceholders := make([]string, 0, len(liveTypes))
+		args := make([]interface{}, 0, len(liveIDs)+len(liveTypes))
+		for folderType := range liveTypes {
+			typePlaceholders = append(typePlaceholders, "?")
+			args = append(args, folderType)
+		}
 		placeholders := make([]string, len(liveIDs))
-		args := make([]interface{}, len(liveIDs))
 		for i, id := range liveIDs {
 			placeholders[i] = "?"
-			args[i] = id
+			args = append(args, id)
 		}
-		query := "DELETE FROM favorites_folder WHERE media_id NOT IN (" + strings.Join(placeholders, ",") + ")"
+		query := "DELETE FROM favorites_folder WHERE folder_type IN (" + strings.Join(typePlaceholders, ",") + ")" +
+			" AND media_id NOT IN (" + strings.Join(placeholders, ",") + ")"
 		if _, err := tx.Exec(query, args...); err != nil {
 			utils.LogError("Failed to prune stale favorite folders: %v", err)
-		}
-	} else {
-		if _, err := tx.Exec("DELETE FROM favorites_folder"); err != nil {
-			utils.LogError("Failed to clear favorite folders: %v", err)
 		}
 	}
 

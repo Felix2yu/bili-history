@@ -247,6 +247,55 @@ func tableExists(t *testing.T, name string) bool {
 	return err == nil
 }
 
+// historyTables lists every per-year history table currently present.
+func historyTables(t *testing.T) []string {
+	t.Helper()
+	rows, err := db(t).Query("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'bilibili_history_%'")
+	if err != nil {
+		t.Fatalf("list history tables: %v", err)
+	}
+	var tables []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			rows.Close()
+			t.Fatalf("scan table name: %v", err)
+		}
+		tables = append(tables, name)
+	}
+	rows.Close()
+	return tables
+}
+
+// globalMinViewAt is the oldest view_at across all history tables. Queries
+// without a year parameter span every table, and under -shuffle other suites
+// may have seeded an earlier year first, so tests must compare against this
+// live value instead of a fixed fixture timestamp.
+func globalMinViewAt(t *testing.T) int64 {
+	t.Helper()
+	var oldest int64
+	seen := false
+	for _, tb := range historyTables(t) {
+		var v sql.NullInt64
+		// A table without a view_at column errors out, exactly as production
+		// skips it; ignore those.
+		if err := db(t).QueryRow("SELECT MIN(view_at) FROM " + tb).Scan(&v); err != nil {
+			continue
+		}
+		if !v.Valid {
+			continue
+		}
+		if !seen || v.Int64 < oldest {
+			oldest = v.Int64
+			seen = true
+		}
+	}
+	if !seen {
+		t.Fatal("no history rows to take a minimum from")
+	}
+	return oldest
+}
+
 // setSESSDATA temporarily writes the cookie fields into the config singleton so
 // that guarded branches can be exercised. Pass "" to simulate a logged-out
 // state. The caller must restore the previous values with the returned func.

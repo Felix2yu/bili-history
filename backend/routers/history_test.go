@@ -187,7 +187,9 @@ func TestHistoryPageFilters(t *testing.T) {
 		t.Fatal("invalid date_range should be ignored rather than filtering everything out")
 	}
 
-	// sort_order=1 flips to ascending, putting the 2006 row first.
+	// sort_order=1 flips to ascending: the first row is the oldest one in the
+	// database. Which year that is depends on which other suites have seeded,
+	// so compare against the live minimum instead of a fixture timestamp.
 	asc := expectStatus(t, e, "GET", "/api/history/all?sort_order=1&size=500", "", 200, "success")
 	ascRecords := asc.dataMap(t)["records"].([]interface{})
 	if len(ascRecords) == 0 {
@@ -195,8 +197,8 @@ func TestHistoryPageFilters(t *testing.T) {
 	}
 	// view_at arrives as a JSON number, so compare numerically.
 	firstTS := int64(ascRecords[0].(map[string]interface{})["view_at"].(float64))
-	if firstTS != viewAt(t, 2006, time.January, 13, 9, 0) {
-		t.Fatalf("first ascending record is not the oldest: %v", ascRecords[0])
+	if want := globalMinViewAt(t); firstTS != want {
+		t.Fatalf("first ascending record is not the oldest: got %d want %d (%v)", firstTS, want, ascRecords[0])
 	}
 	lastTS := int64(ascRecords[len(ascRecords)-1].(map[string]interface{})["view_at"].(float64))
 	if lastTS < firstTS {

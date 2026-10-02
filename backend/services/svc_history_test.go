@@ -128,13 +128,22 @@ func TestSVCSetFetchTaskStatusAssignsTaskID(t *testing.T) {
 	st := &FetchStatus{Status: "queued"}
 	setFetchTaskStatus("svc-task-id", st)
 	defer removeFetchTaskStatus("svc-task-id")
-	if st.TaskID != "svc-task-id" {
-		t.Errorf("TaskID should be assigned by setter, got %q", st.TaskID)
+	// setter 落库的是快照：TaskID 记在存储副本上，调用方的结构体不被改写
+	// （否则抓取协程与读状态的一方会共享同一个指针并发改字段）。
+	stored := GetFetchTaskStatus("svc-task-id")
+	if stored == nil || stored.TaskID != "svc-task-id" || stored.Status != "queued" {
+		t.Fatalf("stored = %+v, want TaskID=svc-task-id Status=queued", stored)
 	}
-	// GetFetchStatusOverall 的副本包含该任务
+	if st.TaskID != "" {
+		t.Errorf("setter mutated the caller's struct: TaskID=%q", st.TaskID)
+	}
+	// 快照里的副本必须与存储对象不是同一个指针
 	overall := GetFetchStatusOverall()
 	tasks := overall["tasks"].(map[string]*FetchStatus)
 	if _, ok := tasks["svc-task-id"]; !ok {
 		t.Errorf("missing task in snapshot")
+	}
+	if tasks["svc-task-id"] == stored {
+		t.Errorf("snapshot aliases the stored status pointer")
 	}
 }

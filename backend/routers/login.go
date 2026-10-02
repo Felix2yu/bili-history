@@ -333,6 +333,12 @@ func checkAndNotify(c *gin.Context) {
 	}
 
 	// code 0 = 登录有效, -101 = 未登录/过期, -6 = cookie 过期
+	// Data 是指针，code==0 也可能为 null（{"code":0,"data":null}）。
+	var username string
+	if nav.Data != nil {
+		username = nav.Data.Username
+	}
+
 	if nav.Code == 0 {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "success",
@@ -340,18 +346,13 @@ func checkAndNotify(c *gin.Context) {
 			"data": map[string]interface{}{
 				"valid":    true,
 				"notified": false,
-				"username": nav.Data.Username,
+				"username": username,
 			},
 		})
 		return
 	}
 
 	// SESSDATA 失效，尝试发送通知
-	var username string
-	if nav.Data != nil {
-		username = nav.Data.Username
-	}
-
 	sendErr := services.SendSessdataExpiredNotification(username)
 	wasNotified := sendErr == nil
 	if sendErr != nil {

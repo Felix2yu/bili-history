@@ -237,10 +237,15 @@ func TestSVCListDownloadedVideos(t *testing.T) {
 	if err != nil || ptotal != total || len(page) != 0 {
 		t.Errorf("out of range page: len=%d total=%d want total=%d err=%v", len(page), ptotal, total, err)
 	}
-	// limit 为 0 时返回空页
-	zero, _, err := ListDownloadedVideos("", 1, 0)
-	if err != nil || len(zero) != 0 {
-		t.Errorf("zero limit: len=%d err=%v", len(zero), err)
+	// limit 非法（<=0）时钳到默认 20，返回整页而非空页
+	zero, ztotal, err := ListDownloadedVideos("", 1, 0)
+	if err != nil || ztotal != total || len(zero) != total {
+		t.Errorf("zero limit: len=%d total=%d err=%v, want full %d rows", len(zero), ztotal, err, total)
+	}
+	// page 非法（<1）时钳到第 1 页
+	first, _, err := ListDownloadedVideos("", 0, 10)
+	if err != nil || len(first) == 0 {
+		t.Errorf("page 0: len=%d err=%v, want first page", len(first), err)
 	}
 }
 

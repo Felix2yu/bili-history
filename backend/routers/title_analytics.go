@@ -191,13 +191,13 @@ func getTitlePatterns(c *gin.Context) {
 			if containsAlpha(title) {
 				patterns["含字母"]++
 			}
-			if isAllAlpha(title) {
+			if isAllChinese(title) {
 				patterns["纯中文"]++
 			}
 			if isAllDigit(title) {
 				patterns["纯数字"]++
 			}
-			if containsAlpha(title) && containsDigit(title) {
+			if containsAlpha(title) && containsChinese(title) {
 				patterns["中英混合"]++
 			}
 			if strings.ContainsAny(title, ",.!?;:\"\u201C\u201D\u2018\u2019") {
@@ -478,16 +478,34 @@ func containsAlpha(s string) bool {
 	return false
 }
 
-func isAllAlpha(s string) bool {
-	if s == "" {
-		return false
-	}
+// 纯中文：至少一个汉字（CJK 统一表意文字 + 扩展 A），且不含 ASCII 字母数字。
+// 中文标点、空格仍算纯中文。
+func isAllChinese(s string) bool {
+	hasChinese := false
 	for _, r := range s {
-		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r == ' ') {
+		if isChineseRune(r) {
+			hasChinese = true
+			continue
+		}
+		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' {
 			return false
 		}
 	}
-	return true
+	return hasChinese
+}
+
+// 中英混合的判定：同时出现拉丁字母与汉字。
+func containsChinese(s string) bool {
+	for _, r := range s {
+		if isChineseRune(r) {
+			return true
+		}
+	}
+	return false
+}
+
+func isChineseRune(r rune) bool {
+	return r >= 0x4E00 && r <= 0x9FFF || r >= 0x3400 && r <= 0x4DBF
 }
 
 func isAllDigit(s string) bool {

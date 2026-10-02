@@ -40,7 +40,10 @@ func GetFetchStatusOverall() map[string]interface{} {
 
 	tasks := make(map[string]*FetchStatus)
 	for id, status := range fetchTasks {
-		tasks[id] = status
+		// Copy: the fetch goroutine keeps mutating the stored struct, and this
+		// map is what the HTTP handlers JSON-encode.
+		cp := *status
+		tasks[id] = &cp
 	}
 
 	return map[string]interface{}{
@@ -53,8 +56,11 @@ func GetFetchStatusOverall() map[string]interface{} {
 func setFetchTaskStatus(taskID string, status *FetchStatus) {
 	fetchMutex.Lock()
 	defer fetchMutex.Unlock()
-	status.TaskID = taskID
-	fetchTasks[taskID] = status
+	// Publish a snapshot. Callers keep mutating their own struct afterwards,
+	// so storing the pointer would let readers observe unsynchronised writes.
+	cp := *status
+	cp.TaskID = taskID
+	fetchTasks[taskID] = &cp
 }
 
 func removeFetchTaskStatus(taskID string) {
@@ -339,7 +345,8 @@ func GetFetchTaskStatus(taskID string) *FetchStatus {
 	fetchMutex.RLock()
 	defer fetchMutex.RUnlock()
 	if status, ok := fetchTasks[taskID]; ok {
-		return status
+		cp := *status
+		return &cp
 	}
 	return nil
 }
@@ -405,7 +412,6 @@ func FetchHistorySync(taskID string, skipExists bool) (map[string]interface{}, e
 		}
 
 		data, err := client.GetHistory(max, viewAt, ps)
-		fmt.Fprintf(os.Stderr, "[FETCH-SYNC] page %d: err=%v, listLen=%d, cursorMax=%d\n", pageCount, err, len(data.List), data.Cursor.Max)
 		if err != nil {
 			consecutiveErrors++
 			lastErrMsg = err.Error()
@@ -422,6 +428,7 @@ func FetchHistorySync(taskID string, skipExists bool) (map[string]interface{}, e
 			continue
 		}
 		consecutiveErrors = 0
+		fmt.Fprintf(os.Stderr, "[FETCH-SYNC] page %d: listLen=%d, cursorMax=%d\n", pageCount, len(data.List), data.Cursor.Max)
 
 		status.CurrentPage = pageCount
 		status.LastUpdateTime = time.Now().Unix()

@@ -1081,8 +1081,11 @@ func TestCheckAndRunTasks(t *testing.T) {
 	s.tasks["match"] = target
 
 	// The cron expression must match the current minute when the picker runs;
-	// rebuild it each attempt in case the minute rolls over mid-test.
-	deadline := time.Now().Add(5 * time.Second)
+	// rebuild it each attempt in case the minute rolls over mid-test. The
+	// budget is deliberately generous: with -race on a loaded machine the
+	// executeTask HTTP round trip can take longer than a couple of seconds,
+	// and a tight deadline made this test flake.
+	deadline := time.Now().Add(20 * time.Second)
 	for time.Now().Before(deadline) {
 		now := time.Now()
 		target.CronExpr = fmt.Sprintf("%d %d * * *", now.Minute(), now.Hour())

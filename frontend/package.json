@@ -35,7 +35,7 @@
     "@types/node": "^26.6.4",
     "@vite-pwa/nuxt": "^1.1.1",
     "@vue/runtime-core": "^3.5.43",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.29",
     "tailwindcss": "4.3.3"
   }
 }

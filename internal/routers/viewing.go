@@ -1,0 +1,349 @@
+package routers
+
+import (
+	"net/http"
+	"strconv"
+
+	"bilibili-history-go/internal/database"
+	"bilibili-history-go/internal/models"
+
+	"github.com/gin-gonic/gin"
+)
+
+// RegisterViewingRoutes 注册观看分析相关路由
+func RegisterViewingRoutes(r *gin.RouterGroup) {
+	viewing := r.Group("/viewing")
+	{
+		viewing.GET("/monthly-stats", getMonthlyStats)
+		viewing.GET("/weekly-stats", getWeeklyStats)
+		viewing.GET("/time-slots", getTimeSlots)
+		viewing.GET("/continuity", getContinuity)
+		viewing.GET("/", getViewingOverview)
+		viewing.GET("/watch-counts", getWatchCounts)
+		viewing.GET("/completion-rates", getCompletionRates)
+		viewing.GET("/author-completion", getAuthorCompletion)
+		viewing.GET("/tag-analysis", getTagAnalysis)
+		viewing.GET("/duration-analysis", getDurationAnalysis)
+		// 额外模块分析
+		viewing.GET("/likes-analysis", getLikesAnalysis)
+		viewing.GET("/favorites-analysis", getFavoritesAnalysis)
+		viewing.GET("/watchlater-analysis", getWatchLaterAnalysis)
+		viewing.GET("/extra-overview", getExtraOverview)
+	}
+}
+
+// getYearFromQuery 从查询参数获取年份，不指定则使用最新年份
+func getYearFromQuery(c *gin.Context) (int, []int, bool) {
+	yearStr := c.Query("year")
+
+	db := database.GetSQLiteDB()
+	availableYears, err := db.GetAvailableYears()
+	if err != nil || len(availableYears) == 0 {
+		c.JSON(http.StatusOK, models.ErrorResponse("未找到任何历史记录数据"))
+		return 0, nil, false
+	}
+
+	if yearStr != "" {
+		year, err := strconv.Atoi(yearStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, models.ErrorResponse("无效的年份参数"))
+			return 0, nil, false
+		}
+
+		found := false
+		for _, y := range availableYears {
+			if y == year {
+				found = true
+				break
+			}
+		}
+		if !found {
+			c.JSON(http.StatusOK, models.ErrorResponse("未找到指定年份的历史记录数据"))
+			return 0, nil, false
+		}
+		return year, availableYears, true
+	}
+
+	return availableYears[0], availableYears, true
+}
+
+// getMonthlyStats 获取月度统计
+func getMonthlyStats(c *gin.Context) {
+	year, availableYears, ok := getYearFromQuery(c)
+	if !ok {
+		return
+	}
+
+	result, err := database.AnalyzeHistory(year)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"monthly_stats":        result.MonthlyStats,
+		"total_videos":         result.TotalVideos,
+		"total_duration":       result.TotalDuration,
+		"unique_authors":       result.UniqueAuthors,
+		"tag_ranking":          result.TagRanking,
+		"author_ranking":       result.AuthorRanking,
+		"device_distribution":  result.DeviceDistribution,
+		"title_keywords":       result.TitleKeywords,
+		"duration_preference":  result.DurationPreference,
+		"top_videos":           result.TopVideos,
+		"weekday_distribution": result.WeekdayDistribution,
+		"active_days":          result.ActiveDays,
+		"year":                 year,
+		"available_years":      availableYears,
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(data))
+}
+
+// getWeeklyStats 获取周度统计
+func getWeeklyStats(c *gin.Context) {
+	year, availableYears, ok := getYearFromQuery(c)
+	if !ok {
+		return
+	}
+
+	result, err := database.AnalyzeWeekly(year)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"weekly_stats":      result.WeeklyStats,
+		"seasonal_patterns": result.SeasonalPatterns,
+		"active_days":       result.ActiveDays,
+		"year":              year,
+		"available_years":   availableYears,
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(data))
+}
+
+// getTimeSlots 获取时段分析
+func getTimeSlots(c *gin.Context) {
+	year, availableYears, ok := getYearFromQuery(c)
+	if !ok {
+		return
+	}
+
+	result, err := database.AnalyzeTimeSlots(year)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"daily_time_slots":  result.DailyTimeSlots,
+		"peak_hours":        result.PeakHours,
+		"time_investment":   result.TimeInvestment,
+		"max_daily_record":  result.MaxDailyRecord,
+		"year":              year,
+		"available_years":   availableYears,
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(data))
+}
+
+// getContinuity 获取连续性分析
+func getContinuity(c *gin.Context) {
+	year, availableYears, ok := getYearFromQuery(c)
+	if !ok {
+		return
+	}
+
+	result, err := database.AnalyzeContinuity(year)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"viewing_continuity": result,
+		"year":               year,
+		"available_years":    availableYears,
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(data))
+}
+
+// getViewingOverview 获取观看行为总览
+func getViewingOverview(c *gin.Context) {
+	year, availableYears, ok := getYearFromQuery(c)
+	if !ok {
+		return
+	}
+
+	result, err := database.GetViewingOverview(year)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"details":          result.Details,
+		"report":           result.Report,
+		"year":             year,
+		"available_years":  availableYears,
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(data))
+}
+
+// getWatchCounts 获取重复观看分析
+func getWatchCounts(c *gin.Context) {
+	year, availableYears, ok := getYearFromQuery(c)
+	if !ok {
+		return
+	}
+
+	result, err := database.AnalyzeWatchCounts(year)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"watch_counts":       result,
+		"year":               year,
+		"available_years":    availableYears,
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(data))
+}
+
+// getCompletionRates 获取完成率分析
+func getCompletionRates(c *gin.Context) {
+	year, availableYears, ok := getYearFromQuery(c)
+	if !ok {
+		return
+	}
+
+	result, err := database.AnalyzeCompletionRates(year)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"completion_rates":  result,
+		"year":              year,
+		"available_years":   availableYears,
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(data))
+}
+
+// getAuthorCompletion 获取UP主完成率分析
+func getAuthorCompletion(c *gin.Context) {
+	year, availableYears, ok := getYearFromQuery(c)
+	if !ok {
+		return
+	}
+
+	result, err := database.AnalyzeAuthorCompletion(year)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"completion_rates":  result,
+		"year":              year,
+		"available_years":   availableYears,
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(data))
+}
+
+// getTagAnalysis 获取标签分析
+func getTagAnalysis(c *gin.Context) {
+	year, availableYears, ok := getYearFromQuery(c)
+	if !ok {
+		return
+	}
+
+	result, err := database.AnalyzeTagAnalysis(year)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"watch_counts": map[string]interface{}{
+			"tag_distribution": result.TagDistribution,
+		},
+		"completion_rates": map[string]interface{}{
+			"tag_completion_rates": result.TagCompletionRates,
+		},
+		"year":             year,
+		"available_years":  availableYears,
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(data))
+}
+
+// getDurationAnalysis 获取时长分析
+func getDurationAnalysis(c *gin.Context) {
+	year, availableYears, ok := getYearFromQuery(c)
+	if !ok {
+		return
+	}
+
+	result, err := database.AnalyzeDurationAnalysis(year)
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"duration_correlation": result.DurationCorrelation,
+		"year":                 year,
+		"available_years":      availableYears,
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(data))
+}
+
+// getLikesAnalysis 获取点赞分析
+func getLikesAnalysis(c *gin.Context) {
+	result, err := database.AnalyzeLikes()
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(result))
+}
+
+// getFavoritesAnalysis 获取收藏分析
+func getFavoritesAnalysis(c *gin.Context) {
+	result, err := database.AnalyzeFavorites()
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(result))
+}
+
+// getWatchLaterAnalysis 获取稍后再看分析
+func getWatchLaterAnalysis(c *gin.Context) {
+	result, err := database.AnalyzeWatchLater()
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SuccessResponse(result))
+}
+
+// getExtraOverview 获取额外模块概览
+func getExtraOverview(c *gin.Context) {
+	result := database.GetExtraStatsOverview()
+	c.JSON(http.StatusOK, models.SuccessResponse(result))
+}

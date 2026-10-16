@@ -25,15 +25,15 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      go-dir: backend
+      go-dir: .
       # database 包内有纯 Go 驱动守卫测试，必须纳入
-      test-packages: ./config/... ./utils/... ./models/... ./database/...
-      web-dir: frontend
+      test-packages: ./internal/config/... ./internal/utils/... ./internal/models/... ./internal/database/...
+      web-dir: web
       # Nuxt 用 generate 而非 build，产物落在 .output/public
       web-build-command: pnpm run generate
       frontend-stage-command: |
-        rm -rf backend/web/dist
-        cp -r frontend/.output/public backend/web/dist
+        rm -rf internal/web/dist
+        cp -r web/.output/public internal/web/dist
 
   image:
     needs: test
@@ -42,17 +42,17 @@ jobs:
       packages: write
     uses: Felix2yu/.github/.github/workflows/reusable-image.yml@v1
     with:
-      go-dir: backend
-      main-package: ./cmd
+      go-dir: .
+      main-package: ./cmd/bili-history
       binary-name: bili-history
       image-name: ghcr.io/felix2yu/bili-history
       # SQLite 已换为纯 Go 驱动（modernc.org/sqlite），无需 cgo、可交叉编译；
       # database/driver_purego_test.go 守卫这一点
-      web-dir: frontend
+      web-dir: web
       web-build-command: pnpm run generate
       frontend-stage-command: |
-        rm -rf backend/web/dist
-        cp -r frontend/.output/public backend/web/dist
+        rm -rf internal/web/dist
+        cp -r web/.output/public internal/web/dist
 
   release:
     if: github.event_name == 'release'
@@ -60,11 +60,11 @@ jobs:
       contents: write
     uses: Felix2yu/.github/.github/workflows/reusable-release.yml@v1
     with:
-      go-dir: backend
-      main-package: ./cmd
+      go-dir: .
+      main-package: ./cmd/bili-history
       binary-name: bili-history
-      web-dir: frontend
+      web-dir: web
       web-build-command: pnpm run generate
       frontend-stage-command: |
-        rm -rf backend/web/dist
-        cp -r frontend/.output/public backend/web/dist
+        rm -rf internal/web/dist
+        cp -r web/.output/public internal/web/dist

@@ -8,8 +8,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
-# MiCode
+# MiCode / Qoder
 .mimocode/
+.qoder/
 
 # Build outputs
 dist/
@@ -49,14 +50,17 @@ docker-compose.override.yml
 .pytest_cache/
 .coverage
 htmlcov/
-backend/bilibili-history-go
+/bilibili-history-go
 
 # 统一 pnpm：只有 pnpm-lock.yaml 入库，其余包管理器的锁一律不入库
 package-lock.json
 yarn.lock
 bun.lock
 bun.lockb
-backend/main
-backend/fonts/
-backend/coverage.out
-backend/coverage.txt
+/main
+/coverage.out
+/coverage.txt
+/bin/
+
+# 迁移后 backend/ 残留：旧布局的本地资源与产物（fonts/、本地二进制等），未入库
+/backend/

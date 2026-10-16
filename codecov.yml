@@ -31,12 +31,13 @@ ignore:
 flags:
   backend:
     paths:
-      - backend/**/*.go
+      - internal/**/*.go
+      - cmd/**/*.go
     carryforward: true
   frontend:
     paths:
-      - frontend/**
+      - web/**
     carryforward: true
 
 fixes:
-  - "bilibili-history-go/::backend/"
+  - "bilibili-history-go/::"

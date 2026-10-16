@@ -30,12 +30,11 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
 
 WORKDIR /app
 
-COPY bin/bili-history /app/bili-history
-COPY backend/config /app/config
-COPY entrypoint.sh /entrypoint.sh
+COPY --chmod=755 bin/bili-history /app/bili-history
+COPY internal/config /app/config
+COPY --chmod=755 scripts/docker-entrypoint.sh /entrypoint.sh
 
-RUN mkdir -p /app/output && \
-    chmod +x /entrypoint.sh /app/bili-history
+RUN mkdir -p /app/output
 
 EXPOSE 8899
 

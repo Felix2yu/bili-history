@@ -1,0 +1,46 @@
+package utils
+
+import (
+	"os"
+	"path/filepath"
+
+	"bilibili-history-go/internal/config"
+)
+
+func GetBasePath() string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "."
+	}
+	return cwd
+}
+
+func GetOutputPath(paths ...string) string {
+	basePath := GetBasePath()
+	outputDir := filepath.Join(basePath, "output")
+	os.MkdirAll(outputDir, 0755)
+	
+	fullPath := filepath.Join(append([]string{outputDir}, paths...)...)
+	os.MkdirAll(filepath.Dir(fullPath), 0755)
+	
+	return fullPath
+}
+
+func GetDatabasePath(paths ...string) string {
+	basePath := GetBasePath()
+	databaseDir := filepath.Join(basePath, "output", "database")
+	os.MkdirAll(databaseDir, 0755)
+	
+	fullPath := filepath.Join(append([]string{databaseDir}, paths...)...)
+	os.MkdirAll(filepath.Dir(fullPath), 0755)
+	
+	return fullPath
+}
+
+func GetDBFilePath() string {
+	cfg := config.GetConfig()
+	if cfg == nil {
+		return GetOutputPath("bilibili_history.db")
+	}
+	return GetOutputPath(cfg.DBFile)
+}

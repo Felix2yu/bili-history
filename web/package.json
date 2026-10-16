@@ -26,7 +26,7 @@
     "nuxt": "4.6.1",
     "pinia": "^4.0.2",
     "vant": "^4.10.2",
-    "vue": "^3.5.43",
+    "vue": "^3.5.44",
     "vue-echarts": "^8.3.2",
     "vue-router": "^5.4.0"
   },
@@ -34,8 +34,8 @@
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.5",
     "@vite-pwa/nuxt": "^1.1.1",
-    "@vue/runtime-core": "^3.5.43",
-    "postcss": "^8.5.29",
+    "@vue/runtime-core": "^3.5.44",
+    "postcss": "^8.5.30",
     "tailwindcss": "4.3.3"
   }
 }

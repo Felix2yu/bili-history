@@ -4,27 +4,20 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: false,
 
-  modules: [
-    '@pinia/nuxt',
-    '@vueuse/nuxt',
-    '@vite-pwa/nuxt',
-  ],
+  modules: ['@nuxt/eslint', '@pinia/nuxt', '@vueuse/nuxt', '@vite-pwa/nuxt'],
 
-  css: [
-    '~/assets/css/main.css',
-    'vant/lib/index.css',
-  ],
+  css: ['~/assets/css/main.css', 'vant/lib/index.css'],
 
   postcss: {
     plugins: {
-      '@tailwindcss/postcss': {},
-    },
+      '@tailwindcss/postcss': {}
+    }
   },
 
   runtimeConfig: {
     public: {
-      defaultBackendUrl: process.env.NUXT_PUBLIC_DEFAULT_BACKEND_URL || '/api',
-    },
+      defaultBackendUrl: process.env.NUXT_PUBLIC_DEFAULT_BACKEND_URL || '/api'
+    }
   },
 
   app: {
@@ -32,12 +25,15 @@ export default defineNuxtConfig({
       title: '拾帧集',
       script: [
         {
-          innerHTML: `(function(){try{var s=localStorage.getItem('darkMode');var d=s?s==='dark'||(s==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');var t=localStorage.getItem('themeColor');if(t)document.documentElement.setAttribute('data-theme',t);var f=localStorage.getItem('fontSize');var fs={'small':'14px','default':'16px','large':'18px'};if(f&&fs[f])document.documentElement.style.fontSize=fs[f]}catch(e){}})()`,
-        },
+          innerHTML: `(function(){try{var s=localStorage.getItem('darkMode');var d=s?s==='dark'||(s==='system'&&window.matchMedia('(prefers-color-scheme:dark)').matches):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');var t=localStorage.getItem('themeColor');if(t)document.documentElement.setAttribute('data-theme',t);var f=localStorage.getItem('fontSize');var fs={'small':'14px','default':'16px','large':'18px'};if(f&&fs[f])document.documentElement.style.fontSize=fs[f]}catch(e){}})()`
+        }
       ],
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no' },
+        {
+          name: 'viewport',
+          content: 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no'
+        },
         { name: 'theme-color', content: '#1e293b' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'mobile-web-app-capable', content: 'yes' },
@@ -48,16 +44,16 @@ export default defineNuxtConfig({
         { property: 'og:title', content: '拾帧集' },
         { property: 'og:description', content: '拾起每帧画面，珍藏B站回忆' },
         { property: 'og:type', content: 'website' },
-        { property: 'og:image', content: '/icons/icon-512.png' },
+        { property: 'og:image', content: '/icons/icon-512.png' }
       ],
       link: [
         { rel: 'icon', href: '/favicon.ico', sizes: '16x16 32x32 48x48' },
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/icons/icon-192.png' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/icons/apple-touch-icon.png' },
-        { rel: 'mask-icon', href: '/logo.svg', color: '#fb7299' },
-      ],
-    },
+        { rel: 'mask-icon', href: '/logo.svg', color: '#fb7299' }
+      ]
+    }
   },
 
   pwa: {
@@ -82,27 +78,27 @@ export default defineNuxtConfig({
           src: '/icons/icon-192.png',
           sizes: '192x192',
           type: 'image/png',
-          purpose: 'any',
+          purpose: 'any'
         },
         {
           src: '/icons/icon-512.png',
           sizes: '512x512',
           type: 'image/png',
-          purpose: 'any',
+          purpose: 'any'
         },
         {
           src: '/icons/icon-maskable-192.png',
           sizes: '192x192',
           type: 'image/png',
-          purpose: 'maskable',
+          purpose: 'maskable'
         },
         {
           src: '/icons/icon-maskable-512.png',
           sizes: '512x512',
           type: 'image/png',
-          purpose: 'maskable',
-        },
-      ],
+          purpose: 'maskable'
+        }
+      ]
     },
     workbox: {
       navigateFallback: '/',
@@ -112,8 +108,8 @@ export default defineNuxtConfig({
           urlPattern: /^\/api\/.*/i,
           handler: 'NetworkOnly',
           options: {
-            cacheName: 'api-cache',
-          },
+            cacheName: 'api-cache'
+          }
         },
         {
           urlPattern: /\.(png|jpg|jpeg|svg|gif|webp|ico)$/i,
@@ -122,9 +118,9 @@ export default defineNuxtConfig({
             cacheName: 'image-cache',
             expiration: {
               maxEntries: 100,
-              maxAgeSeconds: 60 * 60 * 24 * 30,
-            },
-          },
+              maxAgeSeconds: 60 * 60 * 24 * 30
+            }
+          }
         },
         {
           urlPattern: /\.(css|js)$/i,
@@ -133,9 +129,9 @@ export default defineNuxtConfig({
             cacheName: 'static-cache',
             expiration: {
               maxEntries: 60,
-              maxAgeSeconds: 60 * 60 * 24 * 7,
-            },
-          },
+              maxAgeSeconds: 60 * 60 * 24 * 7
+            }
+          }
         },
         {
           urlPattern: /^https:\/\/i[0-9]\.hdslb\.com\/.*/i,
@@ -144,23 +140,23 @@ export default defineNuxtConfig({
             cacheName: 'bilibili-image-cache',
             expiration: {
               maxEntries: 200,
-              maxAgeSeconds: 60 * 60 * 24 * 7,
-            },
-          },
-        },
-      ],
+              maxAgeSeconds: 60 * 60 * 24 * 7
+            }
+          }
+        }
+      ]
     },
     client: {
-      installPrompt: true,
+      installPrompt: true
     },
     devOptions: {
-      enabled: false,
-    },
+      enabled: false
+    }
   },
 
   vite: {
     define: {
-      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false',
-    },
-  },
-})
+      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
+    }
+  }
+});

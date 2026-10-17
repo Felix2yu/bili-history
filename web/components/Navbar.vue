@@ -1,38 +1,64 @@
 <template>
   <div class="sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
     <nav class="glass border-b border-glass-border">
-      <div class="max-w-[1800px] mx-auto transition-all duration-300 ease-in-out">
-        <div class="flex items-center justify-between px-3 py-2.5 gap-3">
+      <div class="mx-auto max-w-[1800px] transition-all duration-300 ease-in-out">
+        <div class="flex items-center justify-between gap-3 px-3 py-2.5">
           <!-- Left: action buttons -->
           <div class="flex items-center gap-1.5">
             <!-- Hamburger menu (mobile only) -->
-            <button @click="toggleSidebar" class="glass-icon-btn md:hidden" title="菜单">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <button class="glass-icon-btn md:hidden" title="菜单" @click="toggleSidebar">
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
             <!-- Refresh button -->
             <button
-              @click="handleUpdate"
               :disabled="isUpdating"
               class="glass-icon-btn"
-              :class="{ 'active': isUpdating }"
+              :class="{ active: isUpdating }"
               :title="syncDeleted ? '当前模式：同步已删除记录' : '当前模式：不同步已删除记录'"
+              @click="handleUpdate"
             >
-              <svg v-if="isUpdating" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg v-if="isUpdating" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
               </svg>
-              <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <svg
+                v-else
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
               </svg>
             </button>
-
-
           </div>
 
           <!-- Center: SearchBar -->
-          <div class="flex-1 max-w-xl mx-2">
+          <div class="mx-2 max-w-xl flex-1">
             <SearchBar />
           </div>
 
@@ -40,66 +66,116 @@
           <div class="flex items-center gap-1.5">
             <!-- Layout toggle (desktop only) -->
             <button
-              @click="$emit('change-layout', layout === 'list' ? 'grid' : 'list')"
-              class="hidden sm:flex glass-icon-btn"
-              :class="{ 'active': layout === 'grid' }"
+              class="glass-icon-btn hidden sm:flex"
+              :class="{ active: layout === 'grid' }"
               :title="layout === 'list' ? '网格视图' : '列表视图'"
+              @click="$emit('change-layout', layout === 'list' ? 'grid' : 'list')"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path v-if="layout === 'list'" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                <path v-else stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  v-if="layout === 'list'"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+                <path
+                  v-else
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                />
               </svg>
             </button>
 
             <!-- Filter button -->
             <button
-              @click="openFilterPanel"
               class="glass-icon-btn"
-              :class="{ 'active': isFilterActive }"
+              :class="{ active: isFilterActive }"
               :title="isFilterActive ? '筛选中' : '筛选'"
+              @click="openFilterPanel"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                />
               </svg>
             </button>
 
             <!-- Batch mode -->
             <button
-              @click="$emit('toggle-batch-mode')"
               class="glass-icon-btn"
-              :class="{ 'active': isBatchMode }"
+              :class="{ active: isBatchMode }"
               :title="isBatchMode ? '点击取消' : '批量操作'"
+              @click="$emit('toggle-batch-mode')"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" :stroke="isBatchMode ? 'var(--accent)' : 'currentColor'" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                :stroke="isBatchMode ? 'var(--accent)' : 'currentColor'"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+                />
               </svg>
             </button>
 
             <!-- Settings (mobile only) -->
             <button
-              @click="$router.push('/settings')"
-              class="flex sm:hidden glass-icon-btn"
+              class="glass-icon-btn flex sm:hidden"
               title="设置"
+              @click="$router.push('/settings')"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
             </button>
           </div>
         </div>
 
         <!-- Filter area -->
-        <div class="max-w-[1800px] mx-auto transition-all duration-300 ease-in-out">
+        <div class="mx-auto max-w-[1800px] transition-all duration-300 ease-in-out">
           <FilterDropdown
             ref="filterDropdownRef"
             :business="business"
-            :businessLabel="businessLabel"
+            :business-label="businessLabel"
             :date="date"
             :category="category"
             :total="total"
             @update:business="$emit('update:business', $event)"
-            @update:businessLabel="$emit('update:businessLabel', $event)"
+            @update:business-label="$emit('update:businessLabel', $event)"
             @update:date="$emit('update:date', $event)"
             @update:category="$emit('update:category', $event)"
             @update:category-type="$emit('update:category-type', $event)"
@@ -114,14 +190,14 @@
 </template>
 
 <script setup>
-import SearchBar from './SearchBar.vue'
-import FilterDropdown from './FilterDropdown.vue'
-import { ref, watch, computed, inject, onMounted } from 'vue'
-import { showNotify } from 'vant'
-import { getSyncConfig } from '~/utils/api'
-import 'vant/es/notify/style'
+import SearchBar from './SearchBar.vue';
+import FilterDropdown from './FilterDropdown.vue';
+import { ref, computed, inject, onMounted } from 'vue';
+import { showNotify } from 'vant';
+import { getSyncConfig } from '~/utils/api';
+import 'vant/es/notify/style';
 
-const toggleSidebar = inject('toggleSidebar', () => {})
+const toggleSidebar = inject('toggleSidebar', () => {});
 
 const props = defineProps({
   date: { type: String, default: '' },
@@ -131,52 +207,62 @@ const props = defineProps({
   isBatchMode: { type: Boolean, default: false },
   businessLabel: { type: String, default: '' },
   business: { type: String, default: '' }
-})
+});
 
 const emit = defineEmits([
-  'click-date', 'click-category', 'click-business',
-  'change-layout', 'update:date', 'update:category', 'update:category-type',
-  'update:business', 'update:businessLabel', 'refresh-data', 'toggle-batch-mode'
-])
+  'click-date',
+  'click-category',
+  'click-business',
+  'change-layout',
+  'update:date',
+  'update:category',
+  'update:category-type',
+  'update:business',
+  'update:businessLabel',
+  'refresh-data',
+  'toggle-batch-mode'
+]);
 
-const isUpdating = ref(false)
-const syncDeleted = ref(false)
-const filterDropdownRef = ref(null)
+const isUpdating = ref(false);
+const syncDeleted = ref(false);
+const filterDropdownRef = ref(null);
 
-const isFilterActive = computed(() => Boolean(props.date || props.category || props.business))
+const isFilterActive = computed(() => Boolean(props.date || props.category || props.business));
 
 // Fetch sync config from backend on mount
 onMounted(async () => {
   try {
-    const response = await getSyncConfig()
+    const response = await getSyncConfig();
     if (response.data && response.data.success) {
-      syncDeleted.value = response.data.sync_deleted
+      syncDeleted.value = response.data.sync_deleted;
     }
   } catch (error) {
-    console.error('获取同步配置失败:', error)
+    console.error('获取同步配置失败:', error);
   }
-})
+});
 
 const openFilterPanel = () => {
   if (filterDropdownRef.value?.openFilterPopup) {
-    filterDropdownRef.value.openFilterPopup()
+    filterDropdownRef.value.openFilterPopup();
   }
-}
+};
 
 const handleUpdate = async () => {
-  if (isUpdating.value) return
-  isUpdating.value = true
+  if (isUpdating.value) return;
+  isUpdating.value = true;
   try {
-    emit('refresh-data')
+    emit('refresh-data');
   } catch (error) {
-    console.error('更新失败:', error)
+    console.error('更新失败:', error);
     showNotify({
       type: 'danger',
       message: error.response?.data?.message || error.message || '更新失败，请稍后重试',
-      duration: 3500,
-    })
+      duration: 3500
+    });
   } finally {
-    setTimeout(() => { isUpdating.value = false }, 2000)
+    setTimeout(() => {
+      isUpdating.value = false;
+    }, 2000);
   }
-}
+};
 </script>

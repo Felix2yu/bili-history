@@ -3,45 +3,45 @@
 // - // 开头的协议相对地址 -> https:
 // - http/https 绝对地址 -> 保持不变
 // - 以 / 开头或相对路径 -> 拼接当前 API BaseURL
-import { getCurrentBaseUrl } from '~/utils/api'
+import { getCurrentBaseUrl } from '~/utils/api';
 
 // B站 CDN 图片通过后端代理获取（解决 Referer 403 问题）
-const isBilibiliCdn = (url) => /^https?:\/\/i[0-9]*\.hdslb\.com\//i.test(url)
+const isBilibiliCdn = (url) => /^https?:\/\/i[0-9]*\.hdslb\.com\//i.test(url);
 
 export const normalizeImageUrl = (url) => {
-	if (!url) return ''
-	if (typeof url !== 'string') return url
+  if (!url) return '';
+  if (typeof url !== 'string') return url;
 
-	// 数据或 blob URL
-	if (url.startsWith('data:') || url.startsWith('blob:')) return url
+  // 数据或 blob URL
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
 
-	// 协议相对 URL
-	if (url.startsWith('//')) url = `https:${url}`
+  // 协议相对 URL
+  if (url.startsWith('//')) url = `https:${url}`;
 
-	// B站 CDN 图片走后端代理（后端设置正确的 Referer: https://www.bilibili.com）
-	if (isBilibiliCdn(url)) {
-		const base = getCurrentBaseUrl && getCurrentBaseUrl()
-		if (base) {
-			const baseNormalized = String(base).replace(/\/$/, '')
-			return `${baseNormalized}/images/proxy?url=${encodeURIComponent(url)}`
-		}
-	}
+  // B站 CDN 图片走后端代理（后端设置正确的 Referer: https://www.bilibili.com）
+  if (isBilibiliCdn(url)) {
+    const base = getCurrentBaseUrl && getCurrentBaseUrl();
+    if (base) {
+      const baseNormalized = String(base).replace(/\/$/, '');
+      return `${baseNormalized}/images/proxy?url=${encodeURIComponent(url)}`;
+    }
+  }
 
-	// 已是绝对 URL - 将 HTTP 升级为 HTTPS（避免混合内容警告）
-	if (/^https?:\/\//i.test(url)) {
-		if (url.startsWith('http://')) {
-			return url.replace('http://', 'https://')
-		}
-		return url
-	}
+  // 已是绝对 URL - 将 HTTP 升级为 HTTPS（避免混合内容警告）
+  if (/^https?:\/\//i.test(url)) {
+    if (url.startsWith('http://')) {
+      return url.replace('http://', 'https://');
+    }
+    return url;
+  }
 
-	// 其余按相对路径处理，拼接当前 API BaseURL
-	const base = getCurrentBaseUrl && getCurrentBaseUrl()
-	if (!base) return url
-	const baseNormalized = String(base).replace(/\/$/, '')
-	const pathNormalized = url.startsWith('/') ? url : `/${url}`
-	return `${baseNormalized}${pathNormalized}`
-}
+  // 其余按相对路径处理，拼接当前 API BaseURL
+  const base = getCurrentBaseUrl && getCurrentBaseUrl();
+  if (!base) return url;
+  const baseNormalized = String(base).replace(/\/$/, '');
+  const pathNormalized = url.startsWith('/') ? url : `/${url}`;
+  return `${baseNormalized}${pathNormalized}`;
+};
 
 /**
  * 将相对 output 路径转换为可访问的静态 URL（自动拼接 /static/ 前缀，并处理反斜杠）
@@ -50,27 +50,34 @@ export const normalizeImageUrl = (url) => {
  * 若已以 /static/ 开头，则直接规范化为完整 URL
  */
 export const toStaticUrl = (relativePath) => {
-  if (!relativePath) return ''
-  if (typeof relativePath !== 'string') return relativePath
+  if (!relativePath) return '';
+  if (typeof relativePath !== 'string') return relativePath;
 
   // 已是绝对/数据/Blob URL
-  if (relativePath.startsWith('data:') || relativePath.startsWith('blob:') || /^https?:\/\//i.test(relativePath)) {
-    return relativePath
+  if (
+    relativePath.startsWith('data:') ||
+    relativePath.startsWith('blob:') ||
+    /^https?:\/\//i.test(relativePath)
+  ) {
+    return relativePath;
   }
 
   // 统一分隔符
-  const normalized = relativePath.replace(/\\/g, '/').replace(/^\/+/, '')
+  const normalized = relativePath.replace(/\\/g, '/').replace(/^\/+/, '');
 
   // 已包含 /static/ 前缀
-  const staticPath = normalized.startsWith('static/') || normalized.startsWith('/static/')
-    ? (normalized.startsWith('/') ? normalized : `/${normalized}`)
-    : `/static/${normalized}`
+  const staticPath =
+    normalized.startsWith('static/') || normalized.startsWith('/static/')
+      ? normalized.startsWith('/')
+        ? normalized
+        : `/${normalized}`
+      : `/static/${normalized}`;
 
   // 拼接域名
-  return normalizeImageUrl(staticPath)
-}
+  return normalizeImageUrl(staticPath);
+};
 
 export default {
-	normalizeImageUrl,
-	toStaticUrl,
-}
+  normalizeImageUrl,
+  toStaticUrl
+};

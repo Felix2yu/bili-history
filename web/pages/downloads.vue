@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
+import Downloads from '~/components/page/Downloads.vue';
 definePageMeta({
-  layout: 'main',
-})
-import Downloads from '~/components/page/Downloads.vue'
+  layout: 'main'
+});
 </script>

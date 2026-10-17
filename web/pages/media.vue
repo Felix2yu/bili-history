@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
+import MediaManager from '~/components/page/MediaManager.vue';
 definePageMeta({
-  layout: 'main',
-})
-import MediaManager from '~/components/page/MediaManager.vue'
+  layout: 'main'
+});
 </script>

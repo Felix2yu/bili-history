@@ -1,14 +1,15 @@
-import axios from 'axios'
+import axios from 'axios';
 // 导入通知组件
-import 'vant/es/notify/style'
+import 'vant/es/notify/style';
 
-const DEFAULT_URL = (typeof process !== 'undefined' && process.env?.NUXT_PUBLIC_DEFAULT_BACKEND_URL) || '/api'
+const DEFAULT_URL =
+  (typeof process !== 'undefined' && process.env?.NUXT_PUBLIC_DEFAULT_BACKEND_URL) || '/api';
 
 const getBaseUrl = () => {
-  return localStorage.getItem('baseUrl') || DEFAULT_URL
-}
+  return localStorage.getItem('baseUrl') || DEFAULT_URL;
+};
 
-const BASE_URL = getBaseUrl()
+const BASE_URL = getBaseUrl();
 
 // 服务器地址列表
 const SERVER_URLS = [
@@ -16,72 +17,82 @@ const SERVER_URLS = [
   'http://127.0.0.1:8899',
   'http://localhost:8899',
   'http://0.0.0.0:8899'
-]
+];
 
 if (!SERVER_URLS.includes(DEFAULT_URL)) {
-  SERVER_URLS.unshift(DEFAULT_URL)
+  SERVER_URLS.unshift(DEFAULT_URL);
 }
 
 // 设置服务器地址
 export const setBaseUrl = (url) => {
-  localStorage.setItem('baseUrl', url)
+  localStorage.setItem('baseUrl', url);
   // 更新 axios 实例的 baseURL
-  updateInstanceBaseUrl(url)
+  updateInstanceBaseUrl(url);
   // 触发API BASE URL更新事件，供其他API模块使用
   try {
-    const event = new CustomEvent('api-baseurl-updated', { detail: { url } })
-    window.dispatchEvent(event)
-    console.log('已触发API BaseURL更新事件:', url)
+    const event = new CustomEvent('api-baseurl-updated', { detail: { url } });
+    window.dispatchEvent(event);
+    console.log('已触发API BaseURL更新事件:', url);
   } catch (error) {
-    console.error('触发API BaseURL更新事件失败:', error)
+    console.error('触发API BaseURL更新事件失败:', error);
   }
-  window.location.reload() // 刷新页面以应用新的baseUrl
-}
+  window.location.reload(); // 刷新页面以应用新的baseUrl
+};
 
 // 重置服务器地址
 export const resetBaseUrl = () => {
-  localStorage.removeItem('baseUrl')
-  window.location.reload()
-}
+  localStorage.removeItem('baseUrl');
+  window.location.reload();
+};
 
 // 获取当前服务器地址
 export const getCurrentBaseUrl = () => {
-  return getBaseUrl()
-}
+  return getBaseUrl();
+};
 
 // 创建一个 axios 实例
 export const instance = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000,
-})
+  timeout: 15000
+});
 
 // 请求拦截器
 instance.interceptors.request.use(
   (config) => {
-    return config
+    return config;
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
 // 响应拦截器
 instance.interceptors.response.use(
   (response) => {
-    return response
+    return response;
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
 // 更新 axios 实例的 baseURL
 export const updateInstanceBaseUrl = (newBaseUrl) => {
-  instance.defaults.baseURL = newBaseUrl
-}
+  instance.defaults.baseURL = newBaseUrl;
+};
 
 // 历史记录相关接口
-export const getBiliHistory2024 = (page, size, sortOrder, tagName, mainCategory, dateRange, useLocalImages = false, business = '', signal) => {
+export const getBiliHistory2024 = (
+  page,
+  size,
+  sortOrder,
+  tagName,
+  mainCategory,
+  dateRange,
+  useLocalImages = false,
+  business = '',
+  signal
+) => {
   return instance.get(`/history/all`, {
     params: {
       page,
@@ -91,17 +102,24 @@ export const getBiliHistory2024 = (page, size, sortOrder, tagName, mainCategory,
       main_category: mainCategory,
       date_range: dateRange,
       use_local_images: useLocalImages,
-      business: business,
+      business: business
     },
-    signal,
-  })
-}
+    signal
+  });
+};
 
 export const getHistoryDates = () => {
-  return instance.get(`/history/dates`)
-}
+  return instance.get(`/history/dates`);
+};
 
-export const searchBiliHistory2024 = (search, searchType = 'all', page = 1, size = 30, useLocalImages = false, useSessdata = true) => {
+export const searchBiliHistory2024 = (
+  search,
+  searchType = 'all',
+  page = 1,
+  size = 30,
+  useLocalImages = false,
+  useSessdata = true
+) => {
   return instance.get(`/history/search`, {
     params: {
       page,
@@ -110,23 +128,23 @@ export const searchBiliHistory2024 = (search, searchType = 'all', page = 1, size
       search_type: searchType,
       use_local_images: useLocalImages,
       use_sessdata: useSessdata
-    },
-  })
-}
+    }
+  });
+};
 
 // 获取可用年份列表
 export const getAvailableYears = () => {
-  return instance.get(`/history/available-years`)
-}
+  return instance.get(`/history/available-years`);
+};
 
 // 分类相关接口
 export const getVideoCategories = () => {
-  return instance.get(`/categories/categories`) // 使用新的分类接口
-}
+  return instance.get(`/categories/categories`); // 使用新的分类接口
+};
 
 export const getMainCategories = () => {
-  return instance.get(`/categories/main-categories`)
-}
+  return instance.get(`/categories/main-categories`);
+};
 
 // 标题分析相关接口已拆分为以下独立接口：
 // - getTitleKeywordAnalysis: 关键词分析
@@ -142,8 +160,8 @@ export const getTitleKeywordAnalysis = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取标题长度分析
 export const getTitleLengthAnalysis = (year, useCache = true) => {
@@ -152,8 +170,8 @@ export const getTitleLengthAnalysis = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取标题情感分析
 export const getTitleSentimentAnalysis = (year, useCache = true) => {
@@ -162,8 +180,8 @@ export const getTitleSentimentAnalysis = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取标题趋势分析
 export const getTitleTrendAnalysis = (year, useCache = true) => {
@@ -172,8 +190,8 @@ export const getTitleTrendAnalysis = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取标题互动分析
 export const getTitleInteractionAnalysis = (year, useCache = true) => {
@@ -182,8 +200,8 @@ export const getTitleInteractionAnalysis = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 观看时间分析相关接口已拆分为以下独立接口：
 // - getViewingMonthlyStats: 月度统计分析
@@ -199,8 +217,8 @@ export const getViewingMonthlyStats = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取周度观看统计分析
 export const getViewingWeeklyStats = (year, useCache = true) => {
@@ -209,8 +227,8 @@ export const getViewingWeeklyStats = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取时段观看分析
 export const getViewingTimeSlots = (year, useCache = true) => {
@@ -219,8 +237,8 @@ export const getViewingTimeSlots = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取观看连续性分析
 export const getViewingContinuity = (year, useCache = true) => {
@@ -229,8 +247,8 @@ export const getViewingContinuity = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取重复观看分析
 export const getViewingWatchCounts = (year, useCache = true) => {
@@ -239,8 +257,8 @@ export const getViewingWatchCounts = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取视频完成率分析
 export const getViewingCompletionRates = (year, useCache = true) => {
@@ -249,8 +267,8 @@ export const getViewingCompletionRates = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取UP主完成率分析
 export const getViewingAuthorCompletion = (year, useCache = true) => {
@@ -259,8 +277,8 @@ export const getViewingAuthorCompletion = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取标签分析
 export const getViewingTagAnalysis = (year, useCache = true) => {
@@ -269,8 +287,8 @@ export const getViewingTagAnalysis = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取视频时长分析
 export const getViewingDurationAnalysis = (year, useCache = true) => {
@@ -279,8 +297,8 @@ export const getViewingDurationAnalysis = (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 原始的观看时间分析接口已删除，现在使用拆分后的独立接口
 
@@ -291,30 +309,30 @@ export const getViewingBehavior = async (year, useCache = false) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取热力图数据（日期 -> 观看数量）
 export const getHeatmapData = async (year) => {
   return instance.get(`/heatmap/data`, {
     params: { year }
-  })
-}
+  });
+};
 
 // 获取点赞分析数据
 export const getLikesAnalysis = async () => {
-  return instance.get('/viewing/likes-analysis')
-}
+  return instance.get('/viewing/likes-analysis');
+};
 
 // 获取收藏分析数据
 export const getFavoritesAnalysis = async () => {
-  return instance.get('/viewing/favorites-analysis')
-}
+  return instance.get('/viewing/favorites-analysis');
+};
 
 // 获取稍后再看分析数据
 export const getWatchLaterAnalysis = async () => {
-  return instance.get('/viewing/watchlater-analysis')
-}
+  return instance.get('/viewing/watchlater-analysis');
+};
 
 // 获取热门视频命中率分析
 export const getPopularHitRate = async (year, useCache = true) => {
@@ -323,8 +341,8 @@ export const getPopularHitRate = async (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取热门预测能力分析
 export const getPopularPredictionAbility = async (year, useCache = true) => {
@@ -333,8 +351,8 @@ export const getPopularPredictionAbility = async (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取UP主热门关联分析
 export const getAuthorPopularAssociation = async (year, useCache = true) => {
@@ -343,8 +361,8 @@ export const getAuthorPopularAssociation = async (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取热门视频分区分布分析
 export const getCategoryPopularDistribution = async (year, useCache = true) => {
@@ -353,8 +371,8 @@ export const getCategoryPopularDistribution = async (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
+  });
+};
 
 // 获取热门视频时长分布分析
 export const getDurationPopularDistribution = async (year, useCache = true) => {
@@ -363,64 +381,68 @@ export const getDurationPopularDistribution = async (year, useCache = true) => {
       year,
       use_cache: useCache
     }
-  })
-}
-
-
+  });
+};
 
 // 实时更新历史记录
 export const updateBiliHistoryRealtime = (syncDeleted = false) => {
-  return instance.get(`/fetch/bili-history-realtime`, {
-    params: {
-      sync_deleted: syncDeleted
-    }
-  }).then(response => {
-    // 检查响应格式
-    if (!response.data) {
-      throw new Error('响应数据格式错误')
-    }
+  return instance
+    .get(`/fetch/bili-history-realtime`, {
+      params: {
+        sync_deleted: syncDeleted
+      }
+    })
+    .then((response) => {
+      // 检查响应格式
+      if (!response.data) {
+        throw new Error('响应数据格式错误');
+      }
 
-    // 如果返回未找到本地历史记录错误，则调用完整获取接口
-    if (response.data.status === 'error' && response.data.message === '未找到本地历史记录') {
-      return getBiliHistory()
-    }
+      // 如果返回未找到本地历史记录错误，则调用完整获取接口
+      if (response.data.status === 'error' && response.data.message === '未找到本地历史记录') {
+        return getBiliHistory();
+      }
 
-    return response
-  }).catch(error => {
-    console.error('API 请求错误:', error)
-    // 重新抛出错误，让调用者处理
-    throw error
-  })
-}
+      return response;
+    })
+    .catch((error) => {
+      console.error('API 请求错误:', error);
+      // 重新抛出错误，让调用者处理
+      throw error;
+    });
+};
 
 // 获取完整历史记录
 export const getBiliHistory = () => {
-  return instance.get('/fetch/bili-history').then(async response => {
-    // 检查响应格式
-    if (!response.data) {
-      throw new Error('响应数据格式错误')
-    }
-
-    // 如果获取历史记录成功，调用导入SQLite接口
-    if (response.data.status === 'success') {
-      try {
-        await importSqliteData()
-        // 1秒后刷新页面，让用户看到成功提示
-        setTimeout(() => {
-          window.location.reload()
-        }, 1000)
-      } catch (error) {
-        console.error('导入SQLite失败:', error)
-        // 即使导入失败也返回历史记录的响应
+  return instance
+    .get('/fetch/bili-history')
+    .then(async (response) => {
+      // 检查响应格式
+      if (!response.data) {
+        throw new Error('响应数据格式错误');
       }
-    }
 
-    return response
-  }).catch(error => {
-    console.error('获取历史记录失败:', error)
-    throw error
-  })
-}
+      // 如果获取历史记录成功，调用导入SQLite接口
+      if (response.data.status === 'success') {
+        try {
+          await importSqliteData();
+          // 1秒后刷新页面，让用户看到成功提示
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } catch (error) {
+          console.error('导入SQLite失败:', error);
+          // 即使导入失败也返回历史记录的响应
+        }
+      }
+
+      return response;
+    })
+    .catch((error) => {
+      console.error('获取历史记录失败:', error);
+      throw error;
+    });
+};
 
 // 获取每日视频统计
 export const getDailyStats = async (date, year) => {
@@ -429,114 +451,118 @@ export const getDailyStats = async (date, year) => {
       date,
       year
     }
-  })
-}
+  });
+};
 
 // 导入SQLite数据
 export const importSqliteData = () => {
-  return instance.post(`/importSqlite/import_data_sqlite`)
-}
+  return instance.post(`/importSqlite/import_data_sqlite`);
+};
 
 // 导出相关接口
 // 导出历史记录到Excel
 export const exportHistory = (options = {}) => {
   // 只传递非空参数
-  const params = {}
+  const params = {};
 
   // 年份参数
   if (options.year !== undefined && options.year !== null) {
-    params.year = options.year
+    params.year = options.year;
   }
 
   // 月份参数
   if (options.month !== undefined && options.month !== null) {
-    params.month = options.month
+    params.month = options.month;
   }
 
   // 开始日期参数
   if (options.start_date) {
-    params.start_date = options.start_date
+    params.start_date = options.start_date;
   }
 
   // 结束日期参数
   if (options.end_date) {
-    params.end_date = options.end_date
+    params.end_date = options.end_date;
   }
 
-  console.log('导出参数:', params)
+  console.log('导出参数:', params);
 
-  return instance.post('/export/export_history', null, {
-    params,
-    responseType: 'blob'
-  }).then(response => {
-    // 创建blob链接并下载
-    const blob = new Blob([response.data], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  return instance
+    .post('/export/export_history', null, {
+      params,
+      responseType: 'blob'
     })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', 'bilibili_history.xlsx')
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    return { success: true }
-  })
-}
+    .then((response) => {
+      // 创建blob链接并下载
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'bilibili_history.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      return { success: true };
+    });
+};
 
 // 下载SQLite数据库
 export const downloadDatabase = () => {
-  return instance.get('/export/download_db', {
-    responseType: 'blob',
-    headers: {
-      'Accept': 'application/x-sqlite3'
-    }
-  }).then(response => {
-    // 创建blob链接并下载
-    const blob = new Blob([response.data], {
-      type: 'application/x-sqlite3'
+  return instance
+    .get('/export/download_db', {
+      responseType: 'blob',
+      headers: {
+        Accept: 'application/x-sqlite3'
+      }
     })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', 'bilibili_history.db')
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    return response
-  })
-}
+    .then((response) => {
+      // 创建blob链接并下载
+      const blob = new Blob([response.data], {
+        type: 'application/x-sqlite3'
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'bilibili_history.db');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      return response;
+    });
+};
 
 // 登录相关接口
 // 生成登录二维码
 export const generateLoginQRCode = () => {
-  return instance.get('/login/qrcode/generate')
-}
+  return instance.get('/login/qrcode/generate');
+};
 
 // 获取二维码图片URL
 export const getQRCodeImageURL = () => {
-  return `${BASE_URL}/login/qrcode/image`
-}
+  return `${BASE_URL}/login/qrcode/image`;
+};
 
 // 获取二维码图片（返回blob URL）
 export const getQRCodeImageBlob = async () => {
   try {
     const response = await instance.get('/login/qrcode/image', {
       responseType: 'blob'
-    })
+    });
 
     // 创建blob URL
     const blob = new Blob([response.data], {
       type: response.headers['content-type'] || 'image/png'
-    })
-    return URL.createObjectURL(blob)
+    });
+    return URL.createObjectURL(blob);
   } catch (error) {
-    console.error('获取二维码图片失败:', error)
-    throw error
+    console.error('获取二维码图片失败:', error);
+    throw error;
   }
-}
+};
 
 // 轮询二维码状态
 export const pollQRCodeStatus = (qrcodeKey) => {
@@ -544,25 +570,25 @@ export const pollQRCodeStatus = (qrcodeKey) => {
     params: {
       qrcode_key: qrcodeKey
     }
-  })
-}
+  });
+};
 
 // 退出登录
 export const logout = () => {
-  return instance.post('/login/logout')
-}
+  return instance.post('/login/logout');
+};
 
 // 获取登录状态
 export const getLoginStatus = () => {
-  return instance.get('/login/check')
-}
+  return instance.get('/login/check');
+};
 
 // 批量删除历史记录
 export const batchDeleteHistory = (items) => {
   return instance.delete('/delete/batch-delete', {
-    data: items  // 直接发送数组，不要包装在 items 对象中
-  })
-}
+    data: items // 直接发送数组，不要包装在 items 对象中
+  });
+};
 
 // 删除B站历史记录
 export const deleteBilibiliHistory = (kid, syncToBilibili = true) => {
@@ -573,8 +599,8 @@ export const deleteBilibiliHistory = (kid, syncToBilibili = true) => {
     data: {
       sync_to_bilibili: syncToBilibili
     }
-  })
-}
+  });
+};
 
 // 批量删除B站历史记录
 export const batchDeleteBilibiliHistory = (items) => {
@@ -582,8 +608,8 @@ export const batchDeleteBilibiliHistory = (items) => {
     data: {
       items
     }
-  })
-}
+  });
+};
 
 // =============================
 // 热门视频数据清理（按年分库）
@@ -595,14 +621,14 @@ export const batchDeleteBilibiliHistory = (items) => {
  * @returns {Promise<any>}
  */
 export const getPopularCleanupYears = () => {
-  return instance.get('/bilibili/popular/years')
-}
+  return instance.get('/bilibili/popular/years');
+};
 
 // 数据库管理相关接口
 // 重置数据库
 export const resetDatabase = () => {
-  return instance.post('/history/reset-database')
-}
+  return instance.post('/history/reset-database');
+};
 
 // 备注相关接口
 // 更新视频备注
@@ -611,15 +637,15 @@ export const updateVideoRemark = (bvid, viewAt, remark) => {
     bvid,
     view_at: viewAt,
     remark
-  })
-}
+  });
+};
 
 // 批量获取视频备注
 export const batchGetRemarks = (records) => {
   return instance.post('/history/batch-remarks', {
     items: records
-  })
-}
+  });
+};
 
 // 获取所有备注记录
 export const getAllRemarks = (page = 1, size = 10, sortOrder = 0) => {
@@ -629,14 +655,14 @@ export const getAllRemarks = (page = 1, size = 10, sortOrder = 0) => {
       size,
       sort_order: sortOrder
     }
-  })
-}
+  });
+};
 
 // 图片管理相关接口
 // 获取图片下载状态
 export const getImagesStatus = () => {
-  return instance.get('/images/status')
-}
+  return instance.get('/images/status');
+};
 
 // 开始下载图片
 export const startImagesDownload = (year = null, useSessdata = true) => {
@@ -645,22 +671,30 @@ export const startImagesDownload = (year = null, useSessdata = true) => {
       year,
       use_sessdata: useSessdata
     }
-  })
-}
+  });
+};
 
 // 停止下载图片
 export const stopImagesDownload = () => {
-  return instance.post('/images/stop')
-}
+  return instance.post('/images/stop');
+};
 
 // 清空图片
 export const clearImages = () => {
-  return instance.post('/images/clear')
-}
+  return instance.post('/images/clear');
+};
 
 // 下载视频
-export const downloadVideo = async (bvid, sessdata = null, onMessage, downloadCover = true, onlyAudio = false, cid = 0, options = {}) => {
-  console.log('调用下载API, bvid:', bvid, '高级选项:', options)
+export const downloadVideo = async (
+  bvid,
+  sessdata = null,
+  onMessage,
+  downloadCover = true,
+  onlyAudio = false,
+  cid = 0,
+  options = {}
+) => {
+  console.log('调用下载API, bvid:', bvid, '高级选项:', options);
 
   const requestBody = {
     url: bvid,
@@ -670,51 +704,51 @@ export const downloadVideo = async (bvid, sessdata = null, onMessage, downloadCo
     cid,
     // 添加高级选项
     ...options
-  }
+  };
 
   // 从本地存储获取API密钥
-  const apiKey = localStorage.getItem('apiKey')
+  const apiKey = localStorage.getItem('apiKey');
 
   // 准备请求头
   const headers = {
-    'Content-Type': 'application/json',
-  }
+    'Content-Type': 'application/json'
+  };
 
   // 如果存在API密钥，添加到请求头
   if (apiKey) {
-    headers['X-API-Key'] = apiKey
+    headers['X-API-Key'] = apiKey;
   }
 
   const response = await fetch(`${BASE_URL}/download/download_video`, {
     method: 'POST',
     headers,
     body: JSON.stringify(requestBody)
-  })
+  });
 
   if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.detail || '下载请求失败')
+    const errorData = await response.json();
+    throw new Error(errorData.detail || '下载请求失败');
   }
 
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
 
   while (true) {
-    const { value, done } = await reader.read()
-    if (done) break
+    const { value, done } = await reader.read();
+    if (done) break;
 
-    buffer += decoder.decode(value, { stream: true })
+    buffer += decoder.decode(value, { stream: true });
 
     // 处理缓冲区中的完整行
-    const lines = buffer.split('\n')
-    buffer = lines.pop() // 保留最后一个不完整的行
+    const lines = buffer.split('\n');
+    buffer = lines.pop(); // 保留最后一个不完整的行
 
     for (const line of lines) {
       if (line.startsWith('data: ')) {
-        const content = line.substring(6).trim()
+        const content = line.substring(6).trim();
         if (content && content !== 'close') {
-          onMessage(content)
+          onMessage(content);
         }
       }
     }
@@ -723,81 +757,86 @@ export const downloadVideo = async (bvid, sessdata = null, onMessage, downloadCo
   // 处理最后可能剩余的数据
   if (buffer) {
     if (buffer.startsWith('data: ')) {
-      const content = buffer.substring(6).trim()
+      const content = buffer.substring(6).trim();
       if (content && content !== 'close') {
-        onMessage(content)
+        onMessage(content);
       }
     }
   }
-}
+};
 
 // 检查 FFmpeg 安装状态
 export const checkFFmpeg = () => {
-  return instance.get('/download/check_ffmpeg')
-}
+  return instance.get('/download/check_ffmpeg');
+};
 
 // 计划任务管理相关接口
 export const getAllSchedulerTasks = (params = {}) => {
-  return instance.get('/scheduler/tasks', { params })
-    .then(response => {
-      return response
+  return instance
+    .get('/scheduler/tasks', { params })
+    .then((response) => {
+      return response;
     })
-    .catch(error => {
-      console.error('getAllSchedulerTasks API错误:', error)
-      throw error
-    })
-}
+    .catch((error) => {
+      console.error('getAllSchedulerTasks API错误:', error);
+      throw error;
+    });
+};
 
 export const getSchedulerTaskDetail = (taskId, params = {}) => {
-  return instance.get(`/scheduler/tasks`, {
-    params: {
-      task_id: taskId,
-      include_subtasks: true,  // 默认包含子任务
-      ...params
-    }
-  }).then(response => {
-    return response;
-  }).catch(error => {
-    console.error('API - 获取任务详情出错:', error);
-    throw error;
-  });
-}
+  return instance
+    .get(`/scheduler/tasks`, {
+      params: {
+        task_id: taskId,
+        include_subtasks: true, // 默认包含子任务
+        ...params
+      }
+    })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      console.error('API - 获取任务详情出错:', error);
+      throw error;
+    });
+};
 
 export const createSchedulerTask = (taskData) => {
-  return instance.post('/scheduler/tasks', taskData)
-}
+  return instance.post('/scheduler/tasks', taskData);
+};
 
 export const updateSchedulerTask = (taskId, taskData) => {
-  return instance.put(`/scheduler/tasks/${encodeURIComponent(taskId)}`, taskData)
-}
+  return instance.put(`/scheduler/tasks/${encodeURIComponent(taskId)}`, taskData);
+};
 
 export const deleteSchedulerTask = (taskId) => {
-  return instance.delete(`/scheduler/tasks/${encodeURIComponent(taskId)}`)
-}
+  return instance.delete(`/scheduler/tasks/${encodeURIComponent(taskId)}`);
+};
 
 export const executeSchedulerTask = (taskId, options = {}) => {
-  return instance.post(`/scheduler/tasks/${encodeURIComponent(taskId)}/execute`, options)
-}
+  return instance.post(`/scheduler/tasks/${encodeURIComponent(taskId)}/execute`, options);
+};
 
 // 子任务管理接口
 export const addSubTask = (taskId, subTaskData) => {
-  console.log('调用addSubTask API:', { taskId, subTaskData })
-  return instance.post(`/scheduler/tasks/${encodeURIComponent(taskId)}/subtasks`, subTaskData)
-    .then(response => {
-      console.log('addSubTask API响应:', response)
-      return response
+  console.log('调用addSubTask API:', { taskId, subTaskData });
+  return instance
+    .post(`/scheduler/tasks/${encodeURIComponent(taskId)}/subtasks`, subTaskData)
+    .then((response) => {
+      console.log('addSubTask API响应:', response);
+      return response;
     })
-    .catch(error => {
-      console.error('addSubTask API错误:', error)
-      throw error
-    })
-}
-
+    .catch((error) => {
+      console.error('addSubTask API错误:', error);
+      throw error;
+    });
+};
 
 export const deleteSubTask = (taskId, subTaskId) => {
-  return instance.delete(`/scheduler/tasks/${encodeURIComponent(taskId)}/subtasks/${encodeURIComponent(subTaskId)}`)
-}
-
+  return instance.delete(
+    `/scheduler/tasks/${encodeURIComponent(taskId)}/subtasks/${encodeURIComponent(subTaskId)}`
+  );
+};
 
 // 获取任务历史记录
 export const getTaskHistory = ({
@@ -819,58 +858,60 @@ export const getTaskHistory = ({
       page,
       page_size
     }
-  })
-}
+  });
+};
 
 // 系统接口
 export const getAvailableEndpoints = () => {
-  return instance.get('/scheduler/available-endpoints')
-}
+  return instance.get('/scheduler/available-endpoints');
+};
 
 // 启用/禁用任务
 export const setTaskEnabled = (taskId, enabled) => {
   return instance.post(`/scheduler/tasks/${encodeURIComponent(taskId)}/enable`, {
     enabled
-  })
-}
+  });
+};
 
 // 通知配置相关接口
 export const getNotifyConfig = () => {
-  return instance.get('/config/notify')
-}
+  return instance.get('/config/notify');
+};
 
 export const updateNotifyConfig = (config) => {
-  return instance.post('/config/notify', config)
-}
+  return instance.post('/config/notify', config);
+};
 
 export const testNotifyPush = () => {
-  return instance.post('/config/notify/test')
-}
+  return instance.post('/config/notify/test');
+};
 
 // MCP配置相关接口
 export const getMcpConfig = () => {
-  return instance.get('/config/mcp-config')
-    .then(response => {
-      console.log('MCP配置API响应成功:', response)
-      return response
+  return instance
+    .get('/config/mcp-config')
+    .then((response) => {
+      console.log('MCP配置API响应成功:', response);
+      return response;
     })
-    .catch(error => {
-      console.error('MCP配置API错误:', error)
-      throw error
-    })
-}
+    .catch((error) => {
+      console.error('MCP配置API错误:', error);
+      throw error;
+    });
+};
 
 export const updateMcpConfig = (config) => {
-  return instance.post('/config/mcp-config', config)
-    .then(response => {
-      console.log('更新MCP配置API响应成功:', response)
-      return response
+  return instance
+    .post('/config/mcp-config', config)
+    .then((response) => {
+      console.log('更新MCP配置API响应成功:', response);
+      return response;
     })
-    .catch(error => {
-      console.error('更新MCP配置API错误:', error)
-      throw error
-    })
-}
+    .catch((error) => {
+      console.error('更新MCP配置API错误:', error);
+      throw error;
+    });
+};
 
 // API安全相关接口已移除
 
@@ -880,8 +921,8 @@ export const checkVideoDownload = (cids) => {
     params: {
       cids: Array.isArray(cids) ? cids.join(',') : cids
     }
-  })
-}
+  });
+};
 
 // 获取已下载视频列表
 export const getDownloadedVideos = (searchTerm = '', page = 1, limit = 20) => {
@@ -891,8 +932,8 @@ export const getDownloadedVideos = (searchTerm = '', page = 1, limit = 20) => {
       page,
       limit
     }
-  })
-}
+  });
+};
 
 /**
  * 删除已下载的视频
@@ -911,13 +952,13 @@ export const deleteDownloadedVideo = (cid, deleteDirectory = false, directory = 
       delete_directory: deleteDirectory,
       directory: directory
     }
-  })
-}
+  });
+};
 
 // 服务器健康检查
 export const checkServerHealth = () => {
-  return instance.get('/health')
-}
+  return instance.get('/health');
+};
 
 /**
  * 获取视频流地址
@@ -925,12 +966,12 @@ export const checkServerHealth = () => {
  * @returns {string} 视频流URL
  */
 export const getVideoStream = (file_path) => {
-  if (!file_path) return ''
-  const baseUrl = instance.defaults.baseURL
+  if (!file_path) return '';
+  const baseUrl = instance.defaults.baseURL;
 
   // 构建基本URL
-  return `${baseUrl}/download/stream_video?file_path=${encodeURIComponent(file_path)}&t=${Date.now()}`
-}
+  return `${baseUrl}/download/stream_video?file_path=${encodeURIComponent(file_path)}&t=${Date.now()}`;
+};
 
 /**
  * 获取弹幕文件内容
@@ -952,7 +993,7 @@ export const getDanmakuFile = async (cid = '', file_path = '') => {
     console.error('获取弹幕文件失败:', error);
     throw error;
   }
-}
+};
 
 // 数据同步相关接口
 /**
@@ -960,16 +1001,16 @@ export const getDanmakuFile = async (cid = '', file_path = '') => {
  * @returns {Promise} - API响应
  */
 export const syncData = () => {
-  return instance.post('/data_sync/sync', {})
-}
+  return instance.post('/data_sync/sync', {});
+};
 
 /**
  * 获取最新同步结果API
  * @returns {Promise} - API响应
  */
 export const getSyncResult = () => {
-  return instance.get('/data_sync/sync/result')
-}
+  return instance.get('/data_sync/sync/result');
+};
 
 /**
  * 检查数据完整性API
@@ -979,24 +1020,24 @@ export const getSyncResult = () => {
 export const checkDataIntegrity = (force_check = false) => {
   return instance.post('/data_sync/check', {
     force_check
-  })
-}
+  });
+};
 
 /**
  * 获取数据完整性校验配置API
  * @returns {Promise} - API响应
  */
 export const getIntegrityCheckConfig = () => {
-  return instance.get('/data_sync/config')
-}
+  return instance.get('/data_sync/config');
+};
 
 /**
  * 获取数据完整性报告API
  * @returns {Promise} - API响应
  */
 export const getIntegrityReport = () => {
-  return instance.get('/data_sync/report')
-}
+  return instance.get('/data_sync/report');
+};
 
 /**
  * 更新数据完整性校验配置API
@@ -1006,16 +1047,16 @@ export const getIntegrityReport = () => {
 export const updateIntegrityCheckConfig = (checkOnStartup) => {
   return instance.post('/data_sync/config', {
     check_on_startup: checkOnStartup
-  })
-}
+  });
+};
 
 /**
  * 获取同步删除配置API
  * @returns {Promise} - API响应
  */
 export const getSyncConfig = () => {
-  return instance.get('/data_sync/sync-config')
-}
+  return instance.get('/data_sync/sync-config');
+};
 
 /**
  * 更新同步删除配置API
@@ -1025,16 +1066,16 @@ export const getSyncConfig = () => {
  * @returns {Promise} - API响应
  */
 export const updateSyncConfig = (params) => {
-  return instance.post('/data_sync/sync-config', params)
-}
+  return instance.post('/data_sync/sync-config', params);
+};
 
 /**
  * 获取外观配置API
  * @returns {Promise} - API响应
  */
 export const getAppearanceConfig = () => {
-  return instance.get('/data_sync/appearance-config')
-}
+  return instance.get('/data_sync/appearance-config');
+};
 
 /**
  * 更新外观配置API
@@ -1043,8 +1084,8 @@ export const getAppearanceConfig = () => {
  * @returns {Promise} - API响应
  */
 export const updateAppearanceConfig = (params) => {
-  return instance.post('/data_sync/appearance-config', params)
-}
+  return instance.post('/data_sync/appearance-config', params);
+};
 
 /**
  * 获取指定用户创建的所有收藏夹信息
@@ -1056,8 +1097,8 @@ export const updateAppearanceConfig = (params) => {
  * @returns {Promise<Object>} 收藏夹列表
  */
 export const getCreatedFavoriteFolders = (params = {}) => {
-  return instance.get('/favorite/list', { params })
-}
+  return instance.get('/favorite/list', { params });
+};
 
 /**
  * 获取指定用户收藏的视频收藏夹列表
@@ -1070,8 +1111,8 @@ export const getCreatedFavoriteFolders = (params = {}) => {
  * @returns {Promise<Object>} 收藏夹列表
  */
 export const getCollectedFavoriteFolders = (params = {}) => {
-  return instance.get('/favorite/collected/list', { params })
-}
+  return instance.get('/favorite/collected/list', { params });
+};
 
 /**
  * 获取收藏夹内容列表
@@ -1088,8 +1129,8 @@ export const getCollectedFavoriteFolders = (params = {}) => {
  * @returns {Promise<Object>} 收藏夹内容列表
  */
 export const getFavoriteContents = (params = {}) => {
-  return instance.get('/favorite/content/list', { params })
-}
+  return instance.get('/favorite/content/list', { params });
+};
 
 /**
  * 获取数据库中的收藏夹列表
@@ -1100,8 +1141,8 @@ export const getFavoriteContents = (params = {}) => {
  * @returns {Promise<Object>} 收藏夹列表
  */
 export const getLocalFavoriteFolders = (params = {}) => {
-  return instance.get('/favorite/local/list', { params })
-}
+  return instance.get('/favorite/local/list', { params });
+};
 
 /**
  * 获取本地收藏的合集列表
@@ -1111,8 +1152,8 @@ export const getLocalFavoriteFolders = (params = {}) => {
  * @returns {Promise<Object>} 合集列表
  */
 export const getLocalCollectedFolders = (params = {}) => {
-  return instance.get('/favorite/collected/local/list', { params })
-}
+  return instance.get('/favorite/collected/local/list', { params });
+};
 
 /**
  * 获取数据库中的收藏内容列表
@@ -1123,8 +1164,8 @@ export const getLocalCollectedFolders = (params = {}) => {
  * @returns {Promise<Object>} 内容列表
  */
 export const getLocalFavoriteContents = (params = {}) => {
-  return instance.get('/favorite/content/list', { params })
-}
+  return instance.get('/favorite/content/list', { params });
+};
 
 /**
  * 从B站在线获取收藏夹内容
@@ -1135,8 +1176,8 @@ export const getLocalFavoriteContents = (params = {}) => {
  * @returns {Promise<Object>} 内容列表
  */
 export const getOnlineFavoriteContents = (params = {}) => {
-  return instance.get('/favorite/content/online', { params })
-}
+  return instance.get('/favorite/content/online', { params });
+};
 // #endregion
 
 /**
@@ -1149,8 +1190,8 @@ export const getOnlineFavoriteContents = (params = {}) => {
  * @returns {Promise<Object>} 操作结果
  */
 export const favoriteResource = (params = {}) => {
-  return instance.post('/favorite/resource/deal', params)
-}
+  return instance.post('/favorite/resource/deal', params);
+};
 
 /**
  * 批量收藏或取消收藏视频
@@ -1162,8 +1203,8 @@ export const favoriteResource = (params = {}) => {
  * @returns {Promise<Object>} 操作结果
  */
 export const batchFavoriteResource = (params = {}) => {
-  return instance.post('/favorite/resource/batch-deal', params)
-}
+  return instance.post('/favorite/resource/batch-deal', params);
+};
 
 /**
  * 本地批量收藏或取消收藏视频
@@ -1176,8 +1217,8 @@ export const batchFavoriteResource = (params = {}) => {
  * @returns {Promise<Object>} 操作结果
  */
 export const localBatchFavoriteResource = (params = {}) => {
-  return instance.post('/favorite/resource/local-batch-deal', params)
-}
+  return instance.post('/favorite/resource/local-batch-deal', params);
+};
 
 /**
  * 批量检查视频收藏状态
@@ -1191,14 +1232,17 @@ export const batchCheckFavoriteStatus = (params = {}) => {
 
   // 确保 oids 是数组格式
   if (typeof requestParams.oids === 'string') {
-    requestParams.oids = requestParams.oids.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+    requestParams.oids = requestParams.oids
+      .split(',')
+      .map((id) => parseInt(id.trim(), 10))
+      .filter((id) => !isNaN(id));
   } else if (!Array.isArray(requestParams.oids)) {
     console.error('批量检查收藏状态参数错误：oids必须是数组或逗号分隔的字符串');
     requestParams.oids = [];
   }
 
   return instance.post('/favorite/check/batch', requestParams);
-}
+};
 
 /**
  * 下载用户收藏夹视频
@@ -1212,10 +1256,10 @@ export const batchCheckFavoriteStatus = (params = {}) => {
  * @returns {Promise<void>}
  */
 export const downloadFavorites = async (options, onMessage) => {
-  console.log('调用收藏夹下载API, 参数:', options)
+  console.log('调用收藏夹下载API, 参数:', options);
 
   // 提取基本选项和高级选项
-  const { user_id, fid, sessdata, download_cover, only_audio, ...advancedOptions } = options
+  const { user_id, fid, sessdata, download_cover, only_audio, ...advancedOptions } = options;
 
   const requestBody = {
     user_id,
@@ -1225,43 +1269,43 @@ export const downloadFavorites = async (options, onMessage) => {
     only_audio: only_audio ?? false,
     // 添加高级选项
     ...advancedOptions
-  }
+  };
 
   // 准备请求头
   const headers = {
-    'Content-Type': 'application/json',
-  }
+    'Content-Type': 'application/json'
+  };
 
   const response = await fetch(`${BASE_URL}/download/download_favorites`, {
     method: 'POST',
     headers,
     body: JSON.stringify(requestBody)
-  })
+  });
 
   if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.detail || '下载请求失败')
+    const errorData = await response.json();
+    throw new Error(errorData.detail || '下载请求失败');
   }
 
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
 
   while (true) {
-    const { value, done } = await reader.read()
-    if (done) break
+    const { value, done } = await reader.read();
+    if (done) break;
 
-    buffer += decoder.decode(value, { stream: true })
+    buffer += decoder.decode(value, { stream: true });
 
     // 处理缓冲区中的完整行
-    const lines = buffer.split('\n')
-    buffer = lines.pop() // 保留最后一个不完整的行
+    const lines = buffer.split('\n');
+    buffer = lines.pop(); // 保留最后一个不完整的行
 
     for (const line of lines) {
       if (line.startsWith('data: ')) {
-        const content = line.substring(6).trim()
+        const content = line.substring(6).trim();
         if (content && content !== 'close') {
-          onMessage(content)
+          onMessage(content);
         }
       }
     }
@@ -1270,13 +1314,13 @@ export const downloadFavorites = async (options, onMessage) => {
   // 处理最后可能剩余的数据
   if (buffer) {
     if (buffer.startsWith('data: ')) {
-      const content = buffer.substring(6).trim()
+      const content = buffer.substring(6).trim();
       if (content && content !== 'close') {
-        onMessage(content)
+        onMessage(content);
       }
     }
   }
-}
+};
 
 /**
  * 批量下载多个视频
@@ -1289,10 +1333,10 @@ export const downloadFavorites = async (options, onMessage) => {
  * @returns {Promise<void>}
  */
 export const batchDownloadVideos = async (options, onMessage) => {
-  console.log('调用批量下载API, 参数:', options)
+  console.log('调用批量下载API, 参数:', options);
 
   // 提取基本选项和高级选项
-  const { videos, sessdata, download_cover, only_audio, ...advancedOptions } = options
+  const { videos, sessdata, download_cover, only_audio, ...advancedOptions } = options;
 
   const requestBody = {
     videos,
@@ -1301,48 +1345,48 @@ export const batchDownloadVideos = async (options, onMessage) => {
     only_audio: only_audio ?? false,
     // 添加高级选项
     ...advancedOptions
-  }
+  };
 
   // 准备请求头
   const headers = {
-    'Content-Type': 'application/json',
-  }
+    'Content-Type': 'application/json'
+  };
 
   const response = await fetch(`${BASE_URL}/download/batch_download`, {
     method: 'POST',
     headers,
     body: JSON.stringify(requestBody)
-  })
+  });
 
   if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.detail || '批量下载请求失败')
+    const errorData = await response.json();
+    throw new Error(errorData.detail || '批量下载请求失败');
   }
 
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
 
   while (true) {
-    const { value, done } = await reader.read()
-    if (done) break
+    const { value, done } = await reader.read();
+    if (done) break;
 
-    buffer += decoder.decode(value, { stream: true })
+    buffer += decoder.decode(value, { stream: true });
 
     // 处理缓冲区中的完整行
-    const lines = buffer.split('\n')
-    buffer = lines.pop() // 保留最后一个不完整的行
+    const lines = buffer.split('\n');
+    buffer = lines.pop(); // 保留最后一个不完整的行
 
     for (const line of lines) {
       if (line.startsWith('data: ')) {
-        const content = line.substring(6).trim()
+        const content = line.substring(6).trim();
         if (content && content !== 'close') {
-          onMessage(content)
+          onMessage(content);
         }
       }
     }
   }
-}
+};
 
 /**
  * 下载用户全部投稿视频
@@ -1355,10 +1399,10 @@ export const batchDownloadVideos = async (options, onMessage) => {
  * @returns {Promise<void>}
  */
 export const downloadUserVideos = async (options, onMessage) => {
-  console.log('调用用户视频下载API, 参数:', options)
+  console.log('调用用户视频下载API, 参数:', options);
 
   // 提取基本选项和高级选项
-  const { user_id, sessdata, download_cover, only_audio, ...advancedOptions } = options
+  const { user_id, sessdata, download_cover, only_audio, ...advancedOptions } = options;
 
   const requestBody = {
     user_id,
@@ -1367,43 +1411,43 @@ export const downloadUserVideos = async (options, onMessage) => {
     only_audio: only_audio ?? false,
     // 添加高级选项
     ...advancedOptions
-  }
+  };
 
   // 准备请求头
   const headers = {
-    'Content-Type': 'application/json',
-  }
+    'Content-Type': 'application/json'
+  };
 
   const response = await fetch(`${BASE_URL}/download/download_user_videos`, {
     method: 'POST',
     headers,
     body: JSON.stringify(requestBody)
-  })
+  });
 
   if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.detail || '下载请求失败')
+    const errorData = await response.json();
+    throw new Error(errorData.detail || '下载请求失败');
   }
 
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
 
   while (true) {
-    const { value, done } = await reader.read()
-    if (done) break
+    const { value, done } = await reader.read();
+    if (done) break;
 
-    buffer += decoder.decode(value, { stream: true })
+    buffer += decoder.decode(value, { stream: true });
 
     // 处理缓冲区中的完整行
-    const lines = buffer.split('\n')
-    buffer = lines.pop() // 保留最后一个不完整的行
+    const lines = buffer.split('\n');
+    buffer = lines.pop(); // 保留最后一个不完整的行
 
     for (const line of lines) {
       if (line.startsWith('data: ')) {
-        const content = line.substring(6).trim()
+        const content = line.substring(6).trim();
         if (content && content !== 'close') {
-          onMessage(content)
+          onMessage(content);
         }
       }
     }
@@ -1412,14 +1456,13 @@ export const downloadUserVideos = async (options, onMessage) => {
   // 处理最后可能剩余的数据
   if (buffer) {
     if (buffer.startsWith('data: ')) {
-      const content = buffer.substring(6).trim()
+      const content = buffer.substring(6).trim();
       if (content && content !== 'close') {
-        onMessage(content)
+        onMessage(content);
       }
     }
   }
-}
-
+};
 
 /**
  * 获取B站视频详细信息
@@ -1431,8 +1474,8 @@ export const downloadUserVideos = async (options, onMessage) => {
 export const getVideoInfo = (params) => {
   return instance.get(`/download/video_info`, {
     params
-  })
-}
+  });
+};
 
 // 获取用户投稿视频列表
 export const getUserVideos = (params) => {
@@ -1446,8 +1489,8 @@ export const getUserVideos = (params) => {
       order: params.order || 'pubdate',
       sessdata: params.sessdata || ''
     }
-  })
-}
+  });
+};
 
 /**
  * 批量获取视频详情（使用新的超详细接口）
@@ -1457,20 +1500,20 @@ export const getUserVideos = (params) => {
  * @param {boolean} params.use_sessdata - 是否使用SESSDATA获取详情，某些视频需要登录才能查看（可选，默认为true）
  * @returns {Promise<object>} - 包含获取结果的响应
  */
-export const fetchVideoDetails = (params) => {
-  let maxVideos = 100
-  let specificVideos = ''
-  let useSessdata = true
+export const fetchVideoDetails = (params, legacySpecificVideos) => {
+  let maxVideos = 100;
+  let specificVideos = '';
+  let useSessdata = true;
 
   // 兼容旧版调用方式，同时支持对象参数和独立参数
   if (typeof params === 'object') {
-    maxVideos = params.max_videos !== undefined ? params.max_videos : 100
-    specificVideos = params.specific_videos || ''
-    useSessdata = params.use_sessdata !== undefined ? params.use_sessdata : true
+    maxVideos = params.max_videos !== undefined ? params.max_videos : 100;
+    specificVideos = params.specific_videos || '';
+    useSessdata = params.use_sessdata !== undefined ? params.use_sessdata : true;
   } else if (typeof params === 'number') {
     // 旧版调用方式: fetchVideoDetails(maxVideos, specificVideos)
-    maxVideos = params
-    specificVideos = arguments[1] || ''
+    maxVideos = params;
+    specificVideos = legacySpecificVideos || '';
   }
 
   // 使用新的超详细视频详情接口
@@ -1480,8 +1523,8 @@ export const fetchVideoDetails = (params) => {
       specific_videos: specificVideos,
       use_sessdata: useSessdata
     }
-  })
-}
+  });
+};
 
 /**
  * 创建视频详情进度的SSE连接（使用新的超详细接口）
@@ -1490,38 +1533,38 @@ export const fetchVideoDetails = (params) => {
  * @returns {EventSource} - SSE事件源对象
  */
 export const createVideoDetailsProgressSSE = (params) => {
-  let updateInterval = 0.1
+  let updateInterval = 0.1;
 
   // 兼容旧版调用方式，同时支持对象参数和数字参数
   if (typeof params === 'object') {
-    updateInterval = params.update_interval !== undefined ? params.update_interval : 0.1
+    updateInterval = params.update_interval !== undefined ? params.update_interval : 0.1;
   } else if (typeof params === 'number') {
-    updateInterval = params
+    updateInterval = params;
   }
 
-  const baseUrl = instance.defaults.baseURL
+  const baseUrl = instance.defaults.baseURL;
 
   // 构建基本URL，使用新的超详细接口
-  let url = `${baseUrl}/video_details/progress?update_interval=${updateInterval}`
+  let url = `${baseUrl}/video_details/progress?update_interval=${updateInterval}`;
 
-  return new EventSource(url)
-}
+  return new EventSource(url);
+};
 
 /**
  * 获取视频详情统计数据（使用新的超详细接口）
  * @returns {Promise<object>} - 包含视频详情统计的响应
  */
 export const getVideoDetailsStats = () => {
-  return instance.get('/video_details/stats')
-}
+  return instance.get('/video_details/stats');
+};
 
 /**
  * 停止视频详情获取任务
  * @returns {Promise<object>} - 包含停止结果的响应
  */
 export const stopVideoDetailsFetch = () => {
-  return instance.post('/video_details/stop')
-}
+  return instance.post('/video_details/stop');
+};
 
 /**
  * 检查视频是否为合集
@@ -1530,14 +1573,14 @@ export const stopVideoDetailsFetch = () => {
  * @returns {Promise<object>} 包含合集信息的响应
  */
 export const checkCollection = (url, sessdata = null) => {
-  const params = { url }
+  const params = { url };
   if (sessdata) {
-    params.sessdata = sessdata
+    params.sessdata = sessdata;
   }
   return instance.get('/collection/check_collection', {
     params
-  })
-}
+  });
+};
 
 /**
  * 下载整个合集
@@ -1552,39 +1595,39 @@ export const downloadCollection = async (params, onMessage) => {
     const response = await fetch(`${BASE_URL}/collection/download_collection`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(params)
-    })
+    });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
 
     while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
+      const { done, value } = await reader.read();
+      if (done) break;
 
-      const chunk = decoder.decode(value)
-      const lines = chunk.split('\n')
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
-          const message = line.slice(6)
+          const message = line.slice(6);
           if (message && onMessage) {
-            onMessage(message)
+            onMessage(message);
           }
         }
       }
     }
   } catch (error) {
-    console.error('下载合集失败:', error)
-    throw error
+    console.error('下载合集失败:', error);
+    throw error;
   }
-}
+};
 
 // =============================
 // 动态相关接口（/dynamic）
@@ -1599,8 +1642,8 @@ export const downloadCollection = async (params, onMessage) => {
 export const getDynamicDbHosts = (limit = 50, offset = 0) => {
   return instance.get('/dynamic/db/hosts', {
     params: { limit, offset }
-  })
-}
+  });
+};
 
 /**
  * 从B站获取用户卡片信息
@@ -1608,8 +1651,8 @@ export const getDynamicDbHosts = (limit = 50, offset = 0) => {
  * @param {string|number} mid - 用户 MID
  */
 export const getDynamicUserCard = (mid) => {
-  return instance.get(`/dynamic/user_card/${mid}`)
-}
+  return instance.get(`/dynamic/user_card/${mid}`);
+};
 
 /**
  * 列出指定 UP 的动态（来自数据库）
@@ -1621,8 +1664,8 @@ export const getDynamicUserCard = (mid) => {
 export const getDynamicDbSpace = (hostMid, limit = 20, offset = 0) => {
   return instance.get(`/dynamic/db/space/${hostMid}`, {
     params: { limit, offset }
-  })
-}
+  });
+};
 /**
  * 自动从上次位置继续抓取（页级延迟 3-5 秒，支持"页级停止"）
  * GET /dynamic/space/auto/{host_mid}
@@ -1634,16 +1677,11 @@ export const getDynamicDbSpace = (hostMid, limit = 20, offset = 0) => {
  * @param {string[]} [params.dynamic_types=[]] - 要获取的动态类型
  */
 export const startDynamicAutoFetch = (hostMid, params = {}) => {
-  const {
-    need_top = false,
-    save_to_db = true,
-    save_media = true,
-    dynamic_types = []
-  } = params
+  const { need_top = false, save_to_db = true, save_media = true, dynamic_types = [] } = params;
   return instance.get(`/dynamic/space/auto/${hostMid}`, {
     params: { need_top, save_to_db, save_media, dynamic_types: dynamic_types.join(',') }
-  })
-}
+  });
+};
 
 /**
  * 创建动态抓取进度的 SSE 连接
@@ -1652,10 +1690,10 @@ export const startDynamicAutoFetch = (hostMid, params = {}) => {
  * @returns {EventSource}
  */
 export const createDynamicProgressSSE = (hostMid) => {
-  const baseUrl = instance.defaults.baseURL
-  const url = `${baseUrl}/dynamic/space/auto/${hostMid}/progress`
-  return new EventSource(url)
-}
+  const baseUrl = instance.defaults.baseURL;
+  const url = `${baseUrl}/dynamic/space/auto/${hostMid}/progress`;
+  return new EventSource(url);
+};
 
 /**
  * 发送停止信号（当前页抓取完成后停止并记录 offset）
@@ -1663,8 +1701,8 @@ export const createDynamicProgressSSE = (hostMid) => {
  * @param {string|number} hostMid - UP 的 mid
  */
 export const stopDynamicAutoFetch = (hostMid) => {
-  return instance.post(`/dynamic/space/auto/${hostMid}/stop`)
-}
+  return instance.post(`/dynamic/space/auto/${hostMid}/stop`);
+};
 // =============================
 // 动态删除接口（/dynamic）
 // =============================
@@ -1676,8 +1714,8 @@ export const stopDynamicAutoFetch = (hostMid) => {
  * @returns {Promise<any>}
  */
 export const deleteDynamicSpace = (hostMid) => {
-  return instance.delete(`/dynamic/space/${hostMid}`)
-}
+  return instance.delete(`/dynamic/space/${hostMid}`);
+};
 
 /**
  * 删除单条动态及其媒体文件
@@ -1686,8 +1724,8 @@ export const deleteDynamicSpace = (hostMid) => {
  * @returns {Promise<any>}
  */
 export const deleteDynamicItem = (idStr) => {
-  return instance.delete(`/dynamic/item/${idStr}`)
-}
+  return instance.delete(`/dynamic/item/${idStr}`);
+};
 // =============================
 // 稍后再看接口（/watchlater）
 // =============================
@@ -1697,16 +1735,16 @@ export const deleteDynamicItem = (idStr) => {
  * GET /watchlater/list
  */
 export const getWatchLaterList = () => {
-  return instance.get('/watchlater/list')
-}
+  return instance.get('/watchlater/list');
+};
 
 /**
  * 从本地数据库获取稍后再看列表
  * GET /watchlater/local
  */
 export const getWatchLaterLocal = (params = {}) => {
-  return instance.get('/watchlater/local', { params })
-}
+  return instance.get('/watchlater/local', { params });
+};
 
 /**
  * 删除单个稍后再看视频
@@ -1715,8 +1753,8 @@ export const getWatchLaterLocal = (params = {}) => {
  * @returns {Promise<any>}
  */
 export const removeFromWatchLater = (bvid) => {
-  return instance.delete(`/watchlater/${bvid}`)
-}
+  return instance.delete(`/watchlater/${bvid}`);
+};
 
 /**
  * 批量删除稍后再看视频
@@ -1725,8 +1763,8 @@ export const removeFromWatchLater = (bvid) => {
  * @returns {Promise<any>}
  */
 export const batchRemoveFromWatchLater = (bvids) => {
-  return instance.post('/watchlater/batch-delete', { bvids })
-}
+  return instance.post('/watchlater/batch-delete', { bvids });
+};
 // =============================
 // 我的点赞接口（/like）
 // =============================
@@ -1736,48 +1774,48 @@ export const batchRemoveFromWatchLater = (bvids) => {
  * GET /like/list
  */
 export const getLikeList = () => {
-  return instance.get('/like/list')
-}
+  return instance.get('/like/list');
+};
 
 /**
  * 从B站同步点赞数据到本地
  * POST /like/sync
  */
 export const syncLikes = () => {
-  return instance.post('/like/sync')
-}
+  return instance.post('/like/sync');
+};
 
 /**
  * 同步收藏夹数据到本地
  * POST /favorite/sync
  */
 export const syncFavorites = () => {
-  return instance.post('/favorite/sync')
-}
+  return instance.post('/favorite/sync');
+};
 
 /**
  * 查询异步任务状态
  * GET /task/:id/status
  */
 export const getTaskStatus = (taskId) => {
-  return instance.get(`/task/${taskId}/status`)
-}
+  return instance.get(`/task/${taskId}/status`);
+};
 
 /**
  * 从本地数据库获取点赞视频列表
  * GET /like/local
  */
 export const getLikeLocal = (params = {}) => {
-  return instance.get('/like/local', { params })
-}
+  return instance.get('/like/local', { params });
+};
 
 /**
  * 点赞/取消点赞视频
  * POST /like/toggle
  */
 export const toggleLike = (bvid, like = true) => {
-  return instance.post('/like/toggle', { bvid, like })
-}
+  return instance.post('/like/toggle', { bvid, like });
+};
 // =============================
 
 // =============================
@@ -1789,31 +1827,30 @@ export const toggleLike = (bvid, like = true) => {
  * GET /report/weekly?year=2025&week=28
  */
 export const getWeeklyReport = (year, week) => {
-  return instance.get('/report/weekly', { params: { year, week } })
-}
+  return instance.get('/report/weekly', { params: { year, week } });
+};
 
 /**
  * 获取月报数据
  * GET /report/monthly?year=2025&month=7
  */
 export const getMonthlyReport = (year, month) => {
-  return instance.get('/report/monthly', { params: { year, month } })
-}
+  return instance.get('/report/monthly', { params: { year, month } });
+};
 
 /**
  * 获取有数据的周列表
  * GET /report/available-weeks?year=2025
  */
 export const getAvailableWeeks = (year) => {
-  return instance.get('/report/available-weeks', { params: { year } })
-}
+  return instance.get('/report/available-weeks', { params: { year } });
+};
 
 /**
  * 获取有数据的月列表
  * GET /report/available-months?year=2025
  */
 export const getAvailableMonths = (year) => {
-  return instance.get('/report/available-months', { params: { year } })
-}
+  return instance.get('/report/available-months', { params: { year } });
+};
 // =============================
-

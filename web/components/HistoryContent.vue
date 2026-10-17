@@ -1,46 +1,90 @@
 <template>
   <div class="transition-all duration-300 ease-in-out">
-
     <!-- 加载状态 -->
-    <div v-if="isLoading" class="flex flex-col items-center justify-center py-16 glass-card mx-3 mt-4">
-      <div class="w-12 h-12 border-3 border-accent border-t-transparent rounded-full animate-spin mb-4"></div>
-      <h3 class="text-lg font-medium text-gray-600 dark:text-gray-300 mb-1">加载中</h3>
+    <div
+      v-if="isLoading"
+      class="glass-card mx-3 mt-4 flex flex-col items-center justify-center py-16"
+    >
+      <div
+        class="mb-4 h-12 w-12 animate-spin rounded-full border-3 border-accent border-t-transparent"
+      />
+      <h3 class="mb-1 text-lg font-medium text-gray-600 dark:text-gray-300">加载中</h3>
       <p class="text-sm text-gray-500 dark:text-gray-400">正在获取历史记录数据...</p>
     </div>
 
     <!-- 登录状态空状态 -->
-    <div v-else-if="!isLoggedIn" class="flex flex-col items-center justify-center py-16 glass-card mx-3 mt-4">
-      <div class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-        <svg class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+    <div
+      v-else-if="!isLoggedIn"
+      class="glass-card mx-3 mt-4 flex flex-col items-center justify-center py-16"
+    >
+      <div
+        class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800"
+      >
+        <svg
+          class="h-8 w-8 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+          />
         </svg>
       </div>
-      <h3 class="text-lg font-medium text-gray-600 dark:text-gray-300 mb-1">请先登录</h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">登录B站账号后才能查看您的历史记录</p>
+      <h3 class="mb-1 text-lg font-medium text-gray-600 dark:text-gray-300">请先登录</h3>
+      <p class="mb-5 text-sm text-gray-500 dark:text-gray-400">登录B站账号后才能查看您的历史记录</p>
       <button
-        class="px-5 py-2.5 bg-accent text-white rounded-xl hover:bg-accent/90 transition-all duration-200 flex items-center gap-2 text-sm font-medium shadow-lg shadow-accent/20 btn-press"
-        @click="openLoginDialog">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+        class="btn-press flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-accent/20 transition-all duration-200 hover:bg-accent/90"
+        @click="openLoginDialog"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+          />
         </svg>
         <span>点击登录</span>
       </button>
     </div>
 
     <!-- 数据为空状态 -->
-    <div v-else-if="isLoaded && isLoggedIn && records.length === 0" class="flex flex-col items-center justify-center py-16 glass-card mx-3 mt-4">
-      <div class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-        <svg class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <div
+      v-else-if="isLoaded && isLoggedIn && records.length === 0"
+      class="glass-card mx-3 mt-4 flex flex-col items-center justify-center py-16"
+    >
+      <div
+        class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800"
+      >
+        <svg
+          class="h-8 w-8 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       </div>
-      <h3 class="text-lg font-medium text-gray-600 dark:text-gray-300 mb-1">暂无历史记录</h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">点击下方按钮从B站获取您的历史记录</p>
+      <h3 class="mb-1 text-lg font-medium text-gray-600 dark:text-gray-300">暂无历史记录</h3>
+      <p class="mb-5 text-sm text-gray-500 dark:text-gray-400">点击下方按钮从B站获取您的历史记录</p>
       <button
-        class="px-5 py-2.5 bg-accent text-white rounded-xl hover:bg-accent/90 transition-all duration-200 flex items-center gap-2 text-sm font-medium shadow-lg shadow-accent/20 btn-press"
-        @click="refreshData">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        class="btn-press flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-accent/20 transition-all duration-200 hover:bg-accent/90"
+        @click="refreshData"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
         </svg>
         <span>获取历史记录</span>
       </button>
@@ -48,166 +92,292 @@
 
     <!-- 视频记录列表 -->
     <div v-else class="overflow-hidden">
-        <!-- 网格布局 -->
-        <div v-if="activeLayout === 'grid'"
-             class="grid gap-4 px-4 mx-auto" key="grid-layout"
-             style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
-          <template v-for="(record, index) in records" :key="`grid-${record.id}-${record.view_at}`">
-            <!-- 日期分割线和视频数量 -->
-            <div v-if="shouldShowDivider(index)" class="col-span-full relative py-2">
-              <div class="relative flex items-center justify-between px-1">
+      <!-- 网格布局 -->
+      <div
+        v-if="activeLayout === 'grid'"
+        key="grid-layout"
+        class="mx-auto grid gap-4 px-4"
+        style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))"
+      >
+        <template v-for="(record, index) in records" :key="`grid-${record.id}-${record.view_at}`">
+          <!-- 日期分割线和视频数量 -->
+          <div v-if="shouldShowDivider(index)" class="relative col-span-full py-2">
+            <div class="relative flex items-center justify-between px-1">
+              <div class="flex items-center gap-2">
+                <div
+                  v-if="isBatchMode"
+                  class="flex cursor-pointer items-center justify-center"
+                  @click.stop="toggleDaySelection(record.view_at)"
+                >
+                  <div
+                    class="flex h-5 w-5 items-center justify-center rounded-lg border-2 transition-all"
+                    :class="
+                      isDaySelected(record.view_at)
+                        ? 'border-accent bg-accent'
+                        : 'border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800'
+                    "
+                  >
+                    <svg
+                      v-if="isDaySelected(record.view_at)"
+                      class="h-3 w-3 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="3"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{
+                  formatDividerDate(record.view_at)
+                }}</span>
+              </div>
+              <div>
+                <span class="text-xs font-medium text-accent"
+                  >{{ getDailyStatsForDate(record.view_at) }}条数据 · 总时长
+                  {{ formatDailyWatchTime(record.view_at) }}</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- 网格布局的视频卡片 -->
+          <VideoGridCard
+            :video="record"
+            :select-mode="isBatchMode"
+            :is-selected="selectedRecords.has(`${record.bvid}_${record.view_at}`)"
+            :show-category="true"
+            :show-owner="record.business !== 'cheese' && record.business !== 'pgc'"
+            :show-views="false"
+            :show-time="false"
+            :category-key="'tag_name'"
+            :owner-key="'author_name'"
+            :owner-face-key="'author_face'"
+            :cover-key="'cover'"
+            :progress="
+              record.business !== 'article-list' &&
+              record.business !== 'article' &&
+              record.business !== 'live'
+                ? record.progress
+                : null
+            "
+            :total-duration="
+              record.business !== 'article-list' &&
+              record.business !== 'article' &&
+              record.business !== 'live'
+                ? record.duration
+                : null
+            "
+            card-style="glass"
+            @click="handleVideoClick(record)"
+            @toggle-select="toggleRecordSelection"
+            @owner-click="handleAuthorClick"
+          >
+            <template #cover-top-left="{ video: r }">
+              <div
+                class="absolute top-1 left-1 z-10 flex flex-col gap-1"
+                :class="isBatchMode ? 'ml-6' : ''"
+              >
+                <div
+                  v-if="isVideoDownloaded(r.cid) && r.business === 'archive'"
+                  class="flex items-center space-x-1 rounded bg-green-500 px-1.5 py-0.5 text-[0.625rem] font-semibold text-white shadow-md"
+                >
+                  <svg class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    />
+                  </svg>
+                  <span>已下载</span>
+                </div>
+                <div
+                  v-if="getCategoryName(r)"
+                  class="rounded bg-accent/80 px-1 py-0.5 text-[0.625rem] text-white"
+                >
+                  {{ getCategoryName(r) }}
+                </div>
+              </div>
+            </template>
+
+            <template #cover-top-right="{ video: r }">
+              <div
+                v-if="
+                  isVideoFavorited(
+                    parseInt(r.aid || r.avid || (r.business === 'archive' ? r.oid : 0), 10)
+                  ) && r.business !== 'live'
+                "
+                class="absolute top-0 right-0 z-10"
+              >
+                <div
+                  class="flex items-center space-x-1 rounded-bl-md bg-amber-500 px-1.5 py-0.5 text-[0.625rem] font-semibold text-white shadow-md"
+                >
+                  <svg
+                    class="h-2.5 w-2.5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                    />
+                  </svg>
+                  <span>已收藏</span>
+                </div>
+              </div>
+            </template>
+
+            <template #actions="{ video: r }">
+              <div
+                v-if="r.business === 'archive'"
+                class="glass-icon-btn !h-6 !w-6"
+                @click.stop.prevent="handleDownloadGrid(r)"
+              >
+                <svg
+                  class="h-3 w-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
+                </svg>
+              </div>
+              <div
+                class="glass-icon-btn !h-6 !w-6 hover:!bg-red-500/20 hover:!text-red-500"
+                @click.stop="handleDelete(r)"
+              >
+                <svg
+                  class="h-3 w-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </div>
+            </template>
+
+            <template #title="{ video: r }">
+              <!-- eslint-disable-next-line vue/no-v-html -- 标题经 utils/escapeHtml 转义后高亮 -->
+              <span v-html="highlightText(r.title)" />
+            </template>
+
+            <template #meta-top="{ video: r }">
+              <div
+                v-if="r.business !== 'archive'"
+                class="flex items-center truncate text-xs text-gray-500 dark:text-gray-400"
+              >
+                <span
+                  class="inline-flex items-center rounded-md bg-[#f1f2f3] px-2 py-0.5 text-[0.625rem] text-[#71767d] dark:bg-gray-700 dark:text-gray-300"
+                >
+                  {{ getBusinessType(r.business) }}
+                </span>
+              </div>
+            </template>
+
+            <template #meta-bottom-right="{ video: r }">
+              <div class="flex items-center space-x-1">
+                <img
+                  v-if="r.dt === 1 || r.dt === 3 || r.dt === 5 || r.dt === 7"
+                  src="/Mobile.svg"
+                  alt="Mobile"
+                  class="h-3 w-3"
+                />
+                <img v-else-if="r.dt === 2 || r.dt === 33" src="/PC.svg" alt="PC" class="h-3 w-3" />
+                <img
+                  v-else-if="r.dt === 4 || r.dt === 6"
+                  src="/Pad.svg"
+                  alt="Pad"
+                  class="h-3 w-3"
+                />
+                <span class="text-[0.625rem]">{{ formatTimestamp(r.view_at) }}</span>
+              </div>
+            </template>
+          </VideoGridCard>
+        </template>
+      </div>
+
+      <!-- 列表布局 -->
+      <div v-else key="list-layout" class="transform-gpu transition-all duration-300 ease-in-out">
+        <template v-for="(record, index) in records" :key="`list-${record.id}-${record.view_at}`">
+          <!-- 日期分割线和视频数量 -->
+          <div v-if="shouldShowDivider(index)" class="relative mx-auto max-w-4xl py-2">
+            <div class="px-3">
+              <div class="relative flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <div v-if="isBatchMode" class="flex items-center justify-center cursor-pointer" @click.stop="toggleDaySelection(record.view_at)">
-                    <div class="w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all"
-                         :class="isDaySelected(record.view_at) ? 'bg-accent border-accent' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'">
-                      <svg v-if="isDaySelected(record.view_at)" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <div
+                    v-if="isBatchMode"
+                    class="flex cursor-pointer items-center justify-center"
+                    @click.stop="toggleDaySelection(record.view_at)"
+                  >
+                    <div
+                      class="flex h-5 w-5 items-center justify-center rounded-lg border-2 transition-all"
+                      :class="
+                        isDaySelected(record.view_at)
+                          ? 'border-accent bg-accent'
+                          : 'border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800'
+                      "
+                    >
+                      <svg
+                        v-if="isDaySelected(record.view_at)"
+                        class="h-3 w-3 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="3"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
                     </div>
                   </div>
-                  <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ formatDividerDate(record.view_at) }}</span>
+                  <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{
+                    formatDividerDate(record.view_at)
+                  }}</span>
                 </div>
                 <div>
-                  <span class="text-xs text-accent font-medium">{{ getDailyStatsForDate(record.view_at) }}条数据 · 总时长 {{ formatDailyWatchTime(record.view_at) }}</span>
+                  <span class="text-xs font-medium text-accent"
+                    >{{ getDailyStatsForDate(record.view_at) }}条数据 · 总时长
+                    {{ formatDailyWatchTime(record.view_at) }}</span
+                  >
                 </div>
               </div>
             </div>
-
-            <!-- 网格布局的视频卡片 -->
-            <VideoGridCard
-              :video="record"
-              :select-mode="isBatchMode"
-              :is-selected="selectedRecords.has(`${record.bvid}_${record.view_at}`)"
-              :show-category="true"
-              :show-owner="record.business !== 'cheese' && record.business !== 'pgc'"
-              :show-views="false"
-              :show-time="false"
-              :category-key="'tag_name'"
-              :owner-key="'author_name'"
-              :owner-face-key="'author_face'"
-              :cover-key="'cover'"
-              :progress="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live' ? record.progress : null"
-              :total-duration="record.business !== 'article-list' && record.business !== 'article' && record.business !== 'live' ? record.duration : null"
-              card-style="glass"
-              @click="handleVideoClick(record)"
-              @toggle-select="toggleRecordSelection"
-              @owner-click="handleAuthorClick"
-            >
-              <template #cover-top-left="{ video: r }">
-                <div class="absolute top-1 left-1 z-10 flex flex-col gap-1" :class="isBatchMode ? 'ml-6' : ''">
-                  <div v-if="isVideoDownloaded(r.cid) && r.business === 'archive'"
-                       class="bg-green-500 text-white font-semibold px-1.5 py-0.5 text-[0.625rem] flex items-center space-x-1 rounded shadow-md">
-                    <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    <span>已下载</span>
-                  </div>
-                  <div v-if="getCategoryName(r)"
-                       class="bg-accent/80 px-1 py-0.5 rounded text-white text-[0.625rem]">
-                    {{ getCategoryName(r) }}
-                  </div>
-                </div>
-              </template>
-
-              <template #cover-top-right="{ video: r }">
-                <div v-if="isVideoFavorited(parseInt(r.aid || r.avid || (r.business === 'archive' ? r.oid : 0), 10)) && r.business !== 'live'"
-                     class="absolute right-0 top-0 z-10">
-                  <div
-                    class="bg-amber-500 text-white font-semibold px-1.5 py-0.5 text-[0.625rem] flex items-center space-x-1 rounded-bl-md shadow-md">
-                    <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                    <span>已收藏</span>
-                  </div>
-                </div>
-              </template>
-
-              <template #actions="{ video: r }">
-                <div v-if="r.business === 'archive'"
-                     class="glass-icon-btn !w-6 !h-6"
-                     @click.stop.prevent="handleDownloadGrid(r)">
-                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                </div>
-                <div class="glass-icon-btn !w-6 !h-6 hover:!bg-red-500/20 hover:!text-red-500"
-                     @click.stop="handleDelete(r)">
-                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </div>
-              </template>
-
-              <template #title="{ video: r }">
-                <span v-html="highlightText(r.title)"></span>
-              </template>
-
-              <template #meta-top="{ video: r }">
-                <div v-if="r.business !== 'archive'" class="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center">
-                  <span class="inline-flex items-center rounded-md bg-[#f1f2f3] dark:bg-gray-700 px-2 py-0.5 text-[0.625rem] text-[#71767d] dark:text-gray-300">
-                    {{ getBusinessType(r.business) }}
-                  </span>
-                </div>
-              </template>
-
-              <template #meta-bottom-right="{ video: r }">
-                <div class="flex items-center space-x-1">
-                  <img v-if="r.dt === 1 || r.dt === 3 || r.dt === 5 || r.dt === 7"
-                       src="/Mobile.svg"
-                       alt="Mobile"
-                       class="h-3 w-3"
-                  />
-                  <img v-else-if="r.dt === 2 || r.dt === 33"
-                       src="/PC.svg"
-                       alt="PC"
-                       class="h-3 w-3"
-                  />
-                  <img v-else-if="r.dt === 4 || r.dt === 6"
-                       src="/Pad.svg"
-                       alt="Pad"
-                       class="h-3 w-3"
-                  />
-                  <span class="text-[0.625rem]">{{ formatTimestamp(r.view_at) }}</span>
-                </div>
-              </template>
-            </VideoGridCard>
-          </template>
-        </div>
-
-        <!-- 列表布局 -->
-        <div v-else
-             class="transition-all duration-300 ease-in-out transform-gpu" key="list-layout">
-          <template v-for="(record, index) in records" :key="`list-${record.id}-${record.view_at}`">
-            <!-- 日期分割线和视频数量 -->
-            <div v-if="shouldShowDivider(index)" class="relative py-2 max-w-4xl mx-auto">
-              <div class="px-3">
-                <div class="relative flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <div v-if="isBatchMode" class="flex items-center justify-center cursor-pointer" @click.stop="toggleDaySelection(record.view_at)">
-                      <div class="w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all"
-                           :class="isDaySelected(record.view_at) ? 'bg-accent border-accent' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'">
-                        <svg v-if="isDaySelected(record.view_at)" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                      </div>
-                    </div>
-                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ formatDividerDate(record.view_at) }}</span>
-                  </div>
-                  <div>
-                    <span class="text-xs text-accent font-medium">{{ getDailyStatsForDate(record.view_at) }}条数据 · 总时长 {{ formatDailyWatchTime(record.view_at) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <VideoRecord
-              :record="record"
-              :is-batch-mode="isBatchMode"
-              :is-selected="selectedRecords.has(`${record.bvid}_${record.view_at}`)"
-              :remark-data="remarkData"
-              :is-downloaded="isVideoDownloaded(record.cid)"
-              :is-video-favorited="isVideoFavorited(parseInt(record.aid || record.avid || (record.business === 'archive' ? record.oid : 0), 10))"
-              @toggle-selection="toggleRecordSelection"
-              @refresh-data="fetchHistoryByDateRange"
-              @remark-updated="handleRemarkUpdate"
-            />
-          </template>
-        </div>
+          </div>
+          <VideoRecord
+            :record="record"
+            :is-batch-mode="isBatchMode"
+            :is-selected="selectedRecords.has(`${record.bvid}_${record.view_at}`)"
+            :remark-data="remarkData"
+            :is-downloaded="isVideoDownloaded(record.cid)"
+            :is-video-favorited="
+              isVideoFavorited(
+                parseInt(
+                  record.aid || record.avid || (record.business === 'archive' ? record.oid : 0),
+                  10
+                )
+              )
+            "
+            @toggle-selection="toggleRecordSelection"
+            @refresh-data="fetchHistoryByDateRange"
+            @remark-updated="handleRemarkUpdate"
+          />
+        </template>
+      </div>
     </div>
 
     <!-- 日期选择日历 -->
@@ -223,28 +393,103 @@
     />
 
     <!-- 批量操作按钮区域 -->
-    <div v-if="isBatchMode && selectedRecords.size > 0"
-         class="fixed bottom-20 md:bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-[92vw] max-w-[1200px]">
+    <div
+      v-if="isBatchMode && selectedRecords.size > 0"
+      class="fixed bottom-20 left-1/2 z-50 w-[92vw] max-w-[1200px] -translate-x-1/2 transform md:bottom-4"
+    >
       <div class="glass-card px-4 py-3">
-        <div class="flex flex-wrap gap-2 justify-center">
-          <button @click="handleBatchDelete" class="flex items-center gap-1.5 px-3 py-2 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-all btn-press shadow-sm">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+        <div class="flex flex-wrap justify-center gap-2">
+          <button
+            class="btn-press flex items-center gap-1.5 rounded-xl bg-red-500 px-3 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-600"
+            @click="handleBatchDelete"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
             <span>删除({{ selectedRecords.size }})</span>
           </button>
-          <button @click="handleBatchDownload" class="flex items-center gap-1.5 px-3 py-2 bg-green-500 text-white rounded-xl text-sm font-medium hover:bg-green-600 transition-all btn-press shadow-sm">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+          <button
+            class="btn-press flex items-center gap-1.5 rounded-xl bg-green-500 px-3 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-green-600"
+            @click="handleBatchDownload"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
             <span>下载({{ selectedRecords.size }})</span>
           </button>
-          <button v-if="!isAllFavorited && unfavoritedCount > 0" @click="handleBatchFavorite" class="flex items-center gap-1.5 px-3 py-2 bg-accent text-white rounded-xl text-sm font-medium hover:bg-accent/90 transition-all btn-press shadow-sm">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+          <button
+            v-if="!isAllFavorited && unfavoritedCount > 0"
+            class="btn-press flex items-center gap-1.5 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent/90"
+            @click="handleBatchFavorite"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+              />
+            </svg>
             <span>收藏({{ unfavoritedCount }})</span>
           </button>
-          <button v-if="hasFavoritedVideos" @click="handleBatchUnfavorite" class="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition-all btn-press shadow-sm">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          <button
+            v-if="hasFavoritedVideos"
+            class="btn-press flex items-center gap-1.5 rounded-xl bg-orange-500 px-3 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-orange-600"
+            @click="handleBatchUnfavorite"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
             <span>取消收藏({{ favoritedCount }})</span>
           </button>
-          <button @click="handleCopyLinks" class="flex items-center gap-1.5 px-3 py-2 bg-blue-500 text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition-all btn-press shadow-sm">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+          <button
+            class="btn-press flex items-center gap-1.5 rounded-xl bg-blue-500 px-3 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-600"
+            @click="handleCopyLinks"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+              />
+            </svg>
             <span>复制链接({{ selectedRecords.size }})</span>
           </button>
         </div>
@@ -256,16 +501,16 @@
   <Teleport to="body">
     <DownloadDialog
       v-model:show="showDownloadDialog"
+      v-model:current-video-index="currentVideoIndex"
       :video-info="{
- title: selectedRecord?.title || '',
- author: selectedRecord?.author_name || '',
- bvid: selectedRecord?.bvid || '',
- cover: selectedRecord?.cover || selectedRecord?.covers?.[0] || '',
- cid: selectedRecord?.cid || ''
- }"
+        title: selectedRecord?.title || '',
+        author: selectedRecord?.author_name || '',
+        bvid: selectedRecord?.bvid || '',
+        cover: selectedRecord?.cover || selectedRecord?.covers?.[0] || '',
+        cid: selectedRecord?.cid || ''
+      }"
       :is-batch-download="isBatchDownload"
       :batch-videos="batchVideos"
-      v-model:currentVideoIndex="currentVideoIndex"
       @download-complete="handleDownloadComplete"
     />
   </Teleport>
@@ -281,32 +526,14 @@
 
   <!-- 登录对话框 -->
   <Teleport to="body">
-    <LoginDialog
-      v-model:show="showLoginDialog"
-      @login-success="handleLoginSuccess"
-    />
+    <LoginDialog v-model:show="showLoginDialog" @login-success="handleLoginSuccess" />
   </Teleport>
 </template>
 
-<style scoped>
-@keyframes bounce-x {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(25%);
-  }
-}
-
-.animate-bounce-x {
-  animation: bounce-x 1s infinite;
-}
-</style>
-
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useMediaQuery } from '@vueuse/core'
-import { useAsyncData } from '#imports'
+import { ref, computed, onMounted, watch } from 'vue';
+import { useMediaQuery } from '@vueuse/core';
+import { useAsyncData } from '#imports';
 import {
   getBiliHistory2024,
   getMainCategories,
@@ -320,75 +547,76 @@ import {
   favoriteResource,
   localBatchFavoriteResource,
   batchDeleteBilibiliHistory,
-  deleteBilibiliHistory,
-} from '~/utils/api'
-import { showNotify, showDialog } from 'vant'
-import 'vant/es/dialog/style'
-import VideoRecord from './VideoRecord.vue'
-import LoginDialog from './LoginDialog.vue'
-import DownloadDialog from './DownloadDialog.vue'
-import FavoriteDialog from './FavoriteDialog.vue'
-import { openInBrowser } from '~/utils/openUrl.js'
-import { formatDuration, formatTimestamp, getBusinessType } from '~/utils/format'
-import VideoGridCard from './VideoGridCard.vue'
+  deleteBilibiliHistory
+} from '~/utils/api';
+import { showNotify, showDialog } from 'vant';
+import 'vant/es/dialog/style';
+import VideoRecord from './VideoRecord.vue';
+import LoginDialog from './LoginDialog.vue';
+import DownloadDialog from './DownloadDialog.vue';
+import FavoriteDialog from './FavoriteDialog.vue';
+import { openInBrowser } from '~/utils/openUrl.js';
+import { formatTimestamp, getBusinessType } from '~/utils/format';
+import { highlightText as highlightKeyword } from '~/utils/escapeHtml';
+import VideoGridCard from './VideoGridCard.vue';
 
 const props = defineProps({
   selectedYear: {
     type: Number,
-    default: new Date().getFullYear(),
+    default: new Date().getFullYear()
   },
   currentDate: {
     type: String,
-    default: '',
+    default: ''
   },
   page: {
     type: Number,
-    default: 1,
+    default: 1
   },
   show: {
     type: Boolean,
-    default: false,
+    default: false
   },
   showBottom: {
     type: Boolean,
-    default: false,
+    default: false
   },
   layout: {
     type: String,
-    default: 'list',
+    default: 'list'
   },
   searchKeyword: {
     type: String,
-    default: '',
+    default: ''
   },
   date: {
     type: String,
-    default: '',
+    default: ''
   },
   category: {
     type: String,
-    default: '',
+    default: ''
   },
   categoryType: {
     type: String,
-    default: '', // 'main' 或 'sub'
+    default: '' // 'main' 或 'sub'
   },
   business: {
     type: String,
-    default: '',
+    default: ''
   },
   isBatchMode: {
     type: Boolean,
-    default: false,
+    default: false
   },
   pageSize: {
     type: Number,
-    default: 30,
-  },
-})
+    default: 30
+  }
+});
 
-const isSmallScreen = useMediaQuery('(max-width: 639px)')
-const activeLayout = computed(() => (isSmallScreen.value ? 'list' : props.layout))
+const isSmallScreen = useMediaQuery('(max-width: 639px)');
+const activeLayout = computed(() => (isSmallScreen.value ? 'list' : props.layout));
 
 const emit = defineEmits([
   'update:total-pages',
@@ -398,70 +626,69 @@ const emit = defineEmits([
   'update:category',
   'update:show',
   'update:showBottom',
-  'update:pageSize',
-])
+  'update:pageSize'
+]);
 
 // 状态变量
-const records = ref([])
-const total = ref(0)
-const sortOrder = ref(0)
-const size = ref(props.pageSize)
-const remarkData = ref({}) // 存储备注数据
-let abortController = null // 用于取消过期请求
-let fetchId = 0 // 请求序列号，防止旧响应覆盖新数据
-const downloadedVideos = ref(new Set()) // 存储已下载视频的CID集合
-const favoriteStatus = ref({}) // 存储视频收藏状态信息
+const records = ref([]);
+const total = ref(0);
+const sortOrder = ref(0);
+const size = ref(props.pageSize);
+const remarkData = ref({}); // 存储备注数据
+let abortController = null; // 用于取消过期请求
+let fetchId = 0; // 请求序列号，防止旧响应覆盖新数据
+const downloadedVideos = ref(new Set()); // 存储已下载视频的CID集合
+const favoriteStatus = ref({}); // 存储视频收藏状态信息
 
-const date = ref('')
-const dateRange = ref('')
+const dateRange = ref('');
 
-const tagName = ref('')
-const mainCategory = ref('')
-const mainCategories = ref([])
+const tagName = ref('');
+const mainCategory = ref('');
+const mainCategories = ref([]);
 
 // 每日统计数据
-const dailyStats = ref({})
+const dailyStats = ref({});
 
 // 批量删除相关
-const selectedRecords = ref(new Set())
+const selectedRecords = ref(new Set());
 
 // 在data区域添加
-const selectedRecord = ref(null)
-const showDownloadDialog = ref(false)
-const showFavoriteDialog = ref(false)
-const favoriteVideoInfo = ref(null) // 用于存储收藏相关的视频信息
+const selectedRecord = ref(null);
+const showDownloadDialog = ref(false);
+const showFavoriteDialog = ref(false);
+const favoriteVideoInfo = ref(null); // 用于存储收藏相关的视频信息
 
 // 登录相关
-const isLoggedIn = ref(false)
-const isLoading = ref(false)
-const isLoaded = ref(false)
-const showLoginDialog = ref(false)
+const isLoggedIn = ref(false);
+const isLoading = ref(false);
+const isLoaded = ref(false);
+const showLoginDialog = ref(false);
 
 // 选择/取消选择记录
 const toggleRecordSelection = (record) => {
-  const key = `${record.bvid}_${record.view_at}`
+  const key = `${record.bvid}_${record.view_at}`;
   if (selectedRecords.value.has(key)) {
-    selectedRecords.value.delete(key)
+    selectedRecords.value.delete(key);
   } else {
-    selectedRecords.value.add(key)
+    selectedRecords.value.add(key);
   }
-}
+};
 
 // 批量删除选中的记录
 const handleBatchDelete = async () => {
   if (selectedRecords.value.size === 0) {
     showNotify({
       type: 'warning',
-      message: '请先选择要删除的记录',
-    })
-    return
+      message: '请先选择要删除的记录'
+    });
+    return;
   }
 
   try {
     // 检查是否需要同步删除B站历史记录
-    const { getSyncConfig } = await import('~/utils/api')
-    const syncConfigRes = await getSyncConfig()
-    const syncDeleteToBilibili = syncConfigRes.data?.sync_delete_to_bilibili || false
+    const { getSyncConfig } = await import('~/utils/api');
+    const syncConfigRes = await getSyncConfig();
+    const syncDeleteToBilibili = syncConfigRes.data?.sync_delete_to_bilibili || false;
 
     // 根据是否同步删除B站历史记录，显示不同的确认信息
     await showDialog({
@@ -472,278 +699,291 @@ const handleBatchDelete = async () => {
       showCancelButton: true,
       confirmButtonText: '确认删除',
       cancelButtonText: '取消',
-      confirmButtonColor: 'var(--accent)',
-    })
+      confirmButtonColor: 'var(--accent)'
+    });
 
     // 从记录中找到对应的完整信息
-    const items = Array.from(selectedRecords.value).map(key => {
-      const [bvid, view_at] = key.split('_')
+    const items = Array.from(selectedRecords.value).map((key) => {
+      const [bvid, view_at] = key.split('_');
       return {
         bvid,
-        view_at: parseInt(view_at),
-      }
-    })
+        view_at: parseInt(view_at)
+      };
+    });
 
     if (syncDeleteToBilibili) {
       // 构建B站历史记录删除请求的items
-      const biliItems = items.map(item => {
-        // 查找对应的完整记录以获取业务类型
-        const record = records.value.find(r => r.bvid === item.bvid && r.view_at === item.view_at)
-        if (!record) return null
+      const biliItems = items
+        .map((item) => {
+          // 查找对应的完整记录以获取业务类型
+          const record = records.value.find(
+            (r) => r.bvid === item.bvid && r.view_at === item.view_at
+          );
+          if (!record) return null;
 
-        // 根据业务类型构建kid
-        const business = record.business || 'archive'
-        let kid
+          // 根据业务类型构建kid
+          const business = record.business || 'archive';
+          let kid;
 
-        switch (business) {
-          case 'archive':
-            // 使用oid而不是bvid
-            kid = `${business}_${record.oid}`
-            break
-          case 'live':
-            kid = `${business}_${record.oid}`
-            break
-          case 'article':
-            kid = `${business}_${record.oid}`
-            break
-          case 'pgc':
-            kid = `${business}_${record.oid || record.ssid}`
-            break
-          case 'article-list':
-            kid = `${business}_${record.oid || record.rlid}`
-            break
-          default:
-            kid = `${business}_${record.oid || record.bvid}`
-            break
-        }
+          switch (business) {
+            case 'archive':
+              // 使用oid而不是bvid
+              kid = `${business}_${record.oid}`;
+              break;
+            case 'live':
+              kid = `${business}_${record.oid}`;
+              break;
+            case 'article':
+              kid = `${business}_${record.oid}`;
+              break;
+            case 'pgc':
+              kid = `${business}_${record.oid || record.ssid}`;
+              break;
+            case 'article-list':
+              kid = `${business}_${record.oid || record.rlid}`;
+              break;
+            default:
+              kid = `${business}_${record.oid || record.bvid}`;
+              break;
+          }
 
-        if (!kid) {
-          return null
-        }
+          if (!kid) {
+            return null;
+          }
 
-        return {
-          kid,
-          sync_to_bilibili: true,
-        }
-      }).filter(item => item !== null)
+          return {
+            kid,
+            sync_to_bilibili: true
+          };
+        })
+        .filter((item) => item !== null);
 
       if (biliItems.length > 0) {
         try {
           // 调用B站历史记录删除API
-          const biliResponse = await batchDeleteBilibiliHistory(biliItems)
-          if (biliResponse.data.status === 'success' || biliResponse.data.status === 'partial_success') {
-            console.log('B站历史记录删除成功或部分成功:', biliResponse.data)
+          const biliResponse = await batchDeleteBilibiliHistory(biliItems);
+          if (
+            biliResponse.data.status === 'success' ||
+            biliResponse.data.status === 'partial_success'
+          ) {
+            console.log('B站历史记录删除成功或部分成功:', biliResponse.data);
           } else {
-            console.error('B站历史记录删除失败:', biliResponse.data)
-            throw new Error(biliResponse.data.message || '删除B站历史记录失败')
+            console.error('B站历史记录删除失败:', biliResponse.data);
+            throw new Error(biliResponse.data.message || '删除B站历史记录失败');
           }
         } catch (error) {
-          console.error('B站历史记录删除失败:', error)
+          console.error('B站历史记录删除失败:', error);
           // 即使B站删除失败，也继续删除本地记录
         }
       }
     }
 
     // 删除本地记录
-    const response = await batchDeleteHistory(items)
+    const response = await batchDeleteHistory(items);
     if (response.data.status === 'success') {
       showNotify({
         type: 'success',
-        message: response.data.message + (syncDeleteToBilibili ? '，并已同步删除B站历史记录' : ''),
-      })
-      selectedRecords.value.clear()
-      await fetchHistoryByDateRange()
+        message: response.data.message + (syncDeleteToBilibili ? '，并已同步删除B站历史记录' : '')
+      });
+      selectedRecords.value.clear();
+      await fetchHistoryByDateRange();
     } else {
-      throw new Error(response.data.message || '删除失败')
+      throw new Error(response.data.message || '删除失败');
     }
   } catch (error) {
-    if (error.toString().includes('cancel')) return
+    if (error.toString().includes('cancel')) return;
 
     showNotify({
       type: 'danger',
-      message: error.response?.data?.detail || error.message || '删除失败',
-    })
+      message: error.response?.data?.detail || error.message || '删除失败'
+    });
   }
-}
+};
 
 // 监听批量模式变化
-watch(() => props.isBatchMode, (newVal) => {
-  if (!newVal) {
-    selectedRecords.value.clear()
+watch(
+  () => props.isBatchMode,
+  (newVal) => {
+    if (!newVal) {
+      selectedRecords.value.clear();
+    }
   }
-})
+);
 
 // 辅助函数：格式化日期
-const pad = (n) => String(n).padStart(2, '0')
-const formatDate = (date) => `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-const formatDateWithYear = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+const pad = (n) => String(n).padStart(2, '0');
+const formatDate = (date) => `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+const formatDateWithYear = (date) =>
+  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 const formatDateForAPI = (date) => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}${month}${day}`
-}
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+};
 
 // 处理日期区间确认
 const onConfirm = (values) => {
-  const [start, end] = values
-  emit('update:show', false)
+  const [start, end] = values;
+  emit('update:show', false);
 
-  const startYear = start.getFullYear()
-  const endYear = end.getFullYear()
+  const startYear = start.getFullYear();
+  const endYear = end.getFullYear();
 
-  let dateText
+  let dateText;
   if (startYear === props.selectedYear && endYear === props.selectedYear) {
-    dateText = `${formatDate(start)} - ${formatDate(end)}`
+    dateText = `${formatDate(start)} - ${formatDate(end)}`;
   } else {
-    dateText = `${formatDateWithYear(start)} - ${formatDateWithYear(end)}`
+    dateText = `${formatDateWithYear(start)} - ${formatDateWithYear(end)}`;
   }
 
-  emit('update:date', dateText)
-  dateRange.value = `${formatDateForAPI(start)}-${formatDateForAPI(end)}`
-  fetchHistoryByDateRange()
-}
+  emit('update:date', dateText);
+  dateRange.value = `${formatDateForAPI(start)}-${formatDateForAPI(end)}`;
+  fetchHistoryByDateRange();
+};
 
 // 批量检查视频下载状态
 const batchCheckDownloadStatus = async () => {
   try {
-    if (records.value.length === 0) return
+    if (records.value.length === 0) return;
 
     // 筛选出视频类型的记录
-    const videoRecords = records.value.filter(record => record.business === 'archive')
-    if (videoRecords.length === 0) return
+    const videoRecords = records.value.filter((record) => record.business === 'archive');
+    if (videoRecords.length === 0) return;
 
     // 获取所有视频的CID
-    const cids = videoRecords.map(record => record.cid).filter(cid => cid)
-    if (cids.length === 0) return
+    const cids = videoRecords.map((record) => record.cid).filter((cid) => cid);
+    if (cids.length === 0) return;
 
-    const response = await checkVideoDownload(cids)
+    const response = await checkVideoDownload(cids);
 
     if (response.data && response.data.status === 'success') {
       // 清空已有集合
-      downloadedVideos.value.clear()
+      downloadedVideos.value.clear();
 
       // 处理返回结果，将已下载视频的CID添加到集合中
-      const results = response.data.results || {}
+      const results = response.data.results || {};
 
       // 遍历results对象的每个键值对
       Object.entries(results).forEach(([cid, info]) => {
         if (info.downloaded) {
-          downloadedVideos.value.add(cid.toString())
+          downloadedVideos.value.add(cid.toString());
         }
-      })
+      });
     }
   } catch (error) {
-    console.error('批量检查下载状态失败:', error)
+    console.error('批量检查下载状态失败:', error);
   }
-}
+};
 
 // 检查视频是否已下载
 const isVideoDownloaded = (cid) => {
-  return cid && downloadedVideos.value.has(cid.toString())
-}
+  return cid && downloadedVideos.value.has(cid.toString());
+};
 
 // 获取分区名称，优先使用子分区，其次主分区
 function getCategoryName(record) {
-  if (!record) return ''
-  if (record.tag_name) return record.tag_name
-  if (record.tname) return record.tname
-  if (record.main_category) return record.main_category
-  return ''
+  if (!record) return '';
+  if (record.tag_name) return record.tag_name;
+  if (record.tname) return record.tname;
+  if (record.main_category) return record.main_category;
+  return '';
 }
 
 // 检查视频是否已收藏
 const isVideoFavorited = (oid) => {
-  if (!oid) return false
+  if (!oid) return false;
 
   // 确保oid是字符串类型，方便比较
-  const oidStr = String(oid)
+  const oidStr = String(oid);
 
   // 检查是否在收藏状态中
-  return Object.keys(favoriteStatus.value).some(key => {
-    return String(key) === oidStr && favoriteStatus.value[key].is_favorited
-  })
-}
+  return Object.keys(favoriteStatus.value).some((key) => {
+    return String(key) === oidStr && favoriteStatus.value[key].is_favorited;
+  });
+};
 
 // 获取视频被收藏到的收藏夹
 const getVideoFavoriteFolders = (oid) => {
-  if (!oid) return []
+  if (!oid) return [];
 
   // 确保oid是字符串类型，方便比较
-  const oidStr = String(oid)
+  const oidStr = String(oid);
 
   // 查找匹配的收藏状态
   for (const key in favoriteStatus.value) {
     if (String(key) === oidStr) {
-      return favoriteStatus.value[key].favorite_folders || []
+      return favoriteStatus.value[key].favorite_folders || [];
     }
   }
 
-  return []
-}
+  return [];
+};
 
 // 批量检查视频收藏状态
 const batchCheckFavorites = async () => {
   try {
-    if (records.value.length === 0) return
+    if (records.value.length === 0) return;
 
     // 筛选出视频类型的记录
-    const videoRecords = records.value.filter(record => record.business === 'archive')
-    if (videoRecords.length === 0) return
+    const videoRecords = records.value.filter((record) => record.business === 'archive');
+    if (videoRecords.length === 0) return;
 
     // 获取所有视频的avid
-    const oids = videoRecords.map(record => {
-      // 使用 aid 或 avid 或 (oid 如果 business 是 archive)
-      const id = record.aid || record.avid || (record.business === 'archive' ? record.oid : null)
-      // 确保ID是数字类型
-      return id ? parseInt(id, 10) : null
-    }).filter(oid => oid !== null && !isNaN(oid))
+    const oids = videoRecords
+      .map((record) => {
+        // 使用 aid 或 avid 或 (oid 如果 business 是 archive)
+        const id = record.aid || record.avid || (record.business === 'archive' ? record.oid : null);
+        // 确保ID是数字类型
+        return id ? parseInt(id, 10) : null;
+      })
+      .filter((oid) => oid !== null && !isNaN(oid));
 
-    if (oids.length === 0) return
+    if (oids.length === 0) return;
 
-    console.log('批量检查视频收藏状态:', oids)
-    const response = await batchCheckFavoriteStatus({ oids }) // 直接传递数组
+    console.log('批量检查视频收藏状态:', oids);
+    const response = await batchCheckFavoriteStatus({ oids }); // 直接传递数组
 
     if (response.data && response.data.status === 'success') {
       // 清空已有状态
-      favoriteStatus.value = {}
+      favoriteStatus.value = {};
 
       // 处理返回结果
-      const results = response.data.data.results || []
-      results.forEach(item => {
+      const results = response.data.data.results || [];
+      results.forEach((item) => {
         favoriteStatus.value[item.oid] = {
           is_favorited: item.is_favorited,
-          favorite_folders: item.favorite_folders || [],
-        }
-      })
+          favorite_folders: item.favorite_folders || []
+        };
+      });
 
-      console.log('收藏状态数据:', favoriteStatus.value)
+      console.log('收藏状态数据:', favoriteStatus.value);
     }
   } catch (error) {
-    console.error('批量检查收藏状态失败:', error)
+    console.error('批量检查收藏状态失败:', error);
   }
-}
+};
 
 // 数据获取函数
 const fetchHistoryByDateRange = async () => {
   // 取消上一次未完成的请求
   if (abortController) {
-    abortController.abort()
+    abortController.abort();
   }
-  abortController = new AbortController()
-  const currentFetchId = ++fetchId
+  abortController = new AbortController();
+  const currentFetchId = ++fetchId;
 
   try {
-    isLoading.value = true
+    isLoading.value = true;
 
     // 按日期模式：使用 currentDate 构造 date_range
-    let effectiveDateRange = dateRange.value || ''
-    let effectivePage = props.page
-    let effectiveSize = size.value
+    let effectiveDateRange = dateRange.value || '';
+    let effectivePage = props.page;
+    let effectiveSize = size.value;
     if (props.currentDate && props.currentDate.length === 8) {
-      effectiveDateRange = `${props.currentDate}-${props.currentDate}`
-      effectivePage = 1
-      effectiveSize = 9999
+      effectiveDateRange = `${props.currentDate}-${props.currentDate}`;
+      effectivePage = 1;
+      effectiveSize = 9999;
     }
 
     const response = await getBiliHistory2024(
@@ -755,438 +995,460 @@ const fetchHistoryByDateRange = async () => {
       effectiveDateRange,
       localStorage.getItem('useLocalImages') === 'true',
       props.business,
-      abortController.signal,
-    )
+      abortController.signal
+    );
 
     // 如果已有更新的请求在进行中，丢弃本次结果
-    if (currentFetchId !== fetchId) return
+    if (currentFetchId !== fetchId) return;
 
-    isLoaded.value = true
+    isLoaded.value = true;
     if (response.data && response.data.data) {
-      total.value = response.data.data.total
-      records.value = response.data.data.records
-      emit('update:total-pages', Math.ceil(response.data.data.total / size.value))
-      emit('update:total', response.data.data.total)
-      emit('update:record-count', records.value.length)
+      total.value = response.data.data.total;
+      records.value = response.data.data.records;
+      emit('update:total-pages', Math.ceil(response.data.data.total / size.value));
+      emit('update:total', response.data.data.total);
+      emit('update:record-count', records.value.length);
 
       // 批量获取备注
       if (records.value.length > 0) {
-        const batchRecords = records.value.map(record => ({
+        const batchRecords = records.value.map((record) => ({
           bvid: record.bvid,
-          view_at: record.view_at,
-        }))
+          view_at: record.view_at
+        }));
         // 并行获取备注、下载状态、收藏状态
         await Promise.all([
-          batchGetRemarks(batchRecords).then(res => {
-            if (res.data.status === 'success') {
-              remarkData.value = res.data.data
-            }
-          }).catch(() => {}),
+          batchGetRemarks(batchRecords)
+            .then((res) => {
+              if (res.data.status === 'success') {
+                remarkData.value = res.data.data;
+              }
+            })
+            .catch(() => {}),
           batchCheckDownloadStatus(),
           batchCheckFavorites()
-        ])
+        ]);
       }
     }
   } catch (error) {
-    if (error.name === 'AbortError') return
-    console.error('数据获取失败:', error)
-    records.value = []
-    total.value = 0
-    emit('update:total-pages', 0)
-    emit('update:total', 0)
+    if (error.name === 'AbortError') return;
+    console.error('数据获取失败:', error);
+    records.value = [];
+    total.value = 0;
+    emit('update:total-pages', 0);
+    emit('update:total', 0);
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 // 监听年份、页码和日期变化
 watch(
   () => [props.selectedYear, props.page, props.currentDate],
   () => {
-    fetchHistoryByDateRange()
-  },
-)
+    fetchHistoryByDateRange();
+  }
+);
 
 // 监听 pageSize 变化
 watch(
   () => props.pageSize,
   (newSize) => {
-    size.value = newSize
+    size.value = newSize;
     // 保存到 localStorage
-    localStorage.setItem('pageSize', newSize.toString())
-    fetchHistoryByDateRange()
-  },
-)
+    localStorage.setItem('pageSize', newSize.toString());
+    fetchHistoryByDateRange();
+  }
+);
 
 // 监听父组件的 date 变化
 watch(
   () => props.date,
   (newDate) => {
     if (!newDate) {
-      dateRange.value = ''
-      fetchHistoryByDateRange()
+      dateRange.value = '';
+      fetchHistoryByDateRange();
     } else {
       // 解析日期区间格式 "YYYY/MM/DD 至 YYYY/MM/DD"
-      const dates = newDate.split(' 至 ')
+      const dates = newDate.split(' 至 ');
       if (dates.length === 2) {
-        const startParts = dates[0].split('/')
-        const endParts = dates[1].split('/')
+        const startParts = dates[0].split('/');
+        const endParts = dates[1].split('/');
 
         if (startParts.length === 3 && endParts.length === 3) {
-          const startDate = `${startParts[0]}${startParts[1].padStart(2, '0')}${startParts[2].padStart(2, '0')}`
-          const endDate = `${endParts[0]}${endParts[1].padStart(2, '0')}${endParts[2].padStart(2, '0')}`
-          dateRange.value = `${startDate}-${endDate}`
-          fetchHistoryByDateRange()
+          const startDate = `${startParts[0]}${startParts[1].padStart(2, '0')}${startParts[2].padStart(2, '0')}`;
+          const endDate = `${endParts[0]}${endParts[1].padStart(2, '0')}${endParts[2].padStart(2, '0')}`;
+          dateRange.value = `${startDate}-${endDate}`;
+          fetchHistoryByDateRange();
         }
       }
     }
-  },
-)
+  }
+);
 
 // 监听父组件的 category 变化
 watch(
   () => [props.category, props.categoryType],
   ([newCategory, newCategoryType]) => {
     if (!newCategory) {
-      tagName.value = ''
-      mainCategory.value = ''
+      tagName.value = '';
+      mainCategory.value = '';
     } else if (newCategoryType === 'sub') {
       // 子分区名称存储在 tag_name 字段中
-      tagName.value = newCategory
-      mainCategory.value = ''
+      tagName.value = newCategory;
+      mainCategory.value = '';
     } else {
       // 主分区名称存储在 main_category 字段中
-      mainCategory.value = newCategory
-      tagName.value = ''
+      mainCategory.value = newCategory;
+      tagName.value = '';
     }
     // 这里会触发数据获取
-    fetchHistoryByDateRange()
-  },
-)
+    fetchHistoryByDateRange();
+  }
+);
 
 // 监听父组件的 business 变化
 watch(
   () => props.business,
   () => {
-    fetchHistoryByDateRange()
-  },
-)
+    fetchHistoryByDateRange();
+  }
+);
 
 // 获取每日统计数据
 const fetchDailyStats = async (timestamp) => {
-  if (!timestamp) return
+  if (!timestamp) return;
 
   try {
-    const date = new Date(timestamp * 1000)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const dateStr = `${month}${day}`
+    const date = new Date(timestamp * 1000);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${month}${day}`;
 
     // 如果已经有这个日期的数据，就不重复获取
-    const dateKey = `${year}-${month}-${day}`
-    if (dailyStats.value[dateKey]) return
+    const dateKey = `${year}-${month}-${day}`;
+    if (dailyStats.value[dateKey]) return;
 
-    const response = await getDailyStats(dateStr, year)
+    const response = await getDailyStats(dateStr, year);
     if (response.data.status === 'success') {
-      dailyStats.value[dateKey] = response.data.data
+      dailyStats.value[dateKey] = response.data.data;
     }
   } catch (error) {
-    console.error('获取每日统计数据失败:', error)
+    console.error('获取每日统计数据失败:', error);
   }
-}
+};
 
 // 监听记录变化，获取所有不同日期的统计数据
-watch(() => records.value, (newRecords) => {
-  if (newRecords && newRecords.length > 0) {
-    // 获取所有不同日期的时间戳
-    const uniqueDates = new Set()
-    newRecords.forEach(record => {
-      const date = new Date(record.view_at * 1000)
-      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-      if (!uniqueDates.has(dateKey)) {
-        uniqueDates.add(dateKey)
-        fetchDailyStats(record.view_at)
-      }
-    })
-  } else {
-    dailyStats.value = {}
-  }
-}, { deep: true })
+watch(
+  () => records.value,
+  (newRecords) => {
+    if (newRecords && newRecords.length > 0) {
+      // 获取所有不同日期的时间戳
+      const uniqueDates = new Set();
+      newRecords.forEach((record) => {
+        const date = new Date(record.view_at * 1000);
+        const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        if (!uniqueDates.has(dateKey)) {
+          uniqueDates.add(dateKey);
+          fetchDailyStats(record.view_at);
+        }
+      });
+    } else {
+      dailyStats.value = {};
+    }
+  },
+  { deep: true }
+);
 
 // 获取指定日期的统计数据
 const getDailyStatsForDate = (timestamp) => {
-  const date = new Date(timestamp * 1000)
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const dateKey = `${date.getFullYear()}-${month}-${day}`
-  return dailyStats.value[dateKey]?.total_count || 0
-}
+  const date = new Date(timestamp * 1000);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const dateKey = `${date.getFullYear()}-${month}-${day}`;
+  return dailyStats.value[dateKey]?.total_count || 0;
+};
 
 // 获取指定日期的总观看时长（秒）
 const getDailyWatchSecondsForDate = (timestamp) => {
-  const date = new Date(timestamp * 1000)
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const dateKey = `${date.getFullYear()}-${month}-${day}`
-  return dailyStats.value[dateKey]?.total_watch_seconds || 0
-}
+  const date = new Date(timestamp * 1000);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const dateKey = `${date.getFullYear()}-${month}-${day}`;
+  return dailyStats.value[dateKey]?.total_watch_seconds || 0;
+};
 
 // 将秒格式化为中文时长（如 1小时23分45秒）
 const formatHMS = (seconds) => {
-  const total = Math.max(0, Math.floor(seconds || 0))
-  const h = Math.floor(total / 3600)
-  const m = Math.floor((total % 3600) / 60)
-  const s = total % 60
+  const total = Math.max(0, Math.floor(seconds || 0));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
   if (h > 0) {
-    return `${h}小时${String(m).padStart(2, '0')}分${String(s).padStart(2, '0')}秒`
+    return `${h}小时${String(m).padStart(2, '0')}分${String(s).padStart(2, '0')}秒`;
   }
   if (m > 0) {
-    return `${m}分${String(s).padStart(2, '0')}秒`
+    return `${m}分${String(s).padStart(2, '0')}秒`;
   }
-  return `${s}秒`
-}
+  return `${s}秒`;
+};
 
 // 获取指定日期的总时长（格式化）
 const formatDailyWatchTime = (timestamp) => {
-  return formatHMS(getDailyWatchSecondsForDate(timestamp))
-}
+  return formatHMS(getDailyWatchSecondsForDate(timestamp));
+};
 
 // 打开登录对话框
 const openLoginDialog = () => {
-  showLoginDialog.value = true
-}
+  showLoginDialog.value = true;
+};
 
 // 处理登录成功
 const handleLoginSuccess = async (userData) => {
   try {
     // 如果登录对话框传递了用户数据，直接使用
     if (userData && userData.isLogin) {
-      isLoggedIn.value = userData.isLogin
+      isLoggedIn.value = userData.isLogin;
 
       // 触发全局事件，通知侧边栏更新登录状态，并传递用户信息
-      window.dispatchEvent(new CustomEvent('login-status-changed', {
-        detail: {
-          isLoggedIn: true,
-          userInfo: userData,
-        },
-      }))
-    } else {
-      // 如果没有传递用户数据，则调用API获取
-      const response = await getLoginStatus()
-      if (response.data && response.data.code === 0) {
-        isLoggedIn.value = response.data.data.isLogin
-
-        // 触发全局事件，通知侧边栏更新登录状态，并传递用户信息
-        window.dispatchEvent(new CustomEvent('login-status-changed', {
+      window.dispatchEvent(
+        new CustomEvent('login-status-changed', {
           detail: {
             isLoggedIn: true,
-            userInfo: response.data.data,
-          },
-        }))
+            userInfo: userData
+          }
+        })
+      );
+    } else {
+      // 如果没有传递用户数据，则调用API获取
+      const response = await getLoginStatus();
+      if (response.data && response.data.code === 0) {
+        isLoggedIn.value = response.data.data.isLogin;
+
+        // 触发全局事件，通知侧边栏更新登录状态，并传递用户信息
+        window.dispatchEvent(
+          new CustomEvent('login-status-changed', {
+            detail: {
+              isLoggedIn: true,
+              userInfo: response.data.data
+            }
+          })
+        );
       }
     }
 
     // 刷新历史记录数据
     if (isLoggedIn.value) {
-      fetchHistoryByDateRange()
+      fetchHistoryByDateRange();
     }
   } catch (error) {
-    console.error('登录成功后获取状态失败:', error)
+    console.error('登录成功后获取状态失败:', error);
   }
-}
+};
 
 // 检查登录状态
 const checkLoginStatus = async () => {
   try {
-    const response = await getLoginStatus()
-    isLoggedIn.value = response.data && response.data.code === 0 && response.data.data.isLogin
+    const response = await getLoginStatus();
+    isLoggedIn.value = response.data && response.data.code === 0 && response.data.data.isLogin;
   } catch (error) {
-    console.error('获取登录状态失败:', error)
-    isLoggedIn.value = false
+    console.error('获取登录状态失败:', error);
+    isLoggedIn.value = false;
   }
-}
+};
 
 // 刷新数据
 const refreshData = async () => {
   try {
-    isLoading.value = true
-    showNotify({ type: 'success', message: '正在从B站获取历史记录...' })
+    isLoading.value = true;
+    showNotify({ type: 'success', message: '正在从B站获取历史记录...' });
 
-    const { getSyncConfig } = await import('~/utils/api')
-    const syncConfigRes = await getSyncConfig()
-    const syncDeleted = syncConfigRes.data?.sync_deleted || false
-    const response = await updateBiliHistoryRealtime(syncDeleted)
+    const { getSyncConfig } = await import('~/utils/api');
+    const syncConfigRes = await getSyncConfig();
+    const syncDeleted = syncConfigRes.data?.sync_deleted || false;
+    const response = await updateBiliHistoryRealtime(syncDeleted);
     if (response.data.status === 'success') {
-      showNotify({ type: 'success', message: response.data.message || '数据获取成功' })
-      fetchHistoryByDateRange()
+      showNotify({ type: 'success', message: response.data.message || '数据获取成功' });
+      fetchHistoryByDateRange();
     } else {
-      throw new Error(response.data.message || '获取失败')
+      throw new Error(response.data.message || '获取失败');
     }
   } catch (error) {
-    console.error('刷新数据失败:', error)
+    console.error('刷新数据失败:', error);
     showNotify({
       type: 'danger',
-      message: error.response?.data?.message || error.message || '获取历史记录失败',
-    })
+      message: error.response?.data?.message || error.message || '获取历史记录失败'
+    });
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
+
+// 暴露方法给父组件（必须在下面的顶层 await 之前同步调用，
+// 否则异步 setup 期间父组件通过模板 ref 访问不到这些方法）
+defineExpose({
+  fetchHistoryByDateRange,
+  refreshData,
+  checkLoginStatus
+});
 
 // SSR: 初始数据在服务端获取（仅登录状态和分类，记录由fetchHistoryByDateRange加载）
 const { data: initialData } = await useAsyncData('history-initial', async () => {
   try {
-    const loginResponse = await getLoginStatus()
-    const loggedIn = loginResponse.data && loginResponse.data.code === 0 && loginResponse.data.data.isLogin
+    const loginResponse = await getLoginStatus();
+    const loggedIn =
+      loginResponse.data && loginResponse.data.code === 0 && loginResponse.data.data.isLogin;
 
     if (!loggedIn) {
-      return { isLoggedIn: false, records: [], total: 0, categories: [], loginUserInfo: null }
+      return { isLoggedIn: false, records: [], total: 0, categories: [], loginUserInfo: null };
     }
 
-    const catResponse = await getMainCategories()
-    const categories = catResponse.data.status === 'success' ? catResponse.data.data.map((cat) => cat.name) : []
+    const catResponse = await getMainCategories();
+    const categories =
+      catResponse.data.status === 'success' ? catResponse.data.data.map((cat) => cat.name) : [];
 
-    return { isLoggedIn: true, records: [], total: 0, categories, loginUserInfo: loginResponse.data.data }
+    return {
+      isLoggedIn: true,
+      records: [],
+      total: 0,
+      categories,
+      loginUserInfo: loginResponse.data.data
+    };
   } catch (error) {
-    console.error('SSR 初始数据获取失败:', error)
-    return { isLoggedIn: false, records: [], total: 0, categories: [], loginUserInfo: null }
+    console.error('SSR 初始数据获取失败:', error);
+    return { isLoggedIn: false, records: [], total: 0, categories: [], loginUserInfo: null };
   }
-})
+});
 
 // 从 SSR 数据初始化组件状态
 if (initialData.value) {
-  isLoggedIn.value = initialData.value.isLoggedIn
-  total.value = initialData.value.total
-  mainCategories.value = initialData.value.categories
-  emit('update:total-pages', Math.ceil(initialData.value.total / size.value))
-  emit('update:total', initialData.value.total)
-  isLoading.value = false
+  isLoggedIn.value = initialData.value.isLoggedIn;
+  total.value = initialData.value.total;
+  mainCategories.value = initialData.value.categories;
+  emit('update:total-pages', Math.ceil(initialData.value.total / size.value));
+  emit('update:total', initialData.value.total);
+  isLoading.value = false;
 
   // 客户端挂载后触发登录状态事件
   if (import.meta.client && initialData.value.loginUserInfo) {
-    window.dispatchEvent(new CustomEvent('login-status-changed', {
-      detail: { isLoggedIn: true, userInfo: initialData.value.loginUserInfo },
-    }))
+    window.dispatchEvent(
+      new CustomEvent('login-status-changed', {
+        detail: { isLoggedIn: true, userInfo: initialData.value.loginUserInfo }
+      })
+    );
   }
 }
 
 // 客户端挂载后获取数据
 onMounted(async () => {
   // 并行获取历史数据和额外数据
-  const historyPromise = fetchHistoryByDateRange()
+  const historyPromise = fetchHistoryByDateRange();
 
   // 等待历史数据加载完成后获取备注等信息
-  await historyPromise
+  await historyPromise;
 
   if (isLoggedIn.value && records.value.length > 0) {
-    const batchRecords = records.value.map(record => ({
+    const batchRecords = records.value.map((record) => ({
       bvid: record.bvid,
-      view_at: record.view_at,
-    }))
+      view_at: record.view_at
+    }));
     // 并行获取备注、下载状态、收藏状态
     await Promise.all([
-      batchGetRemarks(batchRecords).then(res => {
-        if (res.data.status === 'success') {
-          remarkData.value = res.data.data
-        }
-      }).catch(() => {}),
+      batchGetRemarks(batchRecords)
+        .then((res) => {
+          if (res.data.status === 'success') {
+            remarkData.value = res.data.data;
+          }
+        })
+        .catch(() => {
+          // 备注批量获取失败不阻断主流程，列表照常展示
+        }),
       batchCheckDownloadStatus(),
       batchCheckFavorites()
-    ])
+    ]);
   }
-})
-
-// 暴露方法给父组件
-defineExpose({
-  fetchHistoryByDateRange,
-  refreshData,
-  checkLoginStatus,
-})
+});
 
 // 格式化分割线日期
 const formatDividerDate = (timestamp) => {
-  const date = new Date(timestamp * 1000)
-  const currentYear = new Date().getFullYear()
-  const year = date.getFullYear()
-  const month = date.getMonth() + 1
-  const day = date.getDate()
+  const date = new Date(timestamp * 1000);
+  const currentYear = new Date().getFullYear();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
 
   if (year === currentYear) {
-    return `${month}月${day}日`
+    return `${month}月${day}日`;
   } else {
-    return `${year}年${month}月${day}日`
+    return `${year}年${month}月${day}日`;
   }
-}
+};
 
 // 判断是否需要显示分割线
 const shouldShowDivider = (index) => {
-  if (index === 0) return true
+  if (index === 0) return true;
 
-  const currentDate = new Date(records.value[index].view_at * 1000)
-  const prevDate = new Date(records.value[index - 1].view_at * 1000)
+  const currentDate = new Date(records.value[index].view_at * 1000);
+  const prevDate = new Date(records.value[index - 1].view_at * 1000);
 
-  return currentDate.getDate() !== prevDate.getDate() ||
+  return (
+    currentDate.getDate() !== prevDate.getDate() ||
     currentDate.getMonth() !== prevDate.getMonth() ||
     currentDate.getFullYear() !== prevDate.getFullYear()
-}
+  );
+};
 
 // 处理视频点击
 const handleVideoClick = async (record) => {
-  let url = ''
+  let url = '';
 
   switch (record.business) {
     case 'archive':
-      url = `https://www.bilibili.com/video/${record.bvid}`
-      break
+      url = `https://www.bilibili.com/video/${record.bvid}`;
+      break;
     case 'article':
-      url = `https://www.bilibili.com/read/cv${record.oid}`
-      break
+      url = `https://www.bilibili.com/read/cv${record.oid}`;
+      break;
     case 'article-list':
-      url = `https://www.bilibili.com/read/readlist/rl${record.oid}`
-      break
+      url = `https://www.bilibili.com/read/readlist/rl${record.oid}`;
+      break;
     case 'live':
-      url = `https://live.bilibili.com/${record.oid}`
-      break
+      url = `https://live.bilibili.com/${record.oid}`;
+      break;
     case 'pgc':
-      url = record.uri || `https://www.bilibili.com/bangumi/play/ep${record.epid}`
-      break
+      url = record.uri || `https://www.bilibili.com/bangumi/play/ep${record.epid}`;
+      break;
     case 'cheese':
-      url = record.uri || `https://www.bilibili.com/cheese/play/ep${record.epid}`
-      break
+      url = record.uri || `https://www.bilibili.com/cheese/play/ep${record.epid}`;
+      break;
     default:
-      console.warn('未知的业务类型:', record.business)
-      return
+      console.warn('未知的业务类型:', record.business);
+      return;
   }
 
   if (url) {
-    await openInBrowser(url)
+    await openInBrowser(url);
   }
-}
+};
 
 // 处理UP主点击
 const handleAuthorClick = async (record) => {
-  const url = `https://space.bilibili.com/${record.author_mid}`
-  await openInBrowser(url)
-}
+  const url = `https://space.bilibili.com/${record.author_mid}`;
+  await openInBrowser(url);
+};
 
 // formatTimestamp 已从 ~/utils/format 导入
 
 // 高亮显示匹配的文本
-const highlightText = (text) => {
-  if (!props.searchKeyword || !text) return text
-
-  const regex = new RegExp(props.searchKeyword, 'gi')
-  return text.replace(regex, match => `<span class="text-[#FF6699]">${match}</span>`)
-}
+const highlightText = (text) => highlightKeyword(text, props.searchKeyword, 'text-[#FF6699]');
 
 // 处理删除记录
 const handleDelete = async (record) => {
   try {
     // 检查是否需要同步删除B站历史记录
-    const { getSyncConfig } = await import('~/utils/api')
-    const syncConfigRes = await getSyncConfig()
-    const syncDeleteToBilibili = syncConfigRes.data?.sync_delete_to_bilibili || false
+    const { getSyncConfig } = await import('~/utils/api');
+    const syncConfigRes = await getSyncConfig();
+    const syncDeleteToBilibili = syncConfigRes.data?.sync_delete_to_bilibili || false;
 
     await showDialog({
       title: '确认删除',
@@ -1196,425 +1458,448 @@ const handleDelete = async (record) => {
       showCancelButton: true,
       confirmButtonText: '确认删除',
       cancelButtonText: '取消',
-      confirmButtonColor: 'var(--accent)',
-    })
+      confirmButtonColor: 'var(--accent)'
+    });
 
     // 如果需要同步删除B站历史记录
     if (syncDeleteToBilibili) {
       // 构建B站历史记录删除请求
-      const business = record.business || 'archive'
-      let kid = ''
+      const business = record.business || 'archive';
+      let kid = '';
 
       switch (business) {
         case 'archive':
           // 使用oid而不是bvid
-          kid = `${business}_${record.oid}`
-          break
+          kid = `${business}_${record.oid}`;
+          break;
         case 'live':
-          kid = `${business}_${record.oid}`
-          break
+          kid = `${business}_${record.oid}`;
+          break;
         case 'article':
-          kid = `${business}_${record.oid}`
-          break
+          kid = `${business}_${record.oid}`;
+          break;
         case 'pgc':
-          kid = `${business}_${record.oid || record.ssid}`
-          break
+          kid = `${business}_${record.oid || record.ssid}`;
+          break;
         case 'article-list':
-          kid = `${business}_${record.oid || record.rlid}`
-          break
+          kid = `${business}_${record.oid || record.rlid}`;
+          break;
         default:
-          kid = `${business}_${record.oid || record.bvid}`
-          break
+          kid = `${business}_${record.oid || record.bvid}`;
+          break;
       }
 
       if (kid) {
         try {
           // 调用B站历史记录删除API
-          const biliResponse = await deleteBilibiliHistory(kid, true)
+          const biliResponse = await deleteBilibiliHistory(kid, true);
           if (biliResponse.data.status === 'success') {
-            console.log('B站历史记录删除成功:', biliResponse.data)
+            console.log('B站历史记录删除成功:', biliResponse.data);
           } else {
-            console.error('B站历史记录删除失败:', biliResponse.data)
+            console.error('B站历史记录删除失败:', biliResponse.data);
             // 即使B站删除失败，也继续删除本地记录
           }
         } catch (error) {
-          console.error('B站历史记录删除失败:', error)
+          console.error('B站历史记录删除失败:', error);
           // 即使B站删除失败，也继续删除本地记录
         }
       }
     }
 
-    const response = await batchDeleteHistory([{
-      bvid: record.bvid,
-      view_at: record.view_at,
-    }])
+    const response = await batchDeleteHistory([
+      {
+        bvid: record.bvid,
+        view_at: record.view_at
+      }
+    ]);
     if (response.data.status === 'success') {
       showNotify({
         type: 'success',
-        message: response.data.message + (syncDeleteToBilibili ? '，并已同步删除B站历史记录' : ''),
-      })
-      fetchHistoryByDateRange()
+        message: response.data.message + (syncDeleteToBilibili ? '，并已同步删除B站历史记录' : '')
+      });
+      fetchHistoryByDateRange();
     } else {
-      throw new Error(response.data.message || '删除失败')
+      throw new Error(response.data.message || '删除失败');
     }
   } catch (error) {
-    if (error.toString().includes('cancel')) return
+    if (error.toString().includes('cancel')) return;
 
     showNotify({
       type: 'danger',
-      message: error.response?.data?.detail || error.message || '删除失败',
-    })
+      message: error.response?.data?.detail || error.message || '删除失败'
+    });
   }
-}
+};
 
 // 判断某一天是否被全部选中
 const isDaySelected = (timestamp) => {
-  const date = new Date(timestamp * 1000)
-  const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() / 1000
-  const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).getTime() / 1000 - 1
+  const date = new Date(timestamp * 1000);
+  const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() / 1000;
+  const dayEnd =
+    new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).getTime() / 1000 - 1;
 
-  const dayRecords = records.value.filter(record =>
-    record.view_at >= dayStart && record.view_at <= dayEnd,
-  )
+  const dayRecords = records.value.filter(
+    (record) => record.view_at >= dayStart && record.view_at <= dayEnd
+  );
 
-  return dayRecords.every(record =>
-    selectedRecords.value.has(`${record.bvid}_${record.view_at}`),
-  )
-}
+  return dayRecords.every((record) =>
+    selectedRecords.value.has(`${record.bvid}_${record.view_at}`)
+  );
+};
 
 // 切换某一天的所有记录的选中状态
 const toggleDaySelection = (timestamp) => {
-  const date = new Date(timestamp * 1000)
-  const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() / 1000
-  const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).getTime() / 1000 - 1
+  const date = new Date(timestamp * 1000);
+  const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() / 1000;
+  const dayEnd =
+    new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).getTime() / 1000 - 1;
 
-  const dayRecords = records.value.filter(record =>
-    record.view_at >= dayStart && record.view_at <= dayEnd,
-  )
+  const dayRecords = records.value.filter(
+    (record) => record.view_at >= dayStart && record.view_at <= dayEnd
+  );
 
-  const allSelected = isDaySelected(timestamp)
+  const allSelected = isDaySelected(timestamp);
 
-  dayRecords.forEach(record => {
-    const key = `${record.bvid}_${record.view_at}`
+  dayRecords.forEach((record) => {
+    const key = `${record.bvid}_${record.view_at}`;
     if (allSelected) {
-      selectedRecords.value.delete(key)
+      selectedRecords.value.delete(key);
     } else {
-      selectedRecords.value.add(key)
+      selectedRecords.value.add(key);
     }
-  })
-}
+  });
+};
 
 // 处理备注更新
 const handleRemarkUpdate = (data) => {
-  const key = `${data.bvid}_${data.view_at}`
+  const key = `${data.bvid}_${data.view_at}`;
   remarkData.value[key] = {
     bvid: data.bvid,
     view_at: data.view_at,
     remark: data.remark,
-    remark_time: data.remark_time,
-  }
-}
+    remark_time: data.remark_time
+  };
+};
 
 // 处理网格视图下载按钮点击
 const handleDownloadGrid = (record) => {
-  console.log('handleDownloadGrid - 处理网格视图下载按钮点击')
-  selectedRecord.value = record
+  console.log('handleDownloadGrid - 处理网格视图下载按钮点击');
+  selectedRecord.value = record;
   // 确保设置为单个视频下载模式，而非批量下载
-  isBatchDownload.value = false
-  showDownloadDialog.value = true
-}
+  isBatchDownload.value = false;
+  showDownloadDialog.value = true;
+};
 
 // 批量下载视频列表
-const batchVideos = ref([])
-const isBatchDownload = ref(false)
-const currentVideoIndex = ref(0)
+const batchVideos = ref([]);
+const isBatchDownload = ref(false);
+const currentVideoIndex = ref(0);
 
 // 批量下载处理函数
 const handleBatchDownload = async () => {
   if (selectedRecords.value.size === 0) {
     showNotify({
       type: 'warning',
-      message: '请先选择要下载的记录',
-    })
-    return
+      message: '请先选择要下载的记录'
+    });
+    return;
   }
 
   try {
     // 从选中的记录中提取视频信息
-    const videoRecords = [...selectedRecords.value].map(key => {
-      const [bvid, timestamp] = key.split('_')
-      return records.value.find(r => r.bvid === bvid && String(r.view_at) === timestamp)
-    }).filter(record => record && record.business === 'archive') // 过滤掉未找到的记录和非视频记录
+    const videoRecords = [...selectedRecords.value]
+      .map((key) => {
+        const [bvid, timestamp] = key.split('_');
+        return records.value.find((r) => r.bvid === bvid && String(r.view_at) === timestamp);
+      })
+      .filter((record) => record && record.business === 'archive'); // 过滤掉未找到的记录和非视频记录
 
     if (videoRecords.length === 0) {
       showNotify({
         type: 'warning',
-        message: '选中的记录中没有有效的视频',
-      })
-      return
+        message: '选中的记录中没有有效的视频'
+      });
+      return;
     }
 
     // 准备批量下载的视频列表
-    batchVideos.value = videoRecords.map(record => ({
+    batchVideos.value = videoRecords.map((record) => ({
       bvid: record.bvid,
       cid: record.cid,
       title: record.title,
       author: record.author_name,
-      cover: record.cover,
-    }))
+      cover: record.cover
+    }));
 
     // 设置批量下载模式
-    isBatchDownload.value = true
-    currentVideoIndex.value = 0
+    isBatchDownload.value = true;
+    currentVideoIndex.value = 0;
 
     // 显示下载对话框
     if (batchVideos.value.length > 0) {
       // 设置第一个视频作为当前下载视频
-      const firstVideo = batchVideos.value[0]
+      const firstVideo = batchVideos.value[0];
       selectedRecord.value = {
         title: firstVideo.title,
         author_name: firstVideo.author,
         bvid: firstVideo.bvid,
         cover: firstVideo.cover,
-        cid: firstVideo.cid,
-      }
-      showDownloadDialog.value = true
+        cid: firstVideo.cid
+      };
+      showDownloadDialog.value = true;
     }
   } catch (error) {
-    console.error('批量下载准备失败:', error)
+    console.error('批量下载准备失败:', error);
     showNotify({
       type: 'danger',
-      message: '批量下载准备失败: ' + (error.message || '未知错误'),
-    })
+      message: '批量下载准备失败: ' + (error.message || '未知错误')
+    });
   }
-}
+};
 
 // 处理下载完成
 const handleDownloadComplete = async () => {
   // 下载完成后重新检查下载状态
-  await batchCheckDownloadStatus()
-}
+  await batchCheckDownloadStatus();
+};
 
 // 调试函数，在控制台显示所有视频的CID和下载状态
 // 处理收藏夹选择对话框
 const handleFavoriteDone = async (result) => {
-  console.log('handleFavoriteDone - 处理收藏完成', result)
+  console.log('handleFavoriteDone - 处理收藏完成', result);
   if (result && result.success) {
     if (result.isBatch) {
       // 批量收藏完成
-      showNotify({ type: 'success', message: `批量收藏完成，已添加${result.videoInfo.selectedCount}个视频到收藏夹` })
+      showNotify({
+        type: 'success',
+        message: `批量收藏完成，已添加${result.videoInfo.selectedCount}个视频到收藏夹`
+      });
 
       // 更新收藏状态
       if (result.videoInfo.batchIds) {
-        const videoIds = result.videoInfo.batchIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id))
+        const videoIds = result.videoInfo.batchIds
+          .split(',')
+          .map((id) => parseInt(id.trim(), 10))
+          .filter((id) => !isNaN(id));
 
         // 为每个视频ID更新收藏状态
-        videoIds.forEach(videoId => {
+        videoIds.forEach((videoId) => {
           favoriteStatus.value[videoId] = {
             is_favorited: true,
-            favorite_folders: result.folders.map(folderId => ({
+            favorite_folders: result.folders.map((folderId) => ({
               media_id: folderId,
-              title: '收藏夹',
-            })),
-          }
-        })
+              title: '收藏夹'
+            }))
+          };
+        });
 
         // 取消批量模式并清空选择
-        selectedRecords.value.clear()
+        selectedRecords.value.clear();
 
         // 刷新收藏状态
-        await batchCheckFavorites()
+        await batchCheckFavorites();
       }
     } else {
       // 单个视频收藏完成
-      showNotify({ type: 'success', message: '收藏成功' })
+      showNotify({ type: 'success', message: '收藏成功' });
 
       // 更新收藏状态
-      let videoId = result.videoInfo.aid || result.videoInfo.avid ||
-        (result.videoInfo.business === 'archive' ? result.videoInfo.oid : null)
+      let videoId =
+        result.videoInfo.aid ||
+        result.videoInfo.avid ||
+        (result.videoInfo.business === 'archive' ? result.videoInfo.oid : null);
 
       if (videoId) {
         // 确保ID是整数
-        videoId = parseInt(videoId, 10)
+        videoId = parseInt(videoId, 10);
 
         if (!isNaN(videoId)) {
           // 设置为已收藏状态
           favoriteStatus.value[videoId] = {
             is_favorited: true,
-            favorite_folders: result.folders.map(folderId => ({
+            favorite_folders: result.folders.map((folderId) => ({
               media_id: folderId,
-              title: '收藏夹', // 由于API返回的是ID列表，我们不知道具体名称，所以用通用名称
-            })),
-          }
+              title: '收藏夹' // 由于API返回的是ID列表，我们不知道具体名称，所以用通用名称
+            }))
+          };
 
           // 重新获取精确的收藏夹信息
-          await batchCheckFavorites()
+          await batchCheckFavorites();
         }
       }
     }
   }
-}
+};
 
 // 批量收藏选中的记录
 const handleBatchFavorite = async () => {
   if (selectedRecords.value.size === 0) {
     showNotify({
       type: 'warning',
-      message: '请先选择要收藏的记录',
-    })
-    return
+      message: '请先选择要收藏的记录'
+    });
+    return;
   }
 
   // 从选中的记录中提取视频ID
-  const videoRecords = [...selectedRecords.value].map(key => {
-    const [bvid, timestamp] = key.split('_')
-    return records.value.find(r => r.bvid === bvid && String(r.view_at) === timestamp)
-  }).filter(record => record) // 过滤掉未找到的记录
+  const videoRecords = [...selectedRecords.value]
+    .map((key) => {
+      const [bvid, timestamp] = key.split('_');
+      return records.value.find((r) => r.bvid === bvid && String(r.view_at) === timestamp);
+    })
+    .filter((record) => record); // 过滤掉未找到的记录
 
   // 提取视频ID
-  const oids = videoRecords.map(record => {
-    const id = record.aid || record.avid || (record.business === 'archive' ? record.oid : null)
-    return id ? parseInt(id, 10) : null
-  }).filter(oid => oid !== null && !isNaN(oid))
+  const oids = videoRecords
+    .map((record) => {
+      const id = record.aid || record.avid || (record.business === 'archive' ? record.oid : null);
+      return id ? parseInt(id, 10) : null;
+    })
+    .filter((oid) => oid !== null && !isNaN(oid));
 
   if (oids.length === 0) {
     showNotify({
       type: 'warning',
-      message: '选中的记录中没有有效的视频ID',
-    })
-    return
+      message: '选中的记录中没有有效的视频ID'
+    });
+    return;
   }
 
   // 打开收藏夹选择对话框
-  showFavoriteDialog.value = true
+  showFavoriteDialog.value = true;
   favoriteVideoInfo.value = {
     isBatch: true,
     batchIds: oids.join(','),
-    selectedCount: oids.length,
-  }
-}
+    selectedCount: oids.length
+  };
+};
 
 // 计算选中记录中已收藏的数量
 const hasFavoritedVideos = computed(() => {
-  return favoritedCount.value > 0
-})
+  return favoritedCount.value > 0;
+});
 
 const favoritedCount = computed(() => {
-  if (selectedRecords.value.size === 0) return 0
+  if (selectedRecords.value.size === 0) return 0;
 
-  let count = 0
-  selectedRecords.value.forEach(key => {
-    const [bvid, timestamp] = key.split('_')
-    const record = records.value.find(r => r.bvid === bvid && String(r.view_at) === timestamp)
+  let count = 0;
+  selectedRecords.value.forEach((key) => {
+    const [bvid, timestamp] = key.split('_');
+    const record = records.value.find((r) => r.bvid === bvid && String(r.view_at) === timestamp);
     if (record) {
-      const videoId = record.aid || record.avid || (record.business === 'archive' ? record.oid : null)
+      const videoId =
+        record.aid || record.avid || (record.business === 'archive' ? record.oid : null);
       if (videoId && isVideoFavorited(parseInt(videoId, 10))) {
-        count++
+        count++;
       }
     }
-  })
+  });
 
-  return count
-})
+  return count;
+});
 
 // 计算选中记录中未收藏的数量
 const unfavoritedCount = computed(() => {
-  if (selectedRecords.value.size === 0) return 0
-  return selectedRecords.value.size - favoritedCount.value
-})
+  if (selectedRecords.value.size === 0) return 0;
+  return selectedRecords.value.size - favoritedCount.value;
+});
 
 // 检查是否所有选中的记录都已收藏
 const isAllFavorited = computed(() => {
-  return selectedRecords.value.size > 0 && favoritedCount.value === selectedRecords.value.size
-})
+  return selectedRecords.value.size > 0 && favoritedCount.value === selectedRecords.value.size;
+});
 
 // 复制选中视频的链接到剪贴板
 const handleCopyLinks = async () => {
   if (selectedRecords.value.size === 0) {
     showNotify({
       type: 'warning',
-      message: '请先选择要复制链接的记录',
-    })
-    return
+      message: '请先选择要复制链接的记录'
+    });
+    return;
   }
 
   try {
     // 从选中的记录中提取视频信息
-    const videoRecords = [...selectedRecords.value].map(key => {
-      const [bvid, timestamp] = key.split('_')
-      return records.value.find(r => r.bvid === bvid && String(r.view_at) === timestamp)
-    }).filter(record => record) // 过滤掉未找到的记录
+    const videoRecords = [...selectedRecords.value]
+      .map((key) => {
+        const [bvid, timestamp] = key.split('_');
+        return records.value.find((r) => r.bvid === bvid && String(r.view_at) === timestamp);
+      })
+      .filter((record) => record); // 过滤掉未找到的记录
 
     // 生成链接列表
-    const links = videoRecords.map(record => {
-      let url = ''
-      switch (record.business) {
-        case 'archive':
-          url = `https://www.bilibili.com/video/${record.bvid}`
-          break
-        case 'article':
-          url = `https://www.bilibili.com/read/cv${record.oid}`
-          break
-        case 'article-list':
-          url = `https://www.bilibili.com/read/readlist/rl${record.oid}`
-          break
-        case 'live':
-          url = `https://live.bilibili.com/${record.oid}`
-          break
-        case 'pgc':
-          url = record.uri || `https://www.bilibili.com/bangumi/play/ep${record.epid}`
-          break
-        case 'cheese':
-          url = record.uri || `https://www.bilibili.com/cheese/play/ep${record.epid}`
-          break
-        default:
-          console.warn('未知的业务类型:', record.business)
-          return null
-      }
-      return url
-    }).filter(url => url) // 过滤掉无效的URL
+    const links = videoRecords
+      .map((record) => {
+        let url = '';
+        switch (record.business) {
+          case 'archive':
+            url = `https://www.bilibili.com/video/${record.bvid}`;
+            break;
+          case 'article':
+            url = `https://www.bilibili.com/read/cv${record.oid}`;
+            break;
+          case 'article-list':
+            url = `https://www.bilibili.com/read/readlist/rl${record.oid}`;
+            break;
+          case 'live':
+            url = `https://live.bilibili.com/${record.oid}`;
+            break;
+          case 'pgc':
+            url = record.uri || `https://www.bilibili.com/bangumi/play/ep${record.epid}`;
+            break;
+          case 'cheese':
+            url = record.uri || `https://www.bilibili.com/cheese/play/ep${record.epid}`;
+            break;
+          default:
+            console.warn('未知的业务类型:', record.business);
+            return null;
+        }
+        return url;
+      })
+      .filter((url) => url); // 过滤掉无效的URL
 
     // 复制到剪贴板
     if (links.length > 0) {
-      await copyToClipboard(links.join('\n'))
+      await copyToClipboard(links.join('\n'));
       showNotify({
         type: 'success',
-        message: `已复制 ${links.length} 个链接到剪贴板`,
-      })
+        message: `已复制 ${links.length} 个链接到剪贴板`
+      });
     } else {
       showNotify({
         type: 'warning',
-        message: '没有找到有效的链接',
-      })
+        message: '没有找到有效的链接'
+      });
     }
   } catch (error) {
-    console.error('复制链接失败:', error)
+    console.error('复制链接失败:', error);
     showNotify({
       type: 'danger',
-      message: '复制链接失败: ' + (error.message || '未知错误'),
-    })
+      message: '复制链接失败: ' + (error.message || '未知错误')
+    });
   }
-}
+};
 
 // 复制到剪贴板函数
 const copyToClipboard = async (text) => {
   try {
-    await navigator.clipboard.writeText(text)
-    return true
+    await navigator.clipboard.writeText(text);
+    return true;
   } catch (err) {
-    console.error('复制失败:', err)
-    throw new Error('复制到剪贴板失败，请检查浏览器权限')
+    console.error('复制失败:', err);
+    throw new Error('复制到剪贴板失败，请检查浏览器权限', { cause: err });
   }
-}
+};
 
 // 批量取消收藏选中的记录
 const handleBatchUnfavorite = async () => {
   if (selectedRecords.value.size === 0) {
     showNotify({
       type: 'warning',
-      message: '请先选择要取消收藏的记录',
-    })
-    return
+      message: '请先选择要取消收藏的记录'
+    });
+    return;
   }
 
   try {
@@ -1622,58 +1907,63 @@ const handleBatchUnfavorite = async () => {
     await showDialog({
       title: '确认取消收藏',
       message: `确定要取消${favoritedCount.value}个视频的收藏吗？`,
-      showCancelButton: true,
-    })
+      showCancelButton: true
+    });
 
     // 从选中的记录中提取视频ID
-    const videoRecords = [...selectedRecords.value].map(key => {
-      const [bvid, timestamp] = key.split('_')
-      return records.value.find(r => r.bvid === bvid && String(r.view_at) === timestamp)
-    }).filter(record => record) // 过滤掉未找到的记录
+    const videoRecords = [...selectedRecords.value]
+      .map((key) => {
+        const [bvid, timestamp] = key.split('_');
+        return records.value.find((r) => r.bvid === bvid && String(r.view_at) === timestamp);
+      })
+      .filter((record) => record); // 过滤掉未找到的记录
 
     // 过滤出已收藏的视频
-    const favoritedRecords = videoRecords.filter(record => {
-      const videoId = record.aid || record.avid || (record.business === 'archive' ? record.oid : null)
-      return videoId && isVideoFavorited(parseInt(videoId, 10))
-    })
+    const favoritedRecords = videoRecords.filter((record) => {
+      const videoId =
+        record.aid || record.avid || (record.business === 'archive' ? record.oid : null);
+      return videoId && isVideoFavorited(parseInt(videoId, 10));
+    });
 
     if (favoritedRecords.length === 0) {
       showNotify({
         type: 'warning',
-        message: '选中的记录中不包含已收藏的视频',
-      })
-      return
+        message: '选中的记录中不包含已收藏的视频'
+      });
+      return;
     }
 
     // 提取视频ID
-    const videoIds = favoritedRecords.map(record => {
-      const id = record.aid || record.avid || (record.business === 'archive' ? record.oid : null)
-      return id ? parseInt(id, 10) : null
-    }).filter(id => id !== null && !isNaN(id))
+    const videoIds = favoritedRecords
+      .map((record) => {
+        const id = record.aid || record.avid || (record.business === 'archive' ? record.oid : null);
+        return id ? parseInt(id, 10) : null;
+      })
+      .filter((id) => id !== null && !isNaN(id));
 
     if (videoIds.length === 0) {
       showNotify({
         type: 'warning',
-        message: '无法获取有效的视频ID',
-      })
-      return
+        message: '无法获取有效的视频ID'
+      });
+      return;
     }
 
     // 获取每个视频的收藏夹列表和执行取消收藏操作
-    let results
+    let results;
 
     // 获取每个视频的收藏夹列表
-    const unfavoritePromises = videoIds.map(async videoId => {
-      const folders = getVideoFavoriteFolders(videoId)
+    const unfavoritePromises = videoIds.map(async (videoId) => {
+      const folders = getVideoFavoriteFolders(videoId);
       if (folders.length > 0) {
         // 获取收藏夹ID
-        const folderIds = folders.map(folder => folder.media_id)
+        const folderIds = folders.map((folder) => folder.media_id);
 
         // 发送取消收藏请求
         const response = await favoriteResource({
           rid: videoId,
-          del_media_ids: folderIds.join(','),
-        })
+          del_media_ids: folderIds.join(',')
+        });
 
         // 如果远程操作成功，同步本地数据库（不提示用户）
         if (response.data.status === 'success') {
@@ -1681,57 +1971,72 @@ const handleBatchUnfavorite = async () => {
             await localBatchFavoriteResource({
               rids: videoId.toString(),
               del_media_ids: folderIds.join(','),
-              operation_type: 'local', // 只在本地操作
-            })
+              operation_type: 'local' // 只在本地操作
+            });
           } catch (syncError) {
-            console.error('本地同步取消收藏失败，但不影响用户体验:', syncError)
+            console.error('本地同步取消收藏失败，但不影响用户体验:', syncError);
           }
         }
 
-        return { videoId, success: response.data.status === 'success' }
+        return { videoId, success: response.data.status === 'success' };
       }
-      return { videoId, success: false, reason: '没有找到收藏夹' }
-    })
+      return { videoId, success: false, reason: '没有找到收藏夹' };
+    });
 
-    results = await Promise.all(unfavoritePromises)
-    const successCount = results.filter(r => r.success).length
+    results = await Promise.all(unfavoritePromises);
+    const successCount = results.filter((r) => r.success).length;
 
     if (successCount > 0) {
       showNotify({
         type: 'success',
-        message: `成功取消${successCount}个视频的收藏`,
-      })
+        message: `成功取消${successCount}个视频的收藏`
+      });
 
       // 更新收藏状态
-      results.forEach(result => {
+      results.forEach((result) => {
         if (result.success) {
           favoriteStatus.value[result.videoId] = {
             is_favorited: false,
-            favorite_folders: [],
-          }
+            favorite_folders: []
+          };
         }
-      })
+      });
 
       // 刷新收藏状态
-      await batchCheckFavorites()
+      await batchCheckFavorites();
 
       // 取消选择
-      selectedRecords.value.clear()
+      selectedRecords.value.clear();
     } else {
       showNotify({
         type: 'danger',
-        message: '取消收藏失败',
-      })
+        message: '取消收藏失败'
+      });
     }
   } catch (error) {
-    if (error.toString().includes('cancel')) return
+    if (error.toString().includes('cancel')) return;
 
-    console.error('批量取消收藏失败:', error)
+    console.error('批量取消收藏失败:', error);
     showNotify({
       type: 'danger',
-      message: '批量取消收藏失败: ' + (error.message || '未知错误'),
-    })
+      message: '批量取消收藏失败: ' + (error.message || '未知错误')
+    });
+  }
+};
+</script>
+
+<style scoped>
+@keyframes bounce-x {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(25%);
   }
 }
 
-</script>
+.animate-bounce-x {
+  animation: bounce-x 1s infinite;
+}
+</style>

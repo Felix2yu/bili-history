@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
+import Settings from '~/components/Settings.vue';
 definePageMeta({
-  layout: 'main',
-})
-import Settings from '~/components/Settings.vue'
+  layout: 'main'
+});
 </script>

@@ -11,7 +11,11 @@
     "start": "nuxt start",
     "preview": "nuxt preview",
     "generate": "nuxt generate",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
   },
   "dependencies": {
     "@pinia/nuxt": "^1.0.1",
@@ -31,11 +35,16 @@
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
+    "@nuxt/eslint": "^1.17.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.5",
     "@vite-pwa/nuxt": "^1.1.1",
     "@vue/runtime-core": "^3.5.44",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
     "postcss": "^8.5.30",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "4.3.3"
   }
 }

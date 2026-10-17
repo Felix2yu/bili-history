@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
+import History from '~/components/page/History.vue';
 definePageMeta({
-  layout: 'main',
-})
-import History from '~/components/page/History.vue'
+  layout: 'main'
+});
 </script>

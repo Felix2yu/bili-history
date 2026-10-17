@@ -7,30 +7,44 @@
           <SimpleSearchBar
             v-model="inputMid"
             placeholder="输入用户 MID"
-            @search="triggerQueryNow"
             class="w-full"
+            @search="triggerQueryNow"
           />
         </div>
         <button
-          class="px-4 py-2 bg-green-600 text-white rounded-md hover:opacity-90 disabled:opacity-50"
+          class="rounded-md bg-green-600 px-4 py-2 text-white hover:opacity-90 disabled:opacity-50"
           :disabled="!canStartDownload"
           @click="handleStartDownload"
-        >下载</button>
+        >
+          下载
+        </button>
         <button
-          class="px-4 py-2 bg-gray-700 text-white rounded-md hover:opacity-90 disabled:opacity-50"
+          class="rounded-md bg-gray-700 px-4 py-2 text-white hover:opacity-90 disabled:opacity-50"
           :disabled="!downloading"
           @click="handleStop"
-        >停止</button>
+        >
+          停止
+        </button>
       </div>
 
       <!-- 动态类型选择 -->
-      <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-        <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">获取动态类型（不选则全部获取）</div>
+      <div class="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+        <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+          获取动态类型（不选则全部获取）
+        </div>
         <div class="flex flex-wrap gap-2">
-          <label v-for="dt in dynamicTypeOptions" :key="dt.value" class="flex items-center space-x-1 cursor-pointer">
-            <input type="checkbox" v-model="selectedDynamicTypes" :value="dt.value"
-              class="w-3.5 h-3.5 text-green-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500"
-              :disabled="downloading" />
+          <label
+            v-for="dt in dynamicTypeOptions"
+            :key="dt.value"
+            class="flex cursor-pointer items-center space-x-1"
+          >
+            <input
+              v-model="selectedDynamicTypes"
+              type="checkbox"
+              :value="dt.value"
+              class="h-3.5 w-3.5 rounded border-gray-300 bg-gray-100 text-green-600 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700"
+              :disabled="downloading"
+            />
             <span class="text-xs text-gray-700 dark:text-gray-300">{{ dt.label }}</span>
           </label>
         </div>
@@ -38,40 +52,77 @@
     </div>
 
     <!-- 用户信息卡片 -->
-    <div v-if="hostInfo" class="glass-card p-4 flex items-center space-x-4">
-      <img :src="hostFaceUrl" alt="face" class="w-14 h-14 rounded-full object-cover border" />
-      <div class="flex-1 min-w-0">
-        <div class="text-base font-medium truncate">{{ hostInfo.up_name || `UID ${hostInfo.host_mid}` }}</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">动态数：{{ hostInfo.item_count }} · 核心数：{{ hostInfo.core_count }}</div>
-        <div class="text-xs text-gray-400 dark:text-gray-500">最近发布时间：{{ formatTs(hostInfo.last_publish_ts) }} · 最近抓取：{{ formatTs(hostInfo.last_fetch_time) }}</div>
+    <div v-if="hostInfo" class="glass-card flex items-center space-x-4 p-4">
+      <img :src="hostFaceUrl" alt="face" class="h-14 w-14 rounded-full border object-cover" />
+      <div class="min-w-0 flex-1">
+        <div class="truncate text-base font-medium">
+          {{ hostInfo.up_name || `UID ${hostInfo.host_mid}` }}
+        </div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">
+          动态数：{{ hostInfo.item_count }} · 核心数：{{ hostInfo.core_count }}
+        </div>
+        <div class="text-xs text-gray-400 dark:text-gray-500">
+          最近发布时间：{{ formatTs(hostInfo.last_publish_ts) }} · 最近抓取：{{
+            formatTs(hostInfo.last_fetch_time)
+          }}
+        </div>
       </div>
       <button
-        class="px-3 py-1.5 bg-green-600 text-white rounded-md hover:opacity-90 disabled:opacity-50"
+        class="rounded-md bg-green-600 px-3 py-1.5 text-white hover:opacity-90 disabled:opacity-50"
         :disabled="!canStartDownload"
         @click="handleStartDownload"
-      >下载</button>
+      >
+        下载
+      </button>
       <button
-        class="ml-2 px-3 py-1.5 bg-red-600 text-white rounded-md hover:opacity-90 disabled:opacity-50"
+        class="ml-2 rounded-md bg-red-600 px-3 py-1.5 text-white hover:opacity-90 disabled:opacity-50"
         :disabled="!hostMid || downloading || deleting"
         @click="handleDeleteHost"
-      >删除</button>
+      >
+        删除
+      </button>
     </div>
 
     <!-- 已抓取的UP列表 -->
     <div class="glass-card p-4">
-      <div class="flex items-center justify-between mb-3">
+      <div class="mb-3 flex items-center justify-between">
         <div class="text-sm font-medium">已抓取的UP</div>
-        <button class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" @click="loadHosts">刷新</button>
+        <button
+          class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          @click="loadHosts"
+        >
+          刷新
+        </button>
       </div>
       <div v-if="hostsLoading" class="text-xs text-gray-400">加载中...</div>
       <div v-else>
-        <div v-if="hosts.length" class="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-          <div v-for="h in hosts" :key="h.host_mid" class="group border rounded-md p-2 flex items-center space-x-2 hover:border-accent cursor-pointer dark:border-gray-700"
-               @click="selectHost(h.host_mid)">
-            <img :src="h.face_path ? (h.face_path.startsWith('http') ? normalizeImageUrl(h.face_path) : toStaticUrl(h.face_path)) : ''" class="w-9 h-9 rounded-full object-cover border" alt="face" loading="lazy" />
+        <div
+          v-if="hosts.length"
+          class="grid grid-cols-1 gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"
+        >
+          <div
+            v-for="h in hosts"
+            :key="h.host_mid"
+            class="group flex cursor-pointer items-center space-x-2 rounded-md border p-2 hover:border-accent dark:border-gray-700"
+            @click="selectHost(h.host_mid)"
+          >
+            <img
+              :src="
+                h.face_path
+                  ? h.face_path.startsWith('http')
+                    ? normalizeImageUrl(h.face_path)
+                    : toStaticUrl(h.face_path)
+                  : ''
+              "
+              class="h-9 w-9 rounded-full border object-cover"
+              alt="face"
+              loading="lazy"
+            />
             <div class="min-w-0 flex-1">
-              <div class="text-xs font-medium truncate">{{ h.up_name || h.host_mid }}</div>
-              <div class="text-[0.6875rem] text-gray-500 truncate">动态：{{ h.item_count }} · 抓取：{{ formatTs(h.last_fetch_time) }}</div>
+              <div class="truncate text-xs font-medium">{{ h.up_name || h.host_mid }}</div>
+              <div class="truncate text-[0.6875rem] text-gray-500">
+                动态：{{ h.item_count }} · 抓取：{{ formatTs(h.last_fetch_time) }}
+              </div>
             </div>
           </div>
         </div>
@@ -83,11 +134,16 @@
     <div v-if="downloading || logs.length" class="glass-card p-4">
       <div class="flex items-center justify-between">
         <div class="text-sm font-medium">实时日志</div>
-        <button class="text-xs text-gray-500 hover:text-gray-700" @click="logs=[]">清空</button>
+        <button class="text-xs text-gray-500 hover:text-gray-700" @click="logs = []">清空</button>
       </div>
-      <div ref="logsContainer" class="mt-2 h-40 overflow-auto bg-gray-50 dark:bg-gray-900 border dark:border-gray-700 rounded p-2 text-xs whitespace-pre-wrap">
+      <div
+        ref="logsContainer"
+        class="mt-2 h-40 overflow-auto rounded border bg-gray-50 p-2 text-xs whitespace-pre-wrap dark:border-gray-700 dark:bg-gray-900"
+      >
         <template v-if="logs.length">
-          <div v-for="(line, idx) in logs" :key="idx" class="text-gray-700 dark:text-gray-300">{{ line }}</div>
+          <div v-for="(line, idx) in logs" :key="idx" class="text-gray-700 dark:text-gray-300">
+            {{ line }}
+          </div>
         </template>
         <div v-else class="text-gray-400 dark:text-gray-500">暂无日志</div>
       </div>
@@ -95,31 +151,43 @@
 
     <!-- 已下载动态（数据库读取） -->
     <div v-if="hostMid && items.length" class="glass-card p-4">
-      <div class="flex items-center justify-between mb-3">
+      <div class="mb-3 flex items-center justify-between">
         <div class="text-sm font-medium">已下载动态 ({{ items.length }}/{{ total }})</div>
         <div class="flex items-center space-x-2">
           <button
             v-if="!noMore"
-            class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+            class="rounded bg-gray-100 px-2 py-1 text-xs hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
             @click="loadAll"
-          >显示全部</button>
-          <label class="flex items-center space-x-1 cursor-pointer">
-            <input type="checkbox" v-model="selectAll" @change="toggleSelectAll"
-              class="w-3.5 h-3.5 text-red-600 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded" />
+          >
+            显示全部
+          </button>
+          <label class="flex cursor-pointer items-center space-x-1">
+            <input
+              v-model="selectAll"
+              type="checkbox"
+              class="h-3.5 w-3.5 rounded border-gray-300 bg-gray-100 text-red-600 dark:bg-gray-700"
+              @change="toggleSelectAll"
+            />
             <span class="text-xs text-gray-600 dark:text-gray-400">全选</span>
           </label>
           <button
             v-if="selectedIds.length > 0"
-            class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+            class="rounded bg-red-500 px-2 py-1 text-xs text-white hover:bg-red-600"
             @click="batchDelete"
-          >删除选中 ({{ selectedIds.length }})</button>
+          >
+            删除选中 ({{ selectedIds.length }})
+          </button>
         </div>
       </div>
       <div class="space-y-3">
         <div v-for="it in items" :key="it.id_str" class="flex items-start">
-          <input type="checkbox" v-model="selectedIds" :value="it.id_str"
-            class="mt-3 mr-2 w-4 h-4 text-red-600 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded cursor-pointer" />
-          <div class="flex-1 min-w-0">
+          <input
+            v-model="selectedIds"
+            type="checkbox"
+            :value="it.id_str"
+            class="mt-3 mr-2 h-4 w-4 cursor-pointer rounded border-gray-300 bg-gray-100 text-red-600 dark:bg-gray-700"
+          />
+          <div class="min-w-0 flex-1">
             <component
               :is="isVideoDynamic(it) ? DynamicCardVideo : DynamicCardNormal"
               :item="it"
@@ -131,8 +199,12 @@
       </div>
       <div v-if="loadingAll" class="mt-3 text-center text-xs text-gray-500">加载中，请稍候...</div>
       <div class="mt-3 flex justify-center">
-        <button class="px-3 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50" :disabled="loadingMore || noMore" @click="loadMore">
-          {{ noMore ? '没有更多了' : (loadingMore ? '加载中...' : '加载更多') }}
+        <button
+          class="rounded border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          :disabled="loadingMore || noMore"
+          @click="loadMore"
+        >
+          {{ noMore ? '没有更多了' : loadingMore ? '加载中...' : '加载更多' }}
         </button>
       </div>
     </div>
@@ -140,13 +212,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted, watch, nextTick } from 'vue'
-import { showDialog } from 'vant'
-import 'vant/es/dialog/style'
-import { toStaticUrl, normalizeImageUrl } from '~/utils/imageUrl'
-import DynamicCardVideo from '~/components/dynamic/DynamicCardVideo'
-import DynamicCardNormal from '~/components/dynamic/DynamicCardNormal'
-import SimpleSearchBar from '~/components/SimpleSearchBar'
+import { ref, computed, onUnmounted, watch, nextTick } from 'vue';
+import { showDialog } from 'vant';
+import 'vant/es/dialog/style';
+import { toStaticUrl, normalizeImageUrl } from '~/utils/imageUrl';
+import DynamicCardVideo from '~/components/dynamic/DynamicCardVideo';
+import DynamicCardNormal from '~/components/dynamic/DynamicCardNormal';
+import SimpleSearchBar from '~/components/SimpleSearchBar';
 import {
   getDynamicDbHosts,
   getDynamicDbSpace,
@@ -156,11 +228,11 @@ import {
   stopDynamicAutoFetch,
   deleteDynamicSpace,
   deleteDynamicItem
-} from '~/utils/api'
+} from '~/utils/api';
 
 // 输入 mid
-const inputMid = ref('')
-const hostMid = ref('')
+const inputMid = ref('');
+const hostMid = ref('');
 
 // 动态类型选项
 const dynamicTypeOptions = [
@@ -169,74 +241,80 @@ const dynamicTypeOptions = [
   { value: 'DYNAMIC_TYPE_OPUS', label: '文章' },
   { value: 'DYNAMIC_TYPE_FORWARD', label: '转发' },
   { value: 'DYNAMIC_TYPE_NONE', label: '纯文本' }
-]
-const selectedDynamicTypes = ref([])
+];
+const selectedDynamicTypes = ref([]);
 
 // 主机信息与头像
-const hostInfo = ref(null)
+const hostInfo = ref(null);
 const hostFaceUrl = computed(() => {
-  const face = hostInfo.value?.face_path
-  if (!face) return ''
+  const face = hostInfo.value?.face_path;
+  if (!face) return '';
   if (face.startsWith('http://') || face.startsWith('https://')) {
-    return normalizeImageUrl(face)
+    return normalizeImageUrl(face);
   }
-  return toStaticUrl(face)
-})
+  return toStaticUrl(face);
+});
 
 // UP 列表
-const hosts = ref([])
-const hostsLoading = ref(false)
+const hosts = ref([]);
+const hostsLoading = ref(false);
 
 // 列表 & 分页
-const items = ref([])
-const limit = ref(20)
-const offset = ref(0)
-const total = ref(0)
-const loadingMore = ref(false)
-const loadingAll = ref(false)
-const noMore = ref(false)
+const items = ref([]);
+const limit = ref(20);
+const offset = ref(0);
+const total = ref(0);
+const loadingMore = ref(false);
+const loadingAll = ref(false);
+const noMore = ref(false);
 
 // 多选删除
-const selectedIds = ref([])
-const selectAll = ref(false)
+const selectedIds = ref([]);
+const selectAll = ref(false);
 
 // 下载状态与 SSE
-const downloading = ref(false)
-const deleting = ref(false)
-let sse = null
-const logs = ref([])
-let queryTimer = null
-const logsContainer = ref(null)
+const downloading = ref(false);
+const deleting = ref(false);
+let sse = null;
+const logs = ref([]);
+let queryTimer = null;
+const logsContainer = ref(null);
 
-const canStartDownload = computed(() => !!hostMid.value && !downloading.value)
+const canStartDownload = computed(() => !!hostMid.value && !downloading.value);
 
 const formatTs = (ts) => {
-  if (!ts) return '-'
+  if (!ts) return '-';
   try {
-    const d = new Date(ts * 1000)
-    return [d.getFullYear(), d.getMonth() + 1, d.getDate()].join('-') + ' ' + [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, '0')).join(':')
+    const d = new Date(ts * 1000);
+    return (
+      [d.getFullYear(), d.getMonth() + 1, d.getDate()].join('-') +
+      ' ' +
+      [d.getHours(), d.getMinutes(), d.getSeconds()]
+        .map((n) => String(n).padStart(2, '0'))
+        .join(':')
+    );
   } catch {
-    return String(ts)
+    return String(ts);
   }
-}
+};
 
 // 从 hosts 里尝试读取基本信息（face/up_name），如果没有则从B站API获取
 const fetchHostInfo = async (mid) => {
   // 先从数据库获取
-  const res = await getDynamicDbHosts(200, 0)
-  const list = res?.data?.data || []
-  const found = list.find(x => String(x.host_mid) === String(mid))
+  const res = await getDynamicDbHosts(200, 0);
+  const list = res?.data?.data || [];
+  const found = list.find((x) => String(x.host_mid) === String(mid));
 
   if (found && found.face_path) {
-    hostInfo.value = found
-    return
+    hostInfo.value = found;
+    return;
   }
 
   // 数据库没有或头像为空，从B站API获取用户信息
   try {
-    const cardRes = await getDynamicUserCard(mid)
+    const cardRes = await getDynamicUserCard(mid);
     if (cardRes?.data?.success && cardRes.data.data) {
-      const card = cardRes.data.data
+      const card = cardRes.data.data;
       hostInfo.value = {
         host_mid: String(mid),
         up_name: card.name || found?.up_name || '',
@@ -245,167 +323,175 @@ const fetchHostInfo = async (mid) => {
         core_count: found?.core_count || 0,
         last_publish_ts: found?.last_publish_ts || 0,
         last_fetch_time: found?.last_fetch_time || 0
-      }
+      };
     } else {
-      hostInfo.value = found || { host_mid: String(mid) }
+      hostInfo.value = found || { host_mid: String(mid) };
     }
   } catch {
-    hostInfo.value = found || { host_mid: String(mid) }
+    hostInfo.value = found || { host_mid: String(mid) };
   }
-}
+};
 
 const loadHosts = async () => {
   try {
-    hostsLoading.value = true
-    const res = await getDynamicDbHosts(50, 0)
-    let list = res?.data?.data || []
+    hostsLoading.value = true;
+    const res = await getDynamicDbHosts(50, 0);
+    let list = res?.data?.data || [];
 
     // 对于没有头像的UP，从动态数据中获取作者头像
-    const hostsToFetch = list.filter(h => !h.face_path)
+    const hostsToFetch = list.filter((h) => !h.face_path);
     for (const h of hostsToFetch.slice(0, 10)) {
       try {
-        const spaceRes = await getDynamicDbSpace(h.host_mid, 1, 0)
-        const items = spaceRes?.data?.items || []
+        const spaceRes = await getDynamicDbSpace(h.host_mid, 1, 0);
+        const items = spaceRes?.data?.items || [];
         if (items.length > 0 && items[0].author_face) {
-          h.face_path = items[0].author_face
+          h.face_path = items[0].author_face;
         }
-      } catch {}
+      } catch {
+        // 单个 UP 主头像获取失败不影响其他项，继续循环
+      }
     }
 
-    hosts.value = list
-  } catch (e) {
+    hosts.value = list;
+  } catch {
     // 忽略错误
   } finally {
-    hostsLoading.value = false
+    hostsLoading.value = false;
   }
-}
+};
 
 const selectHost = async (mid) => {
-  inputMid.value = String(mid)
-  await triggerQueryNow()
-}
+  inputMid.value = String(mid);
+  await triggerQueryNow();
+};
 
 const refreshList = async (reset = true) => {
-  if (!hostMid.value) return
+  if (!hostMid.value) return;
   if (reset) {
-    items.value = []
-    offset.value = 0
-    noMore.value = false
+    items.value = [];
+    offset.value = 0;
+    noMore.value = false;
   }
-  const res = await getDynamicDbSpace(hostMid.value, limit.value, offset.value)
-  total.value = res?.data?.total || 0
-  const rows = res?.data?.items || []
-  items.value = reset ? rows : items.value.concat(rows)
-  offset.value += rows.length
-  if (!rows.length || items.value.length >= total.value) noMore.value = true
-}
+  const res = await getDynamicDbSpace(hostMid.value, limit.value, offset.value);
+  total.value = res?.data?.total || 0;
+  const rows = res?.data?.items || [];
+  items.value = reset ? rows : items.value.concat(rows);
+  offset.value += rows.length;
+  if (!rows.length || items.value.length >= total.value) noMore.value = true;
+};
 
 // 手动查询入口已移除，改为输入 1 秒后自动触发
 
 // 去重追加日志：仅当与上一条不同才加入
 const addLog = (line) => {
-  const msg = String(line || '').trim()
-  if (!msg) return
-  const last = logs.value[logs.value.length - 1]
+  const msg = String(line || '').trim();
+  if (!msg) return;
+  const last = logs.value[logs.value.length - 1];
   if (last !== msg) {
-    logs.value.push(msg)
+    logs.value.push(msg);
     // 追加后自动滚动到底部
     nextTick(() => {
       if (logsContainer.value) {
-        logsContainer.value.scrollTop = logsContainer.value.scrollHeight
+        logsContainer.value.scrollTop = logsContainer.value.scrollHeight;
       }
-    })
+    });
   }
-}
+};
 
 const openSSE = (mid) => {
-  closeSSE()
+  closeSSE();
   try {
-    sse = createDynamicProgressSSE(mid)
+    sse = createDynamicProgressSSE(mid);
     sse.onopen = () => {
-      addLog(`[SSE] connected for ${mid}`)
-    }
+      addLog(`[SSE] connected for ${mid}`);
+    };
     // 仅识别最终完成格式："抓取完成！共获取 xx 条动态(，跳过 xx 条)，总计 xx 页"
-    const FINAL_DONE_RE = /\[全部抓取完毕\]\s*抓取完成！共获取\s+\d+\s*条动态(，跳过\s+\d+\s*条)?，\s*总计\s+\d+\s*页/
+    const FINAL_DONE_RE =
+      /\[全部抓取完毕\]\s*抓取完成！共获取\s+\d+\s*条动态(，跳过\s+\d+\s*条)?，\s*总计\s+\d+\s*页/;
     // 显式监听 progress 事件名（后端事件名: progress）
     sse.addEventListener('progress', (evt) => {
       try {
-        const data = JSON.parse(evt.data)
-        const msg = data?.message || evt.data
-        addLog(String(msg))
+        const data = JSON.parse(evt.data);
+        const msg = data?.message || evt.data;
+        addLog(String(msg));
         // 仅在最终完成消息出现时自动停止
         if (FINAL_DONE_RE.test(String(msg))) {
-          if (downloading.value) handleStop()
+          if (downloading.value) handleStop();
         }
       } catch {
-        addLog(String(evt.data))
+        addLog(String(evt.data));
       }
-    })
+    });
     // 兜底接收未命名事件
     sse.onmessage = (evt) => {
       try {
-        const data = JSON.parse(evt.data)
-        const msg = data?.message || evt.data
-        addLog(String(msg))
+        const data = JSON.parse(evt.data);
+        const msg = data?.message || evt.data;
+        addLog(String(msg));
         if (FINAL_DONE_RE.test(String(msg))) {
-          if (downloading.value) handleStop()
+          if (downloading.value) handleStop();
         }
       } catch {
-        addLog(String(evt.data))
+        addLog(String(evt.data));
       }
-    }
-    sse.onerror = (evt) => {
-      addLog('[SSE] error, will close')
-      closeSSE()
-    }
+    };
+    sse.onerror = () => {
+      addLog('[SSE] error, will close');
+      closeSSE();
+    };
   } catch (e) {
-    addLog(`[SSE] create failed: ${e?.message || e}`)
+    addLog(`[SSE] create failed: ${e?.message || e}`);
   }
-}
+};
 
 const closeSSE = () => {
   if (sse) {
-    try { sse.close() } catch {}
-    sse = null
+    try {
+      sse.close();
+    } catch {
+      // 连接可能已断开，close 重复调用抛错时忽略
+    }
+    sse = null;
   }
-}
+};
 
 const handleStartDownload = async () => {
-  if (!hostMid.value || downloading.value) return
-  downloading.value = true
-  const typesMsg = selectedDynamicTypes.value.length > 0
-    ? ` types: ${selectedDynamicTypes.value.join(', ')}`
-    : ' all types'
-  logs.value.push(`Start auto fetch for MID ${hostMid.value}${typesMsg}`)
-  openSSE(hostMid.value)
+  if (!hostMid.value || downloading.value) return;
+  downloading.value = true;
+  const typesMsg =
+    selectedDynamicTypes.value.length > 0
+      ? ` types: ${selectedDynamicTypes.value.join(', ')}`
+      : ' all types';
+  logs.value.push(`Start auto fetch for MID ${hostMid.value}${typesMsg}`);
+  openSSE(hostMid.value);
   try {
     await startDynamicAutoFetch(hostMid.value, {
       need_top: false,
       save_to_db: true,
       save_media: true,
       dynamic_types: selectedDynamicTypes.value
-    })
+    });
   } catch (e) {
-    logs.value.push(`start error: ${e?.message || e}`)
+    logs.value.push(`start error: ${e?.message || e}`);
   }
-}
+};
 
 const handleStop = async () => {
-  if (!hostMid.value) return
+  if (!hostMid.value) return;
   try {
-    await stopDynamicAutoFetch(hostMid.value)
-    addLog('Stop requested')
+    await stopDynamicAutoFetch(hostMid.value);
+    addLog('Stop requested');
   } catch (e) {
-    addLog(`stop error: ${e?.message || e}`)
+    addLog(`stop error: ${e?.message || e}`);
   } finally {
-    downloading.value = false
-    closeSSE()
+    downloading.value = false;
+    closeSSE();
     // 停止后刷新一次列表
-    await refreshList(true)
+    await refreshList(true);
     // 停止后刷新头像（可能在抓取期间生成了face）
-    await fetchHostInfo(hostMid.value)
+    await fetchHostInfo(hostMid.value);
   }
-}
+};
 
 const confirmDelete = (mid, name) => {
   return new Promise((resolve) => {
@@ -415,170 +501,176 @@ const confirmDelete = (mid, name) => {
       showCancelButton: true,
       confirmButtonText: '确认删除',
       cancelButtonText: '取消'
-    }).then(() => {
-      // 第二次确认
-      showDialog({
-        title: '🚨 最终确认',
-        message: `请再次确认删除 ${name} (UID: ${mid}) 的所有数据。\n\n点击确认后将立即执行删除操作！`,
-        showCancelButton: true,
-        confirmButtonText: '立即删除',
-        cancelButtonText: '取消'
-      }).then(() => resolve(true)).catch(() => resolve(false))
-    }).catch(() => resolve(false))
-  })
-}
+    })
+      .then(() => {
+        // 第二次确认
+        showDialog({
+          title: '🚨 最终确认',
+          message: `请再次确认删除 ${name} (UID: ${mid}) 的所有数据。\n\n点击确认后将立即执行删除操作！`,
+          showCancelButton: true,
+          confirmButtonText: '立即删除',
+          cancelButtonText: '取消'
+        })
+          .then(() => resolve(true))
+          .catch(() => resolve(false));
+      })
+      .catch(() => resolve(false));
+  });
+};
 
 const handleDeleteHost = async () => {
-  if (!hostMid.value || downloading.value || deleting.value) return
-  const mid = String(hostMid.value)
-  const name = hostInfo.value?.up_name || `UID ${mid}`
-  const confirmed = await confirmDelete(mid, name)
-  if (!confirmed) return
-  await executeDelete(mid, name, true)
-}
+  if (!hostMid.value || downloading.value || deleting.value) return;
+  const mid = String(hostMid.value);
+  const name = hostInfo.value?.up_name || `UID ${mid}`;
+  const confirmed = await confirmDelete(mid, name);
+  if (!confirmed) return;
+  await executeDelete(mid, name, true);
+};
 
 const executeDelete = async (mid, name, clearSelection) => {
   try {
-    deleting.value = true
-    addLog(`Delete requested for ${name} (MID: ${mid})`)
-    await deleteDynamicSpace(mid)
-    addLog(`Delete success for ${name} (MID: ${mid})`)
-    
+    deleting.value = true;
+    addLog(`Delete requested for ${name} (MID: ${mid})`);
+    await deleteDynamicSpace(mid);
+    addLog(`Delete success for ${name} (MID: ${mid})`);
+
     if (clearSelection) {
       // 清空本地列表、选择状态并刷新
-      items.value = []
-      offset.value = 0
-      total.value = 0
-      noMore.value = true
-      hostInfo.value = null
-      hostMid.value = ''
-      inputMid.value = ''
+      items.value = [];
+      offset.value = 0;
+      total.value = 0;
+      noMore.value = true;
+      hostInfo.value = null;
+      hostMid.value = '';
+      inputMid.value = '';
     }
-    
-    await loadHosts()
+
+    await loadHosts();
   } catch (e) {
-    const errorMsg = e?.message || e
-    addLog(`delete error: ${errorMsg}`)
+    const errorMsg = e?.message || e;
+    addLog(`delete error: ${errorMsg}`);
     showDialog({
       title: '删除失败',
       message: `删除 ${name} 失败：\n${errorMsg}`,
       confirmButtonText: '确定'
-    })
+    });
   } finally {
-    deleting.value = false
+    deleting.value = false;
   }
-}
+};
 
 const isVideoDynamic = (it) => {
   // 有 bvid 即视为视频动态；或 type 包含 VIDEO
-  if (it?.bvid) return true
-  const t = String(it?.type || '')
-  return t.includes('VIDEO') || t.includes('AV')
-}
+  if (it?.bvid) return true;
+  const t = String(it?.type || '');
+  return t.includes('VIDEO') || t.includes('AV');
+};
 
 const handleDynamicDeleted = (idStr) => {
   // 从列表中移除已删除的动态
-  items.value = items.value.filter(it => it.id_str !== idStr)
-  selectedIds.value = selectedIds.value.filter(id => id !== idStr)
-  total.value = Math.max(0, total.value - 1)
-  addLog(`已删除动态 ${idStr}`)
-}
+  items.value = items.value.filter((it) => it.id_str !== idStr);
+  selectedIds.value = selectedIds.value.filter((id) => id !== idStr);
+  total.value = Math.max(0, total.value - 1);
+  addLog(`已删除动态 ${idStr}`);
+};
 
 const loadMore = async () => {
-  if (loadingMore.value || noMore.value) return
-  loadingMore.value = true
+  if (loadingMore.value || noMore.value) return;
+  loadingMore.value = true;
   try {
-    await refreshList(false)
+    await refreshList(false);
   } finally {
-    loadingMore.value = false
+    loadingMore.value = false;
   }
-}
+};
 
 const loadAll = async () => {
-  if (loadingAll.value || noMore.value) return
-  loadingAll.value = true
+  if (loadingAll.value || noMore.value) return;
+  loadingAll.value = true;
   try {
     while (!noMore.value) {
-      await refreshList(false)
+      await refreshList(false);
       // 防止请求过快
-      await new Promise(r => setTimeout(r, 100))
+      await new Promise((r) => setTimeout(r, 100));
     }
   } finally {
-    loadingAll.value = false
+    loadingAll.value = false;
   }
-}
+};
 
 const toggleSelectAll = () => {
   if (selectAll.value) {
-    selectedIds.value = items.value.map(it => it.id_str)
+    selectedIds.value = items.value.map((it) => it.id_str);
   } else {
-    selectedIds.value = []
+    selectedIds.value = [];
   }
-}
+};
 
 const batchDelete = async () => {
-  if (selectedIds.value.length === 0) return
-  if (!confirm(`确定要删除选中的 ${selectedIds.value.length} 条动态吗？`)) return
+  if (selectedIds.value.length === 0) return;
+  if (!confirm(`确定要删除选中的 ${selectedIds.value.length} 条动态吗？`)) return;
 
-  addLog(`开始批量删除 ${selectedIds.value.length} 条动态...`)
-  let deletedCount = 0
-  let failedCount = 0
+  addLog(`开始批量删除 ${selectedIds.value.length} 条动态...`);
+  let deletedCount = 0;
+  let failedCount = 0;
 
   for (const idStr of selectedIds.value) {
     try {
-      await deleteDynamicItem(idStr)
-      deletedCount++
-    } catch (e) {
-      failedCount++
+      await deleteDynamicItem(idStr);
+      deletedCount++;
+    } catch {
+      failedCount++;
     }
   }
 
   // 从列表中移除已删除的动态
-  const deletedSet = new Set(selectedIds.value)
-  items.value = items.value.filter(it => !deletedSet.has(it.id_str))
-  total.value = Math.max(0, total.value - deletedCount)
-  selectedIds.value = []
-  selectAll.value = false
+  const deletedSet = new Set(selectedIds.value);
+  items.value = items.value.filter((it) => !deletedSet.has(it.id_str));
+  total.value = Math.max(0, total.value - deletedCount);
+  selectedIds.value = [];
+  selectAll.value = false;
 
-  addLog(`批量删除完成：成功 ${deletedCount} 条${failedCount > 0 ? `，失败 ${failedCount} 条` : ''}`)
-}
+  addLog(
+    `批量删除完成：成功 ${deletedCount} 条${failedCount > 0 ? `，失败 ${failedCount} 条` : ''}`
+  );
+};
 
 onUnmounted(() => {
-  closeSSE()
-  if (queryTimer) clearTimeout(queryTimer)
-})
+  closeSSE();
+  if (queryTimer) clearTimeout(queryTimer);
+});
 
 // 监听输入，1秒后自动查询
-watch(() => inputMid.value, (val) => {
-  const mid = String(val || '').trim()
-  if (!mid) return
-  if (queryTimer) clearTimeout(queryTimer)
-  queryTimer = setTimeout(async () => {
-    if (hostMid.value !== mid) {
-      hostMid.value = mid
-      await fetchHostInfo(mid)
-      await refreshList(true)
-    }
-  }, 1000)
-})
+watch(
+  () => inputMid.value,
+  (val) => {
+    const mid = String(val || '').trim();
+    if (!mid) return;
+    if (queryTimer) clearTimeout(queryTimer);
+    queryTimer = setTimeout(async () => {
+      if (hostMid.value !== mid) {
+        hostMid.value = mid;
+        await fetchHostInfo(mid);
+        await refreshList(true);
+      }
+    }, 1000);
+  }
+);
 
 // 立即触发查询（供按回车使用）
 const triggerQueryNow = async () => {
-  const mid = String(inputMid.value || '').trim()
-  if (!mid) return
-  if (queryTimer) clearTimeout(queryTimer)
+  const mid = String(inputMid.value || '').trim();
+  if (!mid) return;
+  if (queryTimer) clearTimeout(queryTimer);
   if (hostMid.value !== mid) {
-    hostMid.value = mid
-    await fetchHostInfo(mid)
-    await refreshList(true)
+    hostMid.value = mid;
+    await fetchHostInfo(mid);
+    await refreshList(true);
   }
-}
+};
 
 // 初始化加载UP列表
-loadHosts()
+loadHosts();
 </script>
 
-<style scoped>
-</style>
-
-
+<style scoped></style>

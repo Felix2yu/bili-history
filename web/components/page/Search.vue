@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- 搜索框和总数显示容器 -->
-    <div class="sticky top-0 bg-white dark:bg-gray-900 lg:pt-4 z-50">
+    <div class="sticky top-0 z-50 bg-white lg:pt-4 dark:bg-gray-900">
       <div class="bg-white dark:bg-gray-900">
         <div class="mx-auto max-w-4xl">
           <!-- 使用SearchBar组件 -->
@@ -12,7 +12,7 @@
           />
 
           <!-- 显示总条数，和输入框左端对齐 -->
-          <p class="p-1.5 text-lg text-gray-700 dark:text-gray-300 lm:text-sm">
+          <p class="p-1.5 text-lg text-gray-700 lm:text-sm dark:text-gray-300">
             共 <span class="text-accent">{{ totalResults }}</span> 条数据和
             <span class="text-accent">{{ keyword }}</span> 相关
           </p>
@@ -37,7 +37,7 @@
       </div>
 
       <!-- 分页功能 -->
-      <div class="mb-5 mt-8">
+      <div class="mt-8 mb-5">
         <Pagination
           v-model:current-page="page"
           :total-pages="totalPages"
@@ -50,119 +50,122 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { searchBiliHistory2024, batchGetRemarks } from '~/utils/api'
-import SearchBar from '../SearchBar.vue'
-import VideoRecord from '../VideoRecord.vue'
-import Pagination from '../Pagination.vue'
-import { normalizeImageUrl } from '~/utils/imageUrl.js'
+import { onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { searchBiliHistory2024, batchGetRemarks } from '~/utils/api';
+import SearchBar from '../SearchBar.vue';
+import VideoRecord from '../VideoRecord.vue';
+import Pagination from '../Pagination.vue';
 
 // 获取路由参数
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
 // 状态变量
-const records = ref([])
-const page = ref(1)
-const size = ref(30)
-const totalPages = ref(0)
-const totalResults = ref(0)
-const remarkData = ref({}) // 存储备注数据
+const records = ref([]);
+const page = ref(1);
+const size = ref(30);
+const totalPages = ref(0);
+const totalResults = ref(0);
+const remarkData = ref({}); // 存储备注数据
 
 // 搜索相关变量
-const keyword = ref('')  // 初始化为空字符串
-const searchType = ref('all')  // 默认为全部搜索
+const keyword = ref(''); // 初始化为空字符串
+const searchType = ref('all'); // 默认为全部搜索
 
 // 处理搜索
 const handleSearch = ({ keyword: searchKeyword, type }) => {
-  console.log('Search - 收到搜索事件:', { searchKeyword, type })
+  console.log('Search - 收到搜索事件:', { searchKeyword, type });
   if (searchKeyword.trim()) {
-    keyword.value = searchKeyword.trim()
-    searchType.value = type
-    page.value = 1
-    router.push(`/search/${encodeURIComponent(searchKeyword.trim())}?type=${type}`)
-    fetchSearchResults()
+    keyword.value = searchKeyword.trim();
+    searchType.value = type;
+    page.value = 1;
+    router.push(`/search/${encodeURIComponent(searchKeyword.trim())}?type=${type}`);
+    fetchSearchResults();
   }
-}
+};
 
 // 处理页码变化
 const handlePageChange = async (newPage) => {
   if (newPage !== page.value) {
-    page.value = newPage
+    page.value = newPage;
     // 清空当前记录，避免显示旧数据
-    records.value = []
+    records.value = [];
     // 更新路由
     if (newPage === 1) {
-      await router.push(`/search/${encodeURIComponent(keyword.value)}?type=${searchType.value}`)
+      await router.push(`/search/${encodeURIComponent(keyword.value)}?type=${searchType.value}`);
     } else {
-      await router.push(`/search/${encodeURIComponent(keyword.value)}/page/${newPage}?type=${searchType.value}`)
+      await router.push(
+        `/search/${encodeURIComponent(keyword.value)}/page/${newPage}?type=${searchType.value}`
+      );
     }
-    await fetchSearchResults()
+    await fetchSearchResults();
   }
-}
+};
 
 // 获取搜索结果
 const fetchSearchResults = async () => {
   try {
     // 从localStorage获取是否使用本地图片源的设置（仅客户端）
-    const useLocalImages = import.meta.client ? localStorage.getItem('useLocalImages') === 'true' : false
+    const useLocalImages = import.meta.client
+      ? localStorage.getItem('useLocalImages') === 'true'
+      : false;
 
     const response = await searchBiliHistory2024(
-      keyword.value,           // search
-      searchType.value,        // searchType
-      page.value,             // page
-      size.value,             // size
-      useLocalImages          // 使用本地图片源
-    )
+      keyword.value, // search
+      searchType.value, // searchType
+      page.value, // page
+      size.value, // size
+      useLocalImages // 使用本地图片源
+    );
 
     if (response.data.status === 'success') {
-      records.value = response.data.data.records
-      totalPages.value = Math.ceil(response.data.data.total / size.value)
-      totalResults.value = response.data.data.total
+      records.value = response.data.data.records;
+      totalPages.value = Math.ceil(response.data.data.total / size.value);
+      totalResults.value = response.data.data.total;
 
       // 批量获取备注
       if (records.value.length > 0) {
-        const batchRecords = records.value.map(record => ({
+        const batchRecords = records.value.map((record) => ({
           bvid: record.bvid,
           view_at: record.view_at
-        }))
-        const remarksResponse = await batchGetRemarks(batchRecords)
+        }));
+        const remarksResponse = await batchGetRemarks(batchRecords);
         if (remarksResponse.data.status === 'success') {
-          remarkData.value = remarksResponse.data.data
+          remarkData.value = remarksResponse.data.data;
         }
       }
     }
   } catch (error) {
-    console.error('搜索失败:', error)
+    console.error('搜索失败:', error);
   }
-}
+};
 
 // 从路由参数初始化搜索状态
 const initialKeyword = Array.isArray(route.params.keyword)
   ? route.params.keyword[0]
-  : String(route.params.keyword || '')
-const initialPage = Number(route.params.pageNumber || 1)
+  : String(route.params.keyword || '');
+const initialPage = Number(route.params.pageNumber || 1);
 
 // 初始化组件状态
-keyword.value = initialKeyword
-page.value = initialPage
+keyword.value = initialKeyword;
+page.value = initialPage;
 
 // 初始加载数据（如果存在关键词）
 if (initialKeyword) {
-  fetchSearchResults()
+  fetchSearchResults();
 }
 
 // 处理备注更新
 const handleRemarkUpdate = (data) => {
-  const key = `${data.bvid}_${data.view_at}`
+  const key = `${data.bvid}_${data.view_at}`;
   remarkData.value[key] = {
     bvid: data.bvid,
     view_at: data.view_at,
     remark: data.remark,
     remark_time: data.remark_time
-  }
-}
+  };
+};
 
 // 监听 keyword 变化
 watch(
@@ -170,47 +173,45 @@ watch(
   (newKeyword) => {
     if (newKeyword !== keyword.value) {
       // 确保 keyword 是字符串类型
-      keyword.value = Array.isArray(newKeyword) ? newKeyword[0] : String(newKeyword)
-      page.value = 1
-      records.value = [] // 清空当前记录
-      fetchSearchResults()
+      keyword.value = Array.isArray(newKeyword) ? newKeyword[0] : String(newKeyword);
+      page.value = 1;
+      records.value = []; // 清空当前记录
+      fetchSearchResults();
     }
   }
-)
+);
 
 // 监听页码变化
 watch(
   () => route.params.pageNumber,
   async (newPage) => {
-    const pageNum = Number(newPage) || 1
+    const pageNum = Number(newPage) || 1;
     if (pageNum !== page.value) {
-      page.value = pageNum
-      records.value = [] // 清空当前记录
-      await fetchSearchResults()
+      page.value = pageNum;
+      records.value = []; // 清空当前记录
+      await fetchSearchResults();
     }
   }
-)
+);
 
 // 监听搜索类型变化
-watch(
-  searchType,
-  (newType) => {
-    console.log('Search - 搜索类型变化:', newType)
-    if (keyword.value) {  // 只有在有搜索关键词时才重新搜索
-      records.value = [] // 清空当前记录
-      router.push(`/search/${encodeURIComponent(keyword.value)}?type=${newType}`)
-      fetchSearchResults()
-    }
+watch(searchType, (newType) => {
+  console.log('Search - 搜索类型变化:', newType);
+  if (keyword.value) {
+    // 只有在有搜索关键词时才重新搜索
+    records.value = []; // 清空当前记录
+    router.push(`/search/${encodeURIComponent(keyword.value)}?type=${newType}`);
+    fetchSearchResults();
   }
-)
+});
 
 // 组件挂载时更新搜索类型
 onMounted(() => {
-  const typeFromQuery = String(route.query.type || '')
+  const typeFromQuery = String(route.query.type || '');
   if (typeFromQuery) {
-    searchType.value = typeFromQuery
+    searchType.value = typeFromQuery;
   }
-})
+});
 </script>
 
 <style scoped>

@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
+import Favorites from '~/components/page/Favorites.vue';
 definePageMeta({
-  layout: 'main',
-})
-import Favorites from '~/components/page/Favorites.vue'
+  layout: 'main'
+});
 </script>

@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
+import VideoActions from '~/components/page/VideoActions.vue';
 definePageMeta({
-  layout: 'main',
-})
-import VideoActions from '~/components/page/VideoActions.vue'
+  layout: 'main'
+});
 </script>

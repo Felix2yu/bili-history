@@ -3,5 +3,5 @@
  * @param {string} url - 要打开的URL
  */
 export function openInBrowser(url) {
-  window.open(url, '_blank')
+  window.open(url, '_blank');
 }

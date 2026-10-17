@@ -1,19 +1,19 @@
 <!-- 月度趋势页组件 -->
 <template>
-  <div class="space-y-6" v-if="viewingData">
-    <h3 class="text-4xl font-bold text-center text-accent">
-      月度观看趋势
-    </h3>
+  <div v-if="viewingData" class="space-y-6">
+    <h3 class="text-center text-4xl font-bold text-accent">月度观看趋势</h3>
 
-    <div v-if="viewingData?.insights?.monthly_pattern" 
-      class="text-lg text-center text-gray-600 dark:text-gray-300 mb-8"
+    <div
+      v-if="viewingData?.insights?.monthly_pattern"
+      class="mb-8 text-center text-lg text-gray-600 dark:text-gray-300"
       v-html="formatInsightText(viewingData.insights.monthly_pattern)"
-    >
-    </div>
+    />
 
     <!-- 月度趋势图表 -->
-    <div class="bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-gray-300/50 dark:border-gray-500/50">
-      <h4 class="text-xl font-bold text-accent mb-4">月度趋势</h4>
+    <div
+      class="rounded-xl border border-gray-300/50 bg-white/50 p-6 backdrop-blur-sm dark:border-gray-500/50 dark:bg-white/5"
+    >
+      <h4 class="mb-4 text-xl font-bold text-accent">月度趋势</h4>
       <div class="h-[220px]">
         <v-chart ref="chartRef" class="h-full w-full" :option="monthlyOption" autoresize />
       </div>
@@ -22,42 +22,45 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import gsap from 'gsap'
-import VChart from 'vue-echarts'
-import * as echarts from 'echarts/core'
-import { useDarkMode } from '~/stores/darkMode'
-import { getChartColor } from '~/utils/chartColors'
+import { ref, computed, onMounted } from 'vue';
+import gsap from 'gsap';
+import VChart from 'vue-echarts';
+import { useDarkMode } from '~/stores/darkMode';
+import { getChartColor } from '~/utils/chartColors';
+import { escapeHtml } from '~/utils/escapeHtml';
 
 const props = defineProps({
   viewingData: {
     type: Object,
     required: true
   }
-})
+});
 
-const chartRef = ref(null)
+const chartRef = ref(null);
 
 const monthlyOption = computed(() => {
-  const { isDarkMode } = useDarkMode()
-  const isDark = !!(isDarkMode && isDarkMode.value)
-  const axisLabelColor = isDark ? '#bbbbbb' : '#999999'
-  const axisLineColor = isDark ? '#888888' : '#666666'
-  const splitLineColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.1)'
-  const tooltipBg = isDark ? 'rgba(28, 28, 28, 0.9)' : 'rgba(255, 255, 255, 0.95)'
-  const tooltipText = isDark ? '#ffffff' : '#111111'
+  const { isDarkMode } = useDarkMode();
+  const isDark = !!(isDarkMode && isDarkMode.value);
+  const axisLabelColor = isDark ? '#bbbbbb' : '#999999';
+  const axisLineColor = isDark ? '#888888' : '#666666';
+  const splitLineColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.1)';
+  const tooltipBg = isDark ? 'rgba(28, 28, 28, 0.9)' : 'rgba(255, 255, 255, 0.95)';
+  const tooltipText = isDark ? '#ffffff' : '#111111';
 
-  if (!props.viewingData?.monthly_stats) return {}
+  if (!props.viewingData?.monthly_stats) return {};
 
   // 处理数组格式的 monthly_stats
   const statsArray = Array.isArray(props.viewingData.monthly_stats)
     ? props.viewingData.monthly_stats
-    : Object.entries(props.viewingData.monthly_stats).map(([month, count]) => ({ month, total_count: count }))
+    : Object.entries(props.viewingData.monthly_stats).map(([month, count]) => ({
+        month,
+        total_count: count
+      }));
 
   const data = statsArray
     .sort((a, b) => (a.month || '').localeCompare(b.month || ''))
-    .map(item => [item.month, item.total_count || 0])
-  
+    .map((item) => [item.month, item.total_count || 0]);
+
   return {
     tooltip: {
       trigger: 'axis',
@@ -85,26 +88,28 @@ const monthlyOption = computed(() => {
       axisLabel: { color: axisLabelColor },
       splitLine: { lineStyle: { color: splitLineColor } }
     },
-    series: [{
-      data: data.map(([, count]) => count),
-      type: 'line',
-      smooth: true,
-      lineStyle: {
-        width: 2.5,
-        color: getChartColor(0)
-      },
-      areaStyle: {
-        opacity: 0.15,
-        color: getChartColor(0)
-      },
-      symbolSize: 6,
-      symbol: 'circle',
-      itemStyle: {
-        color: getChartColor(0)
+    series: [
+      {
+        data: data.map(([, count]) => count),
+        type: 'line',
+        smooth: true,
+        lineStyle: {
+          width: 2.5,
+          color: getChartColor(0)
+        },
+        areaStyle: {
+          opacity: 0.15,
+          color: getChartColor(0)
+        },
+        symbolSize: 6,
+        symbol: 'circle',
+        itemStyle: {
+          color: getChartColor(0)
+        }
       }
-    }]
-  }
-})
+    ]
+  };
+});
 
 onMounted(() => {
   if (chartRef.value) {
@@ -114,13 +119,13 @@ onMounted(() => {
       duration: 0.5,
       ease: 'power2.out',
       delay: 0.2
-    })
+    });
   }
-})
+});
 
 // 格式化洞察文本，为数字添加颜色
 const formatInsightText = (text) => {
   if (!text) return '';
-  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-accent">$1</span>')
-}
-</script> 
+  return escapeHtml(text).replace(/(\d+(\.\d+)?)/g, '<span class="text-accent">$1</span>');
+};
+</script>

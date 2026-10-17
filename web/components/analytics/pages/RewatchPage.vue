@@ -1,83 +1,128 @@
 <!-- 最爱重温页组件 -->
 <template>
-  <div class="space-y-4" v-if="viewingData">
-    <div class="max-w-7xl w-full mx-auto px-2 py-6">
+  <div v-if="viewingData" class="space-y-4">
+    <div class="mx-auto w-full max-w-7xl px-2 py-6">
       <div class="space-y-4">
-          <h3 class="text-3xl font-bold text-center text-accent">
-            最爱重温的视频
-          </h3>
+        <h3 class="text-center text-3xl font-bold text-accent">最爱重温的视频</h3>
 
-          <div v-if="viewingData?.insights?.most_watched_videos"
-            class="text-sm text-center text-gray-600 dark:text-gray-300 mb-2 px-4"
-            v-html="formatInsightText(viewingData.insights.most_watched_videos)"
+        <div
+          v-if="viewingData?.insights?.most_watched_videos"
+          class="mb-2 px-4 text-center text-sm text-gray-600 dark:text-gray-300"
+          v-html="formatInsightText(viewingData.insights.most_watched_videos)"
+        />
+
+        <!-- 没有重复观看数据的提示 -->
+        <div
+          v-if="!viewingData?.watch_counts?.most_watched_videos?.length"
+          class="mt-8 rounded-lg border border-gray-300/50 bg-white/50 py-10 text-center backdrop-blur-sm dark:border-gray-500/50 dark:bg-white/5"
+        >
+          <svg
+            class="mx-auto h-16 w-16 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-          </div>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+            />
+          </svg>
+          <p class="mt-4 text-lg font-medium text-gray-700 dark:text-gray-300">暂无重复观看记录</p>
+          <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            你在这一年中很少重复观看相同的视频
+          </p>
+          <p class="mt-1 text-sm text-gray-500">每次都在探索新内容的你，真是充满好奇心呢！</p>
+        </div>
 
-          <!-- 没有重复观看数据的提示 -->
-          <div v-if="!viewingData?.watch_counts?.most_watched_videos?.length"
-               class="mt-8 text-center py-10 bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-lg border border-gray-300/50 dark:border-gray-500/50">
-            <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-            </svg>
-            <p class="mt-4 text-lg font-medium text-gray-700 dark:text-gray-300">暂无重复观看记录</p>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">你在这一年中很少重复观看相同的视频</p>
-            <p class="mt-1 text-sm text-gray-500">每次都在探索新内容的你，真是充满好奇心呢！</p>
-          </div>
-
-          <!-- 第一名 -->
-          <div v-else-if="viewingData.watch_counts.most_watched_videos[0]"
-            class="bg-accent/15 dark:bg-accent/20 backdrop-blur-sm rounded-lg p-3 transform hover:scale-[1.01] transition-transform cursor-pointer video-item relative overflow-hidden border border-gray-300/50 dark:border-gray-500/50"
-            @click="handleVideoClick(viewingData.watch_counts.most_watched_videos[0].bvid)"
-          >
-            <div class="flex items-start space-x-4">
-              <div class="flex-1 min-w-0">
-                <div class="text-sm font-medium text-gray-800 dark:text-white hover:text-accent transition-colors line-clamp-2">
-                  {{ viewingData.watch_counts.most_watched_videos[0].title }}
-                </div>
-                <div class="mt-1.5 text-xs text-gray-600 dark:text-gray-400 flex items-center space-x-4">
-                  <span>UP主：{{ viewingData.watch_counts.most_watched_videos[0].author_name }}</span>
-                  <span>观看 {{ viewingData.watch_counts.most_watched_videos[0].watch_count }} 次</span>
-                  <span>{{ viewingData.watch_counts.most_watched_videos[0].tag_name }}</span>
-                </div>
+        <!-- 第一名 -->
+        <div
+          v-else-if="viewingData.watch_counts.most_watched_videos[0]"
+          class="video-item relative transform cursor-pointer overflow-hidden rounded-lg border border-gray-300/50 bg-accent/15 p-3 backdrop-blur-sm transition-transform hover:scale-[1.01] dark:border-gray-500/50 dark:bg-accent/20"
+          @click="handleVideoClick(viewingData.watch_counts.most_watched_videos[0].bvid)"
+        >
+          <div class="flex items-start space-x-4">
+            <div class="min-w-0 flex-1">
+              <div
+                class="line-clamp-2 text-sm font-medium text-gray-800 transition-colors hover:text-accent dark:text-white"
+              >
+                {{ viewingData.watch_counts.most_watched_videos[0].title }}
               </div>
-              <div class="flex flex-col items-center justify-center bg-white/30 dark:bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-gray-300/50 dark:border-gray-500/50">
-                <div class="text-lg font-bold text-accent rewatch-interval whitespace-nowrap">
-                  {{ Math.round(viewingData.watch_counts.most_watched_videos[0].avg_interval / 3600 / 24) }}
-                </div>
-                <div class="text-[0.625rem] text-gray-500 dark:text-gray-400 whitespace-nowrap">天/次</div>
+              <div
+                class="mt-1.5 flex items-center space-x-4 text-xs text-gray-600 dark:text-gray-400"
+              >
+                <span>UP主：{{ viewingData.watch_counts.most_watched_videos[0].author_name }}</span>
+                <span
+                  >观看 {{ viewingData.watch_counts.most_watched_videos[0].watch_count }} 次</span
+                >
+                <span>{{ viewingData.watch_counts.most_watched_videos[0].tag_name }}</span>
+              </div>
+            </div>
+            <div
+              class="flex flex-col items-center justify-center rounded-lg border border-gray-300/50 bg-white/30 px-2 py-1.5 backdrop-blur-sm dark:border-gray-500/50 dark:bg-white/10"
+            >
+              <div class="rewatch-interval text-lg font-bold whitespace-nowrap text-accent">
+                {{
+                  Math.round(
+                    viewingData.watch_counts.most_watched_videos[0].avg_interval / 3600 / 24
+                  )
+                }}
+              </div>
+              <div class="text-[0.625rem] whitespace-nowrap text-gray-500 dark:text-gray-400">
+                天/次
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- 其余视频 -->
-          <div v-if="viewingData.watch_counts.most_watched_videos?.length > 1" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div v-for="(video, index) in viewingData.watch_counts.most_watched_videos.slice(1)"
-              :key="video.bvid"
-              class="backdrop-blur-sm rounded-lg p-2.5 transform hover:scale-[1.02] transition-transform cursor-pointer video-item relative overflow-hidden border border-gray-300/50 dark:border-gray-500/50"
-              :class="{
-                'bg-amber-50/60 dark:bg-amber-900/20': index === 0,
-                'bg-yellow-50/60 dark:bg-yellow-900/20': index === 1,
-                'bg-white/50 dark:bg-white/5': index > 1
-              }"
-              @click="handleVideoClick(video.bvid)"
-            >
-              <div class="flex items-start space-x-3">
-                <div class="flex-1 min-w-0">
-                  <div class="text-xs font-medium text-gray-800 dark:text-white hover:text-accent transition-colors line-clamp-2">
-                    {{ video.title }}
-                  </div>
-                  <div class="mt-1 text-[0.625rem] text-gray-600 dark:text-gray-400 flex items-center justify-between">
-                    <span>UP主：{{ video.author_name }}</span>
-                    <span>{{ video.watch_count }}次</span>
-                  </div>
-                  <div class="text-[0.625rem] text-gray-500 dark:text-gray-400">{{ video.tag_name }}</div>
+        <!-- 其余视频 -->
+        <div
+          v-if="viewingData.watch_counts.most_watched_videos?.length > 1"
+          class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          <div
+            v-for="(video, index) in viewingData.watch_counts.most_watched_videos.slice(1)"
+            :key="video.bvid"
+            class="video-item relative transform cursor-pointer overflow-hidden rounded-lg border border-gray-300/50 p-2.5 backdrop-blur-sm transition-transform hover:scale-[1.02] dark:border-gray-500/50"
+            :class="{
+              'bg-amber-50/60 dark:bg-amber-900/20': index === 0,
+              'bg-yellow-50/60 dark:bg-yellow-900/20': index === 1,
+              'bg-white/50 dark:bg-white/5': index > 1
+            }"
+            @click="handleVideoClick(video.bvid)"
+          >
+            <div class="flex items-start space-x-3">
+              <div class="min-w-0 flex-1">
+                <div
+                  class="line-clamp-2 text-xs font-medium text-gray-800 transition-colors hover:text-accent dark:text-white"
+                >
+                  {{ video.title }}
                 </div>
-                <div class="flex flex-col items-center justify-center bg-white/30 dark:bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1 ml-1 border border-gray-300/50 dark:border-gray-500/50">
-                  <div class="text-sm font-bold text-accent rewatch-interval whitespace-nowrap">
-                    {{ Math.round(video.avg_interval / 3600 / 24) }}
-                  </div>
-                  <div class="text-[0.625rem] text-gray-500 dark:text-gray-400 whitespace-nowrap">天/次</div>
+                <div
+                  class="mt-1 flex items-center justify-between text-[0.625rem] text-gray-600 dark:text-gray-400"
+                >
+                  <span>UP主：{{ video.author_name }}</span>
+                  <span>{{ video.watch_count }}次</span>
+                </div>
+                <div class="text-[0.625rem] text-gray-500 dark:text-gray-400">
+                  {{ video.tag_name }}
+                </div>
+              </div>
+              <div
+                class="ml-1 flex flex-col items-center justify-center rounded-lg border border-gray-300/50 bg-white/30 px-2 py-1 backdrop-blur-sm dark:border-gray-500/50 dark:bg-white/10"
+              >
+                <div class="rewatch-interval text-sm font-bold whitespace-nowrap text-accent">
+                  {{ Math.round(video.avg_interval / 3600 / 24) }}
+                </div>
+                <div class="text-[0.625rem] whitespace-nowrap text-gray-500 dark:text-gray-400">
+                  天/次
                 </div>
               </div>
             </div>
@@ -85,32 +130,34 @@
         </div>
       </div>
     </div>
+  </div>
 </template>
 
 <script setup>
-import { onMounted, nextTick, watch, ref } from 'vue'
-import gsap from 'gsap'
-import { openInBrowser } from '~/utils/openUrl.js'
+import { onMounted, nextTick, watch, ref } from 'vue';
+import gsap from 'gsap';
+import { openInBrowser } from '~/utils/openUrl.js';
+import { escapeHtml } from '~/utils/escapeHtml';
 
 const props = defineProps({
   viewingData: {
     type: Object,
     required: true
   }
-})
+});
 
 // 用于存储当前视频列表的引用
-const videoList = ref([])
+const videoList = ref([]);
 
 const handleVideoClick = async (bvid) => {
-  await openInBrowser(`https://www.bilibili.com/video/${bvid}`)
-}
+  await openInBrowser(`https://www.bilibili.com/video/${bvid}`);
+};
 
 // 初始化动画
 const initAnimation = () => {
   nextTick(() => {
     if (props.viewingData?.watch_counts?.most_watched_videos?.length > 0) {
-      const videoItems = document.querySelectorAll('.video-item')
+      const videoItems = document.querySelectorAll('.video-item');
       if (videoItems.length > 0) {
         gsap.from(videoItems, {
           opacity: 0,
@@ -119,36 +166,40 @@ const initAnimation = () => {
           stagger: 0.1,
           ease: 'power2.out',
           delay: 0.2
-        })
+        });
       }
     }
-  })
-}
+  });
+};
 
 // 监听数据变化
-watch(() => props.viewingData?.watch_counts?.most_watched_videos, (newVal) => {
-  // 先清空现有数据
-  videoList.value = []
+watch(
+  () => props.viewingData?.watch_counts?.most_watched_videos,
+  (newVal) => {
+    // 先清空现有数据
+    videoList.value = [];
 
-  // 在下一个 tick 中更新数据
-  nextTick(() => {
-    if (newVal) {
-      videoList.value = newVal
-      initAnimation()
-    }
-  })
-}, { deep: true })
+    // 在下一个 tick 中更新数据
+    nextTick(() => {
+      if (newVal) {
+        videoList.value = newVal;
+        initAnimation();
+      }
+    });
+  },
+  { deep: true }
+);
 
 onMounted(() => {
-  videoList.value = props.viewingData?.watch_counts?.most_watched_videos || []
-  initAnimation()
-})
+  videoList.value = props.viewingData?.watch_counts?.most_watched_videos || [];
+  initAnimation();
+});
 
 // 格式化洞察文本，为数字添加颜色
 const formatInsightText = (text) => {
   if (!text) return '';
-  return text.replace(/(\d+(\.\d+)?)/g, '<span class="text-accent">$1</span>')
-}
+  return escapeHtml(text).replace(/(\d+(\.\d+)?)/g, '<span class="text-accent">$1</span>');
+};
 </script>
 
 <style scoped>

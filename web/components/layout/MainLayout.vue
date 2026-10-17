@@ -1,12 +1,12 @@
 <template>
   <div class="flex h-screen overflow-hidden">
     <!-- Desktop Sidebar (permanent) -->
-    <aside class="hidden md:flex glass-sidebar flex-shrink-0 flex-col h-full w-60 z-40">
+    <aside class="glass-sidebar z-40 hidden h-full w-60 flex-shrink-0 flex-col md:flex">
       <Sidebar />
     </aside>
 
     <!-- Main content area -->
-    <main class="flex-1 h-full overflow-y-auto overflow-x-hidden pb-16 md:pb-0">
+    <main class="h-full flex-1 overflow-x-hidden overflow-y-auto pb-16 md:pb-0">
       <slot />
     </main>
 
@@ -25,7 +25,7 @@
       <Transition name="slide-drawer">
         <div
           v-if="showSidebar"
-          class="fixed top-0 left-0 bottom-0 z-[60] glass-sidebar w-64 flex flex-col md:hidden"
+          class="glass-sidebar fixed top-0 bottom-0 left-0 z-[60] flex w-64 flex-col md:hidden"
         >
           <Sidebar compact @navigate="showSidebar = false" />
         </div>
@@ -34,8 +34,8 @@
 
     <!-- DataSyncManager modal -->
     <DataSyncManager
-      v-model:showModal="showDataSyncModal"
-      :initialTab="currentSyncTab"
+      v-model:show-modal="showDataSyncModal"
+      :initial-tab="currentSyncTab"
       @sync-complete="handleSyncComplete"
       @check-complete="handleCheckComplete"
     />
@@ -43,33 +43,39 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, provide } from 'vue'
-import Sidebar from '../Sidebar.vue'
-import MobileTabBar from './MobileTabBar.vue'
-import DataSyncManager from '../DataSyncManager.vue'
+import { ref, onMounted, onUnmounted, provide } from 'vue';
+import Sidebar from '../Sidebar.vue';
+import MobileTabBar from './MobileTabBar.vue';
+import DataSyncManager from '../DataSyncManager.vue';
 
-const showSidebar = ref(false)
-provide('toggleSidebar', () => { showSidebar.value = !showSidebar.value })
+const showSidebar = ref(false);
+provide('toggleSidebar', () => {
+  showSidebar.value = !showSidebar.value;
+});
 
-const showDataSyncModal = ref(false)
-const currentSyncTab = ref('integrity')
+const showDataSyncModal = ref(false);
+const currentSyncTab = ref('integrity');
 
-const handleSyncComplete = (result) => { console.log('同步完成:', result) }
-const handleCheckComplete = (result) => { console.log('完整性检查完成:', result) }
+const handleSyncComplete = (result) => {
+  console.log('同步完成:', result);
+};
+const handleCheckComplete = (result) => {
+  console.log('完整性检查完成:', result);
+};
 
 onMounted(() => {
-  window.addEventListener('open-data-sync-manager', handleOpenDataSyncManager)
-})
+  window.addEventListener('open-data-sync-manager', handleOpenDataSyncManager);
+});
 onUnmounted(() => {
-  window.removeEventListener('open-data-sync-manager', handleOpenDataSyncManager)
-})
+  window.removeEventListener('open-data-sync-manager', handleOpenDataSyncManager);
+});
 
 const handleOpenDataSyncManager = (event) => {
   if (event.detail && event.detail.tab) {
-    currentSyncTab.value = event.detail.tab
+    currentSyncTab.value = event.detail.tab;
   }
-  showDataSyncModal.value = true
-}
+  showDataSyncModal.value = true;
+};
 </script>
 
 <style scoped>

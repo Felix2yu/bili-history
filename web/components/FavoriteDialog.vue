@@ -10,54 +10,69 @@
     @confirm="handleConfirm"
     @cancel="handleCancel"
   >
-    <div class="p-5 bg-transparent">
+    <div class="bg-transparent p-5">
       <div v-if="loading" class="flex justify-center py-4">
         <div class="inline-flex items-center">
-          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <svg class="mr-3 -ml-1 h-5 w-5 animate-spin text-accent" fill="none" viewBox="0 0 24 24">
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
           <span>加载中...</span>
         </div>
       </div>
-      
-      <div v-else-if="favorites.length === 0" class="text-center py-4">
+
+      <div v-else-if="favorites.length === 0" class="py-4 text-center">
         <p class="text-gray-500 dark:text-gray-400">暂无收藏夹</p>
         <div class="mt-3">
-          <button 
-            class="px-3 py-1.5 text-sm bg-accent text-white rounded-md hover:bg-accent/90 transition-colors"
+          <button
+            class="rounded-md bg-accent px-3 py-1.5 text-sm text-white transition-colors hover:bg-accent/90"
             @click="openLoginDialog"
           >
             登录账号
           </button>
         </div>
       </div>
-      
+
       <div v-else>
         <div v-if="videoInfo" class="mb-3">
-          <p class="text-sm text-gray-700 truncate">
+          <p class="truncate text-sm text-gray-700">
             <span v-if="videoInfo.isBatch">批量收藏：{{ videoInfo.selectedCount }}个视频</span>
             <span v-else>收藏视频：{{ videoInfo.title }}</span>
           </p>
         </div>
-        
-        <div class="max-h-60 overflow-y-auto pr-2 space-y-2">
+
+        <div class="max-h-60 space-y-2 overflow-y-auto pr-2">
           <div
             v-for="folder in favorites"
             :key="folder.id"
-            class="flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="flex items-center rounded-md p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            <input 
-              type="checkbox" 
-              :id="`folder-${folder.id}`" 
-              :value="folder.id" 
+            <input
+              :id="`folder-${folder.id}`"
               v-model="selectedFolders"
-              class="w-4 h-4 text-accent border-gray-300 dark:border-gray-600 rounded focus:ring-accent"
+              type="checkbox"
+              :value="folder.id"
+              class="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent dark:border-gray-600"
             />
             <label :for="`folder-${folder.id}`" class="ml-2 flex-1 cursor-pointer">
               <div class="flex items-center">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ folder.title }}</span>
-                <span class="ml-1 text-xs text-gray-500 dark:text-gray-400">({{ folder.media_count }})</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{
+                  folder.title
+                }}</span>
+                <span class="ml-1 text-xs text-gray-500 dark:text-gray-400"
+                  >({{ folder.media_count }})</span
+                >
               </div>
             </label>
           </div>
@@ -65,21 +80,24 @@
       </div>
     </div>
   </van-dialog>
-  
+
   <!-- 登录对话框 -->
   <Teleport to="body">
-    <LoginDialog
-      v-model:show="showLoginDialog"
-      @login-success="handleLoginSuccess"
-    />
+    <LoginDialog v-model:show="showLoginDialog" @login-success="handleLoginSuccess" />
   </Teleport>
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, computed, watch, onMounted } from 'vue'
-import { getCreatedFavoriteFolders, getLocalFavoriteFolders, favoriteResource, batchFavoriteResource, localBatchFavoriteResource } from '~/utils/api'
-import { showNotify } from 'vant'
-import LoginDialog from './LoginDialog.vue'
+import { ref, defineProps, defineEmits, computed, watch, onMounted } from 'vue';
+import {
+  getCreatedFavoriteFolders,
+  getLocalFavoriteFolders,
+  favoriteResource,
+  batchFavoriteResource,
+  localBatchFavoriteResource
+} from '~/utils/api';
+import { showNotify } from 'vant';
+import LoginDialog from './LoginDialog.vue';
 
 const props = defineProps({
   modelValue: {
@@ -90,64 +108,69 @@ const props = defineProps({
     type: Object,
     default: () => ({})
   }
-})
+});
 
-const emit = defineEmits(['update:modelValue', 'favoriteDone'])
+const emit = defineEmits(['update:modelValue', 'favoriteDone']);
 
 // 对话框状态
 const visible = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val)
-})
+});
 
 // 组件数据
-const loading = ref(false)
-const favorites = ref([])
-const selectedFolders = ref([])
-const showLoginDialog = ref(false)
-const isLoggedIn = ref(false)
+const loading = ref(false);
+const favorites = ref([]);
+const selectedFolders = ref([]);
+const showLoginDialog = ref(false);
+const isLoggedIn = ref(false);
 
 // 对话框文本
-const title = computed(() => '选择收藏夹')
-const confirmText = computed(() => '确认收藏')
-const cancelText = computed(() => '取消')
+const title = computed(() => '选择收藏夹');
+const confirmText = computed(() => '确认收藏');
+const cancelText = computed(() => '取消');
 
 // 加载收藏夹列表
 const loadFavorites = async () => {
-  loading.value = true
+  loading.value = true;
   try {
     // 优先读本地
-    let response = await getLocalFavoriteFolders({ page: 1, size: 100 })
+    let response = await getLocalFavoriteFolders({ page: 1, size: 100 });
     // 本地没有数据时，从B站在线获取
-    if (!response || response.data.status !== 'success' || !response.data.data.list || response.data.data.list.length === 0) {
-      response = await getCreatedFavoriteFolders()
+    if (
+      !response ||
+      response.data.status !== 'success' ||
+      !response.data.data.list ||
+      response.data.data.list.length === 0
+    ) {
+      response = await getCreatedFavoriteFolders();
     }
     if (response.data.status === 'success') {
-      favorites.value = response.data.data.list || []
-      isLoggedIn.value = true
+      favorites.value = response.data.data.list || [];
+      isLoggedIn.value = true;
     } else {
-      isLoggedIn.value = false
-      favorites.value = []
+      isLoggedIn.value = false;
+      favorites.value = [];
     }
   } catch (error) {
-    console.error('获取收藏夹列表失败:', error)
-    showNotify({ type: 'danger', message: '获取收藏夹列表失败' })
+    console.error('获取收藏夹列表失败:', error);
+    showNotify({ type: 'danger', message: '获取收藏夹列表失败' });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 处理确认按钮
 const handleConfirm = async () => {
   if (selectedFolders.value.length === 0) {
-    showNotify({ type: 'warning', message: '请至少选择一个收藏夹' })
-    return
+    showNotify({ type: 'warning', message: '请至少选择一个收藏夹' });
+    return;
   }
-  
-  loading.value = true
+
+  loading.value = true;
   try {
     let response;
-    
+
     // 判断是批量收藏还是单个收藏
     if (props.videoInfo.isBatch && props.videoInfo.batchIds) {
       // 批量收藏
@@ -155,10 +178,10 @@ const handleConfirm = async () => {
         rids: props.videoInfo.batchIds,
         add_media_ids: selectedFolders.value.join(',')
       };
-      
+
       // 先远程操作，然后本地同步
       response = await batchFavoriteResource(requestParams);
-      
+
       // 成功后进行本地同步（不展示给用户）
       if (response.data.status === 'success') {
         try {
@@ -170,16 +193,16 @@ const handleConfirm = async () => {
         } catch (syncError) {
           console.error('本地同步失败，但不影响用户体验:', syncError);
         }
-        
+
         showNotify({ type: 'success', message: `成功收藏${props.videoInfo.selectedCount}个视频` });
-        
-        emit('favoriteDone', { 
-          success: true, 
-          videoInfo: props.videoInfo, 
+
+        emit('favoriteDone', {
+          success: true,
+          videoInfo: props.videoInfo,
           folders: selectedFolders.value,
           isBatch: true
         });
-        
+
         visible.value = false;
       } else {
         throw new Error(response.data.message || '批量收藏失败');
@@ -187,19 +210,23 @@ const handleConfirm = async () => {
     } else {
       // 单个视频收藏
       // 获取视频ID，适配不同的属性名（aid/avid/oid/id）
-      const videoId = props.videoInfo?.aid || props.videoInfo?.avid || props.videoInfo?.oid || props.videoInfo?.id;
+      const videoId =
+        props.videoInfo?.aid ||
+        props.videoInfo?.avid ||
+        props.videoInfo?.oid ||
+        props.videoInfo?.id;
 
       if (!props.videoInfo || videoId == null || videoId === 0) {
         showNotify({ type: 'warning', message: '视频信息不完整，无法收藏' });
         return;
       }
-      
+
       // 先远程操作
       response = await favoriteResource({
         rid: videoId,
         add_media_ids: selectedFolders.value.join(',')
       });
-      
+
       if (response.data.status === 'success') {
         // 成功后进行本地同步（不展示给用户）
         try {
@@ -211,15 +238,15 @@ const handleConfirm = async () => {
         } catch (syncError) {
           console.error('本地同步失败，但不影响用户体验:', syncError);
         }
-        
+
         showNotify({ type: 'success', message: '收藏成功' });
-        
-        emit('favoriteDone', { 
-          success: true, 
-          videoInfo: props.videoInfo, 
+
+        emit('favoriteDone', {
+          success: true,
+          videoInfo: props.videoInfo,
           folders: selectedFolders.value
         });
-        
+
         visible.value = false;
       } else {
         throw new Error(response.data.message || '收藏失败');
@@ -231,37 +258,40 @@ const handleConfirm = async () => {
   } finally {
     loading.value = false;
   }
-}
+};
 
 // 处理取消按钮
 const handleCancel = () => {
-  visible.value = false
-}
+  visible.value = false;
+};
 
 // 打开登录对话框
 const openLoginDialog = () => {
-  showLoginDialog.value = true
-}
+  showLoginDialog.value = true;
+};
 
 // 登录成功回调
 const handleLoginSuccess = () => {
-  showNotify({ type: 'success', message: '登录成功' })
-  loadFavorites()
-}
+  showNotify({ type: 'success', message: '登录成功' });
+  loadFavorites();
+};
 
 // 监听对话框显示状态变化
-watch(() => visible.value, (newVal) => {
-  if (newVal) {
-    selectedFolders.value = []
-    loadFavorites()
+watch(
+  () => visible.value,
+  (newVal) => {
+    if (newVal) {
+      selectedFolders.value = [];
+      loadFavorites();
+    }
   }
-})
+);
 
 onMounted(() => {
   if (visible.value) {
-    loadFavorites()
+    loadFavorites();
   }
-})
+});
 </script>
 
 <style scoped>

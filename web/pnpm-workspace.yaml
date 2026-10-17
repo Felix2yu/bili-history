@@ -4,7 +4,8 @@
 # 所以这里没有补 override —— 补上会把 minimatch 依赖的 2.1.4 顶到 5.x，是一次无收益的大版本跳转。
 # 以后确实需要时写在本文件，别写回 package.json。
 packages:
-  - "."
+  - '.'
 
 allowBuilds:
   esbuild: true
+  unrs-resolver: true

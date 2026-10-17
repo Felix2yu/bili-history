@@ -1,152 +1,352 @@
 <template>
-  <div class="flex flex-col h-full">
+  <div class="flex h-full flex-col">
     <!-- Header with logo and close -->
-    <div class="flex items-center justify-between px-5 py-5 border-b border-white/10 dark:border-white/5">
-      <router-link to="/" @click="emit('navigate')" class="flex-1 flex items-center justify-center gap-2.5 text-[#1a1a2e] dark:text-gray-200">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 52" class="h-10 md:h-11 w-auto object-contain">
+    <div
+      class="flex items-center justify-between border-b border-white/10 px-5 py-5 dark:border-white/5"
+    >
+      <router-link
+        to="/"
+        class="flex flex-1 items-center justify-center gap-2.5 text-[#1a1a2e] dark:text-gray-200"
+        @click="emit('navigate')"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 140 52"
+          class="h-10 w-auto object-contain md:h-11"
+        >
           <defs>
             <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#fb7299"/>
-              <stop offset="100%" stop-color="#ff8fab"/>
+              <stop offset="0%" stop-color="#fb7299" />
+              <stop offset="100%" stop-color="#ff8fab" />
             </linearGradient>
           </defs>
           <g transform="translate(2 6)">
-            <rect x="0" y="6" width="34" height="30" rx="7" fill="url(#lg)"/>
-            <rect x="3" y="9" width="28" height="24" rx="4" fill="#1a1a2e"/>
-            <circle cx="17" cy="21" r="5" fill="none" stroke="#fff" stroke-width="1.8"/>
-            <path d="M17 18 L17 21 L20 23" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            <path d="M12 5 L9 0" stroke="url(#lg)" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M22 5 L25 0" stroke="url(#lg)" stroke-width="2.5" stroke-linecap="round"/>
+            <rect x="0" y="6" width="34" height="30" rx="7" fill="url(#lg)" />
+            <rect x="3" y="9" width="28" height="24" rx="4" fill="#1a1a2e" />
+            <circle cx="17" cy="21" r="5" fill="none" stroke="#fff" stroke-width="1.8" />
+            <path
+              d="M17 18 L17 21 L20 23"
+              stroke="#fff"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              fill="none"
+            />
+            <path d="M12 5 L9 0" stroke="url(#lg)" stroke-width="2.5" stroke-linecap="round" />
+            <path d="M22 5 L25 0" stroke="url(#lg)" stroke-width="2.5" stroke-linecap="round" />
           </g>
-          <text x="46" y="36" font-family="'PingFang SC', 'Noto Serif SC', 'Songti SC', serif" font-size="22" font-weight="600" fill="currentColor" letter-spacing="1.5">
+          <text
+            x="46"
+            y="36"
+            font-family="'PingFang SC', 'Noto Serif SC', 'Songti SC', serif"
+            font-size="22"
+            font-weight="600"
+            fill="currentColor"
+            letter-spacing="1.5"
+          >
             拾帧集
           </text>
         </svg>
       </router-link>
-      <button @click="emit('navigate')" class="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/10 dark:hover:bg-white/5 transition-colors text-gray-500 md:hidden ml-2">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <button
+        class="ml-2 flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-white/10 md:hidden dark:hover:bg-white/5"
+        @click="emit('navigate')"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto py-3 px-2 space-y-1">
+    <nav class="flex-1 space-y-1 overflow-y-auto px-2 py-3">
       <router-link
         to="/"
+        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200"
+        :class="
+          currentContent === 'history'
+            ? 'bg-accent/10 text-accent'
+            : 'text-gray-600 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-white/5'
+        "
         @click="emit('navigate')"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-        :class="currentContent === 'history' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
       >
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          class="h-5 w-5 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         <span>历史记录</span>
       </router-link>
 
-      <router-link v-if="!compact" to="/favorites" @click="emit('navigate')"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-        :class="currentContent === 'favorites' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
+      <router-link
+        v-if="!compact"
+        to="/favorites"
+        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200"
+        :class="
+          currentContent === 'favorites'
+            ? 'bg-accent/10 text-accent'
+            : 'text-gray-600 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-white/5'
+        "
+        @click="emit('navigate')"
       >
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+        <svg
+          class="h-5 w-5 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+          />
         </svg>
         <span>我的收藏</span>
       </router-link>
 
-      <router-link v-if="!compact" to="/watchlater" @click="emit('navigate')"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-        :class="currentContent === 'watchlater' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
+      <router-link
+        v-if="!compact"
+        to="/watchlater"
+        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200"
+        :class="
+          currentContent === 'watchlater'
+            ? 'bg-accent/10 text-accent'
+            : 'text-gray-600 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-white/5'
+        "
+        @click="emit('navigate')"
       >
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          class="h-5 w-5 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         <span>稍后再看</span>
       </router-link>
 
-      <router-link v-if="!compact" to="/likes" @click="emit('navigate')"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-        :class="currentContent === 'likes' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
+      <router-link
+        v-if="!compact"
+        to="/likes"
+        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200"
+        :class="
+          currentContent === 'likes'
+            ? 'bg-accent/10 text-accent'
+            : 'text-gray-600 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-white/5'
+        "
+        @click="emit('navigate')"
       >
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+        <svg
+          class="h-5 w-5 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
+          />
         </svg>
         <span>我的点赞</span>
       </router-link>
 
-      <div class="py-2 px-3"><div class="border-t border-gray-200/20 dark:border-gray-700/30"></div></div>
+      <div class="px-3 py-2">
+        <div class="border-t border-gray-200/20 dark:border-gray-700/30" />
+      </div>
 
-      <router-link to="/report" @click="emit('navigate')"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-        :class="currentContent === 'report' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
+      <router-link
+        to="/report"
+        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200"
+        :class="
+          currentContent === 'report'
+            ? 'bg-accent/10 text-accent'
+            : 'text-gray-600 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-white/5'
+        "
+        @click="emit('navigate')"
       >
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <svg
+          class="h-5 w-5 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
         </svg>
         <span>数据概览</span>
       </router-link>
 
-      <router-link to="/media" @click="emit('navigate')"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-        :class="currentContent === 'media' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
+      <router-link
+        to="/media"
+        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200"
+        :class="
+          currentContent === 'media'
+            ? 'bg-accent/10 text-accent'
+            : 'text-gray-600 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-white/5'
+        "
+        @click="emit('navigate')"
       >
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        <svg
+          class="h-5 w-5 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+          />
         </svg>
         <span>媒体管理</span>
       </router-link>
 
-      <router-link to="/scheduler" @click="emit('navigate')"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-        :class="currentContent === 'scheduler' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
+      <router-link
+        to="/scheduler"
+        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200"
+        :class="
+          currentContent === 'scheduler'
+            ? 'bg-accent/10 text-accent'
+            : 'text-gray-600 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-white/5'
+        "
+        @click="emit('navigate')"
       >
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          class="h-5 w-5 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         <span>计划任务</span>
       </router-link>
 
-      <div class="py-2 px-3"><div class="border-t border-gray-200/20 dark:border-gray-700/30"></div></div>
+      <div class="px-3 py-2">
+        <div class="border-t border-gray-200/20 dark:border-gray-700/30" />
+      </div>
 
-      <router-link to="/settings" @click="emit('navigate')"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-        :class="currentContent === 'settings' ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'"
+      <router-link
+        to="/settings"
+        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200"
+        :class="
+          currentContent === 'settings'
+            ? 'bg-accent/10 text-accent'
+            : 'text-gray-600 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-white/5'
+        "
+        @click="emit('navigate')"
       >
-        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94 1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <svg
+          class="h-5 w-5 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94 1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
         </svg>
         <span>设置</span>
       </router-link>
     </nav>
 
     <!-- Bottom: user info -->
-    <div class="flex-shrink-0 border-t border-white/10 dark:border-white/5 px-3 py-3">
-      <button @click="handleLoginClick"
-        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5 cursor-pointer"
+    <div class="flex-shrink-0 border-t border-white/10 px-3 py-3 dark:border-white/5">
+      <button
+        class="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-600 transition-all duration-200 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-white/5"
+        @click="handleLoginClick"
       >
         <div class="relative flex-shrink-0">
-          <img v-if="avatarUrl" :src="avatarUrl" alt="avatar"
-            class="w-6 h-6 rounded-full object-cover"
+          <img
+            v-if="avatarUrl"
+            :src="avatarUrl"
+            alt="avatar"
+            class="h-6 w-6 rounded-full object-cover"
             @error="avatarLoadError = true"
           />
-          <div v-if="!avatarUrl" class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          <div
+            v-if="!avatarUrl"
+            class="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700"
+          >
+            <svg
+              class="h-3.5 w-3.5 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
             </svg>
           </div>
-          <span v-if="isLoggedIn" class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-green-400 border-2 border-white dark:border-gray-800"></span>
+          <span
+            v-if="isLoggedIn"
+            class="absolute -right-0.5 -bottom-0.5 h-2 w-2 rounded-full border-2 border-white bg-green-400 dark:border-gray-800"
+          />
         </div>
         <span class="truncate" :class="{ 'text-green-500': isLoggedIn }">
-          {{ isLoggedIn ? (userInfo?.uname || '已登录') : '未登录' }}
+          {{ isLoggedIn ? userInfo?.uname || '已登录' : '未登录' }}
         </span>
       </button>
 
       <div class="mt-2 px-3 text-[0.6875rem] text-gray-400 dark:text-gray-500">
         <div class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full" :class="{ 'bg-green-400': integrityStatus.status === 'consistent', 'bg-yellow-400': integrityStatus.status === 'inconsistent', 'bg-gray-400': integrityStatus.status !== 'consistent' && integrityStatus.status !== 'inconsistent' }"></span>
+          <span
+            class="h-1.5 w-1.5 rounded-full"
+            :class="{
+              'bg-green-400': integrityStatus.status === 'consistent',
+              'bg-yellow-400': integrityStatus.status === 'inconsistent',
+              'bg-gray-400':
+                integrityStatus.status !== 'consistent' && integrityStatus.status !== 'inconsistent'
+            }"
+          />
           <span class="cursor-pointer hover:underline" @click="openDataSyncManager('integrity')">
-            数据 {{ integrityStatus.status === 'consistent' ? '一致' : integrityStatus.status === 'inconsistent' ? '不一致' : '未检查' }}
+            数据
+            {{
+              integrityStatus.status === 'consistent'
+                ? '一致'
+                : integrityStatus.status === 'inconsistent'
+                  ? '不一致'
+                  : '未检查'
+            }}
           </span>
         </div>
       </div>
@@ -157,107 +357,127 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useDarkMode } from '~/stores/darkMode.js'
-import { getLoginStatus, logout, checkDataIntegrity, getIntegrityCheckConfig } from '~/utils/api'
-import { normalizeImageUrl } from '~/utils/imageUrl'
-import { showNotify, showDialog } from 'vant'
-import 'vant/es/notify/style'
-import 'vant/es/dialog/style'
-import LoginDialog from './LoginDialog.vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { getLoginStatus, logout, checkDataIntegrity, getIntegrityCheckConfig } from '~/utils/api';
+import { normalizeImageUrl } from '~/utils/imageUrl';
+import { showNotify, showDialog } from 'vant';
+import 'vant/es/notify/style';
+import 'vant/es/dialog/style';
+import LoginDialog from './LoginDialog.vue';
 
-const props = defineProps({
+// compact 仅模板使用（script 内不引用），故不赋值给变量
+defineProps({
   compact: { type: Boolean, default: false }
-})
-const emit = defineEmits(['navigate'])
-const route = useRoute()
-const router = useRouter()
+});
+const emit = defineEmits(['navigate']);
+const route = useRoute();
 
 const currentContent = computed(() => {
-  const path = route.path
-  if (path === '/settings') return 'settings'
-  if (path.startsWith('/favorites')) return 'favorites'
-  if (path.startsWith('/watchlater')) return 'watchlater'
-  if (path.startsWith('/likes')) return 'likes'
-  if (path.startsWith('/media')) return 'media'
-  if (path.startsWith('/scheduler')) return 'scheduler'
-  if (path.startsWith('/report')) return 'report'
-  return 'history'
-})
+  const path = route.path;
+  if (path === '/settings') return 'settings';
+  if (path.startsWith('/favorites')) return 'favorites';
+  if (path.startsWith('/watchlater')) return 'watchlater';
+  if (path.startsWith('/likes')) return 'likes';
+  if (path.startsWith('/media')) return 'media';
+  if (path.startsWith('/scheduler')) return 'scheduler';
+  if (path.startsWith('/report')) return 'report';
+  return 'history';
+});
 
-const isLoggedIn = ref(false)
-const userInfo = ref(null)
-const showLoginDialog = ref(false)
+const isLoggedIn = ref(false);
+const userInfo = ref(null);
+const showLoginDialog = ref(false);
 
 const checkLoginStatus = async () => {
   try {
-    const response = await getLoginStatus()
+    const response = await getLoginStatus();
     if (response.data && response.data.code === 0) {
-      isLoggedIn.value = response.data.data.isLogin
-      if (isLoggedIn.value) userInfo.value = response.data.data
+      isLoggedIn.value = response.data.data.isLogin;
+      if (isLoggedIn.value) userInfo.value = response.data.data;
     }
-  } catch { isLoggedIn.value = false; userInfo.value = null }
-}
+  } catch {
+    isLoggedIn.value = false;
+    userInfo.value = null;
+  }
+};
 
 const handleLoginClick = () => {
   if (!isLoggedIn.value) {
-    showLoginDialog.value = true
+    showLoginDialog.value = true;
   } else {
     showDialog({
-      title: '确认退出', message: '确定要退出登录吗？',
-      showCancelButton: true, confirmButtonText: '确认', cancelButtonText: '取消', confirmButtonColor: 'var(--accent)'
-    }).then(() => handleLogout()).catch(() => {})
+      title: '确认退出',
+      message: '确定要退出登录吗？',
+      showCancelButton: true,
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      confirmButtonColor: 'var(--accent)'
+    })
+      .then(() => handleLogout())
+      .catch(() => {});
   }
-}
+};
 
 const handleLogout = async () => {
   try {
-    const response = await logout()
+    const response = await logout();
     if (response.data.status === 'success') {
-      showNotify({ type: 'success', message: '已成功退出登录' })
-      isLoggedIn.value = false; userInfo.value = null
-      setTimeout(() => { window.location.reload() }, 1000)
+      showNotify({ type: 'success', message: '已成功退出登录' });
+      isLoggedIn.value = false;
+      userInfo.value = null;
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     }
   } catch (error) {
-    showNotify({ type: 'danger', message: `退出登录失败: ${error.message}` })
+    showNotify({ type: 'danger', message: `退出登录失败: ${error.message}` });
   }
-}
+};
 
-const integrityStatus = ref({ status: 'unknown' })
-const avatarLoadError = ref(false)
+const integrityStatus = ref({ status: 'unknown' });
+const avatarLoadError = ref(false);
 
 const avatarUrl = computed(() => {
-  if (!isLoggedIn.value || !userInfo.value?.face || avatarLoadError.value) return ''
-  return normalizeImageUrl(userInfo.value.face)
-})
+  if (!isLoggedIn.value || !userInfo.value?.face || avatarLoadError.value) return '';
+  return normalizeImageUrl(userInfo.value.face);
+});
 
 const fetchIntegrityStatus = async () => {
   try {
-    const configResponse = await getIntegrityCheckConfig()
+    const configResponse = await getIntegrityCheckConfig();
     if (configResponse.data?.success && !configResponse.data.check_on_startup) {
-      integrityStatus.value = { status: 'disabled' }; return
+      integrityStatus.value = { status: 'disabled' };
+      return;
     }
-    const response = await checkDataIntegrity()
+    const response = await checkDataIntegrity();
     if (response.data?.success) {
       integrityStatus.value = {
         status: response.data.difference === 0 ? 'consistent' : 'inconsistent'
-      }
+      };
     }
-  } catch {}
-}
+  } catch {
+    // 完整性检查失败时保持状态为空，由 UI 按「未知」展示，不弹错误打扰用户
+  }
+};
 
 const openDataSyncManager = (tab) => {
-  window.dispatchEvent(new CustomEvent('open-data-sync-manager', { detail: { tab: tab || 'integrity' } }))
-}
+  window.dispatchEvent(
+    new CustomEvent('open-data-sync-manager', { detail: { tab: tab || 'integrity' } })
+  );
+};
 
 onMounted(async () => {
-  checkLoginStatus()
-  await fetchIntegrityStatus()
+  checkLoginStatus();
+  await fetchIntegrityStatus();
   window.addEventListener('login-status-changed', (e) => {
-    if (e.detail?.isLoggedIn) { isLoggedIn.value = true; avatarLoadError.value = false; if (e.detail.userInfo) userInfo.value = e.detail.userInfo; else checkLoginStatus() }
-    else checkLoginStatus()
-  })
-})
-onUnmounted(() => {})
+    if (e.detail?.isLoggedIn) {
+      isLoggedIn.value = true;
+      avatarLoadError.value = false;
+      if (e.detail.userInfo) userInfo.value = e.detail.userInfo;
+      else checkLoginStatus();
+    } else checkLoginStatus();
+  });
+});
+onUnmounted(() => {});
 </script>

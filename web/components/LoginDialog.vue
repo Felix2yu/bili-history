@@ -2,17 +2,19 @@
 <template>
   <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center">
     <!-- 遮罩层 -->
-    <div class="absolute inset-0 bg-black/50" @click="handleClose"></div>
+    <div class="absolute inset-0 bg-black/50" @click="handleClose" />
 
     <!-- 弹窗内容 -->
-    <div class="relative bg-white rounded-lg shadow-xl w-[360px] max-h-[90vh] overflow-y-auto">
+    <div class="relative max-h-[90vh] w-[360px] overflow-y-auto rounded-lg bg-white shadow-xl">
       <!-- 关闭按钮 -->
-      <button
-        @click="handleClose"
-        class="absolute right-4 top-4 text-gray-400 hover:text-gray-500"
-      >
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-500" @click="handleClose">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
 
@@ -23,15 +25,18 @@
       </div>
 
       <!-- 登录内容 -->
-      <div class="p-6 flex flex-col items-center space-y-4">
+      <div class="flex flex-col items-center space-y-4 p-6">
         <!-- 二维码区域 -->
         <div v-if="qrcodeKey" class="relative">
-          <img :src="qrcodeImageUrl" alt="登录二维码" class="w-48 h-48 rounded-lg shadow-sm">
+          <img :src="qrcodeImageUrl" alt="登录二维码" class="h-48 w-48 rounded-lg shadow-sm" />
           <!-- 二维码失效遮罩 -->
-          <div v-if="qrcodeExpired" class="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+          <div
+            v-if="qrcodeExpired"
+            class="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50"
+          >
             <button
+              class="rounded-md bg-white px-4 py-2 text-sm text-gray-900 hover:bg-gray-50"
               @click="refreshQRCode"
-              class="px-4 py-2 bg-white text-gray-900 rounded-md text-sm hover:bg-gray-50"
             >
               点击刷新
             </button>
@@ -46,8 +51,8 @@
         <!-- 刷新按钮 -->
         <button
           v-if="!qrcodeKey || qrcodeExpired"
+          class="rounded-md px-4 py-2 text-sm text-accent transition-colors duration-200 hover:bg-accent/5"
           @click="refreshQRCode"
-          class="px-4 py-2 text-sm text-accent hover:bg-accent/5 rounded-md transition-colors duration-200"
         >
           {{ qrcodeKey ? '重新获取二维码' : '获取登录二维码' }}
         </button>
@@ -57,278 +62,282 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { showNotify } from 'vant'
+import { ref, computed, onUnmounted, watch } from 'vue';
+import { showNotify } from 'vant';
 import {
   generateLoginQRCode,
   getQRCodeImageURL,
   getQRCodeImageBlob,
   pollQRCodeStatus,
   getLoginStatus
-} from '~/utils/api'
+} from '~/utils/api';
 
 const props = defineProps({
   show: {
     type: Boolean,
     default: false
   }
-})
+});
 
-const emit = defineEmits(['update:show', 'login-success'])
+const emit = defineEmits(['update:show', 'login-success']);
 
 // 登录相关状态
-const qrcodeKey = ref('')
-const qrcodeImageUrl = ref('')
-const qrcodeExpired = ref(false)
-const loginStatus = ref(86101) // 初始状态：未扫码
-const pollingInterval = ref(null)
-const pollingErrors = ref(0)
+const qrcodeKey = ref('');
+const qrcodeImageUrl = ref('');
+const qrcodeExpired = ref(false);
+const loginStatus = ref(86101); // 初始状态：未扫码
+const pollingInterval = ref(null);
+const pollingErrors = ref(0);
 
 // 登录状态文本
 const loginStatusText = computed(() => {
   switch (loginStatus.value) {
     case 0:
-      return '登录成功'
+      return '登录成功';
     case 86038:
-      return '二维码已失效'
+      return '二维码已失效';
     case 86090:
-      return '已扫码，请在手机上确认'
+      return '已扫码，请在手机上确认';
     case 86101:
-      return '请使用B站APP扫描二维码登录'
+      return '请使用B站APP扫描二维码登录';
     default:
-      return '获取二维码中...'
+      return '获取二维码中...';
   }
-})
+});
 
 // 状态样式
 const statusClass = computed(() => {
   switch (loginStatus.value) {
     case 0:
-      return 'text-green-500'
+      return 'text-green-500';
     case 86038:
-      return 'text-red-500'
+      return 'text-red-500';
     case 86090:
-      return 'text-accent'
+      return 'text-accent';
     default:
-      return 'text-gray-500'
+      return 'text-gray-500';
   }
-})
+});
 
 // 开始轮询
 const startPolling = () => {
   if (pollingInterval.value) {
-    clearInterval(pollingInterval.value)
+    clearInterval(pollingInterval.value);
   }
 
-  let attempts = 0
-  const maxAttempts = 90 // 180秒内尝试90次
-  pollingErrors.value = 0 // 重置错误计数
+  let attempts = 0;
+  const maxAttempts = 90; // 180秒内尝试90次
+  pollingErrors.value = 0; // 重置错误计数
 
   pollingInterval.value = setInterval(async () => {
     try {
       if (!qrcodeKey.value) {
-        console.error('缺少qrcode_key参数')
-        clearInterval(pollingInterval.value)
+        console.error('缺少qrcode_key参数');
+        clearInterval(pollingInterval.value);
         showNotify({
           type: 'danger',
           message: '登录参数错误,请刷新页面重试'
-        })
-        return
+        });
+        return;
       }
 
-      const response = await pollQRCodeStatus(qrcodeKey.value)
+      const response = await pollQRCodeStatus(qrcodeKey.value);
 
       if (!response?.data) {
-        throw new Error('服务器响应格式错误')
+        throw new Error('服务器响应格式错误');
       }
 
       if (response.data.status === 'success' && response.data.data) {
-        const code = response.data.data.code
+        const code = response.data.data.code;
         if (typeof code === 'undefined') {
-          throw new Error('响应中缺少状态码')
+          throw new Error('响应中缺少状态码');
         }
 
-        loginStatus.value = code
-        pollingErrors.value = 0
+        loginStatus.value = code;
+        pollingErrors.value = 0;
 
         if (loginStatus.value === 0) {
           // 登录成功
-          clearInterval(pollingInterval.value)
+          clearInterval(pollingInterval.value);
           showNotify({
             type: 'success',
             message: '登录成功'
-          })
+          });
 
           // 获取用户信息并发送登录成功事件
           try {
-            const userResponse = await getLoginStatus()
+            const userResponse = await getLoginStatus();
             if (userResponse.data && userResponse.data.code === 0) {
-              console.log('登录对话框获取到用户信息:', userResponse.data)
+              console.log('登录对话框获取到用户信息:', userResponse.data);
               // 发送登录成功事件，并传递用户信息
-              emit('login-success', userResponse.data.data)
+              emit('login-success', userResponse.data.data);
             } else {
               // 如果获取用户信息失败，仍然发送登录成功事件
-              emit('login-success')
+              emit('login-success');
             }
           } catch (error) {
-            console.error('获取用户信息失败:', error)
+            console.error('获取用户信息失败:', error);
             // 如果出错，仍然发送登录成功事件
-            emit('login-success')
+            emit('login-success');
           }
 
           // 关闭弹窗
           setTimeout(() => {
-            handleClose()
-          }, 1000)
+            handleClose();
+          }, 1000);
         } else if (loginStatus.value === 86038) {
           // 二维码失效
-          clearInterval(pollingInterval.value)
-          qrcodeExpired.value = true
+          clearInterval(pollingInterval.value);
+          qrcodeExpired.value = true;
           showNotify({
             type: 'warning',
             message: '二维码已失效,请点击刷新'
-          })
+          });
         } else if (loginStatus.value === 86090) {
           // 已扫码待确认
           showNotify({
             type: 'primary',
             message: '已扫码,请在手机上确认'
-          })
+          });
         }
       } else {
-        const errorMsg = response.data.detail || response.data.message || '获取状态失败'
-        throw new Error(errorMsg)
+        const errorMsg = response.data.detail || response.data.message || '获取状态失败';
+        throw new Error(errorMsg);
       }
 
-      attempts++
+      attempts++;
       if (attempts >= maxAttempts) {
-        clearInterval(pollingInterval.value)
-        qrcodeExpired.value = true
-        loginStatus.value = 86038
+        clearInterval(pollingInterval.value);
+        qrcodeExpired.value = true;
+        loginStatus.value = 86038;
         showNotify({
           type: 'warning',
           message: '登录超时,请重新获取二维码'
-        })
+        });
       }
     } catch (error) {
-      console.error('轮询出错:', error)
-      pollingErrors.value++
+      console.error('轮询出错:', error);
+      pollingErrors.value++;
 
       if (error.response?.status === 500) {
-        clearInterval(pollingInterval.value)
-        qrcodeExpired.value = true
+        clearInterval(pollingInterval.value);
+        qrcodeExpired.value = true;
         showNotify({
           type: 'danger',
           message: '服务器错误,请稍后重试'
-        })
-        return
+        });
+        return;
       }
 
       if (pollingErrors.value >= 3) {
-        clearInterval(pollingInterval.value)
-        qrcodeExpired.value = true
+        clearInterval(pollingInterval.value);
+        qrcodeExpired.value = true;
         showNotify({
           type: 'danger',
           message: '网络异常,请检查网络后重试'
-        })
+        });
       }
     }
-  }, 2000)
-}
+  }, 2000);
+};
 
 // 获取二维码
 const getQRCode = async () => {
   try {
-    const response = await generateLoginQRCode()
+    const response = await generateLoginQRCode();
 
     if (!response?.data) {
-      throw new Error('服务器响应格式错误')
+      throw new Error('服务器响应格式错误');
     }
 
     if (response.data.status === 'success' && response.data.data?.qrcode_key) {
-      qrcodeKey.value = response.data.data.qrcode_key
+      qrcodeKey.value = response.data.data.qrcode_key;
 
       try {
         // 使用axios获取二维码图片（带API密钥验证）
-        qrcodeImageUrl.value = await getQRCodeImageBlob()
+        qrcodeImageUrl.value = await getQRCodeImageBlob();
       } catch (imgError) {
-        console.error('获取二维码图片失败:', imgError)
+        console.error('获取二维码图片失败:', imgError);
         // 如果获取图片失败，回退到直接使用URL
-        qrcodeImageUrl.value = getQRCodeImageURL()
+        qrcodeImageUrl.value = getQRCodeImageURL();
       }
 
-      qrcodeExpired.value = false
-      loginStatus.value = 86101
-      pollingErrors.value = 0
-      startPolling()
+      qrcodeExpired.value = false;
+      loginStatus.value = 86101;
+      pollingErrors.value = 0;
+      startPolling();
     } else {
-      const errorMsg = response.data.detail || response.data.message || '获取二维码失败'
-      throw new Error(errorMsg)
+      const errorMsg = response.data.detail || response.data.message || '获取二维码失败';
+      throw new Error(errorMsg);
     }
   } catch (error) {
-    console.error('获取二维码失败:', error)
+    console.error('获取二维码失败:', error);
     showNotify({
       type: 'danger',
-      message: error.response?.status === 500 ?
-        '服务器错误,请稍后重试' :
-        `获取二维码失败: ${error.message}`
-    })
-    qrcodeExpired.value = true
+      message:
+        error.response?.status === 500
+          ? '服务器错误,请稍后重试'
+          : `获取二维码失败: ${error.message}`
+    });
+    qrcodeExpired.value = true;
   }
-}
+};
 
 // 刷新二维码
 const refreshQRCode = () => {
   if (pollingInterval.value) {
-    clearInterval(pollingInterval.value)
+    clearInterval(pollingInterval.value);
   }
-  getQRCode()
-}
+  getQRCode();
+};
 
 // 关闭弹窗
 const handleClose = () => {
-  emit('update:show', false)
+  emit('update:show', false);
   // 清理轮询
   if (pollingInterval.value) {
-    clearInterval(pollingInterval.value)
+    clearInterval(pollingInterval.value);
   }
 
   // 如果是blob URL，需要释放
   if (qrcodeImageUrl.value && qrcodeImageUrl.value.startsWith('blob:')) {
-    URL.revokeObjectURL(qrcodeImageUrl.value)
+    URL.revokeObjectURL(qrcodeImageUrl.value);
   }
 
   // 重置状态
-  qrcodeKey.value = ''
-  qrcodeImageUrl.value = ''
-  qrcodeExpired.value = false
-  loginStatus.value = 86101
-  pollingErrors.value = 0
-}
+  qrcodeKey.value = '';
+  qrcodeImageUrl.value = '';
+  qrcodeExpired.value = false;
+  loginStatus.value = 86101;
+  pollingErrors.value = 0;
+};
 
 // 监听show变化
-watch(() => props.show, (newVal) => {
-  if (newVal) {
-    getQRCode()
-  } else {
-    handleClose()
+watch(
+  () => props.show,
+  (newVal) => {
+    if (newVal) {
+      getQRCode();
+    } else {
+      handleClose();
+    }
   }
-})
+);
 
 // 组件卸载时清除轮询和释放资源
 onUnmounted(() => {
   if (pollingInterval.value) {
-    clearInterval(pollingInterval.value)
+    clearInterval(pollingInterval.value);
   }
 
   // 释放blob URL
   if (qrcodeImageUrl.value && qrcodeImageUrl.value.startsWith('blob:')) {
-    URL.revokeObjectURL(qrcodeImageUrl.value)
+    URL.revokeObjectURL(qrcodeImageUrl.value);
   }
-})
+});
 
 // 定义组件选项
 defineOptions({
   name: 'LoginDialog'
-})
+});
 </script>

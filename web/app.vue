@@ -9,11 +9,11 @@
 </template>
 
 <script setup>
-import { useDarkMode } from '~/stores/darkMode'
+import { useDarkMode } from '~/stores/darkMode';
 
-const darkModeStore = useDarkMode()
+const darkModeStore = useDarkMode();
 
 onMounted(() => {
-  darkModeStore.initDarkMode()
-})
+  darkModeStore.initDarkMode();
+});
 </script>

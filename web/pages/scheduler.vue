@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
+import SchedulerTasks from '~/components/page/SchedulerTasks.vue';
 definePageMeta({
-  layout: 'main',
-})
-import SchedulerTasks from '~/components/page/SchedulerTasks.vue'
+  layout: 'main'
+});
 </script>

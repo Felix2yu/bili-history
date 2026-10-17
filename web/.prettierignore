@@ -1,0 +1,6 @@
+.output/
+.nuxt/
+dist/
+node_modules/
+# lockfile is managed by pnpm; prettier reformatting must not touch it
+pnpm-lock.yaml

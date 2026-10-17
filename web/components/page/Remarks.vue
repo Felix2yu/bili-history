@@ -1,72 +1,89 @@
 <template>
   <div>
     <!-- 页面标题 -->
-    <div class="flex items-center justify-between mb-8">
+    <div class="mb-8 flex items-center justify-between">
       <div class="flex items-center space-x-3 text-gray-900 dark:text-gray-100">
-        <svg class="w-7 h-7 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        <svg class="h-7 w-7 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+          />
         </svg>
         <h1 class="text-2xl font-medium">我的备注</h1>
       </div>
-      <div class="text-sm text-gray-500 dark:text-gray-400">
-        共 {{ total }} 条备注
-      </div>
+      <div class="text-sm text-gray-500 dark:text-gray-400">共 {{ total }} 条备注</div>
     </div>
 
     <!-- 备注列表 -->
     <div v-if="remarkRecords.length > 0" class="grid grid-cols-1 gap-6">
-      <div v-for="record in remarkRecords"
-            :key="record.bvid + record.view_at"
-            class="glass-card-hover overflow-hidden">
-        <div class="flex p-4 space-x-6">
+      <div
+        v-for="record in remarkRecords"
+        :key="record.bvid + record.view_at"
+        class="glass-card-hover overflow-hidden"
+      >
+        <div class="flex space-x-6 p-4">
           <!-- 左侧：视频信息 -->
           <div class="w-64 flex-shrink-0">
             <!-- 视频封面 -->
-            <div class="relative w-full aspect-video overflow-hidden rounded-lg mb-3">
+            <div class="relative mb-3 aspect-video w-full overflow-hidden rounded-lg">
               <img
                 :src="normalizeImageUrl(record.cover)"
-                class="w-full h-full object-cover"
+                class="h-full w-full object-cover"
                 alt=""
                 loading="lazy"
               />
               <!-- 视频时长 -->
-              <div class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+              <div
+                class="absolute right-2 bottom-2 rounded bg-black/70 px-2 py-1 text-xs text-white"
+              >
                 {{ formatDuration(record.duration) }}
               </div>
               <!-- 观看进度条 -->
-              <div class="absolute bottom-0 left-0 w-full h-1 bg-gray-200 dark:bg-gray-700">
+              <div class="absolute bottom-0 left-0 h-1 w-full bg-gray-200 dark:bg-gray-700">
                 <div
                   class="h-full bg-accent"
                   :style="{ width: getProgressWidth(record.progress, record.duration) }"
-                ></div>
+                />
               </div>
             </div>
 
             <!-- 视频标题 -->
-            <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2 line-clamp-2 hover:line-clamp-none"
-                v-html="record.title">
+            <h3
+              class="mb-2 line-clamp-2 text-sm font-medium text-gray-900 hover:line-clamp-none dark:text-gray-100"
+            >
+              {{ record.title }}
             </h3>
 
             <!-- UP主信息和时间 -->
-            <div class="flex items-center space-x-2 mb-2">
+            <div class="mb-2 flex items-center space-x-2">
               <img
                 :src="normalizeImageUrl(record.author_face)"
-                class="w-4 h-4 rounded-full"
+                class="h-4 w-4 rounded-full"
                 alt=""
               />
-              <span class="text-xs text-gray-600 dark:text-gray-300"
-                    v-text="record.author_name">
-              </span>
+              <span class="text-xs text-gray-600 dark:text-gray-300" v-text="record.author_name" />
             </div>
             <div class="flex items-center justify-between text-xs text-gray-400 dark:text-gray-400">
               <span>{{ formatTimestamp(record.view_at) }}</span>
               <button
+                class="inline-flex items-center space-x-1 text-accent transition-colors duration-200 hover:text-accent/80"
                 @click="openVideo(record)"
-                class="inline-flex items-center space-x-1 text-accent hover:text-accent/80 transition-colors duration-200"
               >
-                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 <span>查看视频</span>
               </button>
@@ -74,17 +91,20 @@
           </div>
 
           <!-- 右侧：备注内容 -->
-          <div class="flex-1 min-w-0 relative">
+          <div class="relative min-w-0 flex-1">
             <van-field
               v-model="record.remark"
-              @blur="handleRemarkUpdate(record)"
               type="textarea"
               rows="8"
               :autosize="{ minHeight: 160 }"
               :placeholder="'添加备注...'"
               class="remarks-field !bg-transparent"
+              @blur="handleRemarkUpdate(record)"
             />
-            <div v-if="record.remark_time" class="absolute bottom-1 right-2 text-xs text-gray-400 dark:text-gray-500">
+            <div
+              v-if="record.remark_time"
+              class="absolute right-2 bottom-1 text-xs text-gray-400 dark:text-gray-500"
+            >
               最后更新: {{ formatRemarkTime(record.remark_time) }}
             </div>
           </div>
@@ -93,17 +113,36 @@
     </div>
 
     <!-- 空状态显示 -->
-    <div v-else class="flex flex-col items-center justify-center py-16 bg-white dark:bg-gray-900 rounded-lg">
-      <svg class="w-20 h-20 text-gray-300 dark:text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+    <div
+      v-else
+      class="flex flex-col items-center justify-center rounded-lg bg-white py-16 dark:bg-gray-900"
+    >
+      <svg
+        class="mb-4 h-20 w-20 text-gray-300 dark:text-gray-600"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+        />
       </svg>
-      <h3 class="text-xl font-medium text-gray-600 dark:text-gray-300 mb-2">暂无备注</h3>
-      <p class="text-gray-500 dark:text-gray-400 mb-6">当你添加备注后，将在这里显示</p>
-      <button 
-        class="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 transition-colors duration-200 flex items-center space-x-2"
-        @click="$router.push('/')">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      <h3 class="mb-2 text-xl font-medium text-gray-600 dark:text-gray-300">暂无备注</h3>
+      <p class="mb-6 text-gray-500 dark:text-gray-400">当你添加备注后，将在这里显示</p>
+      <button
+        class="flex items-center space-x-2 rounded-md bg-accent px-4 py-2 text-white transition-colors duration-200 hover:bg-accent/90"
+        @click="$router.push('/')"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
         </svg>
         <span>返回视频列表</span>
       </button>
@@ -122,131 +161,127 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { getAllRemarks, updateVideoRemark, batchGetRemarks } from '~/utils/api'
-import { showNotify } from 'vant'
-import Pagination from '../Pagination.vue'
-import { normalizeImageUrl } from '~/utils/imageUrl.js'
-import { formatDuration, formatTimestamp } from '~/utils/format'
+import { ref, onMounted } from 'vue';
+import { getAllRemarks, updateVideoRemark, batchGetRemarks } from '~/utils/api';
+import { showNotify } from 'vant';
+import Pagination from '../Pagination.vue';
+import { normalizeImageUrl } from '~/utils/imageUrl.js';
+import { formatDuration, formatTimestamp } from '~/utils/format';
 
 // 状态管理
-const page = ref(1)
-const totalPages = ref(1)
-const total = ref(0)
-const remarkRecords = ref([])
+const page = ref(1);
+const totalPages = ref(1);
+const total = ref(0);
+const remarkRecords = ref([]);
 
 // 获取备注列表
 const fetchRemarks = async () => {
   try {
-    const response = await getAllRemarks(page.value, 12) // 每页显示12条
+    const response = await getAllRemarks(page.value, 12); // 每页显示12条
     if (response.data.status === 'success') {
-      const records = response.data.data.records
+      const records = response.data.data.records;
       // 构建批量查询请求
-      const batchRecords = records.map(record => ({
+      const batchRecords = records.map((record) => ({
         bvid: record.bvid,
         view_at: record.view_at
-      }))
-      
+      }));
+
       // 批量获取备注信息
-      const remarksResponse = await batchGetRemarks(batchRecords)
+      const remarksResponse = await batchGetRemarks(batchRecords);
       if (remarksResponse.data.status === 'success') {
-        remarkRecords.value = records.map(record => {
-          const key = `${record.bvid}_${record.view_at}`
-          const remarkData = remarksResponse.data.data[key] || {}
+        remarkRecords.value = records.map((record) => {
+          const key = `${record.bvid}_${record.view_at}`;
+          const remarkData = remarksResponse.data.data[key] || {};
           return {
             ...record,
             remark: remarkData.remark || '',
             remark_time: remarkData.remark_time,
             originalRemark: remarkData.remark || '' // 保存原始备注内容
-          }
-        })
+          };
+        });
       }
-      
-      totalPages.value = Math.ceil(response.data.data.total / response.data.data.size)
-      total.value = response.data.data.total
+
+      totalPages.value = Math.ceil(response.data.data.total / response.data.data.size);
+      total.value = response.data.data.total;
     } else {
-      throw new Error(response.data.message || '获取备注列表失败')
+      throw new Error(response.data.message || '获取备注列表失败');
     }
   } catch (error) {
     showNotify({
       type: 'danger',
       message: error.message
-    })
+    });
   }
-}
+};
 
 // 处理分页变化
 const handlePageChange = (newPage) => {
-  page.value = newPage
-  fetchRemarks()
-}
+  page.value = newPage;
+  fetchRemarks();
+};
 
 // 打开视频
 const openVideo = (record) => {
-  const url = `https://www.bilibili.com/video/${record.bvid}`
-  window.open(url, '_blank')
-}
+  const url = `https://www.bilibili.com/video/${record.bvid}`;
+  window.open(url, '_blank');
+};
 
 // 获取进度条宽度
 const getProgressWidth = (progress, duration) => {
-  if (progress === -1) return '100%'
-  if (duration === 0) return '0%'
-  return `${(progress / duration) * 100}%`
-}
+  if (progress === -1) return '100%';
+  if (duration === 0) return '0%';
+  return `${(progress / duration) * 100}%`;
+};
 
 // 格式化备注时间
 const formatRemarkTime = (timestamp) => {
-  if (!timestamp) return ''
-  const date = new Date(timestamp * 1000)
+  if (!timestamp) return '';
+  const date = new Date(timestamp * 1000);
   return date.toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit'
-  })
-}
+  });
+};
 
 // 处理备注更新
 const handleRemarkUpdate = async (record) => {
-  const newValue = record.remark
-  if (newValue === record.originalRemark) return
+  const newValue = record.remark;
+  if (newValue === record.originalRemark) return;
 
   try {
-    const response = await updateVideoRemark(
-      record.bvid,
-      record.view_at,
-      newValue
-    )
+    const response = await updateVideoRemark(record.bvid, record.view_at, newValue);
     if (response.data.status === 'success') {
-      record.originalRemark = newValue
-      record.remark_time = response.data.data.remark_time // 更新备注时间
+      record.originalRemark = newValue;
+      record.remark_time = response.data.data.remark_time; // 更新备注时间
       showNotify({
         type: 'success',
         message: '备注已更新'
-      })
+      });
     } else {
-      throw new Error(response.data.message)
+      throw new Error(response.data.message);
     }
   } catch (error) {
     showNotify({
       type: 'danger',
       message: error.message
-    })
+    });
     // 恢复原值
-    record.remark = record.originalRemark
+    record.remark = record.originalRemark;
   }
-}
+};
 
 // 组件挂载时获取数据
 onMounted(() => {
-  fetchRemarks()
-})
+  fetchRemarks();
+});
 
 // 默认导出
 defineOptions({
   name: 'Remarks'
-})
+});
 </script>
 
 <style scoped>

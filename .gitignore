@@ -64,3 +64,17 @@ bun.lockb
 
 # 迁移后 backend/ 残留：旧布局的本地资源与产物（fonts/、本地二进制等），未入库
 /backend/
+
+# ---- AI Agent 生成目录（不进版本库，本地保留）----
+.workbuddy/
+.trae/
+.trea/
+.qoder/
+.opencode/
+.cursor/
+.claude/
+.codex/
+.gemini/
+.continue/
+.windsurf/
+.aider*

@@ -45,21 +45,21 @@ func TestMain(m *testing.M) {
 
 func fullConfig() *Config {
 	return &Config{
-		SESSDATA:         "sess",
-		OutputFolder:     "of",
-		DBFile:           "db.sqlite",
-		LogFile:          "lf.log",
-		CategoriesFile:   "cf.json",
-		LogFolder:        "logs",
-		BiliJct:          "jct",
-		DedeUserID:       "uid",
-		DedeUserIDCkMd5:  "md5",
-		Notify:           NotifyConfig{Enabled: true, URLs: []string{"url1", "url2"}},
-		Server:           ServerConfig{Host: "127.0.0.1", Port: 9000, SSLEnabled: true, SSLCertFile: "c.pem", SSLKeyFile: "k.pem", DataIntegrity: DataIntegrityConfig{CheckOnStartup: true}},
-		Sync:             SyncConfig{SyncDeleted: true, SyncDeleteToBilibili: true},
-		Appearance:       AppearanceConfig{DarkMode: "dark"},
-		Heatmap:          HeatmapConfig{OutputDir: "o", TemplateFile: "t", Title: "ti"},
-		Mcp:              McpConfig{Enabled: true, Path: "/m", AuthEnabled: true, Token: "tok", MaxPageSize: 50},
+		SESSDATA:        "sess",
+		OutputFolder:    "of",
+		DBFile:          "db.sqlite",
+		LogFile:         "lf.log",
+		CategoriesFile:  "cf.json",
+		LogFolder:       "logs",
+		BiliJct:         "jct",
+		DedeUserID:      "uid",
+		DedeUserIDCkMd5: "md5",
+		Notify:          NotifyConfig{Enabled: true, URLs: []string{"url1", "url2"}},
+		Server:          ServerConfig{Host: "127.0.0.1", Port: 9000, SSLEnabled: true, SSLCertFile: "c.pem", SSLKeyFile: "k.pem", DataIntegrity: DataIntegrityConfig{CheckOnStartup: true}},
+		Sync:            SyncConfig{SyncDeleted: true, SyncDeleteToBilibili: true},
+		Appearance:      AppearanceConfig{DarkMode: "dark"},
+		Heatmap:         HeatmapConfig{OutputDir: "o", TemplateFile: "t", Title: "ti"},
+		Mcp:             McpConfig{Enabled: true, Path: "/m", AuthEnabled: true, Token: "tok", MaxPageSize: 50},
 	}
 }
 
@@ -146,12 +146,12 @@ func TestSaveConfigCreateNew(t *testing.T) {
 
 func TestApplyEnvOverrides(t *testing.T) {
 	envs := map[string]string{
-		"SESSDATA":            "e_sess",
-		"BILI_JCT":            "e_jct",
-		"DEDE_USER_ID":        "e_uid",
-		"DEDE_USER_ID_CKMD5":  "e_md5",
-		"SERVER_HOST":         "1.2.3.4",
-		"SERVER_PORT":         "7777",
+		"SESSDATA":           "e_sess",
+		"BILI_JCT":           "e_jct",
+		"DEDE_USER_ID":       "e_uid",
+		"DEDE_USER_ID_CKMD5": "e_md5",
+		"SERVER_HOST":        "1.2.3.4",
+		"SERVER_PORT":        "7777",
 	}
 	for k, v := range envs {
 		os.Setenv(k, v)

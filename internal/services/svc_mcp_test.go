@@ -371,7 +371,11 @@ func TestSVCMCPToolClampsAndDBErrors(t *testing.T) {
 		}
 	}()
 
-	for _, tc := range []struct{ tool string; args map[string]any; want string }{
+	for _, tc := range []struct {
+		tool string
+		args map[string]any
+		want string
+	}{
 		{"search_history", map[string]any{"keyword": "svc"}, "搜索失败"},
 		{"get_history", map[string]any{"page": float64(1)}, "获取历史记录失败"},
 		{"get_yearly_analysis", map[string]any{"year": float64(2036)}, "分析失败"},

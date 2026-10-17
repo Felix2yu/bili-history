@@ -624,11 +624,11 @@ func registerMCPTools(s *server.MCPServer, cfg *config.Config) {
 		}
 
 		result := map[string]interface{}{
-			"total":   total,
+			"total":    total,
 			"media_id": mediaID,
-			"page":    page,
-			"size":    pageSize,
-			"data":    results,
+			"page":     page,
+			"size":     pageSize,
+			"data":     results,
 		}
 
 		jsonData, _ := json.MarshalIndent(result, "", "  ")

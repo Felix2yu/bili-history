@@ -694,8 +694,8 @@ func (s *Scheduler) toFrontendFormat(task *ScheduleTask) map[string]interface{} 
 			"fail_runs":    task.FailRuns,
 			"last_error":   task.LastError,
 		},
-		"created_at":     task.CreatedAt,
-		"last_modified":  task.LastModified,
+		"created_at":    task.CreatedAt,
+		"last_modified": task.LastModified,
 	}
 	if task.ParentID != "" {
 		out["parent_id"] = task.ParentID
@@ -757,16 +757,16 @@ func (s *Scheduler) CreateTaskFromConfig(payload map[string]interface{}) (map[st
 	}
 
 	mt := database.MainTask{
-		TaskID: taskID,
-		Name:   getString(cfgMap, "name"),
-		Endpoint: normalizeEndpointPath(getString(cfgMap, "endpoint")),
-		Method:   getString(cfgMap, "method"),
-		Params:   getParamsString(cfgMap),
-		ScheduleType: getString(cfgMap, "schedule_type"),
-		ScheduleTime: getString(cfgMap, "schedule_time"),
+		TaskID:        taskID,
+		Name:          getString(cfgMap, "name"),
+		Endpoint:      normalizeEndpointPath(getString(cfgMap, "endpoint")),
+		Method:        getString(cfgMap, "method"),
+		Params:        getParamsString(cfgMap),
+		ScheduleType:  getString(cfgMap, "schedule_type"),
+		ScheduleTime:  getString(cfgMap, "schedule_time"),
 		IntervalValue: getInt(cfgMap, "interval_value", "interval"),
 		IntervalUnit:  getString(cfgMap, "interval_unit", "unit"),
-		TaskType: taskType,
+		TaskType:      taskType,
 	}
 	if enabled, ok := cfgMap["enabled"].(bool); ok && enabled {
 		mt.Enabled = 1
@@ -808,20 +808,20 @@ func (s *Scheduler) UpdateTaskFromConfig(taskID string, payload map[string]inter
 	}
 
 	mt := database.MainTask{
-		TaskID:   existing.ID,
-		Name:     existing.Name,
-		Endpoint: existing.Endpoint,
-		Method:   existing.Method,
-		Params:   existing.Params,
-		ScheduleType: existing.ScheduleType,
-		ScheduleTime: existing.ScheduleTime,
+		TaskID:        existing.ID,
+		Name:          existing.Name,
+		Endpoint:      existing.Endpoint,
+		Method:        existing.Method,
+		Params:        existing.Params,
+		ScheduleType:  existing.ScheduleType,
+		ScheduleTime:  existing.ScheduleTime,
 		IntervalValue: existing.IntervalValue,
 		IntervalUnit:  existing.IntervalUnit,
-		Enabled: 0,
-		TaskType: existing.TaskType,
-		ParentID: existing.ParentID,
-		DependsOn: existing.DependsOn,
-		CreatedAt: existing.CreatedAt,
+		Enabled:       0,
+		TaskType:      existing.TaskType,
+		ParentID:      existing.ParentID,
+		DependsOn:     existing.DependsOn,
+		CreatedAt:     existing.CreatedAt,
 	}
 	if existing.Enabled {
 		mt.Enabled = 1
@@ -952,10 +952,10 @@ func (s *Scheduler) GetStatus() map[string]interface{} {
 		}
 	}
 	return map[string]interface{}{
-		"running":         s.running,
-		"total_tasks":     totalTasks,
-		"running_tasks":   runningTasks,
-		"enabled_tasks":   enabledTasks,
+		"running":       s.running,
+		"total_tasks":   totalTasks,
+		"running_tasks": runningTasks,
+		"enabled_tasks": enabledTasks,
 	}
 }
 

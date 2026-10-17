@@ -10,15 +10,15 @@ import (
 )
 
 type DailyStats struct {
-	Date              string             `json:"date"`
-	TotalCount        int                `json:"total_count"`
-	UniqueAuthors     int                `json:"unique_authors"`
-	AvgDuration       float64            `json:"avg_duration"`
-	AvgCompletionRate float64            `json:"avg_completion_rate"`
-	CompletedVideos   int                `json:"completed_videos"`
-	TagDistribution   map[string]int     `json:"tag_distribution"`
-	AuthorDistribution map[string]int    `json:"author_distribution"`
-	TotalDuration     int                `json:"total_duration"`
+	Date               string         `json:"date"`
+	TotalCount         int            `json:"total_count"`
+	UniqueAuthors      int            `json:"unique_authors"`
+	AvgDuration        float64        `json:"avg_duration"`
+	AvgCompletionRate  float64        `json:"avg_completion_rate"`
+	CompletedVideos    int            `json:"completed_videos"`
+	TagDistribution    map[string]int `json:"tag_distribution"`
+	AuthorDistribution map[string]int `json:"author_distribution"`
+	TotalDuration      int            `json:"total_duration"`
 }
 
 type MonthlyStats struct {
@@ -251,14 +251,14 @@ func AnalyzeHistory(year int) (*AnalysisResult, error) {
 			if dailyRows.Scan(&date, &totalCount, &uniqueAuthors, &totalDuration,
 				&avgDuration, &avgCompletionRate, &completedVideos) == nil {
 				result.DailyStats = append(result.DailyStats, DailyStats{
-					Date:              date,
-					TotalCount:        totalCount,
-					UniqueAuthors:     uniqueAuthors,
-					TotalDuration:     totalDuration,
-					AvgDuration:       avgDuration,
-					AvgCompletionRate: avgCompletionRate,
-					CompletedVideos:   completedVideos,
-					TagDistribution:   make(map[string]int),
+					Date:               date,
+					TotalCount:         totalCount,
+					UniqueAuthors:      uniqueAuthors,
+					TotalDuration:      totalDuration,
+					AvgDuration:        avgDuration,
+					AvgCompletionRate:  avgCompletionRate,
+					CompletedVideos:    completedVideos,
+					TagDistribution:    make(map[string]int),
 					AuthorDistribution: make(map[string]int),
 				})
 			}
@@ -440,9 +440,9 @@ func extractKeywords(title string) []string {
 }
 
 type HeatmapData struct {
-	Year  int              `json:"year"`
-	Data  map[string]int   `json:"data"`
-	Total int              `json:"total"`
+	Year  int            `json:"year"`
+	Data  map[string]int `json:"data"`
+	Total int            `json:"total"`
 }
 
 func GenerateHeatmapData(year int) (*HeatmapData, error) {
@@ -619,10 +619,10 @@ type LongestStreakPeriod struct {
 
 // ContinuityAnalysis 观看连续性分析结果
 type ContinuityAnalysis struct {
-	MaxStreak             int                 `json:"max_streak"`
-	LongestStreakPeriod   LongestStreakPeriod `json:"longest_streak_period"`
-	CurrentStreak         int                 `json:"current_streak"`
-	CurrentStreakStart    string              `json:"current_streak_start"`
+	MaxStreak           int                 `json:"max_streak"`
+	LongestStreakPeriod LongestStreakPeriod `json:"longest_streak_period"`
+	CurrentStreak       int                 `json:"current_streak"`
+	CurrentStreakStart  string              `json:"current_streak_start"`
 }
 
 // TimeInvestment 时间投入分析
@@ -633,9 +633,9 @@ type TimeInvestment struct {
 
 // MaxDurationDay 单日最大时长
 type MaxDurationDay struct {
-	Date        string `json:"date"`
-	VideoCount  int    `json:"video_count"`
-	TotalDuration int  `json:"total_duration"`
+	Date          string `json:"date"`
+	VideoCount    int    `json:"video_count"`
+	TotalDuration int    `json:"total_duration"`
 }
 
 // PeakHour 高峰时段
@@ -652,10 +652,10 @@ type MaxDailyRecord struct {
 
 // TimeSlotAnalysis 时段分析结果
 type TimeSlotAnalysis struct {
-	DailyTimeSlots map[string]int    `json:"daily_time_slots"`
-	PeakHours      []PeakHour        `json:"peak_hours"`
-	TimeInvestment TimeInvestment    `json:"time_investment"`
-	MaxDailyRecord *MaxDailyRecord   `json:"max_daily_record"`
+	DailyTimeSlots map[string]int  `json:"daily_time_slots"`
+	PeakHours      []PeakHour      `json:"peak_hours"`
+	TimeInvestment TimeInvestment  `json:"time_investment"`
+	MaxDailyRecord *MaxDailyRecord `json:"max_daily_record"`
 }
 
 // SeasonalPattern 季节模式
@@ -666,9 +666,9 @@ type SeasonalPattern struct {
 
 // WeeklyAnalysis 星期分析结果
 type WeeklyAnalysis struct {
-	WeeklyStats     map[string]int          `json:"weekly_stats"`
+	WeeklyStats      map[string]int             `json:"weekly_stats"`
 	SeasonalPatterns map[string]SeasonalPattern `json:"seasonal_patterns"`
-	ActiveDays      int                     `json:"active_days"`
+	ActiveDays       int                        `json:"active_days"`
 }
 
 // OverallCompletionStats 总体完成率统计
@@ -683,53 +683,53 @@ type OverallCompletionStats struct {
 
 // DurationBasedStats 基于时长的统计
 type DurationBasedStats struct {
-	VideoCount          int     `json:"video_count"`
-	TotalCompletion     float64 `json:"total_completion"`
-	FullyWatched        int     `json:"fully_watched"`
+	VideoCount            int     `json:"video_count"`
+	TotalCompletion       float64 `json:"total_completion"`
+	FullyWatched          int     `json:"fully_watched"`
 	AverageCompletionRate float64 `json:"average_completion_rate"`
-	FullyWatchedRate    float64 `json:"fully_watched_rate"`
+	FullyWatchedRate      float64 `json:"fully_watched_rate"`
 }
 
 // CompletionStats 完成率分析结果
 type CompletionStats struct {
-	OverallStats       OverallCompletionStats       `json:"overall_stats"`
-	DurationBasedStats map[string]DurationBasedStats `json:"duration_based_stats"`
-	CompletionDistribution map[string]int            `json:"completion_distribution"`
+	OverallStats           OverallCompletionStats        `json:"overall_stats"`
+	DurationBasedStats     map[string]DurationBasedStats `json:"duration_based_stats"`
+	CompletionDistribution map[string]int                `json:"completion_distribution"`
 }
 
 // AuthorCompletionStat UP主完成率统计
 type AuthorCompletionStat struct {
-	AuthorMid           int64   `json:"author_mid"`
-	VideoCount          int     `json:"video_count"`
-	TotalCompletion     float64 `json:"total_completion"`
-	FullyWatched        int     `json:"fully_watched"`
+	AuthorMid             int64   `json:"author_mid"`
+	VideoCount            int     `json:"video_count"`
+	TotalCompletion       float64 `json:"total_completion"`
+	FullyWatched          int     `json:"fully_watched"`
 	AverageCompletionRate float64 `json:"average_completion_rate"`
-	FullyWatchedRate    float64 `json:"fully_watched_rate"`
-	ComprehensiveScore  float64 `json:"comprehensive_score"`
-	LoyaltyScore        float64 `json:"loyalty_score"`
-	QualityScore        float64 `json:"quality_score"`
+	FullyWatchedRate      float64 `json:"fully_watched_rate"`
+	ComprehensiveScore    float64 `json:"comprehensive_score"`
+	LoyaltyScore          float64 `json:"loyalty_score"`
+	QualityScore          float64 `json:"quality_score"`
 }
 
 // AuthorCompletionAnalysis UP主完成率分析结果
 type AuthorCompletionAnalysis struct {
-	MostWatchedAuthors        map[string]AuthorCompletionStat `json:"most_watched_authors"`
-	HighestCompletionAuthors  map[string]AuthorCompletionStat `json:"highest_completion_authors"`
-	MostValuableAuthors       map[string]AuthorCompletionStat `json:"most_valuable_authors"`
-	PotentialAuthors          map[string]AuthorCompletionStat `json:"potential_authors"`
+	MostWatchedAuthors       map[string]AuthorCompletionStat `json:"most_watched_authors"`
+	HighestCompletionAuthors map[string]AuthorCompletionStat `json:"highest_completion_authors"`
+	MostValuableAuthors      map[string]AuthorCompletionStat `json:"most_valuable_authors"`
+	PotentialAuthors         map[string]AuthorCompletionStat `json:"potential_authors"`
 }
 
 // TagCompletionStat 标签完成率统计
 type TagCompletionStat struct {
-	VideoCount          int     `json:"video_count"`
-	TotalCompletion     float64 `json:"total_completion"`
-	FullyWatched        int     `json:"fully_watched"`
+	VideoCount            int     `json:"video_count"`
+	TotalCompletion       float64 `json:"total_completion"`
+	FullyWatched          int     `json:"fully_watched"`
 	AverageCompletionRate float64 `json:"average_completion_rate"`
-	FullyWatchedRate    float64 `json:"fully_watched_rate"`
+	FullyWatchedRate      float64 `json:"fully_watched_rate"`
 }
 
 // TagAnalysis 标签分析结果
 type TagAnalysis struct {
-	TagDistribution    map[string]int              `json:"tag_distribution"`
+	TagDistribution    map[string]int               `json:"tag_distribution"`
 	TagCompletionRates map[string]TagCompletionStat `json:"tag_completion_rates"`
 }
 
@@ -755,14 +755,14 @@ type RewatchStats struct {
 
 // MostWatchedVideo 重复观看最多的视频
 type MostWatchedVideo struct {
-	Title      string  `json:"title"`
-	Bvid       string  `json:"bvid"`
-	Duration   int     `json:"duration"`
-	TagName    string  `json:"tag_name"`
-	AuthorName string  `json:"author_name"`
-	WatchCount int     `json:"watch_count"`
-	FirstView  int64   `json:"first_view"`
-	LastView   int64   `json:"last_view"`
+	Title       string  `json:"title"`
+	Bvid        string  `json:"bvid"`
+	Duration    int     `json:"duration"`
+	TagName     string  `json:"tag_name"`
+	AuthorName  string  `json:"author_name"`
+	WatchCount  int     `json:"watch_count"`
+	FirstView   int64   `json:"first_view"`
+	LastView    int64   `json:"last_view"`
 	AvgInterval float64 `json:"avg_interval"`
 }
 
@@ -811,13 +811,13 @@ type DeviceInfo struct {
 
 // ViewingDetails 观看行为详情
 type ViewingDetails struct {
-	TotalWatchHours    float64                   `json:"total_watch_hours"`
-	TotalDays          int                       `json:"total_days"`
-	TopCategories      []CategoryStats           `json:"top_categories"`
-	FavoriteUpUsers    []FavoriteUpStats         `json:"favorite_up_users"`
-	LateNightViews     []LateNightView           `json:"late_night_views"`
-	TimeSlotActivity   map[string]TimeSlotActivity `json:"time_slot_activity"`
-	Devices            []DeviceInfo              `json:"devices"`
+	TotalWatchHours  float64                     `json:"total_watch_hours"`
+	TotalDays        int                         `json:"total_days"`
+	TopCategories    []CategoryStats             `json:"top_categories"`
+	FavoriteUpUsers  []FavoriteUpStats           `json:"favorite_up_users"`
+	LateNightViews   []LateNightView             `json:"late_night_views"`
+	TimeSlotActivity map[string]TimeSlotActivity `json:"time_slot_activity"`
+	Devices          []DeviceInfo                `json:"devices"`
 }
 
 // ViewingOverview 观看行为总览
@@ -828,9 +828,9 @@ type ViewingOverview struct {
 
 // WeeklyStatsData 周度统计数据
 type WeeklyStatsData struct {
-	WeeklyStats     map[string]int          `json:"weekly_stats"`
+	WeeklyStats      map[string]int             `json:"weekly_stats"`
 	SeasonalPatterns map[string]SeasonalPattern `json:"seasonal_patterns"`
-	ActiveDays      int                     `json:"active_days"`
+	ActiveDays       int                        `json:"active_days"`
 }
 
 // ==================== 观看分析函数 ====================
@@ -1058,7 +1058,7 @@ func AnalyzeWeekly(year int) (*WeeklyAnalysis, error) {
 	yearEndTS := yearEnd.Unix()
 
 	result := &WeeklyAnalysis{
-		WeeklyStats:     make(map[string]int),
+		WeeklyStats:      make(map[string]int),
 		SeasonalPatterns: make(map[string]SeasonalPattern),
 	}
 
@@ -1558,9 +1558,9 @@ func AnalyzeDurationAnalysis(year int) (*DurationAnalysis, error) {
 
 	for period := range timePeriods {
 		result.DurationCorrelation[period] = map[string]DurationTypeStat{
-			"短视频":   {},
+			"短视频":  {},
 			"中等视频": {},
-			"长视频":   {},
+			"长视频":  {},
 		}
 	}
 
@@ -2056,18 +2056,18 @@ func sortIntsDesc(arr []int) {
 }
 
 type DailyCountStats struct {
-	Date              string         `json:"date"`
-	TotalCount        int            `json:"total_count"`
-	TypeCounts        map[string]int `json:"type_counts"`
-	TotalWatchSeconds int            `json:"total_watch_seconds"`
-	TotalVideos       int            `json:"total_videos"`
-	UniqueAuthors     int            `json:"unique_authors"`
-	AvgDuration       float64        `json:"avg_duration"`
-	AvgCompletionRate float64        `json:"avg_completion_rate"`
-	CompletedVideos   int            `json:"completed_videos"`
-	TagDistribution   map[string]int `json:"tag_distribution"`
+	Date               string         `json:"date"`
+	TotalCount         int            `json:"total_count"`
+	TypeCounts         map[string]int `json:"type_counts"`
+	TotalWatchSeconds  int            `json:"total_watch_seconds"`
+	TotalVideos        int            `json:"total_videos"`
+	UniqueAuthors      int            `json:"unique_authors"`
+	AvgDuration        float64        `json:"avg_duration"`
+	AvgCompletionRate  float64        `json:"avg_completion_rate"`
+	CompletedVideos    int            `json:"completed_videos"`
+	TagDistribution    map[string]int `json:"tag_distribution"`
 	AuthorDistribution map[string]int `json:"author_distribution"`
-	Insights          []string       `json:"insights"`
+	Insights           []string       `json:"insights"`
 }
 
 func GetDailyCountStats(year int, month int, day int) (*DailyCountStats, error) {
@@ -2089,11 +2089,11 @@ func GetDailyCountStats(year int, month int, day int) (*DailyCountStats, error) 
 	dayEndTS := dayEnd.Unix()
 
 	result := &DailyCountStats{
-		Date:              dayStart.Format("2006-01-02"),
-		TypeCounts:        make(map[string]int),
-		TagDistribution:   make(map[string]int),
+		Date:               dayStart.Format("2006-01-02"),
+		TypeCounts:         make(map[string]int),
+		TagDistribution:    make(map[string]int),
 		AuthorDistribution: make(map[string]int),
-		Insights:          []string{},
+		Insights:           []string{},
 	}
 
 	typeRows, err := conn.Query(fmt.Sprintf(`
@@ -2213,4 +2213,3 @@ func GetDailyCountStats(year int, month int, day int) (*DailyCountStats, error) 
 
 	return result, nil
 }
-

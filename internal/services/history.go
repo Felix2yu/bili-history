@@ -558,11 +558,11 @@ func FetchHistorySync(taskID string, skipExists bool) (map[string]interface{}, e
 	utils.LogSuccess("[%s] 历史记录同步获取完成: %d 页, %d 条新记录", taskID, pageCount, insertedCount)
 
 	return map[string]interface{}{
-		"status":       "success",
-		"message":      "历史记录获取完成",
-		"task_id":      taskID,
-		"total_pages":  pageCount,
+		"status":        "success",
+		"message":       "历史记录获取完成",
+		"task_id":       taskID,
+		"total_pages":   pageCount,
 		"total_records": len(allEntries),
-		"new_records":  insertedCount,
+		"new_records":   insertedCount,
 	}, nil
 }

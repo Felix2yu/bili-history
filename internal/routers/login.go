@@ -89,12 +89,12 @@ type QRCodePollResponse struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 	Data    struct {
-		Code          int    `json:"code"`
-		Message       string `json:"message"`
-		URL           string `json:"url"`
-		RefreshToken  string `json:"refresh_token"`
-		Timestamp     int64  `json:"timestamp"`
-		CookieInfo    struct {
+		Code         int    `json:"code"`
+		Message      string `json:"message"`
+		URL          string `json:"url"`
+		RefreshToken string `json:"refresh_token"`
+		Timestamp    int64  `json:"timestamp"`
+		CookieInfo   struct {
 			Cookies []struct {
 				Name  string `json:"name"`
 				Value string `json:"value"`
@@ -285,7 +285,7 @@ type navResponse struct {
 	Message string `json:"message"`
 	Data    *struct {
 		IsLoggedIn bool   `json:"isLogin"`
-		Username    string `json:"uname"`
+		Username   string `json:"uname"`
 	} `json:"data"`
 }
 

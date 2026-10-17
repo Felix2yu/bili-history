@@ -338,4 +338,3 @@ func ClearAllImages() bool {
 
 	return true
 }
-

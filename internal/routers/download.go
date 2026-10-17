@@ -74,10 +74,10 @@ func getUserVideos(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(gin.H{
-		"list":   videos,
-		"total":  total,
-		"page":   pn,
-		"size":   ps,
+		"list":  videos,
+		"total": total,
+		"page":  pn,
+		"size":  ps,
 	}))
 }
 
@@ -221,10 +221,10 @@ func downloadVideoSSE(c *gin.Context) {
 
 func batchDownloadSSE(c *gin.Context) {
 	var req struct {
-		Videos       []map[string]interface{} `json:"videos"`
-		Sessdata     string                   `json:"sessdata"`
-		DownloadCover bool                    `json:"download_cover"`
-		OnlyAudio    bool                     `json:"only_audio"`
+		Videos        []map[string]interface{} `json:"videos"`
+		Sessdata      string                   `json:"sessdata"`
+		DownloadCover bool                     `json:"download_cover"`
+		OnlyAudio     bool                     `json:"only_audio"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
@@ -269,10 +269,10 @@ func batchDownloadSSE(c *gin.Context) {
 
 func downloadUserVideosSSE(c *gin.Context) {
 	var req struct {
-		UserID       string `json:"user_id"`
-		Sessdata     string `json:"sessdata"`
-		DownloadCover bool  `json:"download_cover"`
-		OnlyAudio    bool   `json:"only_audio"`
+		UserID        string `json:"user_id"`
+		Sessdata      string `json:"sessdata"`
+		DownloadCover bool   `json:"download_cover"`
+		OnlyAudio     bool   `json:"only_audio"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
@@ -344,11 +344,11 @@ func checkCollection(c *gin.Context) {
 
 func downloadCollectionSSE(c *gin.Context) {
 	var req struct {
-		URL          string `json:"url"`
-		CID          int    `json:"cid"`
-		Sessdata     string `json:"sessdata"`
-		DownloadCover bool  `json:"download_cover"`
-		OnlyAudio    bool   `json:"only_audio"`
+		URL           string `json:"url"`
+		CID           int    `json:"cid"`
+		Sessdata      string `json:"sessdata"`
+		DownloadCover bool   `json:"download_cover"`
+		OnlyAudio     bool   `json:"only_audio"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))

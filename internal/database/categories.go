@@ -250,8 +250,8 @@ func GetCategories() ([]models.CategoryNode, error) {
 
 		if _, ok := categoryMap[mainCat]; !ok {
 			categoryMap[mainCat] = &models.CategoryNode{
-				Name:         mainCat,
-				Image:        image.String,
+				Name:          mainCat,
+				Image:         image.String,
 				SubCategories: []models.SubCategory{},
 			}
 			subCatSeen[mainCat] = make(map[string]bool)

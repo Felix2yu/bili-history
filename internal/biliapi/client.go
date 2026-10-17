@@ -15,21 +15,21 @@ import (
 )
 
 var (
-	HistoryURL              = "https://api.bilibili.com/x/web-interface/history/cursor"
-	HistoryDelURL           = "https://api.bilibili.com/x/web-interface/history/del"
-	VideoInfoURL            = "https://api.bilibili.com/x/web-interface/view"
-	WatchLaterURL           = "https://api.bilibili.com/x/v2/history/toview"
-	WatchLaterDelURL        = "https://api.bilibili.com/x/v2/history/toview/del"
-	DynamicSpaceURL         = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
-	UserCardURL             = "https://api.bilibili.com/x/web-interface/card"
-	FavoriteFolderListURL        = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"
-	FavoriteCollectedListURL     = "https://api.bilibili.com/x/v3/fav/folder/collected/list"
-	FavoriteResourceListURL = "https://api.bilibili.com/x/v3/fav/resource/list"
-	FavoriteSeasonListURL   = "https://api.bilibili.com/x/space/fav/season/list"
-	FavoriteDealURL         = "https://api.bilibili.com/x/v3/fav/resource/deal"
-	LikedVideoURL           = "https://api.bilibili.com/x/space/like/video"
-	LikeURL                 = "https://api.bilibili.com/x/web-interface/archive/like"
-	WbiNavURL               = "https://api.bilibili.com/x/web-interface/nav"
+	HistoryURL               = "https://api.bilibili.com/x/web-interface/history/cursor"
+	HistoryDelURL            = "https://api.bilibili.com/x/web-interface/history/del"
+	VideoInfoURL             = "https://api.bilibili.com/x/web-interface/view"
+	WatchLaterURL            = "https://api.bilibili.com/x/v2/history/toview"
+	WatchLaterDelURL         = "https://api.bilibili.com/x/v2/history/toview/del"
+	DynamicSpaceURL          = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
+	UserCardURL              = "https://api.bilibili.com/x/web-interface/card"
+	FavoriteFolderListURL    = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"
+	FavoriteCollectedListURL = "https://api.bilibili.com/x/v3/fav/folder/collected/list"
+	FavoriteResourceListURL  = "https://api.bilibili.com/x/v3/fav/resource/list"
+	FavoriteSeasonListURL    = "https://api.bilibili.com/x/space/fav/season/list"
+	FavoriteDealURL          = "https://api.bilibili.com/x/v3/fav/resource/deal"
+	LikedVideoURL            = "https://api.bilibili.com/x/space/like/video"
+	LikeURL                  = "https://api.bilibili.com/x/web-interface/archive/like"
+	WbiNavURL                = "https://api.bilibili.com/x/web-interface/nav"
 )
 
 // WBI mixin key 的混淆表
@@ -171,20 +171,20 @@ type HistoryCursor struct {
 }
 
 type VideoInfo struct {
-	Bvid      string      `json:"bvid"`
-	Aid       int         `json:"aid"`
-	Videos    int         `json:"videos"`
-	Tid       int         `json:"tid"`
-	Tname     string      `json:"tname"`
-	Copyright int         `json:"copyright"`
-	Pic       string      `json:"pic"`
-	Title     string      `json:"title"`
-	Pubdate   int64       `json:"pubdate"`
-	Ctime     int64       `json:"ctime"`
-	Desc      string      `json:"desc"`
-	Duration  int         `json:"duration"`
-	Owner     VideoOwner  `json:"owner"`
-	Stat      VideoStat   `json:"stat"`
+	Bvid      string     `json:"bvid"`
+	Aid       int        `json:"aid"`
+	Videos    int        `json:"videos"`
+	Tid       int        `json:"tid"`
+	Tname     string     `json:"tname"`
+	Copyright int        `json:"copyright"`
+	Pic       string     `json:"pic"`
+	Title     string     `json:"title"`
+	Pubdate   int64      `json:"pubdate"`
+	Ctime     int64      `json:"ctime"`
+	Desc      string     `json:"desc"`
+	Duration  int        `json:"duration"`
+	Owner     VideoOwner `json:"owner"`
+	Stat      VideoStat  `json:"stat"`
 }
 
 type VideoOwner struct {
@@ -445,7 +445,6 @@ func (c *Client) GetWithDm(urlStr string, params map[string]string) ([]byte, err
 
 	return body, nil
 }
-
 
 func (c *Client) GetHistory(max int64, viewAt int64, ps int) (*HistoryCursorData, error) {
 	params := map[string]string{
@@ -836,10 +835,10 @@ func (c *Client) GetFavoriteFolderList() (*FavFolderListData, error) {
 
 func (c *Client) GetCollectedFavoriteFolders(upMid string, pn, ps int) (*FavFolderListData, error) {
 	params := map[string]string{
-		"up_mid":      upMid,
-		"pn":          fmt.Sprintf("%d", pn),
-		"ps":          fmt.Sprintf("%d", ps),
-		"platform":    "web",
+		"up_mid":       upMid,
+		"pn":           fmt.Sprintf("%d", pn),
+		"ps":           fmt.Sprintf("%d", ps),
+		"platform":     "web",
 		"web_location": "0.0",
 	}
 
@@ -949,14 +948,14 @@ func (c *Client) GetFavoriteResources(mediaID int64, pn, ps int) (*FavResourceDa
 }
 
 type SeasonMediaItem struct {
-	ID       int64      `json:"id"`
-	Title    string     `json:"title"`
-	Cover    string     `json:"cover"`
-	Duration int        `json:"duration"`
-	Pubtime  int64      `json:"pubtime"`
-	Bvid     string     `json:"bvid"`
-	Upper    FavUpper   `json:"upper"`
-	CntInfo  *FavStat   `json:"cnt_info"`
+	ID       int64    `json:"id"`
+	Title    string   `json:"title"`
+	Cover    string   `json:"cover"`
+	Duration int      `json:"duration"`
+	Pubtime  int64    `json:"pubtime"`
+	Bvid     string   `json:"bvid"`
+	Upper    FavUpper `json:"upper"`
+	CntInfo  *FavStat `json:"cnt_info"`
 }
 
 type SeasonData struct {
@@ -967,9 +966,9 @@ type SeasonData struct {
 
 func (c *Client) GetSeasonContents(seasonID int64, pn, ps int) (*SeasonData, error) {
 	params := map[string]string{
-		"season_id":  fmt.Sprintf("%d", seasonID),
-		"pn":         fmt.Sprintf("%d", pn),
-		"ps":         fmt.Sprintf("%d", ps),
+		"season_id":    fmt.Sprintf("%d", seasonID),
+		"pn":           fmt.Sprintf("%d", pn),
+		"ps":           fmt.Sprintf("%d", ps),
 		"web_location": "0.0",
 	}
 	body, err := c.Get(FavoriteSeasonListURL, params)
@@ -1081,4 +1080,3 @@ func (c *Client) LikeVideo(bvid string, like bool) error {
 	}
 	return nil
 }
-

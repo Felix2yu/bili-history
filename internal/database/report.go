@@ -130,10 +130,10 @@ type WeeklyReportResponse struct {
 }
 
 type MonthlyReportResponse struct {
-	Year    int            `json:"year"`
-	Month   int            `json:"month"`
-	Summary ReportSummary  `json:"summary"`
-	Videos  []ReportVideo  `json:"videos"`
+	Year    int           `json:"year"`
+	Month   int           `json:"month"`
+	Summary ReportSummary `json:"summary"`
+	Videos  []ReportVideo `json:"videos"`
 }
 
 func GetWeeklyReport(year, week int) (*WeeklyReportResponse, error) {

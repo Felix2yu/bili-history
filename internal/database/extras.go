@@ -19,12 +19,12 @@ type ExtraDB struct {
 }
 
 var (
-	likesDB     *ExtraDB
-	likesOnce   sync.Once
-	watchlaterDB *ExtraDB
+	likesDB        *ExtraDB
+	likesOnce      sync.Once
+	watchlaterDB   *ExtraDB
 	watchlaterOnce sync.Once
-	favoritesDB *ExtraDB
-	favoritesOnce sync.Once
+	favoritesDB    *ExtraDB
+	favoritesOnce  sync.Once
 )
 
 func getExtraDB(dbFileName string) *sql.DB {
@@ -222,65 +222,65 @@ func GetFavoritesDB() *sql.DB {
 }
 
 type LikeVideo struct {
-	ID          int64  `json:"id"`
-	Bvid        string `json:"bvid"`
-	Aid         int64  `json:"aid"`
-	Title       string `json:"title"`
-	Pic         string `json:"pic"`
-	Desc        string `json:"desc"`
-	Duration    int    `json:"duration"`
-	Tid         int    `json:"tid"`
-	Tname       string `json:"tname"`
-	OwnerName   string `json:"owner_name"`
-	OwnerMid    int64  `json:"owner_mid"`
-	OwnerFace   string `json:"owner_face"`
-	Pubdate     int64  `json:"pubdate"`
-	View        int    `json:"view"`
-	Danmaku     int    `json:"danmaku"`
-	LikeCount   int    `json:"like_count"`
-	Link        string `json:"link"`
-	FetchTime   int64  `json:"fetch_time"`
-	IsSeen      int    `json:"is_seen"`
+	ID        int64  `json:"id"`
+	Bvid      string `json:"bvid"`
+	Aid       int64  `json:"aid"`
+	Title     string `json:"title"`
+	Pic       string `json:"pic"`
+	Desc      string `json:"desc"`
+	Duration  int    `json:"duration"`
+	Tid       int    `json:"tid"`
+	Tname     string `json:"tname"`
+	OwnerName string `json:"owner_name"`
+	OwnerMid  int64  `json:"owner_mid"`
+	OwnerFace string `json:"owner_face"`
+	Pubdate   int64  `json:"pubdate"`
+	View      int    `json:"view"`
+	Danmaku   int    `json:"danmaku"`
+	LikeCount int    `json:"like_count"`
+	Link      string `json:"link"`
+	FetchTime int64  `json:"fetch_time"`
+	IsSeen    int    `json:"is_seen"`
 }
 
 type WatchLaterVideo struct {
-	ID          int64  `json:"id"`
-	Bvid        string `json:"bvid"`
-	Aid         int64  `json:"aid"`
-	Title       string `json:"title"`
-	Pic         string `json:"pic"`
-	Desc        string `json:"desc"`
-	Duration    int    `json:"duration"`
-	Tid         int    `json:"tid"`
-	Tname       string `json:"tname"`
-	OwnerName   string `json:"owner_name"`
-	OwnerMid    int64  `json:"owner_mid"`
-	OwnerFace   string `json:"owner_face"`
-	AddAt       int64  `json:"add_at"`
-	Pubdate     int64  `json:"pubdate"`
-	View        int    `json:"view"`
-	Danmaku     int    `json:"danmaku"`
-	Link        string `json:"link"`
-	FetchTime   int64  `json:"fetch_time"`
+	ID        int64  `json:"id"`
+	Bvid      string `json:"bvid"`
+	Aid       int64  `json:"aid"`
+	Title     string `json:"title"`
+	Pic       string `json:"pic"`
+	Desc      string `json:"desc"`
+	Duration  int    `json:"duration"`
+	Tid       int    `json:"tid"`
+	Tname     string `json:"tname"`
+	OwnerName string `json:"owner_name"`
+	OwnerMid  int64  `json:"owner_mid"`
+	OwnerFace string `json:"owner_face"`
+	AddAt     int64  `json:"add_at"`
+	Pubdate   int64  `json:"pubdate"`
+	View      int    `json:"view"`
+	Danmaku   int    `json:"danmaku"`
+	Link      string `json:"link"`
+	FetchTime int64  `json:"fetch_time"`
 }
 
 type FavoriteFolder struct {
-	ID          int64  `json:"id"`
-	MediaID     int64  `json:"media_id"`
-	Fid         int64  `json:"fid"`
-	Mid         int64  `json:"mid"`
-	Title       string `json:"title"`
-	Cover       string `json:"cover"`
-	Attr        int    `json:"attr"`
-	Intro       string `json:"intro"`
-	Ctime       int64  `json:"ctime"`
-	Mtime       int64  `json:"mtime"`
-	State       int    `json:"state"`
-	MediaCount  int    `json:"media_count"`
-	FavState    int    `json:"fav_state"`
-	LikeState   int    `json:"like_state"`
-	FolderType  int    `json:"folder_type"` // 0=created, 1=collected
-	FetchTime   int64  `json:"fetch_time"`
+	ID         int64  `json:"id"`
+	MediaID    int64  `json:"media_id"`
+	Fid        int64  `json:"fid"`
+	Mid        int64  `json:"mid"`
+	Title      string `json:"title"`
+	Cover      string `json:"cover"`
+	Attr       int    `json:"attr"`
+	Intro      string `json:"intro"`
+	Ctime      int64  `json:"ctime"`
+	Mtime      int64  `json:"mtime"`
+	State      int    `json:"state"`
+	MediaCount int    `json:"media_count"`
+	FavState   int    `json:"fav_state"`
+	LikeState  int    `json:"like_state"`
+	FolderType int    `json:"folder_type"` // 0=created, 1=collected
+	FetchTime  int64  `json:"fetch_time"`
 }
 
 type FavoriteContent struct {

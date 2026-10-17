@@ -160,16 +160,16 @@ func getTitlePatterns(c *gin.Context) {
 
 	// 标题模式分析
 	patterns := map[string]int{
-		"含数字":     0,
-		"含字母":     0,
-		"纯中文":     0,
-		"纯数字":     0,
-		"中英混合":    0,
-		"含标点符号":  0,
-		"含问号":     0,
-		"含感叹号":    0,
-		"问句":       0,
-		"感叹句":     0,
+		"含数字":   0,
+		"含字母":   0,
+		"纯中文":   0,
+		"纯数字":   0,
+		"中英混合":  0,
+		"含标点符号": 0,
+		"含问号":   0,
+		"含感叹号":  0,
+		"问句":    0,
+		"感叹句":   0,
 	}
 
 	rows, err := conn.Query(fmt.Sprintf(`
@@ -439,11 +439,11 @@ func getTitleTrend(c *gin.Context) {
 	defer rows.Close()
 
 	type MonthTrend struct {
-		Month   int     `json:"month"`
-		AvgLen  float64 `json:"avg_len"`
-		MinLen  int     `json:"min_len"`
-		MaxLen  int     `json:"max_len"`
-		Count   int     `json:"count"`
+		Month  int     `json:"month"`
+		AvgLen float64 `json:"avg_len"`
+		MinLen int     `json:"min_len"`
+		MaxLen int     `json:"max_len"`
+		Count  int     `json:"count"`
 	}
 
 	var trends []MonthTrend

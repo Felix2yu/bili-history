@@ -174,7 +174,7 @@ func TestSVCListDownloadedVideos(t *testing.T) {
 	svcMkdirAll(t, deep)
 	svcWrite(t, filepath.Join(deep, "svc嵌套视频.mp4"), []byte("abc"))
 
-	 videos, total, err := ListDownloadedVideos("", 1, 100)
+	videos, total, err := ListDownloadedVideos("", 1, 100)
 	if err != nil {
 		t.Fatalf("ListDownloadedVideos: %v", err)
 	}

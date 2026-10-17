@@ -23,9 +23,9 @@ const (
 	// suite. 2006/2007/2012/2016 are in the past, so the production queries
 	// that look at "recent" windows (last 7/30 days, current year) never mix
 	// seeded rows with rows written by a different test file.
-	yearPrimary   = 2016
-	yearSecondary = 2006
-	yearTertiary  = 2007
+	yearPrimary    = 2016
+	yearSecondary  = 2006
+	yearTertiary   = 2007
 	yearQuaternary = 2012
 	// yearEmpty holds a table with no rows (the viewing/stats zero path);
 	// yearReport is reserved for the report fixtures, whose routes hardcode 2010.

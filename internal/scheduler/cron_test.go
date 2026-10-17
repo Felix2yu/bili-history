@@ -196,7 +196,7 @@ func TestCronMatchWeekday(t *testing.T) {
 		t    time.Time
 		want bool
 	}{
-		{"* * * * 5-7", sun, true},   // Fri-Sun covers Sunday
+		{"* * * * 5-7", sun, true}, // Fri-Sun covers Sunday
 		{"* * * * 5-7", fri, true},
 		{"* * * * 5-7", wed, false},
 		{"* * * * 1,7", sun, true},

@@ -57,18 +57,6 @@ func (a apiResp) dataArray(t *testing.T) []interface{} {
 	return v
 }
 
-func (a apiResp) rawString(t *testing.T) string {
-	t.Helper()
-	var s string
-	if len(a.Data) == 0 {
-		return ""
-	}
-	if err := json.Unmarshal(a.Data, &s); err != nil {
-		t.Fatalf("decode data as string: %v (raw=%s)", err, a.Data)
-	}
-	return s
-}
-
 // do performs a request against the engine and decodes the standard envelope.
 // It fails the test when the body is not valid JSON.
 func do(t *testing.T, e *gin.Engine, method, path string, body string) (int, apiResp) {

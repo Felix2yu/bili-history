@@ -284,8 +284,10 @@ func processBatchFetch(bvids []string, sessdata string) {
 		if err != nil {
 			failedCount++
 			utils.LogWarning("获取视频详情失败 %s: %v", bvid, err)
-			// 记录为失效视频
-			database.RecordInvalidVideo(bvid, err.Error(), 0)
+			// 记录为失效视频：失败只影响下次重试，不影响本轮统计
+			if err := database.RecordInvalidVideo(bvid, err.Error(), 0); err != nil {
+				utils.LogError("记录失效视频失败 bvid=%s: %v", bvid, err)
+			}
 		} else {
 			now := time.Now().Unix()
 			video := &models.VideoBaseInfo{

@@ -95,7 +95,7 @@ func svcDlStubOK(t *testing.T, body string) *svcDlRecorder {
 	})
 }
 
-var svcDlErrDial = errors.New("svcDl dial refused")
+var errSvcDlDial = errors.New("svcDl dial refused")
 
 // ---------------------------------------------------------------------------
 // fetchVideoDetail
@@ -182,11 +182,11 @@ func TestSVCDLFetchVideoDetailBadJSON(t *testing.T) {
 
 func TestSVCDLFetchVideoDetailTransportError(t *testing.T) {
 	svcDlStubTransport(t, func(*http.Request) (*http.Response, error) {
-		return nil, svcDlErrDial
+		return nil, errSvcDlDial
 	})
 
 	_, err := fetchVideoDetail("BVsvcDL0005", "")
-	if !errors.Is(err, svcDlErrDial) {
+	if !errors.Is(err, errSvcDlDial) {
 		t.Fatalf("err = %v, want wrapped dial error", err)
 	}
 }
@@ -312,10 +312,10 @@ func TestSVCDLFetchDashStreamsBadJSON(t *testing.T) {
 
 func TestSVCDLFetchDashStreamsTransportError(t *testing.T) {
 	svcDlStubTransport(t, func(*http.Request) (*http.Response, error) {
-		return nil, svcDlErrDial
+		return nil, errSvcDlDial
 	})
 
-	if _, _, err := fetchDashStreams("BVsvcDL0015", "330015", ""); !errors.Is(err, svcDlErrDial) {
+	if _, _, err := fetchDashStreams("BVsvcDL0015", "330015", ""); !errors.Is(err, errSvcDlDial) {
 		t.Fatalf("err = %v, want dial error", err)
 	}
 }
@@ -454,11 +454,11 @@ func TestSVCDLGetUserVideosBadJSON(t *testing.T) {
 
 func TestSVCDLGetUserVideosTransportError(t *testing.T) {
 	svcDlStubTransport(t, func(*http.Request) (*http.Response, error) {
-		return nil, svcDlErrDial
+		return nil, errSvcDlDial
 	})
 
 	videos, count, err := GetUserVideos("880006", 1, 50)
-	if !errors.Is(err, svcDlErrDial) || videos != nil || count != 0 {
+	if !errors.Is(err, errSvcDlDial) || videos != nil || count != 0 {
 		t.Fatalf("videos=%v count=%d err=%v", videos, count, err)
 	}
 }

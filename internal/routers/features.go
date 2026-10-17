@@ -55,8 +55,8 @@ func RegisterFavoriteRoutes(r *gin.RouterGroup) {
 
 	dynamic := r.Group("/dynamic")
 	{
-		dynamic.GET("/db/hosts", getDynamicDbHosts)
-		dynamic.GET("/db/space/:host_mid", getDynamicDbSpace)
+		dynamic.GET("/db/hosts", getDynamicDBHosts)
+		dynamic.GET("/db/space/:host_mid", getDynamicDBSpace)
 		dynamic.GET("/space/auto/:host_mid", startDynamicAutoFetch)
 		dynamic.GET("/space/auto/:host_mid/progress", dynamicProgressSSE)
 		dynamic.POST("/space/auto/:host_mid/stop", stopDynamicAutoFetch)
@@ -217,7 +217,7 @@ func getCollectedFavoriteFolders(c *gin.Context) {
 
 	data, err := client.GetCollectedFavoriteFolders(cfg.DedeUserID, pn, ps)
 	if err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+		if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
 			return
 		}
@@ -299,7 +299,7 @@ func getOnlineFavoriteContents(c *gin.Context) {
 	if seasonID > 0 {
 		data, err := client.GetSeasonContents(seasonID, pn, ps)
 		if err != nil {
-			if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+			if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 				c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
 				return
 			}
@@ -341,7 +341,7 @@ func getOnlineFavoriteContents(c *gin.Context) {
 	// 普通收藏夹使用 resource API
 	data, err := client.GetFavoriteResources(mediaID, pn, ps)
 	if err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+		if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
 			return
 		}
@@ -408,7 +408,7 @@ func favoriteResource(c *gin.Context) {
 	// Support both formats: resources/media_ids or rid/type/add_media_ids/del_media_ids
 	if body.Resources != "" && body.MediaIDs != "" {
 		if err := client.DealFavoriteResource(body.Resources, body.MediaIDs); err != nil {
-			if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+			if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 				c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
 				return
 			}
@@ -427,7 +427,7 @@ func favoriteResource(c *gin.Context) {
 			mediaIDs = body.DelMediaIDs
 		}
 		if err := client.DealFavoriteResource(resources, mediaIDs); err != nil {
-			if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+			if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 				c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
 				return
 			}
@@ -467,7 +467,7 @@ func batchFavoriteResource(c *gin.Context) {
 
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 	if err := client.DealFavoriteResource(body.Resources, body.MediaIDs); err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+		if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
 			return
 		}
@@ -543,7 +543,7 @@ func getFavoriteList(c *gin.Context) {
 
 	data, err := client.GetFavoriteFolderList()
 	if err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+		if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
 			return
 		}
@@ -590,7 +590,7 @@ func doSyncFavorites(cfg *config.Config, taskID string) {
 	// Fetch folder list
 	folderData, err := client.GetFavoriteFolderList()
 	if err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+		if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 			errMsg = "Cookie 已过期，请重新登录"
 			utils.LogError("[FAVORITE-SYNC] %s", errMsg)
 			return
@@ -670,8 +670,12 @@ func doSyncFavorites(cfg *config.Config, taskID string) {
 					placeholders[i] = "?"
 					args[i] = id
 				}
-				db.Exec("DELETE FROM favorites_folder WHERE folder_type = 0 AND media_id IN ("+strings.Join(placeholders, ",")+")", args...)
-				db.Exec("DELETE FROM favorites_content WHERE media_id IN ("+strings.Join(placeholders, ",")+")", args...)
+				if _, err := db.Exec("DELETE FROM favorites_folder WHERE folder_type = 0 AND media_id IN ("+strings.Join(placeholders, ",")+")", args...); err != nil {
+					utils.LogError("清理失效收藏夹失败: %v", err)
+				}
+				if _, err := db.Exec("DELETE FROM favorites_content WHERE media_id IN ("+strings.Join(placeholders, ",")+")", args...); err != nil {
+					utils.LogError("清理失效收藏内容失败: %v", err)
+				}
 			}
 		}
 	}
@@ -917,7 +921,7 @@ func doSyncLikes(cfg *config.Config, taskID string) {
 
 	res, err := client.GetLikedVideos(vmid)
 	if err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+		if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 			errMsg = "Cookie 已过期，请重新登录"
 			utils.LogError("[LIKE-SYNC] %s", errMsg)
 			return
@@ -980,7 +984,7 @@ func toggleLike(c *gin.Context) {
 
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 	if err := client.LikeVideo(req.Bvid, req.Like); err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+		if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
 			return
 		}
@@ -1009,7 +1013,7 @@ func getWatchLaterList(c *gin.Context) {
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 	data, err := client.GetWatchLaterList()
 	if err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+		if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
 			return
 		}
@@ -1099,7 +1103,7 @@ func doSyncWatchLater(cfg *config.Config, taskID string) {
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 	data, err := client.GetWatchLaterList()
 	if err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+		if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 			errMsg = "Cookie 已过期，请重新登录"
 			return
 		}
@@ -1168,7 +1172,7 @@ func deleteWatchLaterVideo(c *gin.Context) {
 
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 	if err := client.RemoveFromWatchLater(local.Aid); err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+		if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 			c.JSON(http.StatusOK, models.ErrorResponse("Cookie 已过期，请重新登录"))
 			return
 		}
@@ -1249,7 +1253,7 @@ func batchDeleteWatchLaterVideos(c *gin.Context) {
 		}
 		if err := client.RemoveFromWatchLater(local.Aid); err != nil {
 			errMsg := err.Error()
-			if apiErr, ok := err.(*biliapi.ApiError); ok && apiErr.Code == -6 {
+			if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
 				errMsg = "Cookie 已过期，请重新登录"
 			}
 			results = append(results, delResult{Bvid: bvid, Error: errMsg})
@@ -1306,7 +1310,7 @@ func getDynamicUserCard(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": card})
 }
 
-func getDynamicDbHosts(c *gin.Context) {
+func getDynamicDBHosts(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 
@@ -1321,7 +1325,7 @@ func getDynamicDbHosts(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": hosts})
 }
 
-func getDynamicDbSpace(c *gin.Context) {
+func getDynamicDBSpace(c *gin.Context) {
 	hostMid := c.Param("host_mid")
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -1447,8 +1451,10 @@ func deleteDynamicItem(c *gin.Context) {
 		return
 	}
 
-	// 更新UP主统计
-	database.UpdateDynamicHostStats(item.HostMid)
+	// 更新UP主统计：统计落后不影响删除结果，记日志即可
+	if err := database.UpdateDynamicHostStats(item.HostMid); err != nil {
+		utils.LogError("更新 UP 主动态统计失败 mid=%s: %v", item.HostMid, err)
+	}
 
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "已删除"})
 }

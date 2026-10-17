@@ -166,16 +166,14 @@ const (
 // an error state, and block pauses the dynamic feed so the "fetch already
 // running" branch becomes deterministic.
 type ftBiliStub struct {
-	server   *httptest.Server
-	mu       sync.Mutex
-	codes    map[string]int
-	hits     map[string]int
-	queries  map[string][]url.Values
-	forms    map[string][]url.Values
-	members  map[int64]bool
-	failAid  map[int64]bool
-	block    chan struct{}
-	onlySeen []string
+	server  *httptest.Server
+	mu      sync.Mutex
+	codes   map[string]int
+	hits    map[string]int
+	queries map[string][]url.Values
+	forms   map[string][]url.Values
+	failAid map[int64]bool
+	block   chan struct{}
 }
 
 func ftStartStub(t *testing.T) *ftBiliStub {
@@ -185,7 +183,6 @@ func ftStartStub(t *testing.T) *ftBiliStub {
 		hits:    make(map[string]int),
 		queries: make(map[string][]url.Values),
 		forms:   make(map[string][]url.Values),
-		members: make(map[int64]bool),
 		failAid: make(map[int64]bool),
 	}
 	stub.server = httptest.NewServer(http.HandlerFunc(stub.serve))
@@ -225,12 +222,6 @@ func (s *ftBiliStub) setCode(path string, code int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.codes[path] = code
-}
-
-func (s *ftBiliStub) setMember(mediaID int64, isMember bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.members[mediaID] = isMember
 }
 
 func (s *ftBiliStub) setFailAid(aid int64) {
@@ -291,7 +282,6 @@ func (s *ftBiliStub) serve(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.queries[path] = append(s.queries[path], r.URL.Query())
-	members := s.members
 	failAids := s.failAid
 	s.mu.Unlock()
 
@@ -309,7 +299,7 @@ func (s *ftBiliStub) serve(w http.ResponseWriter, r *http.Request) {
 	// success, a not-member style failure and a missing local row.
 	if path == ftPathWatchLaterDel && form.Get("aid") != "" {
 		var aid int64
-		fmt.Sscanf(form.Get("aid"), "%d", &aid)
+		_, _ = fmt.Sscanf(form.Get("aid"), "%d", &aid)
 		if failAids[aid] {
 			io.WriteString(w, `{"code":-404,"message":"ft not found","data":null}`)
 			return
@@ -332,9 +322,7 @@ func (s *ftBiliStub) serve(w http.ResponseWriter, r *http.Request) {
 	case ftPathCreatedList:
 		io.WriteString(w, ftCreatedFoldersJSON)
 	case ftPathCollectedList:
-		if mid := r.URL.Query().Get("up_mid"); mid != "" && members[0] {
-			// membership flag 0 is unused; collected list is static
-		}
+		// membership flag 0 没有用武之地，收藏夹列表是静态的
 		io.WriteString(w, ftCollectedFoldersJSON)
 	case ftPathResourceList:
 		switch r.URL.Query().Get("media_id") {
@@ -398,7 +386,7 @@ func ftNoCreds(t *testing.T) {
 }
 
 // ftPlain decodes the {success,message,data} / {status,message} bodies the
-// dynamic handlers emit instead of the models.ApiResponse envelope.
+// dynamic handlers emit instead of the models.APIResponse envelope.
 func ftPlain(t *testing.T, w *httptest.ResponseRecorder) map[string]interface{} {
 	t.Helper()
 	var m map[string]interface{}
@@ -693,29 +681,6 @@ func ftHasEntry(raw interface{}, key, want string) bool {
 		}
 	}
 	return false
-}
-
-// ftIndexOfEntry returns the position of the first entry matching key=want, or
-// -1. Used to assert relative ordering without depending on foreign rows.
-func ftIndexOfEntry(raw interface{}, key, want string) int {
-	list, ok := raw.([]interface{})
-	// An explicit JSON null prunes the slice to nil, which is still empty.
-	if !ok {
-		if raw == nil {
-			return -1
-		}
-		return -2
-	}
-	for i, item := range list {
-		entry, ok := item.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		if ftNum(entry[key]) == want {
-			return i
-		}
-	}
-	return -1
 }
 
 // ---------------------------------------------------------------------------
@@ -1584,7 +1549,7 @@ func TestFTFavoriteSync(t *testing.T) {
 		t.Fatalf("task status = %v, want completed", status)
 	}
 	result, ok := status["result"].(string)
-	if !ok || !strings.Contains(result, fmt.Sprint(`"folders":3`)) {
+	if !ok || !strings.Contains(result, `"folders":3`) {
 		t.Fatalf("task result = %q, want the three created folders", result)
 	}
 	// 1 media for folder one, 2 for folder two, none for the empty folder.
@@ -1864,7 +1829,7 @@ func TestFTDynamicLegacyAndReads(t *testing.T) {
 	synced := expectStatus(t, e, "POST", "/api/dynamic/sync", "", 200, "success")
 	expectMessage(t, synced, "请使用 /dynamic/space/auto/{host_mid} 端点")
 
-	// getDynamicDbHosts reports the cached hosts.
+	// getDynamicDBHosts reports the cached hosts.
 	ftDynItem(t, ftDynID1, ftDynHost, "DYNAMIC_TYPE_AV", ftDynVideo, "FT动态视频", 1357000100, "[]")
 	ftDynItem(t, ftDynID2, ftDynHost, "DYNAMIC_TYPE_DRAW", "", "FT图文", 1357000101, `["https://i0.hdslb.com/ft/remote-1.jpg"]`)
 	ftSeedDynHost(t, ftDynHost, ftUpName, 2, 2, 1357000101)
@@ -1879,7 +1844,7 @@ func TestFTDynamicLegacyAndReads(t *testing.T) {
 		t.Fatalf("host counters = %v, want the seeded 2/2", entry)
 	}
 
-	// getDynamicDbSpace pages through one host's items newest first.
+	// getDynamicDBSpace pages through one host's items newest first.
 	space := ftSuccess(t, e, "GET", fmt.Sprintf("/api/dynamic/db/space/%s?limit=1&offset=0", ftDynHost), "")
 	if ftNum(space["total"]) != "2" {
 		t.Fatalf("space total = %v, want both seeded items", space["total"])

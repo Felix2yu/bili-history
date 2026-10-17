@@ -332,7 +332,9 @@ func DeleteMainTask(taskID string) error {
 	if rows != nil {
 		for rows.Next() {
 			var id string
-			rows.Scan(&id)
+			if err := rows.Scan(&id); err != nil {
+				continue
+			}
 			subTaskIDs = append(subTaskIDs, id)
 		}
 		rows.Close()
@@ -345,18 +347,22 @@ func DeleteMainTask(taskID string) error {
 
 	// Delete from task_status (including sub-tasks)
 	if _, err := tx.Exec("DELETE FROM task_status WHERE task_id = ?", taskID); err != nil {
-		_ = err
+		return err
 	}
 	for _, sid := range subTaskIDs {
-		tx.Exec("DELETE FROM task_status WHERE task_id = ?", sid)
+		if _, err := tx.Exec("DELETE FROM task_status WHERE task_id = ?", sid); err != nil {
+			return err
+		}
 	}
 
 	// Delete from task_execution_history
 	if _, err := tx.Exec("DELETE FROM task_execution_history WHERE task_id = ?", taskID); err != nil {
-		_ = err
+		return err
 	}
 	for _, sid := range subTaskIDs {
-		tx.Exec("DELETE FROM task_execution_history WHERE task_id = ?", sid)
+		if _, err := tx.Exec("DELETE FROM task_execution_history WHERE task_id = ?", sid); err != nil {
+			return err
+		}
 	}
 
 	return tx.Commit()

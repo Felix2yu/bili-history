@@ -63,7 +63,7 @@ func svcCovDropYearTables(t *testing.T, years ...int) {
 }
 
 // svcCovHistoryServer 起一个 history cursor 桩服务：按请求的 max 参数返回预设页。
-func svcCovHistoryServer(t *testing.T, pages map[string]biliapi.HistoryCursorData, alwaysErr *biliapi.ApiError) *httptest.Server {
+func svcCovHistoryServer(t *testing.T, pages map[string]biliapi.HistoryCursorData, alwaysErr *biliapi.APIError) *httptest.Server {
 	t.Helper()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/x/web-interface/history/cursor", func(w http.ResponseWriter, r *http.Request) {

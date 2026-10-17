@@ -65,21 +65,21 @@ type PagedResponse struct {
 	Current int         `json:"current"`
 }
 
-type ApiResponse struct {
+type APIResponse struct {
 	Status  string      `json:"status"`
 	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
 }
 
-func SuccessResponse(data interface{}) ApiResponse {
-	return ApiResponse{
+func SuccessResponse(data interface{}) APIResponse {
+	return APIResponse{
 		Status: "success",
 		Data:   data,
 	}
 }
 
-func ErrorResponse(message string) ApiResponse {
-	return ApiResponse{
+func ErrorResponse(message string) APIResponse {
+	return APIResponse{
 		Status:  "error",
 		Message: message,
 	}

@@ -416,7 +416,9 @@ func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, 
 	sizeMB := float64(selectedVideo.Bandwidth) / 1024 / 1024
 	onProgress(fmt.Sprintf("画质: %s · %s, 大小: %.1fMB", resolutionLabel(int(selectedVideo.Width), int(selectedVideo.Height)), friendlyCodecName(selectedVideo.Codecs), sizeMB))
 
-	os.MkdirAll(outputDir, 0755)
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("创建输出目录失败: %w", err)
+	}
 
 	// Set bili-dl global config
 	C.O = outputDir
@@ -463,7 +465,9 @@ func CheckVideoDownloaded(cids []string) map[string]bool {
 		result[cid] = false
 	}
 
-	filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
+	// Walk 返回的遍历错误（如目录不存在）在本函数里等同「没找到相关文件」，
+	// 回调已经把 err 转成 nil 返回，故外层显式丢弃。
+	_ = filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
 		}
@@ -546,7 +550,9 @@ func ListDownloadedVideos(search string, page, limit int) ([]DownloadedVideo, in
 	// 预加载所有年份的 BV→封面/作者 映射
 	bvMeta := loadBVMetadata()
 
-	filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
+	// Walk 返回的遍历错误（如目录不存在）在本函数里等同「没找到相关文件」，
+	// 回调已经把 err 转成 nil 返回，故外层显式丢弃。
+	_ = filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
@@ -667,7 +673,9 @@ func DeleteDownloadedVideo(cid string, deleteDir bool, directory string) error {
 	}
 
 	var found bool
-	filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
+	// Walk 返回的遍历错误（如目录不存在）在本函数里等同「没找到相关文件」，
+	// 回调已经把 err 转成 nil 返回，故外层显式丢弃。
+	_ = filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
 		}

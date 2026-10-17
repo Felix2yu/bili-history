@@ -159,7 +159,9 @@ func FetchDynamicSpace(hostMid string, needTop, saveToDB, saveMedia bool, dynami
 			// 增量模式：遇到已存在的动态，完成获取
 			if isIncremental && foundExisting {
 				if len(dbItems) > 0 && saveToDB {
-					database.SaveDynamics(hostMid, dbItems)
+					if _, err := database.SaveDynamics(hostMid, dbItems); err != nil {
+						utils.LogError("保存动态失败 mid=%s: %v", hostMid, err)
+					}
 					totalFetched += len(dbItems)
 				}
 				sendDynamicProgress(fmt.Sprintf("[增量完成] 已获取全部新增动态，共 %d 条", totalFetched))
@@ -246,7 +248,8 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 			Name string `json:"name"`
 			Face string `json:"face"`
 		}
-		json.Unmarshal(authorRaw, &author)
+		// 作者字段解析失败时留空即可，不影响这条动态本身的展示
+		_ = json.Unmarshal(authorRaw, &author)
 		item.AuthorName = author.Name
 		item.AuthorFace = author.Face
 	}
@@ -274,7 +277,7 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 				Opus struct {
 					Title string `json:"title"`
 					Pics  []struct {
-						Url string `json:"url"`
+						URL string `json:"url"`
 					} `json:"pics"`
 					Summary struct {
 						Text string `json:"text"`
@@ -322,9 +325,9 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 			item.OpusSummaryText = dyn.Major.Opus.Summary.Text
 			// 收集 opus 图片
 			for _, pic := range dyn.Major.Opus.Pics {
-				if pic.Url != "" {
-					item.MediaLocals = append(item.MediaLocals, pic.Url)
-					utils.LogInfo("添加 opus 图片: %s", pic.Url)
+				if pic.URL != "" {
+					item.MediaLocals = append(item.MediaLocals, pic.URL)
+					utils.LogInfo("添加 opus 图片: %s", pic.URL)
 				}
 			}
 		}
@@ -337,7 +340,7 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 				Text string `json:"text"`
 			} `json:"desc"`
 		}
-		json.Unmarshal(topicRaw, &topic)
+		_ = json.Unmarshal(topicRaw, &topic)
 		if topic.Desc.Text != "" && item.Txt == "" {
 			item.Txt = topic.Desc.Text
 		}
@@ -346,10 +349,10 @@ func parseDynamicItem(raw biliapi.DynamicRawItem, hostMid string) database.Dynam
 	// Parse publish time from module_author
 	if authorRaw, ok := modules["module_author"]; ok {
 		var author struct {
-			PubTs int64 `json:"pub_ts"`
+			PubTS int64 `json:"pub_ts"`
 		}
-		json.Unmarshal(authorRaw, &author)
-		item.PublishTS = author.PubTs
+		_ = json.Unmarshal(authorRaw, &author)
+		item.PublishTS = author.PubTS
 	}
 
 	item.RawJSON = string(raw.Modules)
@@ -380,7 +383,7 @@ func downloadDynamicMedia(item *database.DynamicItem, hostMid string) {
 	// Download images from draw/opus dynamics
 	// The images are not in the parsed item yet, we need to extract them from raw JSON
 	var modules map[string]json.RawMessage
-	json.Unmarshal([]byte(item.RawJSON), &modules)
+	_ = json.Unmarshal([]byte(item.RawJSON), &modules)
 	if dynRaw, ok := modules["module_dynamic"]; ok {
 		var dyn struct {
 			Major struct {
@@ -391,7 +394,7 @@ func downloadDynamicMedia(item *database.DynamicItem, hostMid string) {
 				} `json:"draw"`
 			} `json:"major"`
 		}
-		json.Unmarshal(dynRaw, &dyn)
+		_ = json.Unmarshal(dynRaw, &dyn)
 
 		for idx, img := range dyn.Major.Draw.Items {
 			if img.Src == "" {

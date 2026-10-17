@@ -297,7 +297,7 @@ func TestSVCCovFetchDynamicSpace(t *testing.T) {
 		}
 	})
 
-	// 5) API 错误码 -101（*biliapi.ApiError）→ 抓取出错并终止
+	// 5) API 错误码 -101（*biliapi.APIError）→ 抓取出错并终止
 	t.Run("api error -101 stops fetch", func(t *testing.T) {
 		svcCovCleanupDynamicHost(t, svcCovDynHostErr)
 		svcCovStartDynamicServer(t, func(offset string) (int, string, any) {

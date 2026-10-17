@@ -176,7 +176,7 @@ const (
 	dataShapeErrBody = `{"code":0,"message":"0","data":"not-an-object"}`
 )
 
-func requireApiErr(t *testing.T, err error, wantContains string) {
+func requireAPIErr(t *testing.T, err error, wantContains string) {
 	t.Helper()
 	if err == nil {
 		t.Fatalf("expected error containing %q, got nil", wantContains)
@@ -509,11 +509,11 @@ func TestAPIMethodResponses(t *testing.T) {
 			srv := newStub(t, map[string]string{tc.path: notLoggedInBody})
 			c := stubClient(t, srv.URL)
 			_, err := tc.call(c)
-			requireApiErr(t, err, "code=-101")
-			requireApiErr(t, err, "账号未登录")
-			if apiErr, ok := err.(*ApiError); ok {
+			requireAPIErr(t, err, "code=-101")
+			requireAPIErr(t, err, "账号未登录")
+			if apiErr, ok := err.(*APIError); ok {
 				if apiErr.Code != -101 {
-					t.Fatalf("ApiError code = %d", apiErr.Code)
+					t.Fatalf("APIError code = %d", apiErr.Code)
 				}
 			}
 		})
@@ -522,7 +522,7 @@ func TestAPIMethodResponses(t *testing.T) {
 			srv := newStub(t, map[string]string{tc.path: riskControlBody})
 			c := stubClient(t, srv.URL)
 			_, err := tc.call(c)
-			requireApiErr(t, err, "code=-352")
+			requireAPIErr(t, err, "code=-352")
 		})
 
 		t.Run(tc.name+"/malformed-json", func(t *testing.T) {
@@ -551,7 +551,7 @@ func TestAPIMethodResponses(t *testing.T) {
 				}
 				return
 			}
-			requireApiErr(t, err, "unmarshal data error")
+			requireAPIErr(t, err, "unmarshal data error")
 		})
 
 		t.Run(tc.name+"/no-fixture-404", func(t *testing.T) {
@@ -599,7 +599,7 @@ func TestFetchWbiKeys(t *testing.T) {
 		srv := newStub(t, map[string]string{navPath: notLoggedInBody})
 		c := stubClient(t, srv.URL)
 		err := c.FetchWbiKeys()
-		requireApiErr(t, err, "fetch wbi keys failed: code=-101")
+		requireAPIErr(t, err, "fetch wbi keys failed: code=-101")
 		if c.ImgKey != "" || c.SubKey != "" {
 			t.Fatalf("keys must stay empty on failure")
 		}
@@ -608,7 +608,7 @@ func TestFetchWbiKeys(t *testing.T) {
 	t.Run("malformed json", func(t *testing.T) {
 		srv := newStub(t, map[string]string{navPath: `{"code":`})
 		c := stubClient(t, srv.URL)
-		requireApiErr(t, c.FetchWbiKeys(), "unmarshal wbi keys error")
+		requireAPIErr(t, c.FetchWbiKeys(), "unmarshal wbi keys error")
 	})
 
 	t.Run("transport error", func(t *testing.T) {
@@ -616,7 +616,7 @@ func TestFetchWbiKeys(t *testing.T) {
 		dead := srv.URL
 		srv.Close()
 		c := stubClient(t, dead)
-		requireApiErr(t, c.FetchWbiKeys(), "fetch wbi keys error")
+		requireAPIErr(t, c.FetchWbiKeys(), "fetch wbi keys error")
 	})
 
 	// Regression: FetchWbiKeys used to slice the key out of the wbi image URLs
@@ -626,7 +626,7 @@ func TestFetchWbiKeys(t *testing.T) {
 	t.Run("key url without extension", func(t *testing.T) {
 		srv := newStub(t, map[string]string{navPath: okEnvelope(`{"wbi_img":{"img_url":"https://i0.hdslb.com/bfs/wbi/noextension","sub_url":"https://i0.hdslb.com/bfs/wbi/sub.png"}}`)})
 		c := stubClient(t, srv.URL)
-		requireApiErr(t, c.FetchWbiKeys(), "无法从 wbi 地址解析 key")
+		requireAPIErr(t, c.FetchWbiKeys(), "无法从 wbi 地址解析 key")
 		if c.ImgKey != "" || c.SubKey != "" {
 			t.Errorf("keys must stay unset on a parse failure: %q / %q", c.ImgKey, c.SubKey)
 		}
@@ -635,7 +635,7 @@ func TestFetchWbiKeys(t *testing.T) {
 	t.Run("empty key url", func(t *testing.T) {
 		srv := newStub(t, map[string]string{navPath: okEnvelope(`{"wbi_img":{"img_url":"https://i0.hdslb.com/bfs/wbi/","sub_url":"https://i0.hdslb.com/bfs/wbi/sub.png"}}`)})
 		c := stubClient(t, srv.URL)
-		requireApiErr(t, c.FetchWbiKeys(), "无法从 wbi 地址解析 key")
+		requireAPIErr(t, c.FetchWbiKeys(), "无法从 wbi 地址解析 key")
 	})
 }
 
@@ -703,7 +703,7 @@ func wbiExpectedForTest(t *testing.T, params map[string]string, mixin string) st
 	return fmt.Sprintf("%x", sum)
 }
 
-// TestWbiSignatureOnTheWire verifies that the w_rid the client actually sends
+// TestWbiSignatureOnTheWire verifies that the wRid the client actually sends
 // matches the WBI signature of the query parameters that were transmitted.
 func TestWbiSignatureOnTheWire(t *testing.T) {
 	srv := newStub(t, map[string]string{
@@ -759,7 +759,7 @@ func TestWbiSignatureOnTheWire(t *testing.T) {
 	}
 	req2 := srv2.lastRequest(t)
 	if req2.Query.Get("w_rid") != "" {
-		t.Fatalf("unexpected w_rid without keys: %q", req2.RawQuery)
+		t.Fatalf("unexpected wRid without keys: %q", req2.RawQuery)
 	}
 	if req2.Query.Has("offset") {
 		t.Fatalf("empty offset should not be sent: %q", req2.RawQuery)
@@ -836,7 +836,7 @@ func TestGetRequestShape(t *testing.T) {
 		}))
 		t.Cleanup(bad.Close)
 		_, err := NewClient("").Get(bad.URL, nil)
-		requireApiErr(t, err, "gzip reader error")
+		requireAPIErr(t, err, "gzip reader error")
 	})
 
 	t.Run("corrupt gzip payload with dm", func(t *testing.T) {
@@ -846,7 +846,7 @@ func TestGetRequestShape(t *testing.T) {
 		}))
 		t.Cleanup(bad.Close)
 		_, err := NewClient("").GetWithDm(bad.URL, nil)
-		requireApiErr(t, err, "gzip reader error")
+		requireAPIErr(t, err, "gzip reader error")
 	})
 
 	// A response whose body is truncated against its Content-Length makes
@@ -871,17 +871,17 @@ func TestGetRequestShape(t *testing.T) {
 
 	t.Run("truncated body reported by Get", func(t *testing.T) {
 		_, err := NewClient("").Get(truncated.URL, map[string]string{"a": "b"})
-		requireApiErr(t, err, "read body error")
+		requireAPIErr(t, err, "read body error")
 	})
 
 	t.Run("truncated body reported by GetWithDm", func(t *testing.T) {
 		_, err := NewClient("").GetWithDm(truncated.URL, map[string]string{"a": "b"})
-		requireApiErr(t, err, "read body error")
+		requireAPIErr(t, err, "read body error")
 	})
 
 	t.Run("truncated body reported by PostForm", func(t *testing.T) {
 		_, err := NewClient("").PostForm(truncated.URL, url.Values{"a": {"b"}})
-		requireApiErr(t, err, "read body error")
+		requireAPIErr(t, err, "read body error")
 	})
 
 	t.Run("http status is ignored by Get", func(t *testing.T) {
@@ -922,9 +922,9 @@ func TestGetRequestShape(t *testing.T) {
 
 	t.Run("invalid url", func(t *testing.T) {
 		_, err := NewClient("").Get("http://[::1", nil)
-		requireApiErr(t, err, "parse url error")
+		requireAPIErr(t, err, "parse url error")
 		_, err = NewClient("").GetWithDm("http://[::1", nil)
-		requireApiErr(t, err, "parse url error")
+		requireAPIErr(t, err, "parse url error")
 	})
 
 	t.Run("transport failure", func(t *testing.T) {
@@ -935,11 +935,11 @@ func TestGetRequestShape(t *testing.T) {
 		dead := closed.URL
 		closed.Close()
 		_, err := NewClient("").Get(dead, nil)
-		requireApiErr(t, err, "request error")
+		requireAPIErr(t, err, "request error")
 		_, err = NewClient("").GetWithDm(dead, map[string]string{"a": "b"})
-		requireApiErr(t, err, "request error")
+		requireAPIErr(t, err, "request error")
 		_, err = NewClient("").PostForm(dead, url.Values{"a": {"b"}})
-		requireApiErr(t, err, "request error")
+		requireAPIErr(t, err, "request error")
 	})
 }
 
@@ -1015,7 +1015,7 @@ func TestPostFormRequestShape(t *testing.T) {
 	}))
 	t.Cleanup(errSrv.Close)
 	_, err = NewClient("sd").PostForm(errSrv.URL, url.Values{"a": {"b"}})
-	requireApiErr(t, err, "HTTP 403: forbidden")
+	requireAPIErr(t, err, "HTTP 403: forbidden")
 
 	// Invalid URL for the POST endpoint hits request creation.
 	if _, err := NewClient("sd").PostForm("http://%zz", nil); err == nil {
@@ -1095,9 +1095,9 @@ func TestWriteEndpointsFormPayloads(t *testing.T) {
 		})
 		c := stubClient(t, srv.URL)
 		err := c.DeleteBiliHistory([]string{"BV1a"})
-		requireApiErr(t, err, "code=-101")
-		if _, ok := err.(*ApiError); !ok {
-			t.Fatalf("error type = %T, want *ApiError", err)
+		requireAPIErr(t, err, "code=-101")
+		if _, ok := err.(*APIError); !ok {
+			t.Fatalf("error type = %T, want *APIError", err)
 		}
 	})
 
@@ -1106,17 +1106,17 @@ func TestWriteEndpointsFormPayloads(t *testing.T) {
 		if got := c.BiliJct; got != "" {
 			t.Fatalf("BiliJct = %q", got)
 		}
-		requireApiErr(t, c.DeleteBiliHistory([]string{"BV1"}), "bili_jct (csrf) is required to delete history")
-		requireApiErr(t, c.DeleteBiliHistoryByKid("archive_1"), "bili_jct (csrf) is required to delete history")
-		requireApiErr(t, c.RemoveFromWatchLater(1), "bili_jct (csrf) is required to remove watch later items")
-		requireApiErr(t, c.DealFavoriteResource("r", "m"), "bili_jct (csrf) is required for favorite operations")
-		requireApiErr(t, c.LikeVideo("BV1", true), "bili_jct (csrf) is required for like operations")
+		requireAPIErr(t, c.DeleteBiliHistory([]string{"BV1"}), "bili_jct (csrf) is required to delete history")
+		requireAPIErr(t, c.DeleteBiliHistoryByKid("archive_1"), "bili_jct (csrf) is required to delete history")
+		requireAPIErr(t, c.RemoveFromWatchLater(1), "bili_jct (csrf) is required to remove watch later items")
+		requireAPIErr(t, c.DealFavoriteResource("r", "m"), "bili_jct (csrf) is required for favorite operations")
+		requireAPIErr(t, c.LikeVideo("BV1", true), "bili_jct (csrf) is required for like operations")
 
 		// With csrf present, the argument validation branches are reachable.
 		c2 := NewClientWithConfig("sd", "jct", "1")
-		requireApiErr(t, c2.DeleteBiliHistory(nil), "bvids is empty")
-		requireApiErr(t, c2.DeleteBiliHistory([]string{}), "bvids is empty")
-		requireApiErr(t, c2.DeleteBiliHistoryByKid(""), "kid is empty")
+		requireAPIErr(t, c2.DeleteBiliHistory(nil), "bvids is empty")
+		requireAPIErr(t, c2.DeleteBiliHistory([]string{}), "bvids is empty")
+		requireAPIErr(t, c2.DeleteBiliHistoryByKid(""), "kid is empty")
 	})
 }
 
@@ -1292,14 +1292,14 @@ func TestGzipBodyErrors(t *testing.T) {
 	c := NewClientWithConfig("sd", "jct", "1")
 	t.Run("Get", func(t *testing.T) {
 		_, err := c.Get(badSrv.URL+"/x", nil)
-		requireApiErr(t, err, "gzip reader error")
+		requireAPIErr(t, err, "gzip reader error")
 	})
 	t.Run("GetWithDm", func(t *testing.T) {
 		_, err := c.GetWithDm(badSrv.URL+"/x", nil)
-		requireApiErr(t, err, "gzip reader error")
+		requireAPIErr(t, err, "gzip reader error")
 	})
 	t.Run("PostForm", func(t *testing.T) {
 		_, err := c.PostForm(badSrv.URL+"/x", url.Values{})
-		requireApiErr(t, err, "gzip reader error")
+		requireAPIErr(t, err, "gzip reader error")
 	})
 }

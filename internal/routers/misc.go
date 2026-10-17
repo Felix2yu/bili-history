@@ -313,7 +313,7 @@ func deleteSingleBiliHistory(c *gin.Context) {
 
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 	if err := client.DeleteBiliHistory([]string{bvid}); err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok {
+		if apiErr, ok := err.(*biliapi.APIError); ok {
 			c.JSON(http.StatusOK, gin.H{
 				"status":  "error",
 				"message": fmt.Sprintf("删除失败: code=%d, %s", apiErr.Code, apiErr.Message),
@@ -359,7 +359,7 @@ func deleteBatchBiliHistory(c *gin.Context) {
 
 	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
 	if err := client.DeleteBiliHistory(req.Bvids); err != nil {
-		if apiErr, ok := err.(*biliapi.ApiError); ok {
+		if apiErr, ok := err.(*biliapi.APIError); ok {
 			c.JSON(http.StatusOK, gin.H{
 				"status":  "error",
 				"message": fmt.Sprintf("删除失败: code=%d, %s", apiErr.Code, apiErr.Message),
@@ -484,7 +484,8 @@ func getMcpConfig(c *gin.Context) {
 		return
 	}
 
-	host := "127.0.0.1"
+	// 监听 0.0.0.0/:: 时对外仍应给本机地址
+	var host string
 	port := 8899
 	if cfg.Server.Host == "0.0.0.0" || cfg.Server.Host == "::" || cfg.Server.Host == "" {
 		host = "127.0.0.1"
@@ -555,7 +556,8 @@ func saveMcpConfig(c *gin.Context) {
 		return
 	}
 
-	host := "127.0.0.1"
+	// 监听 0.0.0.0/:: 时对外仍应给本机地址
+	var host string
 	port := 8899
 	if cfg.Server.Host == "0.0.0.0" || cfg.Server.Host == "::" || cfg.Server.Host == "" {
 		host = "127.0.0.1"
@@ -928,7 +930,8 @@ func checkDataIntegrity(c *gin.Context) {
 	var body struct {
 		ForceCheck bool `json:"force_check"`
 	}
-	c.ShouldBindJSON(&body)
+	// 请求体可省略：没有 body 时按默认（非强制）检查处理
+	_ = c.ShouldBindJSON(&body)
 
 	result, err := services.RunIntegrityCheck(body.ForceCheck)
 	if err != nil {
@@ -939,7 +942,8 @@ func checkDataIntegrity(c *gin.Context) {
 }
 
 func syncData(c *gin.Context) {
-	c.ShouldBindJSON(&struct{}{})
+	// 这个接口不需要请求体，解析失败也无所谓
+	_ = c.ShouldBindJSON(&struct{}{})
 
 	taskID, _ := scheduler.StartAsyncTask("数据同步")
 
@@ -1034,17 +1038,23 @@ func doExportToExcel(taskID string, years []int) {
 		}
 
 		sheetName := fmt.Sprintf("%d", year)
+		// 工作表建不出来会导致整年的数据写进不存在的地方，必须中止
 		if firstSheet {
-			f.SetSheetName("Sheet1", sheetName)
+			if err := f.SetSheetName("Sheet1", sheetName); err != nil {
+				errMsg = "创建工作表失败: " + err.Error()
+				return
+			}
 			firstSheet = false
-		} else {
-			f.NewSheet(sheetName)
+		} else if _, err := f.NewSheet(sheetName); err != nil {
+			errMsg = "创建工作表失败: " + err.Error()
+			return
 		}
 
 		headers := []string{"日期", "时间", "标题", "UP主", "分区", "时长(秒)", "BVID", "CID", "链接"}
 		for i, h := range headers {
 			cell, _ := excelize.CoordinatesToCellName(i+1, 1)
-			f.SetCellValue(sheetName, cell, h)
+			// 单元格坐标由下标生成，不会非法；真正的落盘错误由结尾的 SaveAs 收口
+			_ = f.SetCellValue(sheetName, cell, h)
 		}
 
 		records, err := database.GetAllHistoryRecords(year)
@@ -1070,7 +1080,7 @@ func doExportToExcel(taskID string, years []int) {
 			values := []interface{}{dateStr, timeStr, title, authorName, tname, duration, bvid, cid, link}
 			for i, v := range values {
 				cell, _ := excelize.CoordinatesToCellName(i+1, row)
-				f.SetCellValue(sheetName, cell, v)
+				_ = f.SetCellValue(sheetName, cell, v)
 			}
 			totalRows++
 		}

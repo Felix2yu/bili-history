@@ -108,7 +108,7 @@ func TestSVCparseDynamicItem(t *testing.T) {
 	})
 
 	t.Run("archive with cover", func(t *testing.T) {
-		raw := svcRawItem("arch1", "DYNAMIC_TYPE_ARCIVE", map[string]any{
+		raw := svcRawItem("arch1", "DYNAMIC_TYPE_ARCIVE", map[string]any{ //nolint:misspell // DYNAMIC_TYPE_ARCIVE 是 B 站接口原样返回的拼写
 			"module_author": map[string]any{"name": "svc作者", "face": "http://face/1.jpg", "pub_ts": 1700000000},
 			"module_dynamic": map[string]any{
 				"major": map[string]any{

@@ -292,8 +292,8 @@ func wbiKeyFromURL(urlStr string) (string, error) {
 // SignWbi 对参数进行 wbi 签名（如果已获取到 keys）
 func (c *Client) SignWbi(params map[string]string) string {
 	if c.ImgKey == "" || c.SubKey == "" {
-		// 尝试获取 keys
-		c.FetchWbiKeys()
+		// 尝试获取 keys：失败时 ImgKey/SubKey 仍为空，下面按未签名处理
+		_ = c.FetchWbiKeys()
 	}
 	if c.ImgKey != "" && c.SubKey != "" {
 		return wbiSign(params, c.ImgKey, c.SubKey)
@@ -400,10 +400,8 @@ func (c *Client) GetWithDm(urlStr string, params map[string]string) ([]byte, err
 
 	// 构建查询字符串
 	queryParts := []string{}
-	if params != nil {
-		for k, v := range params {
-			queryParts = append(queryParts, fmt.Sprintf("%s=%s", url.QueryEscape(k), url.QueryEscape(v)))
-		}
+	for k, v := range params { // range 到 nil map 上本来就是空循环，无需前置判断
+		queryParts = append(queryParts, fmt.Sprintf("%s=%s", url.QueryEscape(k), url.QueryEscape(v)))
 	}
 	queryStr := strings.Join(queryParts, "&")
 
@@ -544,7 +542,7 @@ func (c *Client) GetWatchLaterList() (*WatchLaterData, error) {
 		return nil, fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
-		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+		return nil, &APIError{Code: resp.Code, Message: resp.Message}
 	}
 
 	var data WatchLaterData
@@ -616,7 +614,7 @@ func (c *Client) RemoveFromWatchLater(aid int64) error {
 		return fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
-		return &ApiError{Code: resp.Code, Message: resp.Message}
+		return &APIError{Code: resp.Code, Message: resp.Message}
 	}
 	return nil
 }
@@ -644,7 +642,7 @@ func (c *Client) DeleteBiliHistory(bvids []string) error {
 		return fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
-		return &ApiError{Code: resp.Code, Message: resp.Message}
+		return &APIError{Code: resp.Code, Message: resp.Message}
 	}
 	return nil
 }
@@ -672,18 +670,18 @@ func (c *Client) DeleteBiliHistoryByKid(kid string) error {
 		return fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
-		return &ApiError{Code: resp.Code, Message: resp.Message}
+		return &APIError{Code: resp.Code, Message: resp.Message}
 	}
 	return nil
 }
 
-// ApiError represents a Bilibili API-level error with its code and message.
-type ApiError struct {
+// APIError represents a Bilibili API-level error with its code and message.
+type APIError struct {
 	Code    int
 	Message string
 }
 
-func (e *ApiError) Error() string {
+func (e *APIError) Error() string {
 	return fmt.Sprintf("api error: code=%d, message=%s", e.Code, e.Message)
 }
 
@@ -730,7 +728,7 @@ func (c *Client) GetUserCard(mid string) (*UserCardInfo, error) {
 	}
 
 	if resp.Code != 0 {
-		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+		return nil, &APIError{Code: resp.Code, Message: resp.Message}
 	}
 
 	var result UserCardResponse
@@ -744,7 +742,7 @@ func (c *Client) GetUserCard(mid string) (*UserCardInfo, error) {
 func (c *Client) GetDynamicList(hostMid string, offset string, ps int) (*DynamicSpaceResponse, error) {
 	// 先确保获取 wbi keys
 	if c.ImgKey == "" || c.SubKey == "" {
-		c.FetchWbiKeys()
+		_ = c.FetchWbiKeys()
 	}
 
 	params := map[string]string{
@@ -759,8 +757,8 @@ func (c *Client) GetDynamicList(hostMid string, offset string, ps int) (*Dynamic
 
 	// 如果有 wbi keys，添加签名
 	if c.ImgKey != "" && c.SubKey != "" {
-		w_rid := wbiSign(params, c.ImgKey, c.SubKey)
-		params["w_rid"] = w_rid
+		wRid := wbiSign(params, c.ImgKey, c.SubKey)
+		params["w_rid"] = wRid
 	}
 
 	body, err := c.GetWithDm(DynamicSpaceURL, params)
@@ -774,7 +772,7 @@ func (c *Client) GetDynamicList(hostMid string, offset string, ps int) (*Dynamic
 	}
 
 	if resp.Code != 0 {
-		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+		return nil, &APIError{Code: resp.Code, Message: resp.Message}
 	}
 
 	var result DynamicSpaceResponse
@@ -824,7 +822,7 @@ func (c *Client) GetFavoriteFolderList() (*FavFolderListData, error) {
 		return nil, fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
-		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+		return nil, &APIError{Code: resp.Code, Message: resp.Message}
 	}
 	var data FavFolderListData
 	if err := json.Unmarshal(resp.Data, &data); err != nil {
@@ -849,8 +847,8 @@ func (c *Client) GetCollectedFavoriteFolders(upMid string, pn, ps int) (*FavFold
 
 	// 添加 wbi 签名
 	if c.ImgKey != "" && c.SubKey != "" {
-		w_rid := wbiSign(params, c.ImgKey, c.SubKey)
-		params["w_rid"] = w_rid
+		wRid := wbiSign(params, c.ImgKey, c.SubKey)
+		params["w_rid"] = wRid
 	}
 
 	body, err := c.Get(FavoriteCollectedListURL, params)
@@ -862,7 +860,7 @@ func (c *Client) GetCollectedFavoriteFolders(upMid string, pn, ps int) (*FavFold
 		return nil, fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
-		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+		return nil, &APIError{Code: resp.Code, Message: resp.Message}
 	}
 	var data FavFolderListData
 	if err := json.Unmarshal(resp.Data, &data); err != nil {
@@ -938,7 +936,7 @@ func (c *Client) GetFavoriteResources(mediaID int64, pn, ps int) (*FavResourceDa
 		return nil, fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
-		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+		return nil, &APIError{Code: resp.Code, Message: resp.Message}
 	}
 	var data FavResourceData
 	if err := json.Unmarshal(resp.Data, &data); err != nil {
@@ -980,7 +978,7 @@ func (c *Client) GetSeasonContents(seasonID int64, pn, ps int) (*SeasonData, err
 		return nil, fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
-		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+		return nil, &APIError{Code: resp.Code, Message: resp.Message}
 	}
 	var data SeasonData
 	if err := json.Unmarshal(resp.Data, &data); err != nil {
@@ -1007,7 +1005,7 @@ func (c *Client) DealFavoriteResource(resources string, mediaIDs string) error {
 		return fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
-		return &ApiError{Code: resp.Code, Message: resp.Message}
+		return &APIError{Code: resp.Code, Message: resp.Message}
 	}
 	return nil
 }
@@ -1045,7 +1043,7 @@ func (c *Client) GetLikedVideos(vmid int64) (*LikedVideoData, error) {
 		return nil, fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
-		return nil, &ApiError{Code: resp.Code, Message: resp.Message}
+		return nil, &APIError{Code: resp.Code, Message: resp.Message}
 	}
 	var data LikedVideoData
 	if err := json.Unmarshal(resp.Data, &data); err != nil {
@@ -1076,7 +1074,7 @@ func (c *Client) LikeVideo(bvid string, like bool) error {
 		return fmt.Errorf("unmarshal response error: %w", err)
 	}
 	if resp.Code != 0 {
-		return &ApiError{Code: resp.Code, Message: resp.Message}
+		return &APIError{Code: resp.Code, Message: resp.Message}
 	}
 	return nil
 }

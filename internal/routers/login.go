@@ -231,7 +231,11 @@ func logout(c *gin.Context) {
 	}
 
 	cfg.SESSDATA = ""
-	config.SaveConfig(cfg)
+	if err := config.SaveConfig(cfg); err != nil {
+		// 内存里的 SESSDATA 已经清掉了，落盘失败意味着重启后会复活
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("退出登录失败: "+err.Error()))
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
@@ -275,7 +279,10 @@ func checkLoginStatus(c *gin.Context) {
 	}
 
 	var result interface{}
-	json.Unmarshal(body, &result)
+	if err := json.Unmarshal(body, &result); err != nil {
+		c.JSON(http.StatusBadGateway, models.ErrorResponse("上游返回的不是合法 JSON: "+err.Error()))
+		return
+	}
 
 	c.JSON(http.StatusOK, result)
 }

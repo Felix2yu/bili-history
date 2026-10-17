@@ -429,18 +429,18 @@ func TestBiliResponseUnmarshal(t *testing.T) {
 }
 
 func TestApiError(t *testing.T) {
-	err := &ApiError{Code: -101, Message: "unsafe protected"}
+	err := &APIError{Code: -101, Message: "unsafe protected"}
 	if got, want := err.Error(), "api error: code=-101, message=unsafe protected"; got != want {
 		t.Fatalf("Error() = %q, want %q", got, want)
 	}
-	if got, want := (&ApiError{Code: 0, Message: ""}).Error(), "api error: code=0, message="; got != want {
+	if got, want := (&APIError{Code: 0, Message: ""}).Error(), "api error: code=0, message="; got != want {
 		t.Fatalf("Error() = %q, want %q", got, want)
 	}
-	// Errors surfaced through the error interface stay reachable as *ApiError.
-	var target *ApiError
-	var asError error = &ApiError{Code: -352, Message: "risk control"}
+	// Errors surfaced through the error interface stay reachable as *APIError.
+	var target *APIError
+	var asError error = &APIError{Code: -352, Message: "risk control"}
 	if !errors.As(asError, &target) || target.Code != -352 {
-		t.Fatalf("errors.As could not recover *ApiError from %v", asError)
+		t.Fatalf("errors.As could not recover *APIError from %v", asError)
 	}
 }
 

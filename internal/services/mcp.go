@@ -28,7 +28,8 @@ func GenerateToken() string {
 }
 
 func GetMCPServerURL(cfg *config.Config) string {
-	host := "127.0.0.1"
+	// 监听 0.0.0.0/:: 时对外仍应给本机地址
+	var host string
 	port := 8899
 	if cfg.Server.Host == "0.0.0.0" || cfg.Server.Host == "::" || cfg.Server.Host == "" {
 		host = "127.0.0.1"

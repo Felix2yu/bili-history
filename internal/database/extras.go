@@ -13,9 +13,7 @@ import (
 )
 
 type ExtraDB struct {
-	db   *sql.DB
-	path string
-	mu   sync.RWMutex
+	db *sql.DB
 }
 
 var (
@@ -31,7 +29,8 @@ func getExtraDB(dbFileName string) *sql.DB {
 	dbPath := utils.GetDatabasePath(dbFileName)
 
 	dir := filepath.Dir(dbPath)
-	os.MkdirAll(dir, 0755)
+	// 建不出来时下面的 sql.Open 会立刻报错并记录，这里不重复
+	_ = os.MkdirAll(dir, 0755)
 
 	db, err := sql.Open("sqlite", dbPath+"?_busy_timeout=5000&_journal_mode=WAL")
 	if err != nil {

@@ -679,7 +679,7 @@ func TestMSDeleteSingleApiErrorAndHTTPError(t *testing.T) {
 	msSetCreds(t, "sess", "jct", "dede")
 	e := msMiscAPI(t)
 
-	// ApiError branch: code=-101 -> 删除失败: code=-101, 账号未登录
+	// APIError branch: code=-101 -> 删除失败: code=-101, 账号未登录
 	msWithDelStub(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"code":-101,"message":"账号未登录"}`))
@@ -690,7 +690,7 @@ func TestMSDeleteSingleApiErrorAndHTTPError(t *testing.T) {
 		}
 	})
 
-	// HTTP error branch: non-200 -> not an ApiError -> detailed message
+	// HTTP error branch: non-200 -> not an APIError -> detailed message
 	msWithDelStub(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("boom"))
@@ -731,7 +731,7 @@ func TestMSDeleteBatchBili(t *testing.T) {
 		}
 	})
 
-	// ApiError -352
+	// APIError -352
 	msWithDelStub(t, func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"code":-352,"message":"风控"}`))
 	}, func() {
@@ -741,7 +741,7 @@ func TestMSDeleteBatchBili(t *testing.T) {
 		}
 	})
 
-	// HTTP 500 -> non-ApiError -> 500 envelope
+	// HTTP 500 -> non-APIError -> 500 envelope
 	msWithDelStub(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusBadGateway)
 		_, _ = w.Write([]byte("gw error"))

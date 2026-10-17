@@ -962,7 +962,9 @@ func MarkVideoDeleted(bvid string) error {
 		if !exists {
 			continue
 		}
-		conn.Exec(fmt.Sprintf("UPDATE %s SET status = 1 WHERE bvid = ? AND (status IS NULL OR status = 0)", tableName), bvid)
+		if _, err := conn.Exec(fmt.Sprintf("UPDATE %s SET status = 1 WHERE bvid = ? AND (status IS NULL OR status = 0)", tableName), bvid); err != nil {
+			utils.LogError("标记视频删除失败 table=%s bvid=%s: %v", tableName, bvid, err)
+		}
 	}
 	return nil
 }

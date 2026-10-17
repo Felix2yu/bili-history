@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	utils.LogSuccess("=== 正在启动应用... ===")
+	utils.LogSuccess("=== 正在启动应用 %s ===", version)
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
@@ -43,8 +43,11 @@ func main() {
 	// Ensure all year tables have the status column
 	database.MigrateStatusColumn()
 
-	database.InitCategories()
-	utils.LogSuccess("分类表初始化完成")
+	if err := database.InitCategories(); err != nil {
+		utils.LogError("分类表初始化失败: %v", err)
+	} else {
+		utils.LogSuccess("分类表初始化完成")
+	}
 
 	sched := scheduler.GetScheduler()
 	sched.Start()
@@ -158,9 +161,11 @@ func main() {
 
 	if cfg.Server.SSLEnabled && cfg.Server.SSLCertFile != "" && cfg.Server.SSLKeyFile != "" {
 		utils.LogInfo("使用HTTPS启动服务")
-		r.RunTLS(addr, cfg.Server.SSLCertFile, cfg.Server.SSLKeyFile)
-	} else {
-		r.Run(addr)
+		if err := r.RunTLS(addr, cfg.Server.SSLCertFile, cfg.Server.SSLKeyFile); err != nil {
+			utils.LogError("HTTPS 服务启动失败: %v", err)
+		}
+	} else if err := r.Run(addr); err != nil {
+		utils.LogError("服务启动失败: %v", err)
 	}
 }
 

@@ -89,10 +89,9 @@ func GetDynamicDB() *sql.DB {
 			if _, err := db.Exec(dynamicSchema); err != nil {
 				utils.LogError("Failed to ensure dynamic schema: %v", err)
 			}
-			// 迁移：添加 author_face 列
-			db.Exec("ALTER TABLE dynamics ADD COLUMN author_face TEXT DEFAULT ''")
-			// 迁移：添加 last_dynamic_id 列
-			db.Exec("ALTER TABLE dynamic_hosts ADD COLUMN last_dynamic_id TEXT DEFAULT ''")
+			// 迁移：列已存在时 ALTER 会报错，属预期，故显式丢弃
+			_, _ = db.Exec("ALTER TABLE dynamics ADD COLUMN author_face TEXT DEFAULT ''")
+			_, _ = db.Exec("ALTER TABLE dynamic_hosts ADD COLUMN last_dynamic_id TEXT DEFAULT ''")
 		}
 		dynamicDB = &ExtraDB{db: db}
 	})
@@ -178,8 +177,9 @@ func GetDynamicSpace(hostMid string, limit, offset int) (int, []DynamicItem, err
 			&item.Cover, &item.PublishTS, &mediaLocalsJSON, &liveMediaLocalsJSON); err != nil {
 			continue
 		}
-		json.Unmarshal([]byte(mediaLocalsJSON), &item.MediaLocals)
-		json.Unmarshal([]byte(liveMediaLocalsJSON), &item.LiveMediaLocals)
+		// 解析不出来就当作没有本地文件，不影响列表本身
+		_ = json.Unmarshal([]byte(mediaLocalsJSON), &item.MediaLocals)
+		_ = json.Unmarshal([]byte(liveMediaLocalsJSON), &item.LiveMediaLocals)
 		items = append(items, item)
 	}
 
@@ -250,8 +250,8 @@ func GetDynamicByID(idStr string) (*DynamicItem, error) {
 	if err != nil {
 		return nil, err
 	}
-	json.Unmarshal([]byte(mediaLocalsJSON), &item.MediaLocals)
-	json.Unmarshal([]byte(liveMediaLocalsJSON), &item.LiveMediaLocals)
+	_ = json.Unmarshal([]byte(mediaLocalsJSON), &item.MediaLocals)
+	_ = json.Unmarshal([]byte(liveMediaLocalsJSON), &item.LiveMediaLocals)
 	return &item, nil
 }
 
@@ -349,7 +349,7 @@ func SaveDynamics(hostMid string, items []DynamicItem) (int, error) {
 			}
 		}
 
-		SaveDynamicHost(DynamicHost{
+		_ = SaveDynamicHost(DynamicHost{
 			HostMid:       hostMid,
 			UpName:        upName,
 			FacePath:      facePath,

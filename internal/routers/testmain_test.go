@@ -240,13 +240,6 @@ func countRows(t *testing.T, query string, args ...interface{}) int {
 	return n
 }
 
-func tableExists(t *testing.T, name string) bool {
-	t.Helper()
-	var got string
-	err := db(t).QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name=?", name).Scan(&got)
-	return err == nil
-}
-
 // historyTables lists every per-year history table currently present.
 func historyTables(t *testing.T) []string {
 	t.Helper()
@@ -305,9 +298,4 @@ func setSESSDATA(t *testing.T, value string) func() {
 	prev := cfg.SESSDATA
 	cfg.SESSDATA = value
 	return func() { cfg.SESSDATA = prev }
-}
-
-func hasData(resp map[string]interface{}, key string) bool {
-	_, ok := resp[key]
-	return ok
 }

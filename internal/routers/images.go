@@ -276,7 +276,8 @@ func proxyImage(c *gin.Context) {
 
 	outputPath := utils.GetOutputPath("images")
 	proxyDir := filepath.Join(outputPath, "proxy", fileHash[:2])
-	os.MkdirAll(proxyDir, 0755)
+	// 建不出来时下面写文件的错误会更具体，这里不重复
+	_ = os.MkdirAll(proxyDir, 0755)
 	savePath := filepath.Join(proxyDir, fileHash+ext)
 
 	if _, err := os.Stat(savePath); err == nil {

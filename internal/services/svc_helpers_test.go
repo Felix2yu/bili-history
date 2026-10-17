@@ -189,19 +189,6 @@ func svcSeedDataset() error {
 	return nil
 }
 
-// svcWriteFile 在 rel（相对 cwd）路径写入内容，返回绝对路径。
-func svcWriteFile(t *testing.T, rel string, content []byte) string {
-	t.Helper()
-	abs := filepath.Join(mustGetwd(t), rel)
-	if err := os.MkdirAll(filepath.Dir(abs), 0755); err != nil {
-		t.Fatalf("mkdir %s: %v", rel, err)
-	}
-	if err := os.WriteFile(abs, content, 0644); err != nil {
-		t.Fatalf("write %s: %v", rel, err)
-	}
-	return abs
-}
-
 func mustGetwd(t *testing.T) string {
 	t.Helper()
 	wd, err := os.Getwd()

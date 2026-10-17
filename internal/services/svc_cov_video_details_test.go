@@ -134,7 +134,7 @@ func TestSVCCovFetchVideoDetailFromBili(t *testing.T) {
 		t.Errorf("fetch/update time = (%d,%d), want within [%d,%d]", video.FetchTime, video.UpdateTime, before, after)
 	}
 
-	// API 错误码分支（GetVideoInfo 返回普通错误而非 *ApiError）
+	// API 错误码分支（GetVideoInfo 返回普通错误而非 *APIError）
 	if _, err := FetchVideoDetailFromBili("BVsvcCovErr6"); err == nil ||
 		!strings.Contains(err.Error(), "获取视频详情失败") || !strings.Contains(err.Error(), "code=-6") {
 		t.Errorf("err6 = %v", err)

@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 	_ = os.Chdir(tmp)
 
 	// 预热 LoadConfig（仅执行一次），确保后续测试拿到已加载的配置
-	LoadConfig()
+	_, _ = LoadConfig()
 
 	code := m.Run()
 

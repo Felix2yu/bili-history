@@ -8,6 +8,7 @@ import (
 	"bilibili-history-go/internal/config"
 	"bilibili-history-go/internal/database"
 	"bilibili-history-go/internal/models"
+	"bilibili-history-go/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -253,7 +254,9 @@ func checkDeletedVideos(c *gin.Context) {
 		_, err := client.GetVideoInfo(bvid)
 		if err != nil {
 			// Video not found or deleted
-			database.MarkVideoDeleted(bvid)
+			if err := database.MarkVideoDeleted(bvid); err != nil {
+				utils.LogError("标记视频删除失败 bvid=%s: %v", bvid, err)
+			}
 			deleted = append(deleted, bvid)
 		}
 	}

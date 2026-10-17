@@ -74,7 +74,7 @@ func msHTTPJSON(status int, body string) *http.Response {
 	w := httptest.NewRecorder()
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.WriteString(body)
+	_, _ = w.WriteString(body)
 	return w.Result()
 }
 

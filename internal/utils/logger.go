@@ -54,7 +54,8 @@ func (l *Logger) init() {
 	day := now.Format("02")
 
 	l.logDir = filepath.Join("output", "logs", year, month, day)
-	os.MkdirAll(l.logDir, 0755)
+	// 目录建不出来时，下面的 OpenFile 会把真实原因打到 stderr，这里不重复报
+	_ = os.MkdirAll(l.logDir, 0755)
 
 	logPath := filepath.Join(l.logDir, day+".log")
 	errorPath := filepath.Join(l.logDir, "error_"+day+".log")
@@ -104,12 +105,14 @@ func (l *Logger) log(level LogLevel, format string, args ...interface{}) {
 	message := fmt.Sprintf(format, args...)
 	logLine := fmt.Sprintf("[%s] [%s] %s\n", timestamp, levelName, message)
 
+	// 日志写入是最后一道防线：失败时既不能递归记日志，也不该往 stderr 刷屏，
+	// 下一个日志行还会重试，因此显式丢弃。
 	if l.logFile != nil {
-		l.logFile.WriteString(logLine)
+		_, _ = l.logFile.WriteString(logLine)
 	}
 
 	if level >= LevelError && l.errorFile != nil {
-		l.errorFile.WriteString(logLine)
+		_, _ = l.errorFile.WriteString(logLine)
 	}
 
 	if level == LevelError || level == LevelWarning || level == LevelSuccess {

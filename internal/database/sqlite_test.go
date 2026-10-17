@@ -262,7 +262,7 @@ func TestResetDatabase(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	orig, _ := os.Getwd()
-	defer os.Chdir(orig)
+	defer func() { _ = os.Chdir(orig) }()
 	if err := os.Chdir(dir); err != nil {
 		t.Fatal(err)
 	}

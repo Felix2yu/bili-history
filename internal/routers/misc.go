@@ -505,16 +505,16 @@ func getMcpConfig(c *gin.Context) {
 	tokenConfigured := cfg.Mcp.Token != ""
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":          "success",
-		"enabled":         cfg.Mcp.Enabled,
-		"path":            mcpPath,
-		"auth_enabled":    cfg.Mcp.AuthEnabled,
-		"token":           cfg.Mcp.Token,
+		"status":           "success",
+		"enabled":          cfg.Mcp.Enabled,
+		"path":             mcpPath,
+		"auth_enabled":     cfg.Mcp.AuthEnabled,
+		"token":            cfg.Mcp.Token,
 		"token_configured": tokenConfigured,
-		"max_page_size":   cfg.Mcp.MaxPageSize,
-		"server_url":      serverURL,
-		"mcp_url":         mcpURL,
-		"skill_content":   services.GetMCPSkillContent(cfg),
+		"max_page_size":    cfg.Mcp.MaxPageSize,
+		"server_url":       serverURL,
+		"mcp_url":          mcpURL,
+		"skill_content":    services.GetMCPSkillContent(cfg),
 	})
 }
 
@@ -569,17 +569,17 @@ func saveMcpConfig(c *gin.Context) {
 	mcpURL := serverURL + cfg.Mcp.Path + "/"
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":          "success",
-		"message":         "MCP配置已保存",
-		"enabled":         cfg.Mcp.Enabled,
-		"path":            cfg.Mcp.Path,
-		"auth_enabled":    cfg.Mcp.AuthEnabled,
-		"token":           cfg.Mcp.Token,
+		"status":           "success",
+		"message":          "MCP配置已保存",
+		"enabled":          cfg.Mcp.Enabled,
+		"path":             cfg.Mcp.Path,
+		"auth_enabled":     cfg.Mcp.AuthEnabled,
+		"token":            cfg.Mcp.Token,
 		"token_configured": cfg.Mcp.Token != "",
-		"max_page_size":   cfg.Mcp.MaxPageSize,
-		"server_url":      serverURL,
-		"mcp_url":         mcpURL,
-		"skill_content":   services.GetMCPSkillContent(cfg),
+		"max_page_size":    cfg.Mcp.MaxPageSize,
+		"server_url":       serverURL,
+		"mcp_url":          mcpURL,
+		"skill_content":    services.GetMCPSkillContent(cfg),
 		"restart_required": true,
 	})
 }
@@ -855,16 +855,16 @@ func updateDataSyncConfig(c *gin.Context) {
 func getSyncConfig(c *gin.Context) {
 	cfg := config.GetConfig()
 	c.JSON(http.StatusOK, gin.H{
-		"success":                true,
-		"sync_deleted":           cfg.Sync.SyncDeleted,
+		"success":                 true,
+		"sync_deleted":            cfg.Sync.SyncDeleted,
 		"sync_delete_to_bilibili": cfg.Sync.SyncDeleteToBilibili,
 	})
 }
 
 func updateSyncConfig(c *gin.Context) {
 	var body struct {
-		SyncDeleted           *bool `json:"sync_deleted"`
-		SyncDeleteToBilibili  *bool `json:"sync_delete_to_bilibili"`
+		SyncDeleted          *bool `json:"sync_deleted"`
+		SyncDeleteToBilibili *bool `json:"sync_delete_to_bilibili"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "参数错误"})
@@ -1087,7 +1087,7 @@ func doExportToExcel(taskID string, years []int) {
 
 	success = true
 	resultBytes, _ := json.Marshal(map[string]interface{}{
-		"total_rows": totalRows,
+		"total_rows":   totalRows,
 		"download_url": fmt.Sprintf("/api/export/download/%s", taskID),
 		"file_name":    "bilibili_history.xlsx",
 	})
@@ -1257,9 +1257,9 @@ func getFetchStatus(c *gin.Context) {
 		status := services.GetFetchTaskStatus(taskID)
 		if status == nil {
 			c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-				"task_id":   taskID,
-				"status":    "not_found",
-				"message":   "任务不存在或已完成",
+				"task_id": taskID,
+				"status":  "not_found",
+				"message": "任务不存在或已完成",
 			}))
 			return
 		}

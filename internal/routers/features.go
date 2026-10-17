@@ -356,17 +356,17 @@ func getOnlineFavoriteContents(c *gin.Context) {
 			bvid = item.UGC.Bvid
 		}
 		list = append(list, map[string]interface{}{
-			"id":          item.ID,
-			"title":       item.Title,
-			"cover":       item.Cover,
-			"bvid":        bvid,
-			"duration":    item.Duration,
-			"upper_mid":   item.Upper.Mid,
-			"upper_name":  item.Upper.Name,
-			"upper_face":  item.Upper.Face,
-			"fav_time":    item.FavTime,
-			"pub_time":    item.Pubtime,
-			"intro":       item.Intro,
+			"id":         item.ID,
+			"title":      item.Title,
+			"cover":      item.Cover,
+			"bvid":       bvid,
+			"duration":   item.Duration,
+			"upper_mid":  item.Upper.Mid,
+			"upper_name": item.Upper.Name,
+			"upper_face": item.Upper.Face,
+			"fav_time":   item.FavTime,
+			"pub_time":   item.Pubtime,
+			"intro":      item.Intro,
 		})
 	}
 

@@ -52,19 +52,19 @@ func (l *Logger) init() {
 	year := now.Format("2006")
 	month := now.Format("01")
 	day := now.Format("02")
-	
+
 	l.logDir = filepath.Join("output", "logs", year, month, day)
 	os.MkdirAll(l.logDir, 0755)
-	
+
 	logPath := filepath.Join(l.logDir, day+".log")
 	errorPath := filepath.Join(l.logDir, "error_"+day+".log")
-	
+
 	var err error
 	l.logFile, err = os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to open log file: %v\n", err)
 	}
-	
+
 	l.errorFile, err = os.OpenFile(errorPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to open error log file: %v\n", err)
@@ -74,11 +74,11 @@ func (l *Logger) init() {
 func (l *Logger) checkDate() {
 	now := Now()
 	today := now.Format("2006-01-02")
-	
+
 	if today != l.currentDate {
 		l.mu.Lock()
 		defer l.mu.Unlock()
-		
+
 		if today != l.currentDate {
 			if l.logFile != nil {
 				l.logFile.Close()
@@ -93,25 +93,25 @@ func (l *Logger) checkDate() {
 
 func (l *Logger) log(level LogLevel, format string, args ...interface{}) {
 	l.checkDate()
-	
+
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	now := Now()
 	timestamp := now.Format("2006-01-02 15:04:05")
 	levelName := levelNames[level]
-	
+
 	message := fmt.Sprintf(format, args...)
 	logLine := fmt.Sprintf("[%s] [%s] %s\n", timestamp, levelName, message)
-	
+
 	if l.logFile != nil {
 		l.logFile.WriteString(logLine)
 	}
-	
+
 	if level >= LevelError && l.errorFile != nil {
 		l.errorFile.WriteString(logLine)
 	}
-	
+
 	if level == LevelError || level == LevelWarning || level == LevelSuccess {
 		fmt.Print(logLine)
 	}

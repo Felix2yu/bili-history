@@ -89,9 +89,9 @@ func GetSchedulerDB() *sql.DB {
 func migrateSchedulerDB(db *sql.DB) {
 	// Columns to ensure exist in main_tasks: column_name -> DDL fragment
 	mainTaskMigrations := map[string]string{
-		"parent_id":     "TEXT DEFAULT ''",
-		"depends_on":    "TEXT DEFAULT ''",
-		"task_type":     "TEXT DEFAULT 'main'",
+		"parent_id":      "TEXT DEFAULT ''",
+		"depends_on":     "TEXT DEFAULT ''",
+		"task_type":      "TEXT DEFAULT 'main'",
 		"schedule_delay": "INTEGER DEFAULT 0",
 	}
 	ensureColumns(db, "main_tasks", mainTaskMigrations)
@@ -132,36 +132,36 @@ func ensureColumns(db *sql.DB, table string, columns map[string]string) {
 }
 
 type MainTask struct {
-	TaskID         string `json:"task_id"`
-	Name           string `json:"name"`
-	Endpoint       string `json:"endpoint"`
-	Method         string `json:"method"`
-	Params         string `json:"params"`
-	ScheduleType   string `json:"schedule_type"`
-	ScheduleTime   string `json:"schedule_time"`
-	ScheduleDelay  int    `json:"schedule_delay"`
-	IntervalValue  int    `json:"interval_value"`
-	IntervalUnit   string `json:"interval_unit"`
-	Enabled        int    `json:"enabled"`
-	TaskType       string `json:"task_type"`
-	ParentID       string `json:"parent_id"`
-	DependsOn      string `json:"depends_on"`
-	CreatedAt      string `json:"created_at"`
-	LastModified   string `json:"last_modified"`
+	TaskID        string `json:"task_id"`
+	Name          string `json:"name"`
+	Endpoint      string `json:"endpoint"`
+	Method        string `json:"method"`
+	Params        string `json:"params"`
+	ScheduleType  string `json:"schedule_type"`
+	ScheduleTime  string `json:"schedule_time"`
+	ScheduleDelay int    `json:"schedule_delay"`
+	IntervalValue int    `json:"interval_value"`
+	IntervalUnit  string `json:"interval_unit"`
+	Enabled       int    `json:"enabled"`
+	TaskType      string `json:"task_type"`
+	ParentID      string `json:"parent_id"`
+	DependsOn     string `json:"depends_on"`
+	CreatedAt     string `json:"created_at"`
+	LastModified  string `json:"last_modified"`
 }
 
 type TaskStatus struct {
-	TaskID        string  `json:"task_id"`
-	LastRunTime   string  `json:"last_run_time"`
-	NextRunTime   string  `json:"next_run_time"`
-	LastStatus    string  `json:"last_status"`
-	TotalRuns     int     `json:"total_runs"`
-	SuccessRuns   int     `json:"success_runs"`
-	FailRuns      int     `json:"fail_runs"`
-	AvgDuration   float64 `json:"avg_duration"`
-	LastError     string  `json:"last_error"`
-	Tags          string  `json:"tags"`
-	SuccessRate   float64 `json:"success_rate"`
+	TaskID      string  `json:"task_id"`
+	LastRunTime string  `json:"last_run_time"`
+	NextRunTime string  `json:"next_run_time"`
+	LastStatus  string  `json:"last_status"`
+	TotalRuns   int     `json:"total_runs"`
+	SuccessRuns int     `json:"success_runs"`
+	FailRuns    int     `json:"fail_runs"`
+	AvgDuration float64 `json:"avg_duration"`
+	LastError   string  `json:"last_error"`
+	Tags        string  `json:"tags"`
+	SuccessRate float64 `json:"success_rate"`
 }
 
 func GetMainTasks() ([]MainTask, error) {

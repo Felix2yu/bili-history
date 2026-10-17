@@ -73,11 +73,11 @@ func analyzeHistory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":           "success",
-		"message":          "分析完成",
-		"data":             result,
-		"year":             year,
-		"available_years":  availableYears,
+		"status":          "success",
+		"message":         "分析完成",
+		"data":            result,
+		"year":            year,
+		"available_years": availableYears,
 	})
 }
 

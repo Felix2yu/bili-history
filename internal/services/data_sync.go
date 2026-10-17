@@ -29,15 +29,15 @@ type IntegrityCheckResult struct {
 }
 
 type SyncResult struct {
-	Success         bool              `json:"success"`
-	Timestamp       string            `json:"timestamp"`
-	TotalSynced     int               `json:"total_synced"`
-	JSONToDBCount   int               `json:"json_to_db_count"`
-	DBToJSONCount   int               `json:"db_to_json_count"`
-	TotalJSONRecords int              `json:"total_json_records"`
-	TotalDBRecords  int               `json:"total_db_records"`
-	SyncedDays      []SyncedDayDetail `json:"synced_days,omitempty"`
-	Message         string            `json:"message,omitempty"`
+	Success          bool              `json:"success"`
+	Timestamp        string            `json:"timestamp"`
+	TotalSynced      int               `json:"total_synced"`
+	JSONToDBCount    int               `json:"json_to_db_count"`
+	DBToJSONCount    int               `json:"db_to_json_count"`
+	TotalJSONRecords int               `json:"total_json_records"`
+	TotalDBRecords   int               `json:"total_db_records"`
+	SyncedDays       []SyncedDayDetail `json:"synced_days,omitempty"`
+	Message          string            `json:"message,omitempty"`
 }
 
 type SyncedDayDetail struct {
@@ -108,8 +108,6 @@ func RunIntegrityCheck(forceCheck bool) (*IntegrityCheckResult, error) {
 
 	return result, nil
 }
-
-
 
 func countDBRecords() (int, error) {
 	db := database.GetSQLiteDB()

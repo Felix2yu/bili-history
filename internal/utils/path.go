@@ -19,10 +19,10 @@ func GetOutputPath(paths ...string) string {
 	basePath := GetBasePath()
 	outputDir := filepath.Join(basePath, "output")
 	os.MkdirAll(outputDir, 0755)
-	
+
 	fullPath := filepath.Join(append([]string{outputDir}, paths...)...)
 	os.MkdirAll(filepath.Dir(fullPath), 0755)
-	
+
 	return fullPath
 }
 
@@ -30,10 +30,10 @@ func GetDatabasePath(paths ...string) string {
 	basePath := GetBasePath()
 	databaseDir := filepath.Join(basePath, "output", "database")
 	os.MkdirAll(databaseDir, 0755)
-	
+
 	fullPath := filepath.Join(append([]string{databaseDir}, paths...)...)
 	os.MkdirAll(filepath.Dir(fullPath), 0755)
-	
+
 	return fullPath
 }
 

@@ -198,19 +198,19 @@ func TestViewingStats(t *testing.T) {
 	// the handler shares the single pooled connection.
 	insertHistory(t, yearViewing, map[string]interface{}{
 		"bvid": uniqueBvid("BVVW", 1), "title": "观看样本A", "tag_name": "科技",
-		"view_at": viewAt(t, yearViewing, time.June, 5, 21, 0),
+		"view_at":  viewAt(t, yearViewing, time.June, 5, 21, 0),
 		"duration": 300, "progress": 300, "business": "video", "author_mid": 310001,
 	})
 	insertHistory(t, yearViewing, map[string]interface{}{
 		"bvid": uniqueBvid("BVVW", 2), "title": "观看样本B", "tag_name": "音乐",
-		"view_at": viewAt(t, yearViewing, time.June, 6, 8, 0),
+		"view_at":  viewAt(t, yearViewing, time.June, 6, 8, 0),
 		"duration": 120, "progress": 60, "business": "video", "author_mid": 310002,
 	})
 	// A second June row so the peak day has an unambiguous winner: the query
 	// orders by COUNT DESC LIMIT 1 and a 1-1 tie has no defined tie-break.
 	insertHistory(t, yearViewing, map[string]interface{}{
 		"bvid": uniqueBvid("BVVW", 3), "title": "观看样本C", "tag_name": "科技",
-		"view_at": viewAt(t, yearViewing, time.June, 5, 22, 30),
+		"view_at":  viewAt(t, yearViewing, time.June, 5, 22, 30),
 		"duration": 90, "progress": 0, "business": "video", "author_mid": 310003,
 	})
 	done := make(chan apiResp, 1)

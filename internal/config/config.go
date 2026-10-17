@@ -17,12 +17,12 @@ type NotifyConfig struct {
 }
 
 type ServerConfig struct {
-	Host           string              `yaml:"host" json:"host"`
-	Port           int                 `yaml:"port" json:"port"`
-	SSLEnabled     bool                `yaml:"ssl_enabled" json:"ssl_enabled"`
-	SSLCertFile    string              `yaml:"ssl_certfile" json:"ssl_certfile"`
-	SSLKeyFile     string              `yaml:"ssl_keyfile" json:"ssl_keyfile"`
-	DataIntegrity  DataIntegrityConfig `yaml:"data_integrity" json:"data_integrity"`
+	Host          string              `yaml:"host" json:"host"`
+	Port          int                 `yaml:"port" json:"port"`
+	SSLEnabled    bool                `yaml:"ssl_enabled" json:"ssl_enabled"`
+	SSLCertFile   string              `yaml:"ssl_certfile" json:"ssl_certfile"`
+	SSLKeyFile    string              `yaml:"ssl_keyfile" json:"ssl_keyfile"`
+	DataIntegrity DataIntegrityConfig `yaml:"data_integrity" json:"data_integrity"`
 }
 
 type DataIntegrityConfig struct {
@@ -30,7 +30,7 @@ type DataIntegrityConfig struct {
 }
 
 type SyncConfig struct {
-	SyncDeleted         bool `yaml:"sync_deleted" json:"sync_deleted"`
+	SyncDeleted          bool `yaml:"sync_deleted" json:"sync_deleted"`
 	SyncDeleteToBilibili bool `yaml:"sync_delete_to_bilibili" json:"sync_delete_to_bilibili"`
 }
 
@@ -66,23 +66,23 @@ type McpConfig struct {
 }
 
 type Config struct {
-	SESSDATA         string          `yaml:"SESSDATA" json:"SESSDATA"`
-	OutputFolder     string          `yaml:"output_folder" json:"output_folder"`
-	DBFile           string          `yaml:"db_file" json:"db_file"`
-	LogFile          string          `yaml:"log_file" json:"log_file"`
-	CategoriesFile   string          `yaml:"categories_file" json:"categories_file"`
-	FieldsToRemove   []string        `yaml:"fields_to_remove" json:"fields_to_remove"`
-	Notify           NotifyConfig    `yaml:"notify" json:"notify"`
-	LogFolder        string          `yaml:"log_folder" json:"log_folder"`
-	Server           ServerConfig    `yaml:"server" json:"server"`
-	Scheduler        SchedulerConfig `yaml:"scheduler" json:"scheduler"`
-	Sync             SyncConfig      `yaml:"sync" json:"sync"`
-	Appearance       AppearanceConfig `yaml:"appearance" json:"appearance"`
-	Heatmap          HeatmapConfig   `yaml:"heatmap" json:"heatmap"`
-	Mcp              McpConfig       `yaml:"mcp" json:"mcp"`
-	BiliJct          string          `yaml:"bili_jct" json:"bili_jct"`
-	DedeUserID       string          `yaml:"DedeUserID" json:"DedeUserID"`
-	DedeUserIDCkMd5  string          `yaml:"DedeUserID__ckMd5" json:"DedeUserID__ckMd5"`
+	SESSDATA        string           `yaml:"SESSDATA" json:"SESSDATA"`
+	OutputFolder    string           `yaml:"output_folder" json:"output_folder"`
+	DBFile          string           `yaml:"db_file" json:"db_file"`
+	LogFile         string           `yaml:"log_file" json:"log_file"`
+	CategoriesFile  string           `yaml:"categories_file" json:"categories_file"`
+	FieldsToRemove  []string         `yaml:"fields_to_remove" json:"fields_to_remove"`
+	Notify          NotifyConfig     `yaml:"notify" json:"notify"`
+	LogFolder       string           `yaml:"log_folder" json:"log_folder"`
+	Server          ServerConfig     `yaml:"server" json:"server"`
+	Scheduler       SchedulerConfig  `yaml:"scheduler" json:"scheduler"`
+	Sync            SyncConfig       `yaml:"sync" json:"sync"`
+	Appearance      AppearanceConfig `yaml:"appearance" json:"appearance"`
+	Heatmap         HeatmapConfig    `yaml:"heatmap" json:"heatmap"`
+	Mcp             McpConfig        `yaml:"mcp" json:"mcp"`
+	BiliJct         string           `yaml:"bili_jct" json:"bili_jct"`
+	DedeUserID      string           `yaml:"DedeUserID" json:"DedeUserID"`
+	DedeUserIDCkMd5 string           `yaml:"DedeUserID__ckMd5" json:"DedeUserID__ckMd5"`
 }
 
 var (

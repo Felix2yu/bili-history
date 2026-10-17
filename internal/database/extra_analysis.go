@@ -7,31 +7,31 @@ import (
 
 // LikesAnalysisResult 点赞分析结果
 type LikesAnalysisResult struct {
-	TotalCount      int                `json:"total_count"`
-	TopCreators     []CreatorCount     `json:"top_creators"`
-	CategoryDist    []CategoryCount    `json:"category_dist"`
-	DurationDist    []DurationBucket   `json:"duration_dist"`
-	AvgViewCount    float64            `json:"avg_view_count"`
-	AvgDanmakuCount float64            `json:"avg_danmaku_count"`
+	TotalCount      int              `json:"total_count"`
+	TopCreators     []CreatorCount   `json:"top_creators"`
+	CategoryDist    []CategoryCount  `json:"category_dist"`
+	DurationDist    []DurationBucket `json:"duration_dist"`
+	AvgViewCount    float64          `json:"avg_view_count"`
+	AvgDanmakuCount float64          `json:"avg_danmaku_count"`
 }
 
 // FavoritesAnalysisResult 收藏分析结果
 type FavoritesAnalysisResult struct {
-	TotalCount      int                `json:"total_count"`
-	FolderCount     int                `json:"folder_count"`
-	FolderDist      []FolderCount      `json:"folder_dist"`
-	TopCreators     []CreatorCount     `json:"top_creators"`
-	AvgPlayCount    float64            `json:"avg_play_count"`
-	AvgCollectCount float64            `json:"avg_collect_count"`
+	TotalCount      int            `json:"total_count"`
+	FolderCount     int            `json:"folder_count"`
+	FolderDist      []FolderCount  `json:"folder_dist"`
+	TopCreators     []CreatorCount `json:"top_creators"`
+	AvgPlayCount    float64        `json:"avg_play_count"`
+	AvgCollectCount float64        `json:"avg_collect_count"`
 }
 
 // WatchLaterAnalysisResult 稍后再看分析结果
 type WatchLaterAnalysisResult struct {
-	TotalCount      int                `json:"total_count"`
-	CategoryDist    []CategoryCount    `json:"category_dist"`
-	DurationDist    []DurationBucket   `json:"duration_dist"`
-	AvgViewCount    float64            `json:"avg_view_count"`
-	OldestItems     []WatchLaterItem   `json:"oldest_items"`
+	TotalCount   int              `json:"total_count"`
+	CategoryDist []CategoryCount  `json:"category_dist"`
+	DurationDist []DurationBucket `json:"duration_dist"`
+	AvgViewCount float64          `json:"avg_view_count"`
+	OldestItems  []WatchLaterItem `json:"oldest_items"`
 }
 
 // CreatorCount 创作者计数

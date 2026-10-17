@@ -138,12 +138,12 @@ func getTimeSlots(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{
-		"daily_time_slots":  result.DailyTimeSlots,
-		"peak_hours":        result.PeakHours,
-		"time_investment":   result.TimeInvestment,
-		"max_daily_record":  result.MaxDailyRecord,
-		"year":              year,
-		"available_years":   availableYears,
+		"daily_time_slots": result.DailyTimeSlots,
+		"peak_hours":       result.PeakHours,
+		"time_investment":  result.TimeInvestment,
+		"max_daily_record": result.MaxDailyRecord,
+		"year":             year,
+		"available_years":  availableYears,
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(data))
@@ -185,10 +185,10 @@ func getViewingOverview(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{
-		"details":          result.Details,
-		"report":           result.Report,
-		"year":             year,
-		"available_years":  availableYears,
+		"details":         result.Details,
+		"report":          result.Report,
+		"year":            year,
+		"available_years": availableYears,
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(data))
@@ -208,9 +208,9 @@ func getWatchCounts(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{
-		"watch_counts":       result,
-		"year":               year,
-		"available_years":    availableYears,
+		"watch_counts":    result,
+		"year":            year,
+		"available_years": availableYears,
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(data))
@@ -230,9 +230,9 @@ func getCompletionRates(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{
-		"completion_rates":  result,
-		"year":              year,
-		"available_years":   availableYears,
+		"completion_rates": result,
+		"year":             year,
+		"available_years":  availableYears,
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(data))
@@ -252,9 +252,9 @@ func getAuthorCompletion(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{
-		"completion_rates":  result,
-		"year":              year,
-		"available_years":   availableYears,
+		"completion_rates": result,
+		"year":             year,
+		"available_years":  availableYears,
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(data))
@@ -280,8 +280,8 @@ func getTagAnalysis(c *gin.Context) {
 		"completion_rates": map[string]interface{}{
 			"tag_completion_rates": result.TagCompletionRates,
 		},
-		"year":             year,
-		"available_years":  availableYears,
+		"year":            year,
+		"available_years": availableYears,
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(data))

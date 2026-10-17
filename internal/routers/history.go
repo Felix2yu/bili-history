@@ -40,19 +40,19 @@ func getDailyCount(c *gin.Context) {
 	count, totalSeconds, err := database.GetDailyStats(date, year)
 	if err != nil {
 		c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-			"total_count":        0,
+			"total_count":         0,
 			"total_watch_seconds": 0,
-			"unique_authors":     0,
-			"total_duration":     0,
+			"unique_authors":      0,
+			"total_duration":      0,
 		}))
 		return
 	}
 
 	c.JSON(http.StatusOK, models.SuccessResponse(map[string]interface{}{
-		"total_count":        count,
+		"total_count":         count,
 		"total_watch_seconds": totalSeconds,
-		"unique_authors":     0,
-		"total_duration":     0,
+		"unique_authors":      0,
+		"total_duration":      0,
 	}))
 }
 
@@ -106,10 +106,10 @@ func getHistoryPage(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{
-		"records":        result.Records,
-		"total":          result.Total,
-		"size":           result.Size,
-		"current":        result.Current,
+		"records":         result.Records,
+		"total":           result.Total,
+		"size":            result.Size,
+		"current":         result.Current,
 		"available_years": availableYears,
 	}
 
@@ -142,10 +142,10 @@ func searchHistory(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{
-		"records":        result.Records,
-		"total":          result.Total,
-		"size":           result.Size,
-		"current":        result.Current,
+		"records":         result.Records,
+		"total":           result.Total,
+		"size":            result.Size,
+		"current":         result.Current,
 		"available_years": availableYears,
 		"search_info": map[string]interface{}{
 			"keyword":     search,

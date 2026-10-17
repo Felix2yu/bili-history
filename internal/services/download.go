@@ -47,16 +47,16 @@ type DownloadedVideoFile struct {
 }
 
 type DownloadedVideo struct {
-	Title       string              `json:"title"`
-	BVID        string              `json:"bvid"`
-	CID         string              `json:"cid"`
-	Cover       string              `json:"cover"`
-	AuthorName  string              `json:"author_name"`
-	AuthorFace  string              `json:"author_face"`
-	AuthorMid   int64               `json:"author_mid"`
-	DownloadDate string             `json:"download_date"`
-	Files       []DownloadedVideoFile `json:"files"`
-	Directory   string              `json:"directory"`
+	Title        string                `json:"title"`
+	BVID         string                `json:"bvid"`
+	CID          string                `json:"cid"`
+	Cover        string                `json:"cover"`
+	AuthorName   string                `json:"author_name"`
+	AuthorFace   string                `json:"author_face"`
+	AuthorMid    int64                 `json:"author_mid"`
+	DownloadDate string                `json:"download_date"`
+	Files        []DownloadedVideoFile `json:"files"`
+	Directory    string                `json:"directory"`
 }
 
 func GetDownloadOutputPath() string {
@@ -177,9 +177,9 @@ type videoDetail struct {
 	Title string `json:"title"`
 	Cover string `json:"pic"`
 	Owner struct {
-		Name  string `json:"name"`
-		Face  string `json:"face"`
-		Mid   int64  `json:"mid"`
+		Name string `json:"name"`
+		Face string `json:"face"`
+		Mid  int64  `json:"mid"`
 	} `json:"owner"`
 }
 
@@ -838,10 +838,10 @@ func GetUserVideos(mid string, pn, ps int) ([]map[string]string, int, error) {
 		Data struct {
 			List struct {
 				Vlist []struct {
-					BVID  string `json:"bvid"`
-					Title string `json:"title"`
-					Pic   string `json:"pic"`
-					AID   int64  `json:"aid"`
+					BVID   string `json:"bvid"`
+					Title  string `json:"title"`
+					Pic    string `json:"pic"`
+					AID    int64  `json:"aid"`
 					Length string `json:"length"`
 				} `json:"vlist"`
 			} `json:"list"`
@@ -862,10 +862,10 @@ func GetUserVideos(mid string, pn, ps int) ([]map[string]string, int, error) {
 	var videos []map[string]string
 	for _, v := range result.Data.List.Vlist {
 		videos = append(videos, map[string]string{
-			"bvid":  v.BVID,
-			"title": v.Title,
-			"pic":   v.Pic,
-			"aid":   strconv.FormatInt(v.AID, 10),
+			"bvid":   v.BVID,
+			"title":  v.Title,
+			"pic":    v.Pic,
+			"aid":    strconv.FormatInt(v.AID, 10),
 			"length": v.Length,
 		})
 	}

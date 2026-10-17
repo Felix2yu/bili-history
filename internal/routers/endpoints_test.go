@@ -84,27 +84,27 @@ func TestEndpointRegistryCoversAllRoutes(t *testing.T) {
 	// in endpoints.go. They are listed here so the consistency check still
 	// guards every other endpoint and so the gap is explicit.
 	knownGaps := map[string]bool{
-		"DELETE /dynamic/item/:id_str":              true,
-		"GET /config/mcp-config":                    true,
-		"GET /dynamic/user_card/:mid":               true,
-		"GET /export/download/:task_id":             true,
-		"GET /favorite/collected/local/list":        true,
-		"GET /favorite/content/online":              true,
-		"GET /favorite/local/list":                  true,
-		"GET /history/dates":                        true,
-		"GET /task/:id/status":                      true,
-		"GET /title-analytics/length":               true,
-		"GET /title-analytics/patterns":             true,
-		"GET /title-analytics/sentiment":            true,
-		"GET /title-analytics/stats":                true,
-		"GET /title-analytics/trend":                true,
-		"GET /viewing/extra-overview":               true,
-		"GET /viewing/favorites-analysis":           true,
-		"GET /viewing/likes-analysis":               true,
-		"GET /viewing/watchlater-analysis":          true,
-		"POST /config/mcp-config":                   true,
-		"POST /importSqlite/import_data_sqlite":     true,
-		"POST /like/toggle":                         true,
+		"DELETE /dynamic/item/:id_str":          true,
+		"GET /config/mcp-config":                true,
+		"GET /dynamic/user_card/:mid":           true,
+		"GET /export/download/:task_id":         true,
+		"GET /favorite/collected/local/list":    true,
+		"GET /favorite/content/online":          true,
+		"GET /favorite/local/list":              true,
+		"GET /history/dates":                    true,
+		"GET /task/:id/status":                  true,
+		"GET /title-analytics/length":           true,
+		"GET /title-analytics/patterns":         true,
+		"GET /title-analytics/sentiment":        true,
+		"GET /title-analytics/stats":            true,
+		"GET /title-analytics/trend":            true,
+		"GET /viewing/extra-overview":           true,
+		"GET /viewing/favorites-analysis":       true,
+		"GET /viewing/likes-analysis":           true,
+		"GET /viewing/watchlater-analysis":      true,
+		"POST /config/mcp-config":               true,
+		"POST /importSqlite/import_data_sqlite": true,
+		"POST /like/toggle":                     true,
 	}
 
 	routes := fullAPIRoutes()
@@ -139,11 +139,11 @@ func TestEndpointRegistryHasNoStaleEntries(t *testing.T) {
 	// on "/title-analytics/...". PRODUCTION BUG (not fixed here): GetEndpointMeta
 	// can therefore never return the metadata for those five endpoints.
 	knownStale := map[string]bool{
-		"GET /title/length":   true,
-		"GET /title/patterns": true,
+		"GET /title/length":    true,
+		"GET /title/patterns":  true,
 		"GET /title/sentiment": true,
-		"GET /title/stats":    true,
-		"GET /title/trend":    true,
+		"GET /title/stats":     true,
+		"GET /title/trend":     true,
 	}
 
 	var stale []string

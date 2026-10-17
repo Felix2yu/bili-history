@@ -22,12 +22,12 @@ func svcRawItem(idStr, dtype string, modules map[string]any) biliapi.DynamicRawI
 
 func TestSVCExtractExt(t *testing.T) {
 	cases := map[string]string{
-		"https://i0.hdslb.com/a/b.png":                        ".png",
-		"https://i0.hdslb.com/a/b.jpg?x-oss-process=resize":   ".jpg",
-		"https://i0.hdslb.com/a/b":                             ".jpg", // 无扩展名兜底 .jpg
-		"https://i0.hdslb.com/a/b.webp?":                      ".webp",
-		"https://i0.hdslb.com/a/b.jpeg?v=1#frag":              ".jpeg", // #fragment 不参与截断（记录现状）
-		"https://i0.hdslb.com/a/b.gif":                        ".gif",
+		"https://i0.hdslb.com/a/b.png":                      ".png",
+		"https://i0.hdslb.com/a/b.jpg?x-oss-process=resize": ".jpg",
+		"https://i0.hdslb.com/a/b":                          ".jpg", // 无扩展名兜底 .jpg
+		"https://i0.hdslb.com/a/b.webp?":                    ".webp",
+		"https://i0.hdslb.com/a/b.jpeg?v=1#frag":            ".jpeg", // #fragment 不参与截断（记录现状）
+		"https://i0.hdslb.com/a/b.gif":                      ".gif",
 	}
 	for in, want := range cases {
 		if got := extractExt(in); got != want {
@@ -109,7 +109,7 @@ func TestSVCparseDynamicItem(t *testing.T) {
 
 	t.Run("archive with cover", func(t *testing.T) {
 		raw := svcRawItem("arch1", "DYNAMIC_TYPE_ARCIVE", map[string]any{
-			"module_author":   map[string]any{"name": "svc作者", "face": "http://face/1.jpg", "pub_ts": 1700000000},
+			"module_author": map[string]any{"name": "svc作者", "face": "http://face/1.jpg", "pub_ts": 1700000000},
 			"module_dynamic": map[string]any{
 				"major": map[string]any{
 					"type": "MAJOR_TYPE_ARCHIVE",
@@ -178,8 +178,8 @@ func TestSVCparseDynamicItem(t *testing.T) {
 				"major": map[string]any{
 					"type": "MAJOR_TYPE_OPUS",
 					"opus": map[string]any{
-						"title": "svc图文标题",
-						"pics":  []any{map[string]any{"url": "http://img/p1.jpg"}, map[string]any{"url": ""}},
+						"title":   "svc图文标题",
+						"pics":    []any{map[string]any{"url": "http://img/p1.jpg"}, map[string]any{"url": ""}},
 						"summary": map[string]any{"text": "svc摘要"},
 					},
 				},

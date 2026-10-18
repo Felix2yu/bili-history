@@ -26,7 +26,12 @@ ENV LANG=C.UTF-8 \
 
 WORKDIR /app
 
-COPY --chmod=755 bin/bili-history /app/bili-history
+# 二进制必须在 PATH 上，所以装到 /usr/local/bin 而不是 /app。
+# 外部备份工具（docker-db-auto-backup）经 `docker exec <容器> sh -c "bili-history backup"`
+# 采集快照：`sh -c` 里的裸名要靠 PATH 解析，装在 /app 的二进制既取不到裸名，
+# 也让工具按镜像名推导命令（ghcr.io/.../bili-history → bili-history backup）失效。
+# 数据目录仍是 /app/output（见下方挂载），工作目录不变，路径解析逻辑不受影响。
+COPY --chmod=755 bin/bili-history /usr/local/bin/bili-history
 COPY internal/config /app/config
 
 RUN mkdir -p /app/output
@@ -38,4 +43,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 
 # 原入口用 tini + su-exec；基镜的入口直接 exec 到 PID 1，Go 的 os/exec 会回收子进程，
 # 不再需要额外的 init。
-CMD ["/app/bili-history"]
+CMD ["bili-history"]

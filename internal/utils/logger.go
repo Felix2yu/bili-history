@@ -152,6 +152,7 @@ func LogSuccess(format string, args ...interface{}) {
 	GetLogger().Success(format, args...)
 }
 
-func init() {
-	GetLogger()
-}
+// 日志器不在包初始化时启动：GetLogger 本来就用 sync.Once 懒建，
+// 保留一个 init() 反而让「任何导入本包的进程」都在当前工作目录建出 output/logs 并开文件。
+// `bili-history backup` 是经 docker exec 调起来的（默认身份是 root，应用本身跑在 1000），
+// 它只读地打开数据库往外写快照，不该在挂载的数据卷里留下属主错误的日志目录与空文件。

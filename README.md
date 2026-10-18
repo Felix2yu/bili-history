@@ -94,6 +94,7 @@ pnpm dev
 bili-history/
 ├── cmd/bili-history/    # 入口 main.go + version.go
 ├── internal/            # Go 私有业务包
+│   ├── backup/          # `bili-history backup` 多库快照导出
 │   ├── biliapi/         # B 站 API 封装
 │   ├── config/          # 配置加载
 │   ├── database/        # 数据库操作
@@ -138,6 +139,117 @@ bili-history/
 ### 图片懒加载
 
 使用 IntersectionObserver 实现真正的图片懒加载，仅在图片进入视口 200px 范围内才开始加载。
+
+## 备份与恢复
+
+### 这个应用有六个数据库
+
+拾帧集不是一个库一个应用。数据按功能分落在多个 SQLite 文件里：
+
+| 库 | 位置（容器内） | 内容 |
+|----|----------------|------|
+| `bilibili_history.db` | `/app/output/` | 观看历史（按年分表）、分区分类 |
+| `bilibili_dynamic.db` | `/app/output/database/` | 动态与动态主 |
+| `bilibili_likes.db` | `/app/output/database/` | 点赞 |
+| `bilibili_watchlater.db` | `/app/output/database/` | 稍后再看 |
+| `bilibili_favorites.db` | `/app/output/database/` | 收藏夹与收藏内容 |
+| `scheduler.db` | `/app/output/database/` | 计划任务与执行历史 |
+
+主库的文件名来自配置 `db_file`（可改），其余几个是代码里写死的。备份时按实际目录**运行时发现**，
+所以改过 `db_file` 或以后新增库都不需要改备份配置。
+
+单个 `.db` 装不下这个应用，因此 `backup` 子命令的**默认产物是 zip**：
+把上面每个库各做一份一致性快照，打进同一个归档，包内平铺、条目名就是裸文件名。
+
+### 备份
+
+```bash
+docker exec <容器名> bili-history backup > bili-history-$(date +%F).zip
+```
+
+只要一个 `.db`（**有损**：只有 `db_file` 那一个库，动态 / 点赞 / 稍后再看 / 收藏 / 调度器都不在包里），
+可以显式指定格式，日常备份不建议用它：
+
+```bash
+docker exec <容器名> bili-history backup --format db > bilibili_history-$(date +%F).db
+```
+
+实现要点：
+
+- 每个库用 `VACUUM INTO` 由 SQLite 自己在事务里导出，**不热拷贝** `.db` / `-wal` / `-shm`
+  —— 活跃写入下热拷贝会周期性产出损坏副本。
+- 导出进程只读地打开既有的库：不建目录、不跑迁移、不写种子；
+  库文件不存在就报错，**绝不产出一份空数据库**。
+- 主库缺席 → 退出码非零、stdout 一个字节都没有；
+  可选库缺席 → stderr 上告警并跳过，归档照样有效（一个部署可能压根没用过收藏夹）。
+- 日志一律走 stderr，stdout 只承载产物字节，所以 `>` 重定向出来的就是干净的包。
+- 与 `docker-db-auto-backup` 的对接见 `docker-compose.yml`：
+  `BACKUP_SQLITE_CMD=bili-history backup` + `BACKUP_SQLITE_EXT=zip`。
+
+### 一致性范围：每个库各自一致，跨库不是同一个时间点
+
+SQLite 的 `VACUUM INTO` 保证的是**单个库内**的事务级自洽。六个库是六个互不相干的功能库
+（历史、动态、点赞…），不是一个关系型整体，因此导出的是「每个库各自某一瞬间的一致快照」，
+而不是「全应用同一个时间点的一致快照」—— 后者用这种方式做不到，对这份数据也不需要。
+跨库对账（例如「收藏列表与历史记录在同一时刻的状态」）本来就没有事务边界，恢复后以各自为准即可。
+
+### 恢复
+
+包内是平铺的裸文件名，放回磁盘时按上表分两处：主库进 `output/`，其余进 `output/database/`。
+主库那个条目叫什么取决于你的 `db_file`（默认 `bilibili_history.db`），下面的例子用默认名。
+
+```bash
+# 1. 停应用（避免恢复时主进程还在写同一批库）
+docker compose stop bili-history
+
+# 2. 先把旧数据留底，别覆盖掉还能救的东西
+mv ./output ./output.bak-$(date +%F)
+
+# 3. 放回数据目录：包内是平铺的，所以要按上面的表分两处落
+ZIP=~/bili-history-YYYY-MM-DD.zip
+TMP=$(mktemp -d)
+unzip -o "$ZIP" -d "$TMP"
+mkdir -p ./output/database
+mv "$TMP/bilibili_history.db" ./output/                    # 主库 → output/
+for f in bilibili_dynamic.db bilibili_likes.db bilibili_watchlater.db \
+         bilibili_favorites.db scheduler.db; do
+  [ -f "$TMP/$f" ] && mv "$TMP/$f" ./output/database/      # 其余 → output/database/
+done
+rmdir "$TMP"
+
+# 4. 属主交给应用（PUID/PGID 默认 1000），别让 root 属主的文件挡住应用写自己的库
+sudo chown -R 1000:1000 ./output
+
+# 5. 起应用
+docker compose up -d bili-history
+```
+
+包里只会是你实际有的库——某个可选库当初没被备份（比如这个部署没用过收藏夹），
+上面那条 `mv` 会因为 `[ -f ]` 跳过，恢复照样成立。
+
+`VACUUM INTO` 的产物是 delete 日志模式，应用启动会按自身逻辑切回 WAL，旁生的 `-wal`/`-shm`
+不需要人工准备。
+
+### 备份里**没有**什么
+
+- **`config.yaml` 不在备份内**（刻意如此）。它挂在 `/app/config`，里面有 B 站 Cookie
+  （`SESSDATA` / `bili_jct` / `DedeUserID`）与通知渠道 URL。它小、由宿主机管理、且带机密，
+  放进自动备份的归档里等于把会话令牌抄送一份到备份目录。要备份配置请自己按需拷贝，
+  并注意它的权限。
+- **日志**（`output/logs/`）不备份——那是排障现场，不是数据。
+- **图片与下载物**（`output/images/`、`output/downloads/`、`output/dynamic/<mid>/images/`）
+  当前**不**备份，请注意这里有一处真实的取舍：
+  - `output/images/` 是历史封面 / 头像的本地缓存，库里存的是远端 URL，丢了能重新拉；
+  - `output/downloads/` 是 bili-dl 主动下载的视频，体积大且可按 BVID 重新下载；
+  - **但 `output/dynamic/<mid>/images/` 不完全是缓存**：动态抓取成功后，库里的
+    `cover` / `media_locals` 会被改写成指向本地的相对路径，只有 `raw_json` 里还留着原始远端地址。
+    B 站原帖一旦删除，这些图就取不回来了。
+
+  它们都不进包，原因是备份工具把 stdout 当产物管道（`docker exec … > 文件`），
+  塞进数 GB 媒体不适合这个通道，而工具的 full 模式本就是「一个容器一个文件」。
+  **如果你把动态配图当作必须保的内容，请单独同步 `output/dynamic/`（以及 `output/images/`、
+  `output/downloads/`），例如用通用的目录备份而不是本应用的 backup 子命令。**
+  要我把它们也纳入 zip 形态（像 mujian / qiansi 把 uploads 打进包那样）也可以说一声。
 
 ## 许可证
 

@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
+	"bilibili-history-go/internal/backup"
 	"bilibili-history-go/internal/config"
 	"bilibili-history-go/internal/database"
 	"bilibili-history-go/internal/routers"
@@ -20,6 +22,19 @@ import (
 )
 
 func main() {
+	// 外部备份工具（docker-db-auto-backup）经 `docker exec <容器> bili-history backup`
+	// 调起本进程，把 stdout 当备份产物。所以这段拦截必须是 main() 的第一件事，
+	// 早于配置加载、数据库初始化、迁移、调度器协程与 HTTP 服务：
+	// 导出进程只读地打开既有的库并往外写快照，不建目录、不改 schema、不起后台任务。
+	// 日志一律走 stderr（本仓库的 utils 日志会把部分级别写到 stdout，导出路径不碰它）。
+	if len(os.Args) > 1 && os.Args[1] == "backup" {
+		if err := backup.Run(os.Args[2:], os.Stdout); err != nil {
+			fmt.Fprintf(os.Stderr, "备份导出失败: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	utils.LogSuccess("=== 正在启动应用 %s ===", version)
 
 	cfg, err := config.LoadConfig()

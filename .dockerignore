@@ -1,6 +1,6 @@
-# 装配式镜像：Dockerfile 只 COPY 预编译产物（bin/bili-history）、
-# 配置目录（internal/config）与入口脚本（scripts/docker-entrypoint.sh）。
-# 下列排除项都不得命中这三者。
+# 装配式镜像：Dockerfile 只 COPY 预编译产物（bin/bili-history）与
+# 配置目录（internal/config）；降权入口已下沉到公共基镜。
+# 下列排除项都不得命中这两者。
 
 # Git / CI / 文档
 .git/

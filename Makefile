@@ -21,9 +21,10 @@ build:
 dev:
 	go run $(MAIN)
 
-## 只跑不依赖外部服务的包：database 包带纯 Go 驱动的守卫测试，必须纳入
+## 只跑不依赖外部服务的包：database 包带纯 Go 驱动的守卫测试，必须纳入；
+## backup 包是 `bili-history backup` 的产物契约测试（zip / db / 缺库行为），同样不碰网络
 test:
-	go test ./internal/config/... ./internal/utils/... ./internal/models/... ./internal/database/...
+	go test ./internal/config/... ./internal/utils/... ./internal/models/... ./internal/database/... ./internal/backup/...
 
 lint:
 	go vet ./...

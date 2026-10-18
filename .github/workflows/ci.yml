@@ -28,8 +28,9 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       go-dir: .
-      # database 包内有纯 Go 驱动守卫测试，必须纳入
-      test-packages: ./internal/config/... ./internal/utils/... ./internal/models/... ./internal/database/...
+      # database 包内有纯 Go 驱动守卫测试，必须纳入；
+      # backup 包是 `bili-history backup` 的产物契约测试（zip / db / 缺库行为），同样不碰网络
+      test-packages: ./internal/config/... ./internal/utils/... ./internal/models/... ./internal/database/... ./internal/backup/...
       web-dir: web
       # Nuxt 用 generate 而非 build，产物落在 .output/public
       web-build-command: pnpm run generate

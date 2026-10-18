@@ -108,7 +108,6 @@ bili-history/
 │   ├── pages/           # Nuxt 路由页面
 │   ├── utils/           # 工具函数
 │   └── stores/          # Pinia 状态管理
-├── scripts/             # docker-entrypoint.sh
 ├── Dockerfile           # CI 运行时镜像（二进制预编译拼装）
 ├── docker-compose.yml
 ├── LICENSE              # MIT 许可证

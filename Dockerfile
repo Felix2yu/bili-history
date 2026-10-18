@@ -4,34 +4,30 @@
 # 二进制由 CI 预编译：SQLite 已换为纯 Go 驱动（modernc.org/sqlite），
 # CGO_ENABLED=0 出完全静态二进制，可交叉编译、与运行环境的 libc 无关。
 # 这里没有任何 Node/Go 编译步骤，前端产物已通过 go:embed 嵌入二进制。
+#
+# 基镜 ghcr.io/felix2yu/base:alpine-3.24 提供 tzdata、ca-certificates、su-exec
+# 与 PUID/PGID 降权入口；本仓库有两个绑定挂载的数据目录 /app/config 与 /app/output。
+FROM ghcr.io/felix2yu/base:alpine-3.24
 
-FROM alpine:3.24
-
-ENV LANG=C.UTF-8
-ENV LC_ALL=C.UTF-8
-ENV TZ=Asia/Shanghai
-
-ENV SESSDATA=""
-ENV BILI_JCT=""
-ENV DEDE_USER_ID=""
-ENV DEDE_USER_ID_CKMD5=""
-ENV SERVER_HOST=0.0.0.0
-ENV SERVER_PORT=8899
-
+# ffmpeg：视频转码，基镜不含，按需追加（运行期就要用，不能用 --virtual 装完即删）
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add --no-cache \
-      tzdata \
-      ca-certificates \
-      tini \
-      ffmpeg \
-      shadow \
-      su-exec
+    apk add --no-cache ffmpeg
+
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    TZ=Asia/Shanghai \
+    SESSDATA="" \
+    BILI_JCT="" \
+    DEDE_USER_ID="" \
+    DEDE_USER_ID_CKMD5="" \
+    SERVER_HOST=0.0.0.0 \
+    SERVER_PORT=8899 \
+    APP_DATA_DIR="/app/config /app/output"
 
 WORKDIR /app
 
 COPY --chmod=755 bin/bili-history /app/bili-history
 COPY internal/config /app/config
-COPY --chmod=755 scripts/docker-entrypoint.sh /entrypoint.sh
 
 RUN mkdir -p /app/output
 
@@ -40,4 +36,6 @@ EXPOSE 8899
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD wget -qO- http://127.0.0.1:8899/health >/dev/null || exit 1
 
-ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
+# 原入口用 tini + su-exec；基镜的入口直接 exec 到 PID 1，Go 的 os/exec 会回收子进程，
+# 不再需要额外的 init。
+CMD ["/app/bili-history"]

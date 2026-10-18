@@ -25,8 +25,7 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
       tini \
       ffmpeg \
       shadow \
-      su-exec \
-      curl
+      su-exec
 
 WORKDIR /app
 
@@ -39,6 +38,6 @@ RUN mkdir -p /app/output
 EXPOSE 8899
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD curl -fsS http://localhost:8899/health || exit 1
+  CMD wget -qO- http://127.0.0.1:8899/health >/dev/null || exit 1
 
 ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]

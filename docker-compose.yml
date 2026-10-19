@@ -14,8 +14,9 @@ services:
       - PGID=${PGID:-1000}
       # 外部备份工具（docker-db-auto-backup）的 SQLite「应用自导出」约定。
       # 本容器是六个库（历史 / 动态 / 点赞 / 稍后再看 / 收藏 / 调度器），
-      # 而工具的 full 模式是「一个容器一个文件」，所以 `bili-history backup`
+      # 而工具的 full 模式是「一个容器一个文件」，所以 `/app/bili-history backup`
       # 把每个库各做一份 VACUUM INTO 一致性快照，打包成同一个 zip 写到 stdout。
+      # 命令必须写绝对路径：本镜像把二进制放在 /app，而 /app 不在容器 PATH 上。
       #
       # BACKUP_SQLITE_EXT=zip 不能省：省略它，工具会拿 SQLite 魔数去校验一个 zip，
       # 校验失败 → 产物丢弃 → 本轮标记失败。这个失败模式是刻意的，
@@ -23,7 +24,7 @@ services:
       #
       # 注意：挂载进来的 config.yaml 里有 B 站 Cookie / SESSDATA，属主是宿主机的你，
       # 它刻意不在备份产物内（见 README「备份与恢复」）。
-      - BACKUP_SQLITE_CMD=bili-history backup
+      - BACKUP_SQLITE_CMD=/app/bili-history backup
       - BACKUP_SQLITE_EXT=zip
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8899/health || exit 1"]

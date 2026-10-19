@@ -164,14 +164,14 @@ bili-history/
 ### 备份
 
 ```bash
-docker exec <容器名> bili-history backup > bili-history-$(date +%F).zip
+docker exec <容器名> /app/bili-history backup > bili-history-$(date +%F).zip
 ```
 
 只要一个 `.db`（**有损**：只有 `db_file` 那一个库，动态 / 点赞 / 稍后再看 / 收藏 / 调度器都不在包里），
 可以显式指定格式，日常备份不建议用它：
 
 ```bash
-docker exec <容器名> bili-history backup --format db > bilibili_history-$(date +%F).db
+docker exec <容器名> /app/bili-history backup --format db > bilibili_history-$(date +%F).db
 ```
 
 实现要点：
@@ -184,7 +184,8 @@ docker exec <容器名> bili-history backup --format db > bilibili_history-$(dat
   可选库缺席 → stderr 上告警并跳过，归档照样有效（一个部署可能压根没用过收藏夹）。
 - 日志一律走 stderr，stdout 只承载产物字节，所以 `>` 重定向出来的就是干净的包。
 - 与 `docker-db-auto-backup` 的对接见 `docker-compose.yml`：
-  `BACKUP_SQLITE_CMD=bili-history backup` + `BACKUP_SQLITE_EXT=zip`。
+  `BACKUP_SQLITE_CMD=/app/bili-history backup` + `BACKUP_SQLITE_EXT=zip`
+  （命令写绝对路径：镜像把二进制放在 `/app`，而 `/app` 不在容器 PATH 上）。
 
 ### 一致性范围：每个库各自一致，跨库不是同一个时间点
 

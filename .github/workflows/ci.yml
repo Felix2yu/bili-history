@@ -32,6 +32,9 @@ jobs:
       # backup 包是 `bili-history backup` 的产物契约测试（zip / db / 缺库行为），同样不碰网络
       test-packages: ./internal/config/... ./internal/utils/... ./internal/models/... ./internal/database/... ./internal/backup/...
       web-dir: web
+      # lint 纳入 CI：本仓 lint = eslint .，实测 exit=0（0 problems）。
+      # 只有构建侧被验证过是不够的 —— typescript-eslint 对 TS 7 是加载期硬失败。
+      web-lint-command: pnpm run lint
       # Nuxt 用 generate 而非 build，产物落在 .output/public
       web-build-command: pnpm run generate
       frontend-stage-command: |

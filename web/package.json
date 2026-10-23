@@ -18,7 +18,7 @@
     "format:check": "prettier . --check"
   },
   "dependencies": {
-    "@pinia/nuxt": "^1.0.1",
+    "@pinia/nuxt": "^1.0.3",
     "@vueuse/core": "^15.0.0",
     "@vueuse/nuxt": "^15.0.0",
     "artplayer": "^5.4.0",
@@ -27,8 +27,8 @@
     "echarts": "^6.1.0",
     "echarts-wordcloud": "^2.1.0",
     "gsap": "^3.15.0",
-    "nuxt": "4.6.1",
-    "pinia": "^4.0.2",
+    "nuxt": "4.6.2",
+    "pinia": "^4.1.0",
     "vant": "^4.10.2",
     "vue": "^3.5.44",
     "vue-echarts": "^8.3.2",
@@ -42,7 +42,7 @@
     "@vue/runtime-core": "^3.5.44",
     "eslint": "^10.13.0",
     "eslint-config-prettier": "^10.1.8",
-    "postcss": "^8.5.30",
+    "postcss": "^8.5.31",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "4.3.3"

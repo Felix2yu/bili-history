@@ -611,11 +611,16 @@ func TestConcurrentWritesKeepSnapshotConsistent(t *testing.T) {
 	layout := newLayout(t)
 	primary := filepath.Join(layout.OutputDir, layout.PrimaryName)
 	writer := createDB(t, primary)
+	// 先同步写入一行，保证后续快照里至少有一行已提交数据；
+	// 否则导出可能抢在写协程第一次提交之前，用例本身就成了竞态。
+	if _, err := writer.Exec("INSERT INTO probe(note) VALUES (?)", "并发写入 0"); err != nil {
+		t.Fatalf("预写入失败: %v", err)
+	}
 
 	stop := make(chan struct{})
 	done := make(chan error, 1)
 	go func() {
-		for i := 0; ; i++ {
+		for i := 1; ; i++ {
 			select {
 			case <-stop:
 				return

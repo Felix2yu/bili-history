@@ -400,6 +400,34 @@ func TestSchedTaskLifecycle(t *testing.T) {
 		t.Fatalf("unknown task history: len=%d err=%v", len(none), err)
 	}
 
+	// duration 必须随历史行返回，不能缺失或恒为 0（前端据此显示真实耗时）。
+	toF := func(v interface{}) float64 {
+		switch n := v.(type) {
+		case float64:
+			return n
+		case int64:
+			return float64(n)
+		default:
+			return -1
+		}
+	}
+	for _, row := range all {
+		if d := toF(row["duration"]); d < 59.9 || d > 60.1 {
+			t.Fatalf("derived duration = %#v, want ~60s", row["duration"])
+		}
+	}
+	// executeTask 路径显式传入精确（亚秒）耗时，应优先于 end-start 推导。
+	if err := RecordExecution("sched_subsec", "sched_sub任务", "completed", "", "", base, base, 0.37); err != nil {
+		t.Fatalf("RecordExecution subsec: %v", err)
+	}
+	sub, err := GetExecutionHistory("sched_sub任务", 5)
+	if err != nil || len(sub) != 1 {
+		t.Fatalf("subsec history: len=%d err=%v", len(sub), err)
+	}
+	if d := toF(sub[0]["duration"]); d < 0.36 || d > 0.38 {
+		t.Fatalf("subsec duration = %#v, want ~0.37", sub[0]["duration"])
+	}
+
 	// 级联删除：父任务 + 子任务 + task_status + 执行历史
 	if err := DeleteMainTask("sched_p"); err != nil {
 		t.Fatalf("DeleteMainTask: %v", err)

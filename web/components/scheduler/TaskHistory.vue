@@ -420,8 +420,14 @@ const viewError = (record) => {
 
 const statusLabel = (status) => {
   return (
-    { success: '执行成功', error: '执行失败', running: '执行中', pending: '等待中' }[status] ||
-    status
+    {
+      success: '执行成功',
+      completed: '执行成功',
+      error: '执行失败',
+      failed: '执行失败',
+      running: '执行中',
+      pending: '等待中'
+    }[status] || status
   );
 };
 
@@ -433,8 +439,10 @@ const formatTime = (time) => {
 const getStatusClass = (status) => {
   const map = {
     success: 'bg-green-500/10 text-green-600 dark:text-green-400',
+    completed: 'bg-green-500/10 text-green-600 dark:text-green-400',
     running: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     error: 'bg-red-500/10 text-red-600 dark:text-red-400',
+    failed: 'bg-red-500/10 text-red-600 dark:text-red-400',
     pending: 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
   };
   return map[status] || 'bg-gray-500/10 text-gray-500';
@@ -443,8 +451,10 @@ const getStatusClass = (status) => {
 const getStatusDotClass = (status) => {
   const map = {
     success: 'bg-green-500',
+    completed: 'bg-green-500',
     running: 'bg-amber-500',
     error: 'bg-red-500',
+    failed: 'bg-red-500',
     pending: 'bg-blue-500'
   };
   return map[status] || 'bg-gray-500';
@@ -453,8 +463,10 @@ const getStatusDotClass = (status) => {
 const getNodeBgClass = (status) => {
   const map = {
     success: 'bg-green-500/20',
+    completed: 'bg-green-500/20',
     running: 'bg-amber-500/20',
     error: 'bg-red-500/20',
+    failed: 'bg-red-500/20',
     pending: 'bg-blue-500/20'
   };
   return map[status] || 'bg-gray-500/20';
@@ -463,8 +475,10 @@ const getNodeBgClass = (status) => {
 const getNodeDotClass = (status) => {
   const map = {
     success: 'bg-green-500',
+    completed: 'bg-green-500',
     running: 'bg-amber-500',
     error: 'bg-red-500',
+    failed: 'bg-red-500',
     pending: 'bg-blue-500'
   };
   return map[status] || 'bg-gray-500';
@@ -473,8 +487,10 @@ const getNodeDotClass = (status) => {
 const getCardClass = (status) => {
   const map = {
     success: 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
+    completed: 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
     running: 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
     error: 'bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30',
+    failed: 'bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30',
     pending: 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
   };
   return map[status] || 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700';

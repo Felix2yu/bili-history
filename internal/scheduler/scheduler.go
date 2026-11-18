@@ -501,7 +501,7 @@ func (s *Scheduler) executeTask(taskID string, triggerChain bool) {
 			resultStr = result
 		}
 	}
-	_ = database.RecordExecution(execID, taskID, lastStatus, resultStr, lastError, start, end)
+	_ = database.RecordExecution(execID, taskID, lastStatus, resultStr, lastError, start, end, duration)
 
 	// Reload runtime stats from DB into the in-memory task.
 	s.mu.Lock()

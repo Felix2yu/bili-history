@@ -58,7 +58,8 @@ CREATE TABLE IF NOT EXISTS task_execution_history (
     end_time TEXT,
     status TEXT,
     result TEXT,
-    error TEXT
+    error TEXT,
+    duration REAL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_exec_history_task ON task_execution_history(task_id);
 CREATE INDEX IF NOT EXISTS idx_exec_history_start ON task_execution_history(start_time);
@@ -95,6 +96,11 @@ func migrateSchedulerDB(db *sql.DB) {
 		"schedule_delay": "INTEGER DEFAULT 0",
 	}
 	ensureColumns(db, "main_tasks", mainTaskMigrations)
+
+	// Older databases predate the duration column on the history table.
+	ensureColumns(db, "task_execution_history", map[string]string{
+		"duration": "REAL DEFAULT 0",
+	})
 }
 
 // ensureColumns checks whether each column exists in the given table and adds
@@ -434,16 +440,25 @@ func UpdateTaskStatus(taskID, status, lastError string, durationSec float64, suc
 }
 
 // RecordExecution inserts a row into task_execution_history for the history endpoint.
-func RecordExecution(id, taskID, status, result, errMsg string, start, end time.Time) error {
+// durationSec is optional; when omitted it is derived from end-start (sub-second
+// precision) so history rows never display a misleading 0s for fast tasks.
+func RecordExecution(id, taskID, status, result, errMsg string, start, end time.Time, durationSec ...float64) error {
 	db := GetSchedulerDB()
 	if db == nil {
 		return nil
 	}
+	dur := end.Sub(start).Seconds()
+	if dur < 0 {
+		dur = 0
+	}
+	if len(durationSec) > 0 && durationSec[0] > 0 {
+		dur = durationSec[0]
+	}
 	_, err := db.Exec(`INSERT INTO task_execution_history
-		(id, task_id, start_time, end_time, status, result, error)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		(id, task_id, start_time, end_time, status, result, error, duration)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		id, taskID, start.Format("2006-01-02 15:04:05"), end.Format("2006-01-02 15:04:05"),
-		status, result, errMsg)
+		status, result, errMsg, dur)
 	return err
 }
 
@@ -494,10 +509,10 @@ func GetExecutionHistory(taskID string, limit int) ([]map[string]interface{}, er
 	var rows *sql.Rows
 	var err error
 	if taskID != "" {
-		rows, err = db.Query(`SELECT id, task_id, start_time, end_time, status, result, error
+		rows, err = db.Query(`SELECT id, task_id, start_time, end_time, status, result, error, duration
 			FROM task_execution_history WHERE task_id = ? ORDER BY start_time DESC LIMIT ?`, taskID, limit)
 	} else {
-		rows, err = db.Query(`SELECT id, task_id, start_time, end_time, status, result, error
+		rows, err = db.Query(`SELECT id, task_id, start_time, end_time, status, result, error, duration
 			FROM task_execution_history ORDER BY start_time DESC LIMIT ?`, limit)
 	}
 	if err != nil {

@@ -249,6 +249,10 @@ func TestMSLoginCheckAndNotifyNotConfigured(t *testing.T) {
 	e := newAPI(t, msLoginAPI())
 	w := doRaw(t, e, http.MethodGet, "/api/login/check-and-notify", "")
 	m := msRawMap(t, w)
+	// 未配置必须以 error 状态返回，调度器据此把健康检查标记为失败。
+	if m["status"] != "error" {
+		t.Fatalf("status = %v, want error", m["status"])
+	}
 	if m["message"] != "SESSDATA 未配置" {
 		t.Fatalf("message = %v, want SESSDATA 未配置", m["message"])
 	}
@@ -266,6 +270,9 @@ func TestMSLoginCheckAndNotifyValid(t *testing.T) {
 	e := newAPI(t, msLoginAPI())
 	w := doRaw(t, e, http.MethodGet, "/api/login/check-and-notify", "")
 	m := msRawMap(t, w)
+	if m["status"] != "success" {
+		t.Fatalf("status = %v, want success", m["status"])
+	}
 	if m["message"] != "SESSDATA 有效" {
 		t.Fatalf("message = %v, want SESSDATA 有效", m["message"])
 	}
@@ -287,6 +294,10 @@ func TestMSLoginCheckAndNotifyExpiredNoNotify(t *testing.T) {
 	e := newAPI(t, msLoginAPI())
 	w := doRaw(t, e, http.MethodGet, "/api/login/check-and-notify", "")
 	m := msRawMap(t, w)
+	// 失效必须以 error 状态返回，否则调度器会误判任务为 completed。
+	if m["status"] != "error" {
+		t.Fatalf("status = %v, want error", m["status"])
+	}
 	if m["message"] != "SESSDATA 已失效" {
 		t.Fatalf("message = %v, want SESSDATA 已失效", m["message"])
 	}

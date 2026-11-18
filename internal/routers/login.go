@@ -300,7 +300,7 @@ func checkAndNotify(c *gin.Context) {
 	cfg, _ := config.LoadConfig()
 	if cfg == nil || cfg.SESSDATA == "" {
 		c.JSON(http.StatusOK, gin.H{
-			"status":  "success",
+			"status":  "error",
 			"message": "SESSDATA 未配置",
 			"data": map[string]interface{}{
 				"valid":    false,
@@ -369,7 +369,7 @@ func checkAndNotify(c *gin.Context) {
 	utils.LogWarning("SESSDATA 已失效 (code=%d)，已触发通知: %v", nav.Code, wasNotified)
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
+		"status":  "error",
 		"message": "SESSDATA 已失效",
 		"data": map[string]interface{}{
 			"valid":    false,

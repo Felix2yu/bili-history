@@ -301,6 +301,49 @@ func TestDLStreamVideo(t *testing.T) {
 	}
 }
 
+func TestDLStreamDanmaku(t *testing.T) {
+	e := newAPI(t, RegisterDownloadRoutes)
+	expectMessage(t, expectStatus(t, e, "GET", "/api/download/stream_danmaku", "", 400, "error"), "缺少 file_path 或 bvid 参数")
+
+	// 前端传的是视频成品路径，sidecar 命名由后端解析。
+	video := dlWriteDownloadFile(t, filepath.Join("dldm", "DL弹幕视频_BVDLDM00000001.mkv"), []byte("v"))
+	assContent := `[Script Info]
+ScriptType: v4.00+
+
+[Events]
+Dialogue: 0,0:00:01.00,0:00:05.00,Default,,0,0,0,,DL测试弹幕
+`
+	dlWriteDownloadFile(t, filepath.Join("dldm", "DL弹幕视频_BVDLDM00000001.danmaku.ass"), []byte(assContent))
+	t.Cleanup(func() { _ = os.RemoveAll(filepath.Join(dlDownloadsDir(), "dldm")) })
+
+	w := doRaw(t, e, "GET", "/api/download/stream_danmaku?file_path="+urlEncode(video), "")
+	if w.Code != http.StatusOK {
+		t.Fatalf("danmaku code = %d body=%q", w.Code, w.Body.String())
+	}
+	if ct := w.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/plain") {
+		t.Fatalf("content-type = %q", ct)
+	}
+	if !strings.Contains(w.Body.String(), "DL测试弹幕") {
+		t.Fatalf("danmaku body = %q", w.Body.String())
+	}
+
+	// 只给 BV 号也能检索到。
+	byBv := doRaw(t, e, "GET", "/api/download/stream_danmaku?bvid=BVDLDM00000001", "")
+	if byBv.Code != http.StatusOK || !strings.Contains(byBv.Body.String(), "DL测试弹幕") {
+		t.Fatalf("by-bvid code=%d body=%q", byBv.Code, byBv.Body.String())
+	}
+
+	// 目录外路径与不存在的弹幕分别给出 403 与 404。
+	outside := filepath.Join(t.TempDir(), "secret.ass")
+	if err := os.WriteFile(outside, []byte("SECRET"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	expectMessage(t, expectStatus(t, e, "GET", "/api/download/stream_danmaku?file_path="+urlEncode(outside), "", 403, "error"), "无权访问该文件")
+
+	quiet := dlWriteDownloadFile(t, filepath.Join("dldm", "DL无弹幕_BVDLDM00000002.mp4"), []byte("v"))
+	expectMessage(t, expectStatus(t, e, "GET", "/api/download/stream_danmaku?file_path="+urlEncode(quiet), "", 404, "error"), "弹幕文件不存在")
+}
+
 func TestDLCheckFFmpeg(t *testing.T) {
 	e := newAPI(t, RegisterDownloadRoutes)
 	data := expectStatus(t, e, "GET", "/api/download/check_ffmpeg", "", 200, "success").dataMap(t)

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -625,6 +626,47 @@ func TestSVCFavoriteLinksValidation(t *testing.T) {
 	_, err := FavoriteLinks("9007199254740991")
 	if err == nil || !strings.Contains(err.Error(), "未同步到本地") {
 		t.Fatalf("err = %v, want 收藏夹未同步且未配置 SESSDATA", err)
+	}
+}
+
+func TestSVCDanmakuFile(t *testing.T) {
+	out := GetDownloadOutputPath()
+	dir := filepath.Join(out, "svcDL2Danmaku")
+	svcDL2CleanupDir(t, dir)
+
+	video := svcWrite(t, filepath.Join(dir, "svc弹幕标题_BVsvcDL2dm01.mkv"), []byte("video"))
+	ass := filepath.Join(dir, "svc弹幕标题_BVsvcDL2dm01.danmaku.ass")
+	svcWrite(t, ass, []byte("[Script Info]\nDialogue: 0,0:00:01.00,0:00:05.00,Default,,0,0,0,,测试弹幕\n"))
+
+	// 视频成品路径推导出 bili-dl 的 sidecar 命名
+	body, name, err := DanmakuFile(video, "")
+	if err != nil {
+		t.Fatalf("DanmakuFile(video path): %v", err)
+	}
+	if name != filepath.Base(ass) || !strings.Contains(string(body), "测试弹幕") {
+		t.Fatalf("返回内容 = %q name=%q", body, name)
+	}
+
+	// 直接传弹幕路径同样可用
+	if _, _, err := DanmakuFile(ass, ""); err != nil {
+		t.Errorf("DanmakuFile(ass path): %v", err)
+	}
+
+	// 只有 BV 号时按目录检索
+	if _, _, err := DanmakuFile("", "BVsvcDL2dm01"); err != nil {
+		t.Errorf("DanmakuFile(by bvid): %v", err)
+	}
+
+	// 下载目录之外一律拒绝，不给任意文件读取留口子
+	outside := svcWrite(t, filepath.Join(t.TempDir(), "secret.ass"), []byte("SECRET"))
+	if _, _, err := DanmakuFile(outside, ""); !errors.Is(err, ErrDanmakuForbidden) {
+		t.Errorf("outside-dir err = %v, want ErrDanmakuForbidden", err)
+	}
+
+	// 没有弹幕文件的视频给出明确未找到
+	quiet := svcWrite(t, filepath.Join(dir, "svc无弹幕_BVsvcDL2dm02.mp4"), []byte("v"))
+	if _, _, err := DanmakuFile(quiet, ""); !errors.Is(err, ErrDanmakuNotFound) {
+		t.Errorf("missing danmaku err = %v, want ErrDanmakuNotFound", err)
 	}
 }
 

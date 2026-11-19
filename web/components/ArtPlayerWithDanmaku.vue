@@ -15,13 +15,8 @@ const props = defineProps({
     type: String,
     required: true
   },
-  // 弹幕文件路径
+  // 弹幕来源：视频成品路径或弹幕文件路径，具体 sidecar 由后端解析
   danmakuFilePath: {
-    type: String,
-    default: ''
-  },
-  // 视频CID（用于获取弹幕）
-  cid: {
     type: String,
     default: ''
   },
@@ -53,7 +48,7 @@ const props = defineProps({
 });
 
 // 定义事件
-const emit = defineEmits(['ready', 'error']);
+const emit = defineEmits(['ready', 'error', 'danmaku-loaded']);
 
 // DOM引用
 const artPlayerContainer = ref(null);
@@ -64,18 +59,15 @@ const danmakuData = ref([]);
 
 // 加载弹幕文件内容
 const loadDanmaku = async () => {
-  if (!props.danmakuFilePath && !props.cid) {
-    console.log('没有提供弹幕文件路径或CID，跳过弹幕加载');
+  if (!props.danmakuFilePath) {
+    console.log('没有提供弹幕来源，跳过弹幕加载');
+    emit('danmaku-loaded', 0);
     return [];
   }
 
   try {
-    // 优先使用文件路径
-    const path = props.danmakuFilePath || '';
-    const cid = props.cid || '';
-
     // 获取弹幕文件内容
-    const response = await getDanmakuFile(cid, path);
+    const response = await getDanmakuFile(props.danmakuFilePath);
 
     if (!response || !response.data) {
       console.warn('弹幕文件内容为空');
@@ -85,6 +77,7 @@ const loadDanmaku = async () => {
     // 解析ASS格式弹幕
     const danmakuItems = parseAssDanmaku(response.data);
     danmakuData.value = danmakuItems;
+    emit('danmaku-loaded', danmakuItems.length);
 
     // 如果播放器已存在，更新弹幕
     if (player.value && player.value.plugins.artplayerPluginDanmuku) {
@@ -96,6 +89,7 @@ const loadDanmaku = async () => {
     return danmakuItems;
   } catch (error) {
     console.error('加载弹幕文件失败:', error);
+    emit('danmaku-loaded', 0);
     return [];
   }
 };
@@ -348,7 +342,7 @@ watch(
       player.value.switchUrl(props.videoSrc);
 
       // 如果有弹幕，重新加载
-      if (props.danmakuFilePath || props.cid) {
+      if (props.danmakuFilePath) {
         loadDanmaku();
       }
     } else {
@@ -358,11 +352,11 @@ watch(
   { immediate: false }
 );
 
-// 监听弹幕路径变化
+// 监听弹幕来源变化
 watch(
-  [() => props.danmakuFilePath, () => props.cid],
+  () => props.danmakuFilePath,
   () => {
-    if (player.value && (props.danmakuFilePath || props.cid)) {
+    if (player.value && props.danmakuFilePath) {
       loadDanmaku();
     }
   },

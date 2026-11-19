@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -1083,6 +1084,71 @@ func favoriteLinksOnline(mediaID int64) ([]string, error) {
 		}
 	}
 	return links, nil
+}
+
+// 弹幕读取的错误分支，路由据此区分 403 与 404。
+var (
+	ErrDanmakuForbidden = errors.New("弹幕路径不在下载目录内")
+	ErrDanmakuNotFound  = errors.New("未找到弹幕文件")
+)
+
+// DanmakuFile 返回与视频成品同源的弹幕文本。入参可以是视频路径、弹幕文件路径，
+// 或 BV 号；优先 bili-dl 产出的 `标题_BV.danmaku.ass`，其次是同名的任意 .ass。
+// 命名规则由下载侧决定，所以推断交给这里而不是前端。
+func DanmakuFile(path, bvid string) ([]byte, string, error) {
+	outputDir := GetDownloadOutputPath()
+
+	var candidates []string
+	if trimmed := strings.TrimSpace(path); trimmed != "" {
+		abs, err := filepath.Abs(trimmed)
+		if err != nil {
+			return nil, "", ErrDanmakuForbidden
+		}
+		if !insideDir(outputDir, abs) {
+			return nil, "", ErrDanmakuForbidden
+		}
+		switch ext := strings.ToLower(filepath.Ext(abs)); ext {
+		case ".ass", ".xml":
+			candidates = append(candidates, abs)
+		default:
+			base := strings.TrimSuffix(abs, ext)
+			candidates = append(candidates, base+".danmaku.ass", base+".ass")
+		}
+	}
+	for _, candidate := range candidates {
+		if body, err := os.ReadFile(candidate); err == nil {
+			return body, filepath.Base(candidate), nil
+		}
+	}
+
+	if bv := strings.TrimSpace(bvid); bv != "" {
+		if found := findDanmakuByBV(outputDir, bv); found != "" {
+			if body, err := os.ReadFile(found); err == nil {
+				return body, filepath.Base(found), nil
+			}
+		}
+	}
+	return nil, "", ErrDanmakuNotFound
+}
+
+func findDanmakuByBV(outputDir, bv string) string {
+	needle := strings.ToLower(bv)
+	var hit string
+	_ = filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if info.IsDir() {
+			return nil
+		}
+		name := strings.ToLower(info.Name())
+		if strings.HasSuffix(name, ".ass") && strings.Contains(name, needle) {
+			hit = path
+			return filepath.SkipAll
+		}
+		return nil
+	})
+	return hit
 }
 
 // GetUserVideos 拉取 UP 主投稿列表；bili-dl 的 AllVideo 不带分页，这里保留自己的实现。

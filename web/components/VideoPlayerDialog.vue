@@ -30,7 +30,7 @@
           <h3 class="truncate text-lg font-medium text-white">
             {{ getFileName(videoPath) }}
           </h3>
-          <div v-if="danmakuFile" class="mt-1 flex items-center text-xs text-green-400">
+          <div v-if="danmakuCount > 0" class="mt-1 flex items-center text-xs text-green-400">
             <svg class="mr-1 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
@@ -51,12 +51,12 @@
               v-if="activeVideo"
               ref="artPlayerRef"
               :video-src="videoSrc"
-              :cid="currentCid"
-              :danmaku-file-path="danmakuFile"
+              :danmaku-file-path="videoPath"
               :title="getFileName(videoPath)"
               :autoplay="true"
               :width="'100%'"
               :height="'100%'"
+              @danmaku-loaded="danmakuCount = $event"
             />
           </div>
         </div>
@@ -119,8 +119,8 @@ const artPlayerRef = ref(null);
 const isLoading = ref(false);
 const activeVideo = ref(false);
 const videoSrc = ref('');
-const danmakuFile = ref('');
-const currentCid = ref('');
+// 实际加载到的弹幕条数，由播放器组件回报
+const danmakuCount = ref(0);
 
 // 错误状态
 const error = ref(false);
@@ -132,35 +132,6 @@ const getFileName = (path) => {
   return path.split('\\').pop().split('/').pop() || '未知文件';
 };
 
-// 从视频路径中提取CID
-const extractCid = (path) => {
-  if (!path) return '';
-
-  // 尝试从文件名中提取CID
-  const fileName = getFileName(path);
-  const cidMatch =
-    fileName.match(/_(\d+)\.mp4$/) ||
-    fileName.match(/_(\d+)\.flv$/) ||
-    fileName.match(/_(\d+)\.m4a$/);
-
-  if (cidMatch && cidMatch[1]) {
-    return cidMatch[1];
-  }
-
-  // 如果文件名中没有CID，尝试从目录路径中提取
-  const dirMatch = path.match(/(\d{8,})/);
-  return dirMatch ? dirMatch[1] : '';
-};
-
-// 获取弹幕文件路径
-const findDanmakuFile = (videoPath) => {
-  if (!videoPath) return '';
-
-  // 根据视频文件路径推断弹幕文件路径
-  const fileNameWithoutExt = videoPath.replace(/\.(mp4|flv|m4a)$/i, '');
-  return `${fileNameWithoutExt}.ass`;
-};
-
 // 销毁播放器
 const destroyPlayer = () => {
   if (artPlayerRef.value && artPlayerRef.value.player) {
@@ -169,8 +140,7 @@ const destroyPlayer = () => {
 
   // 重置变量
   videoSrc.value = '';
-  danmakuFile.value = '';
-  currentCid.value = '';
+  danmakuCount.value = 0;
   activeVideo.value = false;
 };
 
@@ -195,13 +165,7 @@ const loadVideo = () => {
   // 确保之前的播放器已被销毁
   destroyPlayer();
 
-  // 提取CID
-  currentCid.value = extractCid(props.videoPath);
-
-  // 查找弹幕文件
-  danmakuFile.value = findDanmakuFile(props.videoPath);
-
-  // 使用api生成视频流URL
+  // 弹幕 sidecar 由后端按视频路径解析，这里只传视频路径
   videoSrc.value = getVideoStream(props.videoPath);
 
   // 激活视频元素

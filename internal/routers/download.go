@@ -29,6 +29,7 @@ func RegisterDownloadRoutes(r *gin.RouterGroup) {
 		download.GET("/list_downloaded_videos", listDownloadedVideos)
 		download.DELETE("/delete_downloaded_video", deleteDownloadedVideo)
 		download.GET("/stream_video", streamVideo)
+		download.GET("/stream_danmaku", streamDanmaku)
 		download.GET("/check_ffmpeg", checkFFmpeg)
 		download.POST("/download_video", downloadVideoSSE)
 		download.POST("/batch_download", batchDownloadSSE)
@@ -189,6 +190,33 @@ func streamVideo(c *gin.Context) {
 	c.Header("Content-Type", contentType)
 	c.Header("Accept-Ranges", "bytes")
 	c.File(absPath)
+}
+
+// streamDanmaku 返回下载目录里的弹幕文件文本（ASS）。
+// file_path 可以是视频成品路径或弹幕路径；bvid 用于只知 BV 号时按目录检索。
+func streamDanmaku(c *gin.Context) {
+	filePath := c.Query("file_path")
+	bvid := c.Query("bvid")
+	if filePath == "" && bvid == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("缺少 file_path 或 bvid 参数"))
+		return
+	}
+
+	body, name, err := services.DanmakuFile(filePath, bvid)
+	switch {
+	case errors.Is(err, services.ErrDanmakuForbidden):
+		c.JSON(http.StatusForbidden, models.ErrorResponse("无权访问该文件"))
+		return
+	case errors.Is(err, services.ErrDanmakuNotFound):
+		c.JSON(http.StatusNotFound, models.ErrorResponse("弹幕文件不存在"))
+		return
+	case err != nil:
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse(err.Error()))
+		return
+	}
+
+	c.Header("Content-Disposition", "inline; filename="+strconv.Quote(name))
+	c.Data(http.StatusOK, "text/plain; charset=utf-8", body)
 }
 
 func checkFFmpeg(c *gin.Context) {

@@ -1007,15 +1007,15 @@ export const getVideoStream = (file_path) => {
 
 /**
  * 获取弹幕文件内容
- * @param {string} cid 弹幕ID
- * @param {string} file_path 弹幕文件路径
+ * @param {string} file_path 视频成品路径或弹幕文件路径，sidecar 命名由后端解析
+ * @param {string} bvid 仅知 BV 号时用于在下载目录检索弹幕文件
  * @returns {Promise<Object>} 响应对象
  */
-export const getDanmakuFile = async (cid = '', file_path = '') => {
+export const getDanmakuFile = async (file_path = '', bvid = '') => {
   try {
     const params = {};
-    if (cid) params.cid = cid;
     if (file_path) params.file_path = file_path;
+    if (bvid) params.bvid = bvid;
 
     return await instance.get(`/download/stream_danmaku`, {
       params,

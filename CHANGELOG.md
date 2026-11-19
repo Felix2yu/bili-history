@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 - 限速选项（透传 bili-dl 的 `-rate` 语义）
 - 收藏夹整夹下载接口 `/download/download_favorites`：前端早已在调用但后端没有注册，
   现在补上，本地收藏库优先、未同步时在线拉取
+- 弹幕读取接口 `/download/stream_danmaku`：同样是前端一直在调却没有实现，
+  现在按视频成品路径解析 `标题_BV.danmaku.ass`（也可按 BV 号检索），
+  路径收敛在下载目录内；播放器不再用前端正则猜 sidecar 名与容器扩展名
 
 ### 变更
 

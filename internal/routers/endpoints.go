@@ -802,6 +802,11 @@ func init() {
 		Tags:        tagDownload,
 		OperationID: "stream_video",
 	})
+	RegisterEndpointMeta("GET", "/download/stream_danmaku", EndpointMeta{
+		Summary:     "读取已下载视频的弹幕文件",
+		Tags:        tagDownload,
+		OperationID: "stream_danmaku",
+	})
 	RegisterEndpointMeta("GET", "/download/check_ffmpeg", EndpointMeta{
 		Summary:     "检查FFmpeg安装状态",
 		Tags:        tagDownload,

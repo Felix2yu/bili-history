@@ -85,7 +85,15 @@
                 v-if="downloadStarted"
                 class="line-clamp-2 text-xs text-gray-500 md:line-clamp-none md:text-sm dark:text-gray-400"
               >
-                {{ isDownloading ? '正在下载：' : downloadError ? '下载出错：' : '下载完成：' }}
+                {{
+                  isDownloading
+                    ? '正在下载：'
+                    : downloadError
+                      ? '下载出错：'
+                      : downloadCanceled
+                        ? '已取消：'
+                        : '下载完成：'
+                }}
                 {{ currentVideoTitle }}
               </p>
               <p
@@ -170,17 +178,92 @@
                 >
               </label>
 
+              <label class="flex cursor-pointer items-center space-x-1.5 select-none md:space-x-2">
+                <input
+                  v-model="downloadCover"
+                  type="checkbox"
+                  class="h-3.5 w-3.5 rounded border-gray-300 text-accent focus:ring-accent md:h-4 md:w-4"
+                />
+                <span class="text-[0.625rem] text-gray-700 md:text-xs dark:text-gray-300"
+                  >封面</span
+                >
+              </label>
+
+              <label class="flex cursor-pointer items-center space-x-1.5 select-none md:space-x-2">
+                <input
+                  v-model="danmaku"
+                  type="checkbox"
+                  class="h-3.5 w-3.5 rounded border-gray-300 text-accent focus:ring-accent md:h-4 md:w-4"
+                />
+                <span class="text-[0.625rem] text-gray-700 md:text-xs dark:text-gray-300"
+                  >弹幕</span
+                >
+              </label>
+
+              <label class="flex cursor-pointer items-center space-x-1.5 select-none md:space-x-2">
+                <input
+                  v-model="subtitle"
+                  type="checkbox"
+                  class="h-3.5 w-3.5 rounded border-gray-300 text-accent focus:ring-accent md:h-4 md:w-4"
+                />
+                <span class="text-[0.625rem] text-gray-700 md:text-xs dark:text-gray-300"
+                  >字幕</span
+                >
+              </label>
+
               <!-- 画质选择 -->
-              <div v-if="streamOptions.length > 1" class="min-w-[150px] flex-1">
+              <div v-if="!onlyAudio && streamOptions.length > 1" class="min-w-[150px] flex-1">
                 <select
                   v-model="selectedStreamId"
                   class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-[0.625rem] text-gray-700 focus:ring-1 focus:ring-accent focus:outline-none md:text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
                 >
-                  <option v-for="opt in streamOptions" :key="opt.value" :value="opt.value">
+                  <option v-for="opt in streamOptions" :key="String(opt.value)" :value="opt.value">
                     {{ opt.label }}
                   </option>
                 </select>
               </div>
+
+              <!-- 音质选择 -->
+              <div v-if="audioOptions.length > 1" class="min-w-[150px] flex-1">
+                <select
+                  v-model="selectedAudioId"
+                  class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-[0.625rem] text-gray-700 focus:ring-1 focus:ring-accent focus:outline-none md:text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                >
+                  <option v-for="opt in audioOptions" :key="String(opt.value)" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- 分P选择 -->
+              <div v-if="videoPages.length > 1" class="min-w-[150px] flex-1">
+                <select
+                  v-model="selectedPage"
+                  class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-[0.625rem] text-gray-700 focus:ring-1 focus:ring-accent focus:outline-none md:text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                >
+                  <option :value="0">默认（第 1 P）</option>
+                  <option value="all">全部 P</option>
+                  <option v-for="p in videoPages" :key="p.page" :value="p.page">
+                    P{{ p.page }} {{ p.part }}（{{ formatPageDuration(p.duration) }}）
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 下载进度 -->
+            <div v-if="downloadStarted && isDownloading" class="mb-2 flex items-center gap-2">
+              <van-progress
+                class="min-w-0 flex-1"
+                :percentage="progressPercent"
+                :show-pivot="false"
+                stroke-width="4"
+                color="var(--accent)"
+              />
+              <span
+                class="flex-shrink-0 text-[0.625rem] text-gray-500 md:text-xs dark:text-gray-400"
+              >
+                {{ progressKindLabel }} · {{ progressSpeedText }}
+              </span>
             </div>
 
             <!-- 下载日志 -->
@@ -225,6 +308,13 @@
           </div>
           <div class="flex space-x-3">
             <button
+              v-if="isDownloading"
+              class="rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-700 dark:bg-gray-700 dark:text-red-400 dark:hover:bg-red-900/30"
+              @click="cancelDownload"
+            >
+              取消下载
+            </button>
+            <button
               class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               :disabled="isDownloading"
               @click="handleClose"
@@ -232,7 +322,7 @@
               {{ isDownloading ? '下载中...' : '关闭' }}
             </button>
             <button
-              v-if="!downloadStarted || downloadError"
+              v-if="!downloadStarted || downloadError || downloadCanceled"
               class="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
               :disabled="isDownloading"
               @click="startDownload"
@@ -313,6 +403,7 @@ const emit = defineEmits(['update:show', 'download-complete', 'update:currentVid
 const downloadStarted = ref(false);
 const isDownloading = ref(false);
 const downloadError = ref(false);
+const downloadCanceled = ref(false);
 const downloadLogs = ref([]);
 
 // 添加日志（过滤掉"下载完成"，由状态栏统一显示）
@@ -326,8 +417,43 @@ const downloadStatus = computed(() => {
   if (!downloadStarted.value) return '准备就绪';
   if (downloadError.value) return '下载出错';
   if (isDownloading.value) return '下载中...';
+  if (downloadCanceled.value) return '已取消下载';
   return '下载完成';
 });
+
+// SSE 结构化事件：progress 驱动进度条，done 决定完成/失败/取消态
+const handleDownloadEvent = (evt) => {
+  if (!evt || typeof evt !== 'object') return;
+  if (evt.type === 'progress') {
+    progressPercent.value = Math.max(0, Math.min(100, Number(evt.percent) || 0));
+    progressSpeedBps.value = Number(evt.speed_bps) || 0;
+    progressKind.value = evt.kind || '';
+  } else if (evt.type === 'done') {
+    isDownloading.value = false;
+    if (evt.event === 'ok') {
+      progressPercent.value = 100;
+      showDownloadCompleteNotify();
+      emit('download-complete');
+    } else if (evt.event === 'error') {
+      downloadError.value = true;
+    } else if (evt.event === 'cancel') {
+      if (!downloadCanceled.value) {
+        downloadCanceled.value = true;
+        downloadLogs.value.push('已取消下载');
+      }
+    }
+    // 主动断开流，释放 reader
+    abortController?.abort();
+  }
+};
+
+const cancelDownload = () => {
+  if (!isDownloading.value) return;
+  isDownloading.value = false;
+  downloadCanceled.value = true;
+  downloadLogs.value.push('已取消下载');
+  abortController?.abort();
+};
 
 // 获取下载标题
 const getDownloadTitle = () => {
@@ -368,10 +494,45 @@ const checkFFmpegStatus = async () => {
 const downloadCover = ref(false);
 // 仅下载音频选项
 const onlyAudio = ref(false);
+// 附加内容开关
+const danmaku = ref(false);
+const subtitle = ref(false);
 
-// 画质选择
+// 画质选择（value 为 DASH 画质 id，codec 随选项带出）
 const streamOptions = ref([]);
 const selectedStreamId = ref(null);
+// 音质选择
+const audioOptions = ref([]);
+const selectedAudioId = ref(null);
+// 分P选择：0=默认第1P，'all'=全部P，其余为具体页码
+const videoPages = ref([]);
+const selectedPage = ref(0);
+
+// 下载进度
+const progressPercent = ref(0);
+const progressSpeedBps = ref(0);
+const progressKind = ref('');
+const kindLabels = {
+  video: '视频流',
+  audio: '音频流',
+  cover: '封面',
+  danmaku: '弹幕',
+  subtitle: '字幕'
+};
+const progressKindLabel = computed(() => kindLabels[progressKind.value] || '下载中');
+const progressSpeedText = computed(
+  () => `${(progressSpeedBps.value / 1024 / 1024).toFixed(1)} MB/s`
+);
+
+const formatPageDuration = (seconds) => {
+  const total = Math.max(0, Math.floor(Number(seconds) || 0));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+};
+
+// 取消下载用
+let abortController = null;
 
 // 当前正在下载的视频信息
 const currentVideoTitle = ref('');
@@ -693,9 +854,15 @@ watch(
       favoriteVideoIndex.value = -1;
       favoriteVideos.value = [];
 
-      // 重置画质选择
+      // 重置下载选项
       streamOptions.value = [{ label: '自动选择最佳画质', value: null }];
       selectedStreamId.value = null;
+      audioOptions.value = [{ label: '自动（最高码率）', value: null }];
+      selectedAudioId.value = null;
+      videoPages.value = [];
+      selectedPage.value = 0;
+      danmaku.value = false;
+      subtitle.value = false;
 
       // 获取视频流信息
       if (
@@ -715,11 +882,22 @@ watch(
                 { label: '自动选择最佳画质', value: null },
                 ...data.streams.map((s) => ({
                   label: s.quality,
+                  value: s.id,
+                  codec: s.codec
+                }))
+              ];
+            }
+            if (data.audio_streams && data.audio_streams.length > 0) {
+              audioOptions.value = [
+                { label: '自动（最高码率）', value: null },
+                ...data.audio_streams.map((s) => ({
+                  label: s.quality,
                   value: s.id
                 }))
               ];
-              if (data.title) currentVideoTitle.value = data.title;
             }
+            videoPages.value = Array.isArray(data.pages) ? data.pages : [];
+            if (data.title) currentVideoTitle.value = data.title;
           }
         } catch (error) {
           console.error('获取视频流信息失败:', error);
@@ -747,7 +925,11 @@ const resetState = () => {
   downloadStarted.value = false;
   isDownloading.value = false;
   downloadError.value = false;
+  downloadCanceled.value = false;
   downloadLogs.value = [];
+  progressPercent.value = 0;
+  progressSpeedBps.value = 0;
+  progressKind.value = '';
   currentVideoTitle.value = props.videoInfo.title;
   currentVideoCover.value = props.videoInfo.pic || props.videoInfo.cover;
   currentVideoAuthor.value = props.videoInfo.author || '';
@@ -756,9 +938,19 @@ const resetState = () => {
   favoriteVideoIndex.value = -1;
   favoriteVideos.value = [];
 
-  // 重置画质选择
+  // 重置下载选项
   streamOptions.value = [{ label: '自动选择最佳画质', value: null }];
   selectedStreamId.value = null;
+  audioOptions.value = [{ label: '自动（最高码率）', value: null }];
+  selectedAudioId.value = null;
+  videoPages.value = [];
+  selectedPage.value = 0;
+  danmaku.value = false;
+  subtitle.value = false;
+
+  // 释放可能仍在读取的下载流
+  abortController?.abort();
+  abortController = null;
 };
 
 // 显示下载完成通知
@@ -770,6 +962,27 @@ const showDownloadCompleteNotify = () => {
     duration: 2000,
     teleport: '.notification-container'
   });
+};
+
+// 组装五个下载分支共用的选项
+const buildDownloadOptions = (extra = {}) => {
+  const stream = streamOptions.value.find(
+    (o) => o.value !== null && o.value === selectedStreamId.value
+  );
+  const allPages = selectedPage.value === 'all';
+  return {
+    ...extra,
+    signal: abortController?.signal,
+    download_cover: downloadCover.value,
+    only_audio: onlyAudio.value,
+    video_quality: stream ? stream.value : 0,
+    video_codec: stream ? stream.codec : '',
+    audio_quality: selectedAudioId.value ?? 0,
+    page: allPages ? 0 : Number(selectedPage.value) || 0,
+    batch: allPages,
+    danmaku: danmaku.value,
+    subtitle: subtitle.value
+  };
 };
 
 // 开始下载
@@ -786,7 +999,13 @@ const startDownload = async () => {
     downloadStarted.value = true;
     isDownloading.value = true;
     downloadError.value = false;
+    downloadCanceled.value = false;
     downloadLogs.value = [];
+    progressPercent.value = 0;
+    progressSpeedBps.value = 0;
+    progressKind.value = '';
+    abortController?.abort();
+    abortController = new AbortController();
 
     // 首次显示正在使用预加载的视频
     if (isFavoriteFolder.value && favoriteVideos.value.length > 0) {
@@ -822,11 +1041,7 @@ const startDownload = async () => {
 
       // 发起用户视频下载请求并处理实时消息
       await downloadUserVideos(
-        {
-          user_id: props.videoInfo.user_id,
-          download_cover: downloadCover.value,
-          only_audio: onlyAudio.value
-        },
+        buildDownloadOptions({ user_id: props.videoInfo.user_id }),
         (content) => {
           console.log('收到用户视频下载消息:', content);
           addLog(content);
@@ -883,54 +1098,32 @@ const startDownload = async () => {
             }
           }
 
-          // 检查下载状态
-          if (content.includes('下载完成') && !content.includes('INFO')) {
-            isDownloading.value = false;
-            // 显示下载完成通知
-            showDownloadCompleteNotify();
-            emit('download-complete');
-          } else if (content.includes('ERROR')) {
-            downloadError.value = true;
-            isDownloading.value = false;
-          }
-
           // 自动滚动到底部
           nextTick(() => {
             scrollToBottom();
           });
-        }
+        },
+        handleDownloadEvent
       );
     }
     // 检查是否是收藏夹下载请求
     else if (props.videoInfo.is_favorite_folder) {
       // 发起收藏夹下载请求并处理实时消息
       await downloadFavorites(
-        {
+        buildDownloadOptions({
           user_id: props.videoInfo.user_id,
-          fid: props.videoInfo.fid,
-          download_cover: downloadCover.value,
-          only_audio: onlyAudio.value
-        },
+          fid: props.videoInfo.fid
+        }),
         (content) => {
           console.log('收到收藏夹下载消息:', content);
           addLog(content);
-
-          // 检查下载状态
-          if (content.includes('下载完成') && !content.includes('INFO')) {
-            isDownloading.value = false;
-            // 显示下载完成通知
-            showDownloadCompleteNotify();
-            emit('download-complete');
-          } else if (content.includes('ERROR')) {
-            downloadError.value = true;
-            isDownloading.value = false;
-          }
 
           // 自动滚动到底部
           nextTick(() => {
             scrollToBottom();
           });
-        }
+        },
+        handleDownloadEvent
       );
     } else if (props.isBatchDownload && props.batchVideos.length > 0) {
       // 批量下载多个视频
@@ -947,11 +1140,7 @@ const startDownload = async () => {
 
       // 发起批量下载请求
       await batchDownloadVideos(
-        {
-          videos: props.batchVideos,
-          download_cover: downloadCover.value,
-          only_audio: onlyAudio.value
-        },
+        buildDownloadOptions({ videos: props.batchVideos }),
         (content) => {
           console.log('收到批量下载消息:', content);
           addLog(content);
@@ -986,98 +1175,63 @@ const startDownload = async () => {
             }
           }
 
-          // 检查下载状态
-          if (
-            content.includes('批量下载完成') ||
-            (content.includes('下载完成') && !content.includes('INFO'))
-          ) {
-            isDownloading.value = false;
-            // 显示下载完成通知
-            showDownloadCompleteNotify();
-            emit('download-complete');
-          } else if (content.includes('ERROR')) {
-            downloadError.value = true;
-            isDownloading.value = false;
-          }
-
           // 自动滚动到底部
           nextTick(() => {
             scrollToBottom();
           });
-        }
+        },
+        handleDownloadEvent
       );
     } else if (props.videoInfo.is_collection_download) {
       // 合集下载
       console.log('开始合集下载:', props.videoInfo);
 
       await downloadCollection(
-        {
+        buildDownloadOptions({
           url: props.videoInfo.original_url,
-          cid: props.videoInfo.cid,
-          download_cover: downloadCover.value,
-          only_audio: onlyAudio.value
-        },
+          cid: props.videoInfo.cid
+        }),
         (content) => {
           console.log('收到合集下载消息:', content);
           addLog(content);
 
-          // 检查下载状态
-          if (content.includes('下载完成')) {
-            isDownloading.value = false;
-            // 显示下载完成通知
-            showDownloadCompleteNotify();
-            emit('download-complete');
-          } else if (content.includes('ERROR')) {
-            downloadError.value = true;
-            isDownloading.value = false;
-          }
-
           // 自动滚动到底部
           nextTick(() => {
             scrollToBottom();
           });
-        }
+        },
+        handleDownloadEvent
       );
     } else {
       // 发起单个视频下载请求并处理实时消息
-      await downloadVideo(
-        props.videoInfo.bvid,
-        null,
-        (content) => {
+      await downloadVideo(props.videoInfo.bvid, buildDownloadOptions(), {
+        onMessage: (content) => {
           console.log('收到消息:', content);
           addLog(content);
-
-          // 检查下载状态
-          if (content.includes('下载完成')) {
-            isDownloading.value = false;
-            // 显示下载完成通知
-            showDownloadCompleteNotify();
-            emit('download-complete');
-          } else if (content.includes('ERROR')) {
-            downloadError.value = true;
-            isDownloading.value = false;
-          }
 
           // 自动滚动到底部
           nextTick(() => {
             scrollToBottom();
           });
         },
-        downloadCover.value,
-        onlyAudio.value,
-        props.videoInfo.cid,
-        // 画质选择
-        { stream_id: selectedStreamId.value }
-      );
+        onEvent: handleDownloadEvent
+      });
     }
   } catch (error) {
+    // AbortError 来自取消或 done 后主动断流，状态已在对应处理里复位
+    if (error?.name === 'AbortError') {
+      isDownloading.value = false;
+      return;
+    }
     console.error('下载失败:', error);
     downloadError.value = true;
     isDownloading.value = false;
-    const errorLines = error.message.split('\n');
+    const errorLines = String(error?.message || error).split('\n');
     for (const line of errorLines) {
       downloadLogs.value.push(`ERROR: ${line}`);
     }
+  } finally {
+    isDownloading.value = false;
   }
 };
 
@@ -1107,7 +1261,12 @@ const handleClose = () => {
   }
 
   // 如果下载已完成且没有错误，触发下载完成事件
-  if (downloadStarted.value && !isDownloading.value && !downloadError.value) {
+  if (
+    downloadStarted.value &&
+    !isDownloading.value &&
+    !downloadError.value &&
+    !downloadCanceled.value
+  ) {
     emit('download-complete');
   }
 

@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/).
 
+## [Unreleased]
+
+### 新增
+
+- 下载支持按 DASH 画质/音质 id 精确选流（含 dolby 与 flac 无损音轨），可选编码优先级
+- 分 P 下载：单 P 指定或整稿全量展开
+- 合集与番剧：合集按 `ugc_season` 真实展开，番剧支持 `ep`/`ss` 链接与整季下载
+- 附加内容开关：封面（沿用原有开关）、弹幕、字幕，默认只下封面
+- 下载可取消：断开 SSE 即中止底层请求与 ffmpeg 子进程；并发下载请求被明确拒绝
+- 字节级下载进度（百分比、实时速度、当前资源类型）替代原先的纯文本阶段提示
+- 限速选项（透传 bili-dl 的 `-rate` 语义）
+- 收藏夹整夹下载接口 `/download/download_favorites`：前端早已在调用但后端没有注册，
+  现在补上，本地收藏库优先、未同步时在线拉取
+
+### 变更
+
+- 下载全流程交给 bili-dl 的新接口：不再由本仓库自行请求 playurl（此前缺少 WBI 签名）、
+  自行选流、自行二次转封装；容器由实际编码决定（AV1→MKV、HEVC→MOV、其余→MP4）
+- 产物命名改为 `下载目录/UP主/标题_BV号[ - 01 - 分P名].扩展名`，库列表、已下载判定、
+  删除均按 BV 号关联；历史扁平 `[UP主]标题` 命名继续兼容解析
+- `check_video_download` 与 `delete_downloaded_video` 的参数由 CID 改为 BV 号——
+  按 CID 匹配文件名的判定此前从未命中过任何文件
+- 下载事件流改为 JSON 事件（`log` / `progress` / `done`），`done` 携带成功/失败/取消状态
+
+### 修复
+
+- `stream_video` 会把 downloads 之外的任意本机路径读出来，现收敛在下载目录内并按容器返回 MIME
+- 删除「同时删除整个目录」时可能连整个 UP 主目录一起删掉，现只删属于该 BV 的文件、目录清空后才移除
+- 画质文案按长边取档，1080p 被显示成 2K、720p 被显示成 1080p，现按短边（B 站语义）计算
+
 ## [1.0.0] - 2026-07-26
 
 首个正式发布版本。Bilibili 观看历史记录管理与分析工具。

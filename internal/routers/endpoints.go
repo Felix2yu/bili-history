@@ -822,6 +822,11 @@ func init() {
 		Tags:        tagDownload,
 		OperationID: "download_user_videos_sse",
 	})
+	RegisterEndpointMeta("POST", "/download/download_favorites", EndpointMeta{
+		Summary:     "下载收藏夹全部视频（SSE流）",
+		Tags:        tagDownload,
+		OperationID: "download_favorites_sse",
+	})
 	RegisterEndpointMeta("GET", "/collection/check_collection", EndpointMeta{
 		Summary:     "检查URL是否为合集",
 		Tags:        tagDownload,

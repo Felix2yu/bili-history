@@ -3,7 +3,7 @@ module bilibili-history-go
 go 1.27
 
 require (
-	github.com/Felix2yu/bili-dl v1.0.0
+	github.com/Felix2yu/bili-dl v1.1.0
 	github.com/gin-contrib/cors v1.7.11
 	github.com/gin-gonic/gin v1.12.0
 	github.com/mark3labs/mcp-go v1.5.0

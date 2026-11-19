@@ -240,9 +240,9 @@
             {{ currentVideo?.title || '未知视频' }}
           </p>
 
-          <!-- 显示CID和目录信息 -->
+          <!-- 显示BV号与目录信息 -->
           <div class="mb-3 text-sm text-gray-500">
-            <p v-if="currentVideo?.cid">CID: {{ currentVideo?.cid }}</p>
+            <p v-if="currentVideo?.bvid">BV: {{ currentVideo?.bvid }}</p>
 
             <!-- 目录信息显示 -->
             <div class="mt-2">
@@ -269,7 +269,7 @@
 
           <!-- 视频来源提示 (针对收藏夹视频) -->
           <div
-            v-if="!currentVideo?.cid && getVideoDirectory(currentVideo)"
+            v-if="!currentVideo?.bvid && getVideoDirectory(currentVideo)"
             class="mb-4 rounded-md border border-amber-200 bg-amber-50 p-2 dark:border-amber-800 dark:bg-amber-900/20"
           >
             <p class="text-sm text-amber-700">
@@ -288,7 +288,7 @@
             </button>
             <button
               class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-              :disabled="isDeleting || (!currentVideo?.cid && !getVideoDirectory(currentVideo))"
+              :disabled="isDeleting || (!currentVideo?.bvid && !getVideoDirectory(currentVideo))"
               @click="confirmDeleteVideo"
             >
               {{ isDeleting ? '删除中...' : '确认删除' }}
@@ -416,12 +416,11 @@ const confirmDeleteVideo = async () => {
     // 确定目录路径
     const directory = getVideoDirectory(currentVideo.value);
 
-    // 自动判断是否使用CID
-    // 如果有CID则使用CID，否则使用目录路径
-    const cid = currentVideo.value?.cid || null;
+    // 产物按 BV 归类，删除也用 BV 匹配（同一 BV 的成品与弹幕/字幕/封面一起删除）
+    const bvid = currentVideo.value?.bvid || null;
 
-    // 如果既没有CID也没有目录路径，则无法删除
-    if (!cid && !directory) {
+    // 既没有 BV 也没有目录路径时无法定位文件
+    if (!bvid && !directory) {
       showNotify({
         type: 'warning',
         message: '无法获取视频信息，删除失败'
@@ -430,7 +429,7 @@ const confirmDeleteVideo = async () => {
       return;
     }
 
-    const response = await deleteDownloadedVideo(cid, deleteDirectory.value, directory);
+    const response = await deleteDownloadedVideo(bvid, deleteDirectory.value, directory);
 
     if (response.data && response.data.status === 'success') {
       showNotify({
@@ -472,13 +471,13 @@ const handleAuthorClick = async (video) => {
   }
 };
 
-// 检查是否为浏览器不支持的格式（MKV 容器、AV1 编码）
+// 检查是否为浏览器不支持的格式（MKV / MOV 容器）
 const isUnsupportedFormat = (video) => {
   if (!video.files || !video.files.length) return false;
   const fileName = video.files[0].file_path || '';
   const lower = fileName.toLowerCase();
-  // MKV 容器在大多数浏览器中无法直接播放
-  return lower.endsWith('.mkv');
+  // MKV 与 HEVC 的 MOV 在多数浏览器里无法直接播放（MOV 仅 Safari 可用）
+  return lower.endsWith('.mkv') || lower.endsWith('.mov');
 };
 
 // SSR: 初始数据在服务端获取

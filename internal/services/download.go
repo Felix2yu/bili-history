@@ -1,11 +1,11 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,31 +13,93 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
+	"bilibili-history-go/internal/biliapi"
 	"bilibili-history-go/internal/config"
 	"bilibili-history-go/internal/database"
 	"bilibili-history-go/internal/utils"
 
-	"github.com/Felix2yu/bili-dl/C"
 	"github.com/Felix2yu/bili-dl/api"
+	"github.com/Felix2yu/bili-dl/c"
 )
 
+// 产物命名交给 bili-dl 的路径模板：UP 主子目录 + 标题带 BV 号。
+// BV 留在文件名里，库列表才能按 BV 关联本地历史中的封面与作者。
+const subpathTemplate = "{owner_uname}/{title}_{bv}"
+
+const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+
+// VideoInfo 是下载弹框需要的解析结果：可选码流、分 P、UP 主与封面。
 type VideoInfo struct {
-	URL        string       `json:"url"`
-	Site       string       `json:"site"`
-	Title      string       `json:"title"`
-	Type       string       `json:"type"`
-	Streams    []StreamInfo `json:"streams"`
-	Cover      string       `json:"cover"`
-	DanmakuURL string       `json:"danmaku_url,omitempty"`
+	URL          string       `json:"url"`
+	Site         string       `json:"site"`
+	Type         string       `json:"type"`
+	Title        string       `json:"title"`
+	BVID         string       `json:"bvid"`
+	Owner        string       `json:"owner"`
+	Cover        string       `json:"cover"`
+	Streams      []StreamInfo `json:"streams"`
+	AudioStreams []AudioInfo  `json:"audio_streams"`
+	Pages        []PageInfo   `json:"pages"`
 }
 
+// StreamInfo 是一条可选视频码流，ID 即 DASH 画质 id（对应 bili-dl 的 -q）。
 type StreamInfo struct {
-	ID      string `json:"id"`
-	Quality string `json:"quality"`
-	Size    int64  `json:"size"`
-	Ext     string `json:"ext"`
+	ID        int    `json:"id"`
+	Codec     string `json:"codec"`
+	Quality   string `json:"quality"`
+	Ext       string `json:"ext"`
+	Width     int    `json:"width"`
+	Height    int    `json:"height"`
+	Bandwidth int64  `json:"bandwidth"`
+}
+
+// AudioInfo 是一条可选音频码流，含 dolby 与 flac 无损轨。
+type AudioInfo struct {
+	ID        int    `json:"id"`
+	Codec     string `json:"codec"`
+	Quality   string `json:"quality"`
+	Ext       string `json:"ext"`
+	Bandwidth int64  `json:"bandwidth"`
+}
+
+type PageInfo struct {
+	Page     int    `json:"page"`
+	Cid      string `json:"cid"`
+	Part     string `json:"part"`
+	Duration int    `json:"duration"`
+}
+
+// DownloadOptions 一次下载的全部可选项，零值即「全自动」。
+type DownloadOptions struct {
+	Sessdata     string
+	OnlyAudio    bool
+	VideoQuality int
+	VideoCodec   string
+	AudioQuality int
+	Page         int
+	Batch        bool
+	Collection   bool
+	Danmaku      bool
+	Subtitle     bool
+	Cover        bool
+	RateLimit    string
+}
+
+// DownloadEvent 推送给前端的一条下载消息。
+type DownloadEvent struct {
+	Type    string  `json:"type"` // log / progress
+	Text    string  `json:"text,omitempty"`
+	Event   string  `json:"event,omitempty"`
+	BVID    string  `json:"bvid,omitempty"`
+	Page    int     `json:"page,omitempty"`
+	Kind    string  `json:"kind,omitempty"`
+	Percent float64 `json:"percent,omitempty"`
+	Speed   int64   `json:"speed_bps,omitempty"`
+	Current int64   `json:"current,omitempty"`
+	Total   int64   `json:"total,omitempty"`
 }
 
 type DownloadedVideoFile struct {
@@ -49,7 +111,8 @@ type DownloadedVideoFile struct {
 type DownloadedVideo struct {
 	Title        string                `json:"title"`
 	BVID         string                `json:"bvid"`
-	CID          string                `json:"cid"`
+	Page         int                   `json:"page,omitempty"`
+	Part         string                `json:"part,omitempty"`
 	Cover        string                `json:"cover"`
 	AuthorName   string                `json:"author_name"`
 	AuthorFace   string                `json:"author_face"`
@@ -57,6 +120,99 @@ type DownloadedVideo struct {
 	DownloadDate string                `json:"download_date"`
 	Files        []DownloadedVideoFile `json:"files"`
 	Directory    string                `json:"directory"`
+}
+
+// CollectionVideo 是合集 / 番剧 / 多分 P 投稿里的一个条目。
+type CollectionVideo struct {
+	BVID  string `json:"bvid"`
+	Title string `json:"title"`
+	URL   string `json:"url"`
+	Cid   string `json:"cid,omitempty"`
+	Cover string `json:"cover,omitempty"`
+	Page  int    `json:"page,omitempty"`
+}
+
+// CollectionInfo 是合集检查结果，前端据此决定是否走批量下载。
+type CollectionInfo struct {
+	IsCollection bool              `json:"is_collection"`
+	Type         string            `json:"type"`
+	Title        string            `json:"title"`
+	VideoCount   int               `json:"video_count"`
+	Videos       []CollectionVideo `json:"videos"`
+}
+
+// bili-dl 通过包级变量接收配置，任何两次并发调用都会互相踩参数，
+// 因此所有对它的调用共用这一把锁，且全局变量只在持锁时写入。
+var biliMu sync.Mutex
+
+var (
+	hookMu   sync.RWMutex
+	hookSink func(api.ProgressEvent)
+)
+
+func init() {
+	api.SetProgressHook(func(ev api.ProgressEvent) {
+		hookMu.RLock()
+		sink := hookSink
+		hookMu.RUnlock()
+		if sink != nil {
+			sink(ev)
+		}
+	})
+}
+
+// useProgressSink 把 bili-dl 的进度事件接到当前任务的 emit 上。
+func useProgressSink(emit func(DownloadEvent)) func() {
+	hookMu.Lock()
+	hookSink = func(ev api.ProgressEvent) { emit(progressEvent(ev)) }
+	hookMu.Unlock()
+	return func() {
+		hookMu.Lock()
+		hookSink = nil
+		hookMu.Unlock()
+	}
+}
+
+func progressEvent(ev api.ProgressEvent) DownloadEvent {
+	base := DownloadEvent{Event: ev.Event, BVID: ev.BV, Page: ev.Page, Kind: ev.Kind}
+	kind := kindLabel(ev.Kind)
+	switch ev.Event {
+	case "progress":
+		base.Type = "progress"
+		base.Percent = ev.Percent
+		base.Speed = ev.SpeedBPS
+		base.Current = ev.Current
+		base.Total = ev.Total
+	case "done":
+		base.Type = "log"
+		base.Text = fmt.Sprintf("%s已保存：%s", kind, ev.Message)
+	case "error":
+		base.Type = "log"
+		base.Text = fmt.Sprintf("%s失败：%s", kind, ev.Message)
+	default:
+		base.Type = "log"
+		base.Text = fmt.Sprintf("开始下载%s：%s", kind, ev.Message)
+	}
+	return base
+}
+
+func kindLabel(kind string) string {
+	switch kind {
+	case "video":
+		return "视频流"
+	case "audio":
+		return "音频流"
+	case "cover":
+		return "封面"
+	case "danmaku":
+		return "弹幕"
+	case "subtitle":
+		return "字幕"
+	case "":
+		return "资源"
+	default:
+		return kind
+	}
 }
 
 func GetDownloadOutputPath() string {
@@ -68,72 +224,68 @@ func getCookie() string {
 	if cfg == nil {
 		return ""
 	}
-	if cfg.SESSDATA != "" {
-		return cfg.SESSDATA
-	}
-	return ""
+	return cfg.SESSDATA
 }
 
-var bvRegexp = regexp.MustCompile(`BV[a-zA-Z0-9]+`)
+var (
+	ffmpegOnce   sync.Once
+	ffmpegPathOK bool
+)
 
-func extractBVFromURL(url string) string {
-	if bv := bvRegexp.FindString(url); bv != "" {
-		return bv
-	}
-	return ""
+func ffmpegAvailable() bool {
+	ffmpegOnce.Do(func() {
+		_, err := exec.LookPath("ffmpeg")
+		ffmpegPathOK = err == nil
+	})
+	return ffmpegPathOK
 }
 
-// codecPriority returns sort priority for bilibili codec strings
-// av1 > hevc > avc
-func codecPriorityStr(codec string) int {
-	if strings.HasPrefix(codec, "av01") {
-		return 3
-	} else if strings.HasPrefix(codec, "hev") || strings.HasPrefix(codec, "hvc") {
-		return 2
-	} else if strings.HasPrefix(codec, "avc") {
-		return 1
+// shortCodecName 把 DASH 的完整 codec 串归一成 bili-dl 认识的 av1/hevc/avc。
+// 传原样串会被 matchCodec 当成「不过滤」，选到用户没选的那条流。
+func shortCodecName(codec string) string {
+	switch {
+	case codec == "":
+		return ""
+	case strings.HasPrefix(codec, "av01"):
+		return "av1"
+	case strings.HasPrefix(codec, "hev"), strings.HasPrefix(codec, "hvc"):
+		return "hevc"
+	case strings.HasPrefix(codec, "avc"):
+		return "avc"
+	default:
+		return codec
 	}
-	return 0
 }
 
-// friendlyCodecName returns a short human-readable codec name
-func friendlyCodecName(codec string) string {
-	if strings.HasPrefix(codec, "av01") {
-		return "AV1"
-	} else if strings.HasPrefix(codec, "hev") || strings.HasPrefix(codec, "hvc") {
-		return "HEVC"
-	} else if strings.HasPrefix(codec, "avc") {
-		return "AVC"
+// applyGlobals 写入 bili-dl 全局参数，调用方必须持有 biliMu。
+func applyGlobals(outputDir string, opts DownloadOptions, ctx context.Context) {
+	c.Defaults()
+	cookie := opts.Sessdata
+	if cookie == "" {
+		cookie = getCookie()
 	}
-	return codec
+	c.Cookie = cookie
+	c.O = outputDir
+	c.SubpathTemplate = subpathTemplate
+	c.Delete = true
+	c.AudioOnly = opts.OnlyAudio
+	c.VideoQuality = opts.VideoQuality
+	c.Codec = shortCodecName(opts.VideoCodec)
+	c.AudioQuality = opts.AudioQuality
+	c.RateBytes = c.ParseRate(opts.RateLimit)
+	c.DownloadDanmaku = opts.Danmaku
+	c.DownloadSubtitle = opts.Subtitle
+	c.SaveCover = opts.Cover
+	c.FFMPEG = ffmpegAvailable()
+	// 没有 ffmpeg 就谈不上合并，DASH 分离流原样保留。
+	c.Merge = c.FFMPEG
+	c.Ctx = ctx
 }
 
-// friendlyQualityLabel returns a readable quality label like "4K · HEVC · MOV · 3.0Mbps" or "480p · AVC · MP4 · 320Kbps"
-func friendlyQualityLabel(codec string, width, height int, bandwidth float64) string {
-	res := resolutionLabel(width, height)
-	codecName := friendlyCodecName(codec)
-	ext := containerForCodec(codec)
-	bitrate := bandwidth / 1000
-	if bitrate >= 1000 {
-		return fmt.Sprintf("%s · %s · %s · %.1fMbps", res, codecName, ext, bitrate/1000)
-	}
-	return fmt.Sprintf("%s · %s · %s · %dKbps", res, codecName, ext, int(bitrate))
-}
-
-// containerForCodec returns the target container extension for a codec
-func containerForCodec(codec string) string {
-	if strings.HasPrefix(codec, "av01") {
-		return "MKV"
-	} else if strings.HasPrefix(codec, "hev") || strings.HasPrefix(codec, "hvc") {
-		return "MOV"
-	}
-	return "MP4"
-}
-
-// resolutionLabel returns standard quality name from resolution
+// resolutionLabel 按 B 站的档位语义取短边：1920x1080 是 1080p，竖屏 1080x1920 同理。
 func resolutionLabel(width, height int) string {
 	h := height
-	if width > height {
+	if width < height {
 		h = width
 	}
 	switch {
@@ -154,333 +306,480 @@ func resolutionLabel(width, height int) string {
 	}
 }
 
-// dashVideoStream represents a single video stream from DASH response
-type dashVideoStream struct {
-	ID        float64 `json:"id"`
-	Codecs    string  `json:"codecs"`
-	Width     int     `json:"width"`
-	Height    int     `json:"height"`
-	Bandwidth float64 `json:"bandwidth"`
-	BaseURL   string  `json:"base_url"`
+func friendlyCodecName(codec string) string {
+	switch {
+	case strings.HasPrefix(codec, "av01"):
+		return "AV1"
+	case strings.HasPrefix(codec, "hev"), strings.HasPrefix(codec, "hvc"):
+		return "HEVC"
+	case strings.HasPrefix(codec, "avc"):
+		return "AVC"
+	case strings.Contains(strings.ToLower(codec), "flac"):
+		return "FLAC"
+	case strings.Contains(strings.ToLower(codec), "mp4a"):
+		return "AAC"
+	default:
+		return strings.ToUpper(codec)
+	}
 }
 
-// dashAudioStream represents a single audio stream from DASH response
-type dashAudioStream struct {
-	ID        float64 `json:"id"`
-	Codecs    string  `json:"codecs"`
-	Bandwidth float64 `json:"bandwidth"`
-	BaseURL   string  `json:"base_url"`
+// codecPriority 决定同画质下的展示与选择顺序：av1 > hevc > avc。
+func codecPriority(codec string) int {
+	switch {
+	case strings.HasPrefix(codec, "av01"):
+		return 3
+	case strings.HasPrefix(codec, "hev"), strings.HasPrefix(codec, "hvc"):
+		return 2
+	case strings.HasPrefix(codec, "avc"):
+		return 1
+	default:
+		return 0
+	}
 }
 
-// videoDetail holds extra info from bilibili view API
-type videoDetail struct {
-	Title string `json:"title"`
-	Cover string `json:"pic"`
-	Owner struct {
-		Name string `json:"name"`
-		Face string `json:"face"`
-		Mid  int64  `json:"mid"`
-	} `json:"owner"`
+func bitrateLabel(bandwidth int64) string {
+	kbps := float64(bandwidth) / 1000
+	if kbps >= 1000 {
+		return fmt.Sprintf("%.1fMbps", kbps/1000)
+	}
+	return fmt.Sprintf("%dKbps", int(kbps))
 }
 
-// fetchVideoDetail fetches video detail including author name
-func fetchVideoDetail(bv, cookie string) (*videoDetail, error) {
-	apiURL := fmt.Sprintf("https://api.bilibili.com/x/web-interface/view?bvid=%s", bv)
-	req, err := http.NewRequest("GET", apiURL, nil)
+func streamLabel(s StreamInfo) string {
+	return fmt.Sprintf("%s · %s · %s · %s",
+		resolutionLabel(s.Width, s.Height), friendlyCodecName(s.Codec),
+		strings.ToUpper(s.Ext), bitrateLabel(s.Bandwidth))
+}
+
+func audioLabel(a AudioInfo) string {
+	return fmt.Sprintf("%s · %s · %s",
+		friendlyCodecName(a.Codec), strings.ToUpper(a.Ext), bitrateLabel(a.Bandwidth))
+}
+
+func toStreamInfos(options []api.VideoOption) []StreamInfo {
+	streams := make([]StreamInfo, 0, len(options))
+	for _, o := range options {
+		streams = append(streams, StreamInfo{
+			ID: o.ID, Codec: o.Codec, Ext: o.Ext,
+			Width: o.Width, Height: o.Height, Bandwidth: o.Bandwidth,
+		})
+	}
+	sort.SliceStable(streams, func(i, j int) bool {
+		if streams[i].ID != streams[j].ID {
+			return streams[i].ID > streams[j].ID
+		}
+		return codecPriority(streams[i].Codec) > codecPriority(streams[j].Codec)
+	})
+	for i := range streams {
+		streams[i].Quality = streamLabel(streams[i])
+	}
+	return streams
+}
+
+func toAudioInfos(options []api.AudioOption) []AudioInfo {
+	audios := make([]AudioInfo, 0, len(options))
+	for _, o := range options {
+		audios = append(audios, AudioInfo{ID: o.ID, Codec: o.Codec, Ext: o.Ext, Bandwidth: o.Bandwidth})
+	}
+	sort.SliceStable(audios, func(i, j int) bool { return audios[i].Bandwidth > audios[j].Bandwidth })
+	for i := range audios {
+		audios[i].Quality = audioLabel(audios[i])
+	}
+	return audios
+}
+
+func pagesOf(v api.Video) []PageInfo {
+	pages := make([]PageInfo, 0, len(v.Pages))
+	for _, p := range v.Pages {
+		pages = append(pages, PageInfo{Page: p.Page, Cid: p.Cid.String(), Part: p.Part, Duration: p.Duration})
+	}
+	return pages
+}
+
+// resolvePGC 把番剧输入解析成目标剧集：kind 为 ep 且未展开整季时只取该集。
+func resolvePGC(kind, id string, expandAll bool) ([]api.Video, error) {
+	seasonID, epID := "", id
+	if kind == "ss" {
+		seasonID, epID = id, ""
+	}
+	episodes, err := api.SeasonVideos(seasonID, epID)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-	req.Header.Set("Referer", "https://www.bilibili.com/")
-	if cookie != "" {
-		req.AddCookie(&http.Cookie{Name: "SESSDATA", Value: cookie})
+	if kind == "ep" && !expandAll {
+		for _, e := range episodes {
+			if e.EpID == id {
+				return []api.Video{e}, nil
+			}
+		}
+		return nil, fmt.Errorf("番剧列表里没有 ep%s", id)
 	}
-
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var result struct {
-		Code int         `json:"code"`
-		Data videoDetail `json:"data"`
-	}
-	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, err
-	}
-	if result.Code != 0 {
-		return nil, fmt.Errorf("API 返回错误码: %d", result.Code)
-	}
-	return &result.Data, nil
+	return episodes, nil
 }
 
-// fetchDashStreams fetches DASH stream info from bilibili API
-func fetchDashStreams(bv, cid, cookie string) ([]dashVideoStream, []dashAudioStream, error) {
-	apiURL := "https://api.bilibili.com/x/player/wbi/playurl?fnver=0&fnval=3216&fourk=1&qn=127"
-	parse, _ := url.Parse(apiURL)
-	query := parse.Query()
-	query.Add("bvid", bv)
-	query.Add("cid", cid)
-	parse.RawQuery = query.Encode()
-	apiURL = parse.String()
+// resolveTargets 把一条链接展开成下载目标：番剧按剧集、投稿按分 P，
+// Collection 打开时把所属合集整体展开。调用方必须持有 biliMu。
+func resolveTargets(link string, opts DownloadOptions) ([]api.Video, error) {
+	if kind, id := api.ParsePGCSInput(link); kind != "" {
+		return resolvePGC(kind, id, opts.Batch || opts.Collection)
+	}
 
-	req, err := http.NewRequest("GET", apiURL, nil)
+	bv, page, err := api.ParseInput(link)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-	req.Header.Set("Referer", "https://www.bilibili.com/")
-	if cookie != "" {
-		req.AddCookie(&http.Cookie{Name: "SESSDATA", Value: cookie})
+	if opts.Page > 0 {
+		page = opts.Page
 	}
-
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
+	video, err := api.VideoFromBV(bv)
 	if err != nil {
-		return nil, nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	var result struct {
-		Code int `json:"code"`
-		Data struct {
-			Dash struct {
-				Video []dashVideoStream `json:"video"`
-				Audio []dashAudioStream `json:"audio"`
-			} `json:"dash"`
-		} `json:"data"`
+	if opts.Collection && video.UGCSeason != nil {
+		if parts := api.ExpandUGCSeason(video); len(parts) > 0 {
+			// 合集条目只是带着 cid 的壳，各自再解析一次才能拿到分 P。
+			var out []api.Video
+			for _, part := range parts {
+				full, err := api.VideoFromBV(part.BV)
+				if err != nil {
+					return out, fmt.Errorf("合集条目 %s 解析失败: %w", part.BV, err)
+				}
+				out = append(out, api.ExpandPages(full, 1, opts.Batch)...)
+			}
+			return out, nil
+		}
 	}
-
-	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, nil, err
-	}
-
-	if result.Code != 0 {
-		return nil, nil, fmt.Errorf("API 返回错误码: %d", result.Code)
-	}
-
-	return result.Data.Dash.Video, result.Data.Dash.Audio, nil
+	return api.ExpandPages(video, page, opts.Batch), nil
 }
 
-func ExtractVideoInfo(url string) (*VideoInfo, error) {
-	bv := extractBVFromURL(url)
-	if bv == "" {
-		return nil, fmt.Errorf("无法从 URL 提取 BV 号: %s", url)
+// ExtractVideoInfo 解析一条链接，返回可选码流、分 P 与基本信息。
+func ExtractVideoInfo(link string) (*VideoInfo, error) {
+	// 只读操作：拿到锁就按自己的参数装配，正在下载时直接沿用当前全局参数，
+	// 避免弹框被一个几分钟的下载阻塞到请求超时。
+	if biliMu.TryLock() {
+		defer biliMu.Unlock()
+		applyGlobals(GetDownloadOutputPath(), DownloadOptions{}, context.Background())
 	}
 
-	cookie := getCookie()
+	info := &VideoInfo{URL: link, Site: "bilibili"}
+	var target api.Video
+	if kind, id := api.ParsePGCSInput(link); kind != "" {
+		targets, err := resolvePGC(kind, id, false)
+		if err != nil {
+			return nil, fmt.Errorf("获取番剧信息失败: %w", err)
+		}
+		target = targets[0]
+		info.Type = "pgc"
+	} else {
+		bv, page, err := api.ParseInput(link)
+		if err != nil {
+			return nil, fmt.Errorf("无法解析链接: %w", err)
+		}
+		video, err := api.VideoFromBV(bv)
+		if err != nil {
+			return nil, fmt.Errorf("获取视频信息失败: %w", err)
+		}
+		targets := api.ExpandPages(video, page, false)
+		if len(targets) == 0 {
+			return nil, fmt.Errorf("视频 %s 没有可下载的分 P", bv)
+		}
+		target = targets[0]
+		info.Type = "video"
+	}
 
+	info.Title = target.Title
+	info.BVID = target.BV
+	info.Owner = target.Owner
+	info.Cover = target.Pic
+	info.Pages = pagesOf(target)
+
+	videoOptions, audioOptions, err := api.ListOptions(target)
+	if err != nil {
+		// 码流候选拿不到不致命：下载会走自动选流，画质栏留空即可。
+		return info, nil
+	}
+	info.Streams = toStreamInfos(videoOptions)
+	info.AudioStreams = toAudioInfos(audioOptions)
+	return info, nil
+}
+
+func logEvent(emit func(DownloadEvent), format string, args ...any) {
+	emit(DownloadEvent{Type: "log", Text: fmt.Sprintf(format, args...)})
+}
+
+// Download 依次下载给定链接，链接可以是投稿、番剧或多条 BV。
+// ctx 取消会传导到 bili-dl 的请求与 ffmpeg 子进程。
+func Download(ctx context.Context, links []string, outputDir string, opts DownloadOptions, emit func(DownloadEvent)) error {
+	if len(links) == 0 {
+		return fmt.Errorf("没有待下载的链接")
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if outputDir == "" {
+		outputDir = GetDownloadOutputPath()
+	}
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("创建输出目录失败: %w", err)
+	}
+	if !biliMu.TryLock() {
+		return fmt.Errorf("已有下载任务在进行中，请等待完成后再试")
+	}
+	defer biliMu.Unlock()
+
+	stopHook := useProgressSink(emit)
+	defer stopHook()
+
+	applyGlobals(outputDir, opts, ctx)
+
+	var targets []api.Video
+	for _, link := range links {
+		resolved, err := resolveTargets(link, opts)
+		if err != nil {
+			logEvent(emit, "解析 %s 失败: %v", link, err)
+			continue
+		}
+		targets = append(targets, resolved...)
+	}
+	if len(targets) == 0 {
+		return fmt.Errorf("没有可下载的内容")
+	}
+	logEvent(emit, "共 %d 个下载任务", len(targets))
+
+	var failed int
+	for i, target := range targets {
+		if err := ctx.Err(); err != nil {
+			logEvent(emit, "已取消，剩余 %d 个任务未执行", len(targets)-i)
+			return err
+		}
+		logEvent(emit, "[%d/%d] %s", i+1, len(targets), target.Title)
+		if err := downloadTarget(target, emit); err != nil {
+			failed++
+			logEvent(emit, "[%d/%d] 失败: %v", i+1, len(targets), err)
+		}
+	}
+	if failed == len(targets) {
+		return fmt.Errorf("%d 个任务全部失败", failed)
+	}
+	if failed > 0 {
+		logEvent(emit, "完成，%d 个任务失败", failed)
+	}
+	logEvent(emit, "下载完成")
+	return nil
+}
+
+func downloadTarget(v api.Video, emit func(DownloadEvent)) error {
+	stream, err := api.GetStream(v)
+	if err != nil {
+		return fmt.Errorf("获取下载码流失败: %w", err)
+	}
+	if desc := streamDesc(stream); desc != "" {
+		logEvent(emit, "画质: %s", desc)
+	}
+	if err := api.Dl(stream); err != nil {
+		return fmt.Errorf("下载失败: %w", err)
+	}
+	switch {
+	case c.Merge:
+		if err := api.Merge(stream); err != nil {
+			logEvent(emit, "合并失败: %v，保留单独文件", err)
+		}
+	case !c.AudioOnly:
+		logEvent(emit, "未检测到 ffmpeg，已保留未合并的分离流")
+	}
+	// 弹幕 / 字幕 / 封面是 best-effort，失败不影响本条任务的结果。
+	api.DownloadExtras(stream)
+	return nil
+}
+
+func streamDesc(stream *api.Stream) string {
+	if stream.VWidth == 0 && stream.VHeight == 0 {
+		return ""
+	}
+	return fmt.Sprintf("%s · %s → %s",
+		resolutionLabel(int(stream.VWidth), int(stream.VHeight)),
+		friendlyCodecName(stream.VCodec),
+		strings.ToUpper(codecExtFor(stream.VCodec)))
+}
+
+func codecExtFor(codec string) string {
+	switch {
+	case strings.HasPrefix(codec, "av01"):
+		return "mkv"
+	case strings.HasPrefix(codec, "hev"):
+		return "mov"
+	default:
+		return "mp4"
+	}
+}
+
+// CheckCollection 识别一条链接背后是否有多个可下载条目：合集、番剧或多分 P 投稿。
+func CheckCollection(link string) (*CollectionInfo, error) {
+	if biliMu.TryLock() {
+		defer biliMu.Unlock()
+		applyGlobals(GetDownloadOutputPath(), DownloadOptions{}, context.Background())
+	}
+
+	if kind, id := api.ParsePGCSInput(link); kind != "" {
+		episodes, err := resolvePGC(kind, id, true)
+		if err != nil {
+			return nil, fmt.Errorf("获取番剧信息失败: %w", err)
+		}
+		info := &CollectionInfo{
+			IsCollection: len(episodes) > 1,
+			Type:         "pgc",
+			Title:        episodes[0].Title,
+			VideoCount:   len(episodes),
+		}
+		for _, e := range episodes {
+			info.Videos = append(info.Videos, CollectionVideo{
+				BVID: e.BV, Title: e.Title, Cid: e.Cid, Page: e.ActivePage,
+				Cover: e.Pic,
+				URL:   fmt.Sprintf("https://www.bilibili.com/bangumi/play/ep%s", e.EpID),
+			})
+		}
+		return info, nil
+	}
+
+	bv, _, err := api.ParseInput(link)
+	if err != nil {
+		return nil, fmt.Errorf("无法解析链接: %w", err)
+	}
 	video, err := api.VideoFromBV(bv)
 	if err != nil {
 		return nil, fmt.Errorf("获取视频信息失败: %w", err)
 	}
 
-	_, err = api.ResolveVideo(video)
-	if err != nil {
-		return nil, fmt.Errorf("解析视频信息失败: %w", err)
+	info := &CollectionInfo{Type: "video", Title: video.Title}
+	if video.UGCSeason != nil {
+		if parts := api.ExpandUGCSeason(video); len(parts) > 1 {
+			info.IsCollection = true
+			info.VideoCount = len(parts)
+			for _, part := range parts {
+				title := part.Title
+				if strings.TrimSpace(title) == "" {
+					title = video.Title
+				}
+				info.Videos = append(info.Videos, CollectionVideo{
+					BVID: part.BV, Title: title, Cid: part.Cid, Cover: part.Pic,
+					URL: fmt.Sprintf("https://www.bilibili.com/video/%s", part.BV),
+				})
+			}
+			return info, nil
+		}
 	}
 
-	videoStreams, _, err := fetchDashStreams(video.BV, video.Cid, cookie)
-	if err != nil {
-		return nil, fmt.Errorf("获取视频流信息失败: %w", err)
-	}
-
-	var streams []StreamInfo
-	for _, vs := range videoStreams {
-		codec := vs.Codecs
-		qualityID := int(vs.ID)
-		streams = append(streams, StreamInfo{
-			ID:      fmt.Sprintf("%d-%s", qualityID, codec),
-			Quality: friendlyQualityLabel(codec, vs.Width, vs.Height, vs.Bandwidth),
-			Size:    int64(vs.Bandwidth),
-			Ext:     "mp4",
+	// 非合集投稿按分 P 展开，多 P 也值得让前端提示批量下载。
+	info.VideoCount = len(video.Pages)
+	for _, p := range video.Pages {
+		info.Videos = append(info.Videos, CollectionVideo{
+			BVID: bv, Title: p.Part, Cid: p.Cid.String(), Page: p.Page, Cover: video.Pic,
+			URL: fmt.Sprintf("https://www.bilibili.com/video/%s?p=%d", bv, p.Page),
 		})
 	}
-
-	sort.Slice(streams, func(i, j int) bool {
-		qi, _ := strconv.Atoi(strings.SplitN(streams[i].ID, "-", 2)[0])
-		qj, _ := strconv.Atoi(strings.SplitN(streams[j].ID, "-", 2)[0])
-		if qi != qj {
-			return qi > qj
-		}
-		ci := codecPriorityStr(strings.SplitN(streams[i].ID, "-", 2)[1])
-		cj := codecPriorityStr(strings.SplitN(streams[j].ID, "-", 2)[1])
-		return ci > cj
-	})
-
-	info := &VideoInfo{
-		URL:     url,
-		Site:    "bilibili",
-		Title:   video.Title,
-		Type:    "video",
-		Streams: streams,
-	}
-
 	return info, nil
 }
 
-func DownloadVideoWithProgress(url, sessdata, outputDir string, onlyAudio bool, streamID string, onProgress func(string)) error {
-	bv := extractBVFromURL(url)
-	if bv == "" {
-		return fmt.Errorf("无法从 URL 提取 BV 号: %s", url)
-	}
+var (
+	reBVInName  = regexp.MustCompile(`BV[a-zA-Z0-9]+`)
+	rePageLabel = regexp.MustCompile(` - (\d{2,}) - (.+)$`)
+	rePageParen = regexp.MustCompile(`\((\d+)\)$`)
+)
 
-	cookie := sessdata
-	if cookie == "" {
-		cookie = getCookie()
-	}
-	C.Cookie = cookie
-
-	onProgress("正在提取视频信息...")
-
-	video, err := api.VideoFromBV(bv)
-	if err != nil {
-		return fmt.Errorf("获取视频信息失败: %w", err)
-	}
-
-	_, err = api.ResolveVideo(video)
-	if err != nil {
-		return fmt.Errorf("解析视频信息失败: %w", err)
-	}
-
-	// 获取UP主名字，构建 [UP主名]投稿名 格式的文件名
-	detail, err := fetchVideoDetail(bv, cookie)
-	if err == nil && detail.Owner.Name != "" {
-		video.Title = fmt.Sprintf("[%s]%s", detail.Owner.Name, video.Title)
-	}
-
-	onProgress(fmt.Sprintf("标题: %s", video.Title))
-
-	videoStreams, audioStreams, err := fetchDashStreams(video.BV, video.Cid, cookie)
-	if err != nil {
-		return fmt.Errorf("获取视频流信息失败: %w", err)
-	}
-
-	if len(videoStreams) == 0 {
-		return fmt.Errorf("未找到可用的视频流")
-	}
-	if len(audioStreams) == 0 {
-		return fmt.Errorf("未找到可用的音频流")
-	}
-
-	// Select video stream based on streamID or auto-select best
-	var selectedVideo *dashVideoStream
-	if streamID != "" {
-		// Parse streamID to find matching stream
-		parts := strings.SplitN(streamID, "-", 2)
-		if len(parts) == 2 {
-			targetID, _ := strconv.ParseFloat(parts[0], 64)
-			targetCodec := parts[1]
-			for i, vs := range videoStreams {
-				if vs.ID == targetID && vs.Codecs == targetCodec {
-					selectedVideo = &videoStreams[i]
-					break
-				}
-			}
-		}
-	}
-
-	if selectedVideo == nil {
-		// Auto-select: best codec, then highest quality
-		bestIdx := 0
-		for i := 1; i < len(videoStreams); i++ {
-			ci, cj := codecPriorityStr(videoStreams[i].Codecs), codecPriorityStr(videoStreams[bestIdx].Codecs)
-			if ci > cj || (ci == cj && videoStreams[i].ID > videoStreams[bestIdx].ID) {
-				bestIdx = i
-			}
-		}
-		selectedVideo = &videoStreams[bestIdx]
-	}
-
-	// Select best audio stream (highest bandwidth)
-	bestAudioIdx := 0
-	for i := 1; i < len(audioStreams); i++ {
-		if audioStreams[i].Bandwidth > audioStreams[bestAudioIdx].Bandwidth {
-			bestAudioIdx = i
-		}
-	}
-	selectedAudio := &audioStreams[bestAudioIdx]
-
-	sizeMB := float64(selectedVideo.Bandwidth) / 1024 / 1024
-	onProgress(fmt.Sprintf("画质: %s · %s, 大小: %.1fMB", resolutionLabel(int(selectedVideo.Width), int(selectedVideo.Height)), friendlyCodecName(selectedVideo.Codecs), sizeMB))
-
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return fmt.Errorf("创建输出目录失败: %w", err)
-	}
-
-	// Set bili-dl global config
-	C.O = outputDir
-	C.Merge = true
-	C.Delete = true
-	C.AddBVSuffix = false
-
-	stream := &api.Stream{
-		V:     selectedVideo.BaseURL,
-		A:     selectedAudio.BaseURL,
-		Video: api.Video{Title: video.Title, BV: video.BV, Cid: video.Cid},
-	}
-
-	onProgress("开始下载视频...")
-	if err := api.Dl(stream); err != nil {
-		return fmt.Errorf("下载失败: %w", err)
-	}
-
-	if !onlyAudio {
-		onProgress("正在合并音视频...")
-		if err := api.Merge(stream); err != nil {
-			onProgress(fmt.Sprintf("合并失败: %v，保留单独文件", err))
-		}
-
-		// Remux to target container based on codec: AV1→MKV, HEVC→MOV, AVC→MP4
-		targetExt := containerForCodec(selectedVideo.Codecs)
-		if targetExt != "MP4" {
-			onProgress(fmt.Sprintf("正在转封装为 %s ...", targetExt))
-			if err := remuxToContainer(outputDir, video.Title, video.BV, targetExt); err != nil {
-				onProgress(fmt.Sprintf("转封装失败: %v，保留 MP4 文件", err))
-			}
-		}
-	}
-
-	onProgress("下载完成")
-	return nil
+// mediaFile 是从落盘路径还原出的条目语义。
+type mediaFile struct {
+	// Author 来自文件名里的 [UP主] 前缀（历史扁平命名）。
+	Author string
+	// DirAuthor 来自 UP 主子目录，仅在文件名带 BV、且位于下载目录下一层时才可信，
+	// 用户自己按主题分组的文件夹名不能当作者。
+	DirAuthor string
+	Title     string
+	BVID      string
+	Page      int
+	Part      string
 }
 
-func CheckVideoDownloaded(cids []string) map[string]bool {
-	outputDir := GetDownloadOutputPath()
-	result := make(map[string]bool)
-
-	for _, cid := range cids {
-		result[cid] = false
+// parseMediaPath 解析 outputDir 下的一个文件，兼容新模板
+// （UP 主子目录 + 标题_BV + 分 P 标签）与历史的扁平 [UP主]标题 命名。
+func parseMediaPath(outputDir, path string) mediaFile {
+	rel, err := filepath.Rel(outputDir, path)
+	if err != nil {
+		rel = path
+	}
+	var entry mediaFile
+	if dir := filepath.Dir(rel); dir != "." && dir != string(filepath.Separator) {
+		trimmed := strings.Trim(filepath.ToSlash(dir), "/")
+		if !strings.Contains(trimmed, "/") {
+			entry.DirAuthor = trimmed
+		}
 	}
 
-	// Walk 返回的遍历错误（如目录不存在）在本函数里等同「没找到相关文件」，
-	// 回调已经把 err 转成 nil 返回，故外层显式丢弃。
-	_ = filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() {
-			return nil
-		}
-		name := strings.ToLower(info.Name())
-		for _, cid := range cids {
-			if strings.Contains(name, cid) {
-				result[cid] = true
-			}
-		}
-		return nil
-	})
+	name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+	if bv := reBVInName.FindString(name); bv != "" {
+		entry.BVID = bv
+		name = strings.Replace(name, "_"+bv, "", 1)
+		name = strings.Replace(name, bv, "", 1)
+	}
+	if entry.BVID == "" {
+		entry.DirAuthor = ""
+	}
+	if m := rePageLabel.FindStringSubmatch(name); len(m) == 3 {
+		entry.Page, _ = strconv.Atoi(m[1])
+		entry.Part = strings.TrimSpace(m[2])
+		name = strings.TrimSuffix(name, m[0])
+	} else if m := rePageParen.FindStringSubmatch(name); len(m) == 2 {
+		entry.Page, _ = strconv.Atoi(m[1])
+		name = strings.TrimSuffix(name, m[0])
+	}
 
-	return result
+	if entry.Author == "" && strings.HasPrefix(name, "[") {
+		if end := strings.Index(name, "]"); end > 0 {
+			entry.Author = name[1:end]
+			name = name[end+1:]
+		}
+	}
+	entry.Title = strings.Join(strings.Fields(strings.Trim(name, "_- ")), " ")
+	return entry
+}
+
+// isAudioOnly 判定纯音频：新产物是 m4a/flac/mp3，历史命名里带 _audio 的
+// 单流文件也按纯音频处理。
+func isAudioOnly(ext, name string) bool {
+	return isAudioExt(ext) || strings.Contains(strings.ToLower(name), "_audio")
+}
+
+func isAudioExt(ext string) bool {
+	switch ext {
+	case ".m4a", ".flac", ".mp3":
+		return true
+	default:
+		return false
+	}
+}
+
+// isMediaFile 过滤成品文件：中间态 .merging 与附加内容（弹幕/字幕/封面）都不算条目。
+func isMediaFile(name string) bool {
+	lower := strings.ToLower(name)
+	if strings.Contains(lower, ".merging") {
+		return false
+	}
+	switch filepath.Ext(lower) {
+	case ".mp4", ".mkv", ".mov", ".webm", ".avi", ".flv", ".m4a", ".flac", ".mp3":
+		return true
+	default:
+		return false
+	}
+}
+
+// insideDir 判断 abs 是否落在 base 内，含相等与父子边界，
+// 单纯字符串前缀比较会把 base 的同名前兄弟目录也算进去。
+func insideDir(base, abs string) bool {
+	rel, err := filepath.Rel(base, abs)
+	if err != nil {
+		return false
+	}
+	return rel == "." || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)))
 }
 
 type bvMeta struct {
@@ -542,97 +841,73 @@ func loadBVMetadata() map[string]bvMeta {
 	return result
 }
 
+// ListDownloadedVideos 列出下载目录里的成品，按 BV 关联本地历史的封面与作者。
 func ListDownloadedVideos(search string, page, limit int) ([]DownloadedVideo, int, error) {
 	outputDir := GetDownloadOutputPath()
+	metadata := loadBVMetadata()
 
-	var videos []DownloadedVideo
+	type entry struct {
+		video    DownloadedVideo
+		modified time.Time
+	}
+	var items []entry
 
-	// 预加载所有年份的 BV→封面/作者 映射
-	bvMeta := loadBVMetadata()
-
-	// Walk 返回的遍历错误（如目录不存在）在本函数里等同「没找到相关文件」，
-	// 回调已经把 err 转成 nil 返回，故外层显式丢弃。
+	// 遍历错误（目录不存在等）在这里等同「没有文件」，回调已把 err 转成 nil。
 	_ = filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
+		if err != nil || info.IsDir() || !isMediaFile(info.Name()) {
 			return nil
 		}
-		if info.IsDir() {
+
+		parsed := parseMediaPath(outputDir, path)
+		title := parsed.Title
+		if title == "" {
+			title = strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
+		}
+		if search != "" && !matchesSearch(search, parsed, title) {
 			return nil
+		}
+
+		cover, face := "", ""
+		var mid int64
+		if meta, ok := metadata[parsed.BVID]; ok {
+			cover, face, mid = meta.cover, meta.authorFace, meta.authorMid
+			if parsed.Author == "" {
+				parsed.Author = meta.authorName
+			}
+		}
+		// 没看过这条投稿时历史库里没有作者记录，UP 主子目录名是唯一可靠来源。
+		if parsed.Author == "" {
+			parsed.Author = parsed.DirAuthor
 		}
 
 		ext := strings.ToLower(filepath.Ext(path))
-		if ext != ".mp4" && ext != ".flv" && ext != ".mkv" && ext != ".webm" && ext != ".avi" && ext != ".m4a" {
-			return nil
-		}
-
-		name := info.Name()
-		if search != "" && !strings.Contains(strings.ToLower(name), strings.ToLower(search)) {
-			return nil
-		}
-
-		// 解析文件名，提取元数据
-		fullName := strings.TrimSuffix(name, filepath.Ext(name))
-		authorName := ""
-		title := fullName
-
-		// 尝试匹配 [UP主名]标题 格式
-		if strings.HasPrefix(fullName, "[") {
-			endIdx := strings.Index(fullName, "]")
-			if endIdx > 0 {
-				authorName = fullName[1:endIdx]
-				title = fullName[endIdx+1:]
-			}
-		}
-
-		// 尝试从文件名中提取 BV 号
-		bvid := ""
-		bvMatch := bvRegexp.FindString(fullName)
-		if bvMatch != "" {
-			bvid = bvMatch
-		}
-
-		// 检查是否为纯音频
-		isAudioOnly := strings.Contains(strings.ToLower(name), "audio") || strings.HasSuffix(strings.ToLower(name), ".m4a")
-
-		// 从本地历史记录获取封面和作者信息
-		cover := ""
-		authorFace := ""
-		authorMid := int64(0)
-		if bvid != "" {
-			if meta, ok := bvMeta[bvid]; ok {
-				cover = meta.cover
-				authorFace = meta.authorFace
-				authorMid = meta.authorMid
-				if authorName == "" {
-					authorName = meta.authorName
-				}
-			}
-		}
-
-		videos = append(videos, DownloadedVideo{
-			Title:        title,
-			BVID:         bvid,
-			Cover:        cover,
-			AuthorName:   authorName,
-			AuthorFace:   authorFace,
-			AuthorMid:    authorMid,
-			DownloadDate: info.ModTime().Format("2006-01-02"),
-			Files: []DownloadedVideoFile{
-				{
+		items = append(items, entry{
+			modified: info.ModTime(),
+			video: DownloadedVideo{
+				Title:        title,
+				BVID:         parsed.BVID,
+				Page:         parsed.Page,
+				Part:         parsed.Part,
+				Cover:        cover,
+				AuthorName:   parsed.Author,
+				AuthorFace:   face,
+				AuthorMid:    mid,
+				DownloadDate: info.ModTime().Format("2006-01-02"),
+				Directory:    filepath.Dir(path),
+				Files: []DownloadedVideoFile{{
 					FilePath:    path,
 					SizeMB:      float64(info.Size()) / 1024 / 1024,
-					IsAudioOnly: isAudioOnly,
-				},
+					IsAudioOnly: isAudioOnly(ext, info.Name()),
+				}},
 			},
-			Directory: filepath.Dir(path),
 		})
 		return nil
 	})
 
-	total := len(videos)
+	sort.Slice(items, func(i, j int) bool { return items[i].modified.After(items[j].modified) })
 
-	// 与 routers 的分页守卫保持一致：page/limit 非法时会算出负的 start 或
-	// end<start，切片即 panic，而这个函数是导出的。
+	total := len(items)
+	// 与 routers 的分页守卫保持一致：非法 page/limit 会算出越界下标，而本函数是导出的。
 	if page < 1 {
 		page = 1
 	}
@@ -648,15 +923,56 @@ func ListDownloadedVideos(search string, page, limit int) ([]DownloadedVideo, in
 		end = total
 	}
 
-	return videos[start:end], total, nil
+	videos := make([]DownloadedVideo, 0, end-start)
+	for _, item := range items[start:end] {
+		videos = append(videos, item.video)
+	}
+	return videos, total, nil
 }
 
-func DeleteDownloadedVideo(cid string, deleteDir bool, directory string) error {
+func matchesSearch(search string, parsed mediaFile, title string) bool {
+	needle := strings.ToLower(search)
+	for _, candidate := range []string{title, parsed.Author, parsed.DirAuthor, parsed.Part, parsed.BVID} {
+		if strings.Contains(strings.ToLower(candidate), needle) {
+			return true
+		}
+	}
+	return false
+}
+
+// CheckVideoDownloaded 按 BV 号判断下载目录里是否已有成品。
+func CheckVideoDownloaded(bvids []string) map[string]bool {
+	outputDir := GetDownloadOutputPath()
+	result := make(map[string]bool, len(bvids))
+	wanted := make(map[string]bool, len(bvids))
+	for _, bv := range bvids {
+		result[bv] = false
+		wanted[bv] = true
+	}
+
+	// 目录不存在等同「都没下载过」，回调已吞掉遍历错误。
+	_ = filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() || !isMediaFile(info.Name()) {
+			return nil
+		}
+		for _, bv := range reBVInName.FindAllString(info.Name(), -1) {
+			if wanted[bv] {
+				result[bv] = true
+			}
+		}
+		return nil
+	})
+	return result
+}
+
+// DeleteDownloadedVideo 删除某个 BV 的全部产物（成品与弹幕/字幕/封面等附加文件）。
+// directory 非空时按目录整体处理，此时 bvid 忽略。
+func DeleteDownloadedVideo(bvid string, deleteDir bool, directory string) error {
 	outputDir := GetDownloadOutputPath()
 
 	if directory != "" {
 		absDir, err := filepath.Abs(directory)
-		if err != nil || !strings.HasPrefix(absDir, outputDir) {
+		if err != nil || !insideDir(outputDir, absDir) {
 			return fmt.Errorf("无效的目录路径")
 		}
 		if _, err := os.Stat(absDir); os.IsNotExist(err) {
@@ -668,164 +984,118 @@ func DeleteDownloadedVideo(cid string, deleteDir bool, directory string) error {
 		return nil
 	}
 
-	if cid == "" {
-		return fmt.Errorf("缺少 cid 参数")
+	if bvid == "" {
+		return fmt.Errorf("缺少 bvid 参数")
 	}
 
-	var found bool
-	// Walk 返回的遍历错误（如目录不存在）在本函数里等同「没找到相关文件」，
-	// 回调已经把 err 转成 nil 返回，故外层显式丢弃。
+	var matched []string
+	needle := strings.ToLower(bvid)
+	// 同 CheckVideoDownloaded：遍历错误等同「没找到」。历史文件名里的 BV 大小写不一，
+	// 匹配沿用大小写不敏感语义。
 	_ = filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
 		}
-		name := strings.ToLower(info.Name())
-		if strings.Contains(name, cid) {
-			found = true
-			if deleteDir {
-				dir := filepath.Dir(path)
-				return os.RemoveAll(dir)
-			}
-			return os.Remove(path)
+		if strings.Contains(strings.ToLower(info.Name()), needle) {
+			matched = append(matched, path)
 		}
 		return nil
 	})
-
-	if !found {
+	if len(matched) == 0 {
 		return fmt.Errorf("未找到匹配的视频文件")
 	}
 
+	for _, path := range matched {
+		if err := os.Remove(path); err != nil {
+			return err
+		}
+	}
+	if !deleteDir {
+		return nil
+	}
+
+	// UP 主子目录是整个 UP 主共用的，只能删属于本 BV 的文件，目录空了才移除。
+	ownerDir := filepath.Dir(matched[0])
+	if ownerDir == outputDir {
+		return nil
+	}
+	if entries, err := os.ReadDir(ownerDir); err == nil && len(entries) == 0 {
+		return os.Remove(ownerDir)
+	}
 	return nil
 }
 
-func CheckCollection(url string) (map[string]interface{}, error) {
-	// Extract BV from URL and check if it's a collection page
-	// Bilibili collections use the space/collection API
-	bv := extractBVFromURL(url)
-	if bv == "" {
-		return nil, fmt.Errorf("无法从 URL 提取 BV 号")
+// favoriteOnlinePageSize 是在线拉收藏夹时每页条数，B 站接口上限为 20。
+const favoriteOnlinePageSize = 20
+
+// FavoriteLinks 返回收藏夹里可下载的投稿链接：本地收藏库优先，
+// 没同步过再走在线接口，两路都拿不到时返回明确错误。
+func FavoriteLinks(fid string) ([]string, error) {
+	mediaID, err := strconv.ParseInt(strings.TrimSpace(fid), 10, 64)
+	if err != nil || mediaID <= 0 {
+		return nil, fmt.Errorf("无效收藏夹 id: %s", fid)
 	}
 
-	cookie := getCookie()
-	C.Cookie = cookie
-
-	video, err := api.VideoFromBV(bv)
+	list, _, err := database.GetFavoriteContents(mediaID, 1, 1000)
 	if err != nil {
-		return nil, fmt.Errorf("获取视频信息失败: %w", err)
+		return nil, fmt.Errorf("读取本地收藏夹失败: %w", err)
+	}
+	links := make([]string, 0, len(list))
+	for _, item := range list {
+		if bvid, _ := item["bvid"].(string); bvid != "" {
+			links = append(links, "https://www.bilibili.com/video/"+bvid)
+		}
+	}
+	if len(links) > 0 {
+		return links, nil
 	}
 
-	_, err = api.ResolveVideo(video)
-	if err != nil {
-		return nil, fmt.Errorf("解析视频信息失败: %w", err)
-	}
-
-	// For now, treat single video as non-collection
-	// Collection detection would need additional API calls
-	return map[string]interface{}{
-		"is_collection": false,
-		"video_count":   1,
-		"videos": []map[string]string{
-			{
-				"title": video.Title,
-				"url":   fmt.Sprintf("https://www.bilibili.com/video/%s", video.BV),
-			},
-		},
-	}, nil
+	return favoriteLinksOnline(mediaID)
 }
 
-func DownloadCollectionWithProgress(url, sessdata, outputDir string, onlyAudio bool, onProgress func(string)) error {
-	bv := extractBVFromURL(url)
-	if bv == "" {
-		return fmt.Errorf("无法从 URL 提取 BV 号: %s", url)
+func favoriteLinksOnline(mediaID int64) ([]string, error) {
+	cfg := config.GetConfig()
+	if cfg == nil || cfg.SESSDATA == "" {
+		return nil, fmt.Errorf("收藏夹 %d 未同步到本地，且未配置 SESSDATA，无法在线获取", mediaID)
 	}
 
-	cookie := sessdata
-	if cookie == "" {
-		cookie = getCookie()
-	}
-	C.Cookie = cookie
-	C.O = outputDir
-	C.Merge = true
-	C.Delete = true
-	C.AddBVSuffix = true
-
-	onProgress("正在获取视频信息...")
-
-	video, err := api.VideoFromBV(bv)
-	if err != nil {
-		return fmt.Errorf("获取视频信息失败: %w", err)
+	client := biliapi.NewClientWithConfig(cfg.SESSDATA, cfg.BiliJct, cfg.DedeUserID)
+	if client.ImgKey == "" || client.SubKey == "" {
+		_ = client.FetchWbiKeys()
 	}
 
-	_, err = api.ResolveVideo(video)
-	if err != nil {
-		return fmt.Errorf("解析视频信息失败: %w", err)
-	}
-
-	onProgress(fmt.Sprintf("下载: %s", video.Title))
-
-	videoStreams, audioStreams, err := fetchDashStreams(video.BV, video.Cid, cookie)
-	if err != nil {
-		return fmt.Errorf("获取视频流信息失败: %w", err)
-	}
-
-	if len(videoStreams) == 0 {
-		return fmt.Errorf("未找到可用的视频流")
-	}
-	if len(audioStreams) == 0 {
-		return fmt.Errorf("未找到可用的音频流")
-	}
-
-	// Auto-select best video stream
-	bestIdx := 0
-	for i := 1; i < len(videoStreams); i++ {
-		ci, cj := codecPriorityStr(videoStreams[i].Codecs), codecPriorityStr(videoStreams[bestIdx].Codecs)
-		if ci > cj || (ci == cj && videoStreams[i].ID > videoStreams[bestIdx].ID) {
-			bestIdx = i
+	var links []string
+	for pn := 1; ; pn++ {
+		data, err := client.GetFavoriteResources(mediaID, pn, favoriteOnlinePageSize)
+		if err != nil {
+			if apiErr, ok := err.(*biliapi.APIError); ok && apiErr.Code == -6 {
+				return nil, fmt.Errorf("Cookie 已过期，请重新登录后再试")
+			}
+			return nil, fmt.Errorf("获取收藏夹内容失败: %w", err)
+		}
+		for _, item := range data.Media {
+			if item.UGC != nil && item.UGC.Bvid != "" {
+				links = append(links, "https://www.bilibili.com/video/"+item.UGC.Bvid)
+			}
+		}
+		if len(data.Media) == 0 || len(links) >= data.Page.Count {
+			break
 		}
 	}
-
-	bestAudioIdx := 0
-	for i := 1; i < len(audioStreams); i++ {
-		if audioStreams[i].Bandwidth > audioStreams[bestAudioIdx].Bandwidth {
-			bestAudioIdx = i
-		}
-	}
-
-	stream := &api.Stream{
-		V:     videoStreams[bestIdx].BaseURL,
-		A:     audioStreams[bestAudioIdx].BaseURL,
-		Video: api.Video{Title: video.Title, BV: video.BV, Cid: video.Cid},
-	}
-
-	onProgress("开始下载...")
-	if err := api.Dl(stream); err != nil {
-		return fmt.Errorf("下载失败: %w", err)
-	}
-
-	if !onlyAudio {
-		onProgress("正在合并音视频...")
-		if err := api.Merge(stream); err != nil {
-			onProgress(fmt.Sprintf("合并失败: %v，保留单独文件", err))
-		}
-	}
-
-	onProgress("下载完成")
-	return nil
+	return links, nil
 }
 
+// GetUserVideos 拉取 UP 主投稿列表；bili-dl 的 AllVideo 不带分页，这里保留自己的实现。
 func GetUserVideos(mid string, pn, ps int) ([]map[string]string, int, error) {
-	cookie := getCookie()
+	apiURL := fmt.Sprintf("https://api.bilibili.com/x/space/wbi/arc/search?mid=%s&pn=%d&ps=%d&order=pubdate", mid, pn, ps)
 
-	url := fmt.Sprintf("https://api.bilibili.com/x/space/wbi/arc/search?mid=%s&pn=%d&ps=%d&order=pubdate", mid, pn, ps)
-
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
 		return nil, 0, err
 	}
-
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Referer", "https://www.bilibili.com")
-	if cookie != "" {
+	if cookie := getCookie(); cookie != "" {
 		req.Header.Set("Cookie", cookie)
 	}
 
@@ -862,12 +1132,11 @@ func GetUserVideos(mid string, pn, ps int) ([]map[string]string, int, error) {
 	if err := json.Unmarshal(body, &result); err != nil {
 		return nil, 0, err
 	}
-
 	if result.Code != 0 {
 		return nil, 0, fmt.Errorf("API 返回错误码: %d", result.Code)
 	}
 
-	var videos []map[string]string
+	videos := make([]map[string]string, 0, len(result.Data.List.Vlist))
 	for _, v := range result.Data.List.Vlist {
 		videos = append(videos, map[string]string{
 			"bvid":   v.BVID,
@@ -877,31 +1146,5 @@ func GetUserVideos(mid string, pn, ps int) ([]map[string]string, int, error) {
 			"length": v.Length,
 		})
 	}
-
 	return videos, result.Data.Page.Count, nil
-}
-
-func remuxToContainer(outputDir, title, bv, targetExt string) error {
-	inputPath := filepath.Join(outputDir, title+".mp4")
-	outputPath := filepath.Join(outputDir, title+"."+strings.ToLower(targetExt))
-
-	if _, err := os.Stat(inputPath); os.IsNotExist(err) {
-		return fmt.Errorf("文件不存在: %s", inputPath)
-	}
-
-	args := []string{"-i", inputPath, "-c", "copy", "-y"}
-	// HEVC in MOV needs hvc1 tag for Apple compatibility
-	if targetExt == "MOV" {
-		args = append(args, "-tag:v", "hvc1")
-	}
-	args = append(args, outputPath)
-
-	cmd := exec.Command("ffmpeg", args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("ffmpeg remux failed: %s: %w", string(output), err)
-	}
-
-	os.Remove(inputPath)
-	return nil
 }

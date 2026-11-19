@@ -380,11 +380,11 @@ const handleRemarkBlur = async () => {
 };
 
 const refreshDownloadedState = async () => {
-  if (!record.value?.cid || record.value.business !== 'archive') return;
+  if (!record.value?.bvid || record.value.business !== 'archive') return;
 
   try {
-    const response = await checkVideoDownload(record.value.cid);
-    isDownloaded.value = !!response.data?.downloaded;
+    const response = await checkVideoDownload(record.value.bvid);
+    isDownloaded.value = !!response.data?.data?.[record.value.bvid];
   } catch (error) {
     console.error('检查下载状态失败:', error);
   }

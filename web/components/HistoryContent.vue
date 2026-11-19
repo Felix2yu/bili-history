@@ -180,7 +180,7 @@
                 :class="isBatchMode ? 'ml-6' : ''"
               >
                 <div
-                  v-if="isVideoDownloaded(r.cid) && r.business === 'archive'"
+                  v-if="isVideoDownloaded(r.bvid) && r.business === 'archive'"
                   class="flex items-center space-x-1 rounded bg-green-500 px-1.5 py-0.5 text-[0.625rem] font-semibold text-white shadow-md"
                 >
                   <svg class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -363,7 +363,7 @@
             :is-batch-mode="isBatchMode"
             :is-selected="selectedRecords.has(`${record.bvid}_${record.view_at}`)"
             :remark-data="remarkData"
-            :is-downloaded="isVideoDownloaded(record.cid)"
+            :is-downloaded="isVideoDownloaded(record.bvid)"
             :is-video-favorited="
               isVideoFavorited(
                 parseInt(
@@ -637,7 +637,7 @@ const size = ref(props.pageSize);
 const remarkData = ref({}); // 存储备注数据
 let abortController = null; // 用于取消过期请求
 let fetchId = 0; // 请求序列号，防止旧响应覆盖新数据
-const downloadedVideos = ref(new Set()); // 存储已下载视频的CID集合
+const downloadedVideos = ref(new Set()); // 存储已下载视频的 BV 号集合
 const favoriteStatus = ref({}); // 存储视频收藏状态信息
 
 const dateRange = ref('');
@@ -851,23 +851,22 @@ const batchCheckDownloadStatus = async () => {
     const videoRecords = records.value.filter((record) => record.business === 'archive');
     if (videoRecords.length === 0) return;
 
-    // 获取所有视频的CID
-    const cids = videoRecords.map((record) => record.cid).filter((cid) => cid);
-    if (cids.length === 0) return;
+    // 产物文件名里带 BV 号，已下载判定按 BV 关联
+    const bvids = videoRecords.map((record) => record.bvid).filter((bvid) => bvid);
+    if (bvids.length === 0) return;
 
-    const response = await checkVideoDownload(cids);
+    const response = await checkVideoDownload(bvids);
 
     if (response.data && response.data.status === 'success') {
       // 清空已有集合
       downloadedVideos.value.clear();
 
-      // 处理返回结果，将已下载视频的CID添加到集合中
-      const results = response.data.results || {};
+      // 后端返回 { bvid: true/false } 映射
+      const results = response.data.data || {};
 
-      // 遍历results对象的每个键值对
-      Object.entries(results).forEach(([cid, info]) => {
-        if (info.downloaded) {
-          downloadedVideos.value.add(cid.toString());
+      Object.entries(results).forEach(([bvid, downloaded]) => {
+        if (downloaded) {
+          downloadedVideos.value.add(bvid.toString());
         }
       });
     }
@@ -876,9 +875,9 @@ const batchCheckDownloadStatus = async () => {
   }
 };
 
-// 检查视频是否已下载
-const isVideoDownloaded = (cid) => {
-  return cid && downloadedVideos.value.has(cid.toString());
+// 检查视频是否已下载（按 BV 号）
+const isVideoDownloaded = (bvid) => {
+  return bvid && downloadedVideos.value.has(bvid.toString());
 };
 
 // 获取分区名称，优先使用子分区，其次主分区

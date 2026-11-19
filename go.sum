@@ -1,7 +1,7 @@
 github.com/Azure/go-amqp v1.7.0 h1:9VlH/LEWr386XWWJRNON0eslFqSClYBXP4HewvIqkDQ=
 github.com/Azure/go-amqp v1.7.0/go.mod h1:pCJaHsvRlmmFUpxyQbh2qPkUFqYJeRBTqJSHKJadvPg=
-github.com/Felix2yu/bili-dl v1.0.0 h1:pp7D4OYjIBfgOw94SP6dvrjR0ZJ4XqpjQ8itqzdr5mI=
-github.com/Felix2yu/bili-dl v1.0.0/go.mod h1:tjaEplxEsluJ9LVnykVT76SC9/68s4m2lg324UbRZrQ=
+github.com/Felix2yu/bili-dl v1.1.0 h1:hdbj+WGjW8S0GP3PfaNI5r9RJBKfez5Q9H+ELev+sjE=
+github.com/Felix2yu/bili-dl v1.1.0/go.mod h1:WB5DQFkW1DMA0eR7+i+JYjkCyFlRQNKHkG/H8+/XfsI=
 github.com/ProtonMail/go-crypto v1.5.2 h1:cucYnvqcY7UOXVD//mSyjeaPY0SSN3v5cDkYPxumINk=
 github.com/ProtonMail/go-crypto v1.5.2/go.mod h1:/RaSu30DaKO4RY+XdV/ACcCcZkGr7AhUIduq5sjzzCo=
 github.com/bytedance/gopkg v0.1.4 h1:oZnQwnX82KAIWb7033bEwtxvTqXcYMxDBaQxo5JJHWM=

@@ -2,12 +2,17 @@ package routers
 
 import (
 	"bufio"
+	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"bilibili-history-go/internal/models"
 	"bilibili-history-go/internal/services"
@@ -28,6 +33,7 @@ func RegisterDownloadRoutes(r *gin.RouterGroup) {
 		download.POST("/download_video", downloadVideoSSE)
 		download.POST("/batch_download", batchDownloadSSE)
 		download.POST("/download_user_videos", downloadUserVideosSSE)
+		download.POST("/download_favorites", downloadFavoritesSSE)
 	}
 
 	collection := r.Group("/collection")
@@ -82,22 +88,21 @@ func getUserVideos(c *gin.Context) {
 }
 
 func checkVideoDownload(c *gin.Context) {
-	cidsStr := c.Query("cids")
-	if cidsStr == "" {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse("缺少 cids 参数"))
+	bvidsStr := c.Query("bvids")
+	if bvidsStr == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("缺少 bvids 参数"))
 		return
 	}
 
-	var cids []string
-	for _, cid := range strings.Split(cidsStr, ",") {
-		cid = strings.TrimSpace(cid)
-		if cid != "" {
-			cids = append(cids, cid)
+	var bvids []string
+	for _, bvid := range strings.Split(bvidsStr, ",") {
+		bvid = strings.TrimSpace(bvid)
+		if bvid != "" {
+			bvids = append(bvids, bvid)
 		}
 	}
 
-	result := services.CheckVideoDownloaded(cids)
-	c.JSON(http.StatusOK, models.SuccessResponse(result))
+	c.JSON(http.StatusOK, models.SuccessResponse(services.CheckVideoDownloaded(bvids)))
 }
 
 func listDownloadedVideos(c *gin.Context) {
@@ -127,12 +132,11 @@ func listDownloadedVideos(c *gin.Context) {
 }
 
 func deleteDownloadedVideo(c *gin.Context) {
-	cid := c.Query("cid")
+	bvid := c.Query("bvid")
 	deleteDir := c.Query("delete_directory") == "true"
 	directory := c.Query("directory")
 
-	err := services.DeleteDownloadedVideo(cid, deleteDir, directory)
-	if err != nil {
+	if err := services.DeleteDownloadedVideo(bvid, deleteDir, directory); err != nil {
 		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
 		return
 	}
@@ -142,6 +146,19 @@ func deleteDownloadedVideo(c *gin.Context) {
 	}))
 }
 
+var streamContentTypes = map[string]string{
+	".mp4":  "video/mp4",
+	".m4v":  "video/mp4",
+	".mkv":  "video/x-matroska",
+	".mov":  "video/quicktime",
+	".webm": "video/webm",
+	".avi":  "video/x-msvideo",
+	".flv":  "video/x-flv",
+	".m4a":  "audio/mp4",
+	".flac": "audio/flac",
+	".mp3":  "audio/mpeg",
+}
+
 func streamVideo(c *gin.Context) {
 	filePath := c.Query("file_path")
 	if filePath == "" {
@@ -149,14 +166,29 @@ func streamVideo(c *gin.Context) {
 		return
 	}
 
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+	// 播放地址直接来自请求，必须收敛在下载目录内，否则任意本地文件都会被读走。
+	absPath, err := filepath.Abs(filePath)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("无效的文件路径"))
+		return
+	}
+	outputDir := services.GetDownloadOutputPath()
+	if !strings.HasPrefix(absPath, outputDir+string(filepath.Separator)) {
+		c.JSON(http.StatusForbidden, models.ErrorResponse("无权访问该文件"))
+		return
+	}
+	if _, err := os.Stat(absPath); os.IsNotExist(err) {
 		c.JSON(http.StatusNotFound, models.ErrorResponse("文件不存在"))
 		return
 	}
 
-	c.Header("Content-Type", "video/mp4")
+	contentType := streamContentTypes[strings.ToLower(filepath.Ext(absPath))]
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	c.Header("Content-Type", contentType)
 	c.Header("Accept-Ranges", "bytes")
-	c.File(filePath)
+	c.File(absPath)
 }
 
 func checkFFmpeg(c *gin.Context) {
@@ -179,151 +211,249 @@ func getFFmpegVersion() string {
 	return ""
 }
 
-func downloadVideoSSE(c *gin.Context) {
-	var req struct {
-		URL           string `json:"url"`
-		Sessdata      string `json:"sessdata"`
-		DownloadCover bool   `json:"download_cover"`
-		OnlyAudio     bool   `json:"only_audio"`
-		CID           int    `json:"cid"`
-		StreamID      string `json:"stream_id"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
-		return
-	}
+// downloadRequest 是前端发起一次下载的参数，零值即「全自动」。
+type downloadRequest struct {
+	URL           string                   `json:"url"`
+	URLs          []string                 `json:"urls"`
+	Videos        []map[string]interface{} `json:"videos"`
+	UserID        string                   `json:"user_id"`
+	FID           interface{}              `json:"fid"`
+	Sessdata      string                   `json:"sessdata"`
+	OnlyAudio     bool                     `json:"only_audio"`
+	VideoQuality  int                      `json:"video_quality"`
+	VideoCodec    string                   `json:"video_codec"`
+	AudioQuality  int                      `json:"audio_quality"`
+	Page          int                      `json:"page"`
+	Batch         bool                     `json:"batch"`
+	Collection    bool                     `json:"collection"`
+	Danmaku       bool                     `json:"danmaku"`
+	Subtitle      bool                     `json:"subtitle"`
+	DownloadCover *bool                    `json:"download_cover"`
+	RateLimit     string                   `json:"rate_limit"`
+}
 
+func (r *downloadRequest) options() services.DownloadOptions {
+	// 封面默认跟随既有 download_cover 语义：显式传 false 才关闭。
+	cover := true
+	if r.DownloadCover != nil {
+		cover = *r.DownloadCover
+	}
+	return services.DownloadOptions{
+		Sessdata:     r.Sessdata,
+		OnlyAudio:    r.OnlyAudio,
+		VideoQuality: r.VideoQuality,
+		VideoCodec:   r.VideoCodec,
+		AudioQuality: r.AudioQuality,
+		Page:         r.Page,
+		Batch:        r.Batch,
+		Collection:   r.Collection,
+		Danmaku:      r.Danmaku,
+		Subtitle:     r.Subtitle,
+		Cover:        cover,
+		RateLimit:    r.RateLimit,
+	}
+}
+
+// favoriteID 容忍 fid 以 JSON 数字或字符串两种形态到达。
+func (r *downloadRequest) favoriteID() string {
+	switch v := r.FID.(type) {
+	case string:
+		return strings.TrimSpace(v)
+	case float64:
+		return strconv.FormatInt(int64(v), 10)
+	default:
+		return ""
+	}
+}
+
+func bvLink(bvid string) string {
+	if strings.Contains(bvid, "://") {
+		return bvid
+	}
+	return "https://www.bilibili.com/video/" + bvid
+}
+
+func (r *downloadRequest) links() []string {
+	var links []string
+	if r.URL != "" {
+		links = append(links, r.URL)
+	}
+	for _, link := range r.URLs {
+		if link != "" {
+			links = append(links, bvLink(link))
+		}
+	}
+	for _, video := range r.Videos {
+		if bvid, _ := video["bvid"].(string); bvid != "" {
+			links = append(links, bvLink(bvid))
+		}
+	}
+	return links
+}
+
+// sseEmitter 把下载事件写成 SSE 帧；客户端断开时取消底层 context，
+// 让 bili-dl 的请求与 ffmpeg 子进程一起收尾。
+type sseEmitter struct {
+	mu     sync.Mutex
+	w      http.ResponseWriter
+	flush  http.Flusher
+	ctx    context.Context
+	cancel context.CancelFunc
+	prefix string
+}
+
+func newSSEEmitter(c *gin.Context, prefix string) (*sseEmitter, bool) {
+	flusher, ok := c.Writer.(http.Flusher)
+	if !ok {
+		return nil, false
+	}
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
 
-	flusher, ok := c.Writer.(http.Flusher)
+	ctx, cancel := context.WithCancel(c.Request.Context())
+	return &sseEmitter{w: c.Writer, flush: flusher, ctx: ctx, cancel: cancel, prefix: prefix}, true
+}
+
+func (e *sseEmitter) Event(ev services.DownloadEvent) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.prefix != "" && ev.Type == "log" {
+		ev.Text = e.prefix + ev.Text
+	}
+	body, err := json.Marshal(ev)
+	if err != nil {
+		return
+	}
+	if _, err := fmt.Fprintf(e.w, "data: %s\n\n", body); err != nil {
+		e.cancel()
+		return
+	}
+	e.flush.Flush()
+}
+
+func (e *sseEmitter) Finish(err error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	done := services.DownloadEvent{Type: "done", Event: "ok"}
+	switch {
+	case err == nil:
+		done.Text = "下载完成"
+	case errors.Is(err, context.Canceled):
+		done.Event = "cancel"
+		done.Text = "下载已取消"
+	default:
+		done.Event = "error"
+		done.Text = err.Error()
+	}
+	body, _ := json.Marshal(done)
+	fmt.Fprintf(e.w, "data: %s\n\n", body)
+	e.flush.Flush()
+}
+
+// runDownloadSSE 是所有下载入口共用的一条链路：绑定参数、开流、执行、收尾。
+func runDownloadSSE(c *gin.Context, req *downloadRequest, links []string, prefix string) {
+	if len(links) == 0 {
+		c.JSON(http.StatusOK, models.ErrorResponse("没有可下载的链接"))
+		return
+	}
+
+	emitter, ok := newSSEEmitter(c, prefix)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("不支持流式传输"))
 		return
 	}
 
-	sendEvent := func(msg string) {
-		fmt.Fprintf(c.Writer, "data: %s\n\n", msg)
-		flusher.Flush()
+	err := services.Download(emitter.ctx, links, services.GetDownloadOutputPath(), req.options(), emitter.Event)
+	emitter.Finish(err)
+}
+
+func downloadVideoSSE(c *gin.Context) {
+	var req downloadRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
 	}
-
-	sendEvent("开始下载...")
-
-	outputDir := services.GetDownloadOutputPath()
-	err := services.DownloadVideoWithProgress(req.URL, req.Sessdata, outputDir, req.OnlyAudio, req.StreamID, sendEvent)
-	if err != nil {
-		sendEvent(fmt.Sprintf("下载失败: %v", err))
+	if req.URL == "" && len(req.URLs) == 0 {
+		c.JSON(http.StatusOK, models.ErrorResponse("缺少 url 参数"))
+		return
 	}
-
-	sendEvent("close")
+	runDownloadSSE(c, &req, req.links(), "")
 }
 
 func batchDownloadSSE(c *gin.Context) {
-	var req struct {
-		Videos        []map[string]interface{} `json:"videos"`
-		Sessdata      string                   `json:"sessdata"`
-		DownloadCover bool                     `json:"download_cover"`
-		OnlyAudio     bool                     `json:"only_audio"`
-	}
+	var req downloadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
 		return
 	}
-
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-
-	flusher, ok := c.Writer.(http.Flusher)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("不支持流式传输"))
-		return
-	}
-
-	sendEvent := func(msg string) {
-		fmt.Fprintf(c.Writer, "data: %s\n\n", msg)
-		flusher.Flush()
-	}
-
-	outputDir := services.GetDownloadOutputPath()
-	total := len(req.Videos)
-	for i, video := range req.Videos {
-		bvid, _ := video["bvid"].(string)
-		if bvid == "" {
-			continue
-		}
-		url := "https://www.bilibili.com/video/" + bvid
-		sendEvent(fmt.Sprintf("[%d/%d] 开始下载: %s", i+1, total, bvid))
-
-		err := services.DownloadVideoWithProgress(url, req.Sessdata, outputDir, req.OnlyAudio, "", func(msg string) {
-			sendEvent(fmt.Sprintf("[%d/%d] %s", i+1, total, msg))
-		})
-		if err != nil {
-			sendEvent(fmt.Sprintf("[%d/%d] 下载失败: %v", i+1, total, err))
-		}
-	}
-
-	sendEvent("close")
+	runDownloadSSE(c, &req, req.links(), "")
 }
 
 func downloadUserVideosSSE(c *gin.Context) {
-	var req struct {
-		UserID        string `json:"user_id"`
-		Sessdata      string `json:"sessdata"`
-		DownloadCover bool   `json:"download_cover"`
-		OnlyAudio     bool   `json:"only_audio"`
-	}
+	var req downloadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
 		return
 	}
+	if req.UserID == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("缺少 user_id 参数"))
+		return
+	}
 
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-
-	flusher, ok := c.Writer.(http.Flusher)
+	emitter, ok := newSSEEmitter(c, "")
 	if !ok {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse("不支持流式传输"))
 		return
 	}
-
-	sendEvent := func(msg string) {
-		fmt.Fprintf(c.Writer, "data: %s\n\n", msg)
-		flusher.Flush()
-	}
-
-	sendEvent("正在获取用户视频列表...")
+	emitter.Event(services.DownloadEvent{Type: "log", Text: "正在获取用户视频列表..."})
 
 	videos, total, err := services.GetUserVideos(req.UserID, 1, 50)
 	if err != nil {
-		sendEvent(fmt.Sprintf("获取视频列表失败: %v", err))
-		sendEvent("close")
+		emitter.Finish(fmt.Errorf("获取视频列表失败: %w", err))
+		return
+	}
+	emitter.Event(services.DownloadEvent{Type: "log", Text: fmt.Sprintf("共找到 %d 个视频", total)})
+
+	links := make([]string, 0, len(videos))
+	for _, video := range videos {
+		if bvid := video["bvid"]; bvid != "" {
+			links = append(links, bvLink(bvid))
+		}
+	}
+	err = services.Download(emitter.ctx, links, services.GetDownloadOutputPath(), req.options(), emitter.Event)
+	emitter.Finish(err)
+}
+
+// downloadFavoritesSSE 下载整个收藏夹：本地收藏库优先，未同步时在线拉取。
+func downloadFavoritesSSE(c *gin.Context) {
+	var req downloadRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
+		return
+	}
+	fid := req.favoriteID()
+	if fid == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("缺少 fid 参数"))
 		return
 	}
 
-	sendEvent(fmt.Sprintf("共找到 %d 个视频", total))
-
-	outputDir := services.GetDownloadOutputPath()
-	for i, video := range videos {
-		bvid := video["bvid"]
-		if bvid == "" {
-			continue
-		}
-		url := "https://www.bilibili.com/video/" + bvid
-		title := video["title"]
-		sendEvent(fmt.Sprintf("[%d/%d] 开始下载: %s", i+1, len(videos), title))
-
-		err := services.DownloadVideoWithProgress(url, req.Sessdata, outputDir, req.OnlyAudio, "", func(msg string) {
-			sendEvent(fmt.Sprintf("[%d/%d] %s", i+1, len(videos), msg))
-		})
-		if err != nil {
-			sendEvent(fmt.Sprintf("[%d/%d] 下载失败: %v", i+1, len(videos), err))
-		}
+	emitter, ok := newSSEEmitter(c, "")
+	if !ok {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse("不支持流式传输"))
+		return
 	}
+	emitter.Event(services.DownloadEvent{Type: "log", Text: "正在获取收藏夹视频列表..."})
 
-	sendEvent("close")
+	links, err := services.FavoriteLinks(fid)
+	if err != nil {
+		emitter.Finish(err)
+		return
+	}
+	emitter.Event(services.DownloadEvent{Type: "log", Text: fmt.Sprintf("共找到 %d 个收藏视频", len(links))})
+
+	err = services.Download(emitter.ctx, links, services.GetDownloadOutputPath(), req.options(), emitter.Event)
+	emitter.Finish(err)
 }
 
 func checkCollection(c *gin.Context) {
@@ -343,40 +473,19 @@ func checkCollection(c *gin.Context) {
 }
 
 func downloadCollectionSSE(c *gin.Context) {
-	var req struct {
-		URL           string `json:"url"`
-		CID           int    `json:"cid"`
-		Sessdata      string `json:"sessdata"`
-		DownloadCover bool   `json:"download_cover"`
-		OnlyAudio     bool   `json:"only_audio"`
-	}
+	var req downloadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("参数错误: "+err.Error()))
 		return
 	}
-
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-
-	flusher, ok := c.Writer.(http.Flusher)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, models.ErrorResponse("不支持流式传输"))
+	if req.URL == "" {
+		c.JSON(http.StatusOK, models.ErrorResponse("缺少 url 参数"))
 		return
 	}
-
-	sendEvent := func(msg string) {
-		fmt.Fprintf(c.Writer, "data: %s\n\n", msg)
-		flusher.Flush()
+	// 合集入口的语义就是整集展开，缺省即 collection+batch。
+	if !req.Collection {
+		req.Collection = true
+		req.Batch = true
 	}
-
-	sendEvent("正在获取合集信息...")
-
-	outputDir := services.GetDownloadOutputPath()
-	err := services.DownloadCollectionWithProgress(req.URL, req.Sessdata, outputDir, req.OnlyAudio, sendEvent)
-	if err != nil {
-		sendEvent(fmt.Sprintf("下载失败: %v", err))
-	}
-
-	sendEvent("close")
+	runDownloadSSE(c, &req, []string{req.URL}, "")
 }

@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -16,10 +17,9 @@ import (
 // Reserved namespace for this file: years 2001-2003 are only touched here via
 // the BVDLLIST metadata join, and every file/dir created lives under
 // <cwd>/output/downloads (the TestMain temp dir) with a "dl" marker in the
-// name. The success flows of ExtractVideoInfo / CheckCollection /
-// DownloadVideoWithProgress are not exercised: they route through the bili-dl
-// library whose api.bilibili.com client cannot be repointed from tests, and
-// merging needs a real ffmpeg binary.
+// name. The success flows of ExtractVideoInfo / CheckCollection / Download
+// are not exercised: they route through the bili-dl library and then fetch
+// bytes from bilibili's CDN, which the offline guard below refuses on purpose.
 
 // dlTransportStub makes every api.bilibili.com request answered by h instead
 // of the internet. services.* builds its http.Clients with the default
@@ -72,13 +72,13 @@ func TestDLExtractVideoInfoValidation(t *testing.T) {
 
 	expectMessage(t, expectStatus(t, e, "GET", "/api/download/video_info", "", 400, "error"), "缺少 url 或 bvid 参数")
 
-	// bvid is expanded into the canonical watch URL first; "DLYY0001" holds no
-	// BV id, so the service fails offline before bili-dl would be called.
+	// bvid 先拼成标准观看链接；"DLYY0001" 不含 BV 号，
+	// 服务层会在 bili-dl 发起任何请求之前失败。
 	noBv := expectStatus(t, e, "GET", "/api/download/video_info?bvid=DLYY0001", "", 200, "error")
-	expectMessageContains(t, noBv, "无法从 URL 提取 BV 号")
+	expectMessageContains(t, noBv, "无法解析链接")
 	expectMessageContains(t, noBv, "https://www.bilibili.com/video/DLYY0001")
 
-	expectMessageContains(t, expectStatus(t, e, "GET", "/api/download/video_info?url=https://b23.tv/xyz", "", 200, "error"), "无法从 URL 提取 BV 号")
+	expectMessageContains(t, expectStatus(t, e, "GET", "/api/download/video_info?url=https://example.com/no-bv", "", 200, "error"), "无法解析链接")
 }
 
 func TestDLGetUserVideos(t *testing.T) {
@@ -125,19 +125,24 @@ func TestDLGetUserVideos(t *testing.T) {
 
 func TestDLCheckVideoDownload(t *testing.T) {
 	e := newAPI(t, RegisterDownloadRoutes)
-	expectMessage(t, expectStatus(t, e, "GET", "/api/download/check_video_download", "", 400, "error"), "缺少 cids 参数")
+	expectMessage(t, expectStatus(t, e, "GET", "/api/download/check_video_download", "", 400, "error"), "缺少 bvids 参数")
 
-	dlWriteDownloadFile(t, filepath.Join("dlcheck", "DLVIDEO_900123_p1.mp4"), []byte("x"))
+	dlWriteDownloadFile(t, filepath.Join("dlcheck", "DL视频_BVDLCHK00000001.mp4"), []byte("x"))
+	// 封面 sidecar 不算已下载成品。
+	dlWriteDownloadFile(t, filepath.Join("dlcheck", "DL封面_BVDLCHK00000002.cover.jpg"), []byte("y"))
 
-	resp := expectStatus(t, e, "GET", "/api/download/check_video_download?cids=900123,%20,9999999999,", "", 200, "success").dataMap(t)
-	if len(resp) != 2 {
-		t.Fatalf("blank cids must be dropped, got %v", resp)
+	resp := expectStatus(t, e, "GET", "/api/download/check_video_download?bvids=BVDLCHK00000001,%20,BVDLCHK00000002,BVDLABSENT99,", "", 200, "success").dataMap(t)
+	if len(resp) != 3 {
+		t.Fatalf("blank bvids must be dropped, got %v", resp)
 	}
-	if resp["900123"] != true {
-		t.Fatalf("900123 = %v, want true (case-insensitive name match)", resp["900123"])
+	if resp["BVDLCHK00000001"] != true {
+		t.Fatalf("BVDLCHK00000001 = %v, want true", resp["BVDLCHK00000001"])
 	}
-	if resp["9999999999"] != false {
-		t.Fatalf("9999999999 = %v, want false", resp["9999999999"])
+	if resp["BVDLCHK00000002"] != false {
+		t.Fatalf("cover-only BV = %v, want false", resp["BVDLCHK00000002"])
+	}
+	if resp["BVDLABSENT99"] != false {
+		t.Fatalf("BVDLABSENT99 = %v, want false", resp["BVDLABSENT99"])
 	}
 }
 
@@ -158,7 +163,7 @@ func TestDLListDownloadedVideos(t *testing.T) {
 		t.Fatalf("total = %v, want 1 (%v)", data["total"], data["videos"])
 	}
 	v := dataArray(t, data["videos"])[0].(map[string]interface{})
-	if v["bvid"] != "BVDLLIST000001" || v["title"] != "带前缀视频 BVDLLIST000001" {
+	if v["bvid"] != "BVDLLIST000001" || v["title"] != "带前缀视频" {
 		t.Fatalf("parsed name = %v", v)
 	}
 	if v["author_name"] != "DL作者甲" {
@@ -212,20 +217,41 @@ func TestDLListDownloadedVideos(t *testing.T) {
 func TestDLDeleteDownloadedVideo(t *testing.T) {
 	e := newAPI(t, RegisterDownloadRoutes)
 
-	expectMessage(t, expectStatus(t, e, "DELETE", "/api/download/delete_downloaded_video", "", 200, "error"), "缺少 cid 参数")
+	expectMessage(t, expectStatus(t, e, "DELETE", "/api/download/delete_downloaded_video", "", 200, "error"), "缺少 bvid 参数")
 
-	f := dlWriteDownloadFile(t, filepath.Join("dldelone", "dldelfile_918273.mp4"), []byte("z"))
-	expectStatus(t, e, "DELETE", "/api/download/delete_downloaded_video?cid=918273", "", 200, "success")
-	if _, err := os.Stat(f); !os.IsNotExist(err) {
-		t.Fatalf("file %s should have been deleted", f)
+	// 文件名里的大小写与查询参数不一致，匹配仍要命中；附加内容一起删除。
+	f := dlWriteDownloadFile(t, filepath.Join("dldelone", "DL视频_BVDLDEL00000001.mp4"), []byte("z"))
+	sidecar := dlWriteDownloadFile(t, filepath.Join("dldelone", "DL视频_BVDLDEL00000001.danmaku.ass"), []byte("d"))
+	sibling := dlWriteDownloadFile(t, filepath.Join("dldelone", "DL另一条_BVDLDEL00000002.mp4"), []byte("s"))
+	expectStatus(t, e, "DELETE", "/api/download/delete_downloaded_video?bvid=bvdldel00000001", "", 200, "success")
+	for _, path := range []string{f, sidecar} {
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Fatalf("%s should have been deleted", path)
+		}
+	}
+	if _, err := os.Stat(sibling); err != nil {
+		t.Fatalf("同 UP 其它条目必须保留: %v", err)
 	}
 	if _, err := os.Stat(filepath.Dir(f)); err != nil {
 		t.Fatalf("parent dir must survive a file-only delete: %v", err)
 	}
 
-	expectMessage(t, expectStatus(t, e, "DELETE", "/api/download/delete_downloaded_video?cid=dldelnotexist999", "", 200, "error"), "未找到匹配的视频文件")
+	// 最后一条删除时目录被清空，随之移除。
+	expectStatus(t, e, "DELETE", "/api/download/delete_downloaded_video?bvid=BVDLDEL00000002&delete_directory=true", "", 200, "success")
+	if _, err := os.Stat(filepath.Dir(sibling)); !os.IsNotExist(err) {
+		t.Errorf("emptied directory should be removed, stat = %v", err)
+	}
+
+	expectMessage(t, expectStatus(t, e, "DELETE", "/api/download/delete_downloaded_video?bvid=BVDLDELNOTEXIST999", "", 200, "error"), "未找到匹配的视频文件")
 
 	expectMessage(t, expectStatus(t, e, "DELETE", "/api/download/delete_downloaded_video?directory="+urlEncode("/etc")+"&delete_directory=true", "", 200, "error"), "无效的目录路径")
+	// 只把 downloads 当字符串前缀的兄弟目录同样必须被拒绝。
+	siblingDir := dlDownloadsDir() + "-evil"
+	if err := os.MkdirAll(siblingDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(siblingDir) })
+	expectMessage(t, expectStatus(t, e, "DELETE", "/api/download/delete_downloaded_video?directory="+urlEncode(siblingDir)+"&delete_directory=true", "", 200, "error"), "无效的目录路径")
 	missing := filepath.Join(dlDownloadsDir(), "dllmissingdir")
 	expectMessage(t, expectStatus(t, e, "DELETE", "/api/download/delete_downloaded_video?directory="+urlEncode(missing)+"&delete_directory=true", "", 200, "error"), "目录不存在")
 
@@ -251,13 +277,14 @@ func TestDLStreamVideo(t *testing.T) {
 	e := newAPI(t, RegisterDownloadRoutes)
 	expectMessage(t, expectStatus(t, e, "GET", "/api/download/stream_video", "", 400, "error"), "缺少 file_path 参数")
 
-	dir := t.TempDir()
-	expectMessage(t, expectStatus(t, e, "GET", "/api/download/stream_video?file_path="+urlEncode(filepath.Join(dir, "nope.mp4")), "", 404, "error"), "文件不存在")
+	// downloads 之外的路径直接拒绝，不再泄露本机任意文件。
+	outside := filepath.Join(t.TempDir(), "nope.mp4")
+	expectMessage(t, expectStatus(t, e, "GET", "/api/download/stream_video?file_path="+urlEncode(outside), "", 403, "error"), "无权访问该文件")
 
-	path := filepath.Join(dir, "dlmovie.mp4")
-	if err := os.WriteFile(path, []byte("DL-STREAM-CONTENT"), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	missing := filepath.Join(dlDownloadsDir(), "dlstreammissing", "nope.mp4")
+	expectMessage(t, expectStatus(t, e, "GET", "/api/download/stream_video?file_path="+urlEncode(missing), "", 404, "error"), "文件不存在")
+
+	path := dlWriteDownloadFile(t, filepath.Join("dlstream", "dlmovie.mkv"), []byte("DL-STREAM-CONTENT"))
 	w := doRaw(t, e, "GET", "/api/download/stream_video?file_path="+urlEncode(path), "")
 	if w.Code != http.StatusOK {
 		t.Fatalf("stream code = %d body=%q", w.Code, w.Body.String())
@@ -265,7 +292,8 @@ func TestDLStreamVideo(t *testing.T) {
 	if got := w.Body.String(); got != "DL-STREAM-CONTENT" {
 		t.Fatalf("streamed bytes = %q", got)
 	}
-	if ct := w.Header().Get("Content-Type"); ct != "video/mp4" {
+	// 容器按实际编码决定后，MKV 也要给出正确的 MIME，否则浏览器只会下载。
+	if ct := w.Header().Get("Content-Type"); ct != "video/x-matroska" {
 		t.Fatalf("Content-Type = %q", ct)
 	}
 	if ra := w.Header().Get("Accept-Ranges"); ra != "bytes" {
@@ -286,6 +314,48 @@ func TestDLCheckFFmpeg(t *testing.T) {
 	}
 }
 
+// dlSSEPayloads 解析 SSE 帧：新契约下每条 data 都是 JSON 事件。
+func dlSSEPayloads(t *testing.T, body string) []map[string]interface{} {
+	t.Helper()
+	var events []map[string]interface{}
+	for _, line := range strings.Split(body, "\n") {
+		if !strings.HasPrefix(line, "data: ") {
+			continue
+		}
+		var payload map[string]interface{}
+		if err := json.Unmarshal([]byte(strings.TrimPrefix(line, "data: ")), &payload); err != nil {
+			t.Fatalf("SSE data 不是 JSON: %q (%v)", line, err)
+		}
+		events = append(events, payload)
+	}
+	if len(events) == 0 {
+		t.Fatalf("SSE body 里没有任何事件: %q", body)
+	}
+	return events
+}
+
+// dlSSEText 把所有 log/done 事件的文本拼成一段，便于按关键词断言。
+func dlSSEText(events []map[string]interface{}) string {
+	var sb strings.Builder
+	for _, ev := range events {
+		if text, ok := ev["text"].(string); ok {
+			sb.WriteString(text)
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
+}
+
+// dlSSELastDone 返回流末尾的 done 事件。
+func dlSSELastDone(t *testing.T, events []map[string]interface{}) map[string]interface{} {
+	t.Helper()
+	last := events[len(events)-1]
+	if last["type"] != "done" {
+		t.Fatalf("流末尾应是 done 事件, got %v", last)
+	}
+	return last
+}
+
 func TestDLDownloadVideoSSE(t *testing.T) {
 	e := newAPI(t, RegisterDownloadRoutes)
 
@@ -297,15 +367,21 @@ func TestDLDownloadVideoSSE(t *testing.T) {
 		t.Fatalf("bad JSON body = %q", w.Body.String())
 	}
 
-	w = doRaw(t, e, "POST", "/api/download/download_video", `{"url":"https://example.com/DLYY0001","sessdata":"s"}`)
+	expectMessage(t, expectStatus(t, e, "POST", "/api/download/download_video", `{}`, 200, "error"), "缺少 url 参数")
+
+	w = doRaw(t, e, "POST", "/api/download/download_video",
+		`{"url":"https://example.com/DLYY0001","sessdata":"s","video_quality":116,"only_audio":true}`)
 	if ct := w.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/event-stream") {
 		t.Fatalf("content-type = %q", ct)
 	}
-	body := w.Body.String()
-	for _, want := range []string{"data: 开始下载...", "data: 下载失败: 无法从 URL 提取 BV 号", "data: close"} {
-		if !strings.Contains(body, want) {
-			t.Fatalf("SSE body %q missing %q", body, want)
-		}
+	events := dlSSEPayloads(t, w.Body.String())
+	texts := dlSSEText(events)
+	if !strings.Contains(texts, "解析 https://example.com/DLYY0001 失败") {
+		t.Fatalf("缺少解析失败日志: %q", texts)
+	}
+	done := dlSSELastDone(t, events)
+	if done["text"] != "没有可下载的内容" {
+		t.Fatalf("done = %v, want 没有可下载的内容", done)
 	}
 }
 
@@ -317,22 +393,19 @@ func TestDLBatchDownloadSSE(t *testing.T) {
 		t.Fatalf("bad JSON code = %d body=%q", w.Code, w.Body.String())
 	}
 
-	// video 1 has an empty bvid and video 3 has no bvid key: both must be
-	// skipped; only the second (BV-less but non-empty) starts a failing task.
+	// 只有非空 bvid 会拼成下载链接，空 bvid 与缺 key 的条目直接跳过。
 	w = doRaw(t, e, "POST", "/api/download/batch_download",
 		`{"videos":[{"bvid":""},{"bvid":"DLYY0001"},{"title":"无bvid"}],"sessdata":"s","only_audio":false}`)
-	body := w.Body.String()
-	for _, want := range []string{
-		"data: [2/3] 开始下载: DLYY0001",
-		"data: [2/3] 下载失败: 无法从 URL 提取 BV 号",
-		"data: close",
-	} {
-		if !strings.Contains(body, want) {
-			t.Fatalf("batch SSE body %q missing %q", body, want)
-		}
+	events := dlSSEPayloads(t, w.Body.String())
+	texts := dlSSEText(events)
+	if !strings.Contains(texts, "解析 https://www.bilibili.com/video/DLYY0001 失败") {
+		t.Fatalf("batch SSE 缺少解析失败日志: %q", texts)
 	}
-	if strings.Contains(body, "[1/3]") || strings.Contains(body, "[3/3]") {
-		t.Fatalf("empty-bvid videos must be skipped entirely: %q", body)
+	if strings.Contains(texts, "video/\"\n") || strings.Contains(texts, "bilibili.com/video\n") {
+		t.Fatalf("空 bvid 不应拼成链接: %q", texts)
+	}
+	if got := dlSSELastDone(t, events); got["text"] != "没有可下载的内容" {
+		t.Fatalf("done = %v", got)
 	}
 }
 
@@ -355,28 +428,58 @@ func TestDLDownloadUserVideosSSE(t *testing.T) {
 			"page":{"count":9}}}`)
 	})
 
-	fail := doRaw(t, e, "POST", "/api/download/download_user_videos", `{"user_id":"666"}`).Body.String()
-	for _, want := range []string{"data: 正在获取用户视频列表...", "data: 获取视频列表失败: API 返回错误码: -100", "data: close"} {
-		if !strings.Contains(fail, want) {
-			t.Fatalf("list-failure stream %q missing %q", fail, want)
-		}
+	fail := dlSSEPayloads(t, doRaw(t, e, "POST", "/api/download/download_user_videos", `{"user_id":"666"}`).Body.String())
+	failTexts := dlSSEText(fail)
+	if !strings.Contains(failTexts, "正在获取用户视频列表...") {
+		t.Fatalf("list-failure stream missing stage log: %q", failTexts)
 	}
-	if strings.Contains(fail, "共找到") {
-		t.Fatalf("failed listing must not continue: %q", fail)
+	if got := dlSSELastDone(t, fail); !strings.Contains(got["text"].(string), "获取视频列表失败: API 返回错误码: -100") {
+		t.Fatalf("done = %v", got)
+	}
+	if strings.Contains(failTexts, "共找到") {
+		t.Fatalf("failed listing must not continue: %q", failTexts)
 	}
 
-	ok := doRaw(t, e, "POST", "/api/download/download_user_videos", `{"user_id":"123","only_audio":true}`).Body.String()
-	if !strings.Contains(ok, "data: 共找到 9 个视频") {
-		t.Fatalf("success stream = %q", ok)
+	ok := dlSSEPayloads(t, doRaw(t, e, "POST", "/api/download/download_user_videos", `{"user_id":"123","only_audio":true}`).Body.String())
+	okTexts := dlSSEText(ok)
+	if !strings.Contains(okTexts, "共找到 9 个视频") {
+		t.Fatalf("success stream = %q", okTexts)
 	}
-	if !strings.Contains(ok, "data: [2/2] 开始下载: DL用户视频") || !strings.Contains(ok, "[2/2] 下载失败: 无法从 URL 提取 BV 号") {
-		t.Fatalf("per-video events missing: %q", ok)
+	if !strings.Contains(okTexts, "解析 https://www.bilibili.com/video/DLYY0002 失败") {
+		t.Fatalf("per-video 解析日志缺失: %q", okTexts)
 	}
-	if strings.Contains(ok, "[1/2]") {
-		t.Fatalf("empty-bvid entry should be skipped: %q", ok)
+	if strings.Count(okTexts, "解析 ") != 1 {
+		t.Fatalf("空 bvid 条目应被跳过: %q", okTexts)
 	}
-	if !strings.HasSuffix(ok, "data: close\n\n") {
-		t.Fatalf("stream must end with close: %q", ok)
+	if got := dlSSELastDone(t, ok); got["text"] != "没有可下载的内容" {
+		t.Fatalf("done = %v", got)
+	}
+}
+
+func TestDLDownloadFavoritesSSE(t *testing.T) {
+	e := newAPI(t, RegisterDownloadRoutes)
+
+	w := doRaw(t, e, "POST", "/api/download/download_favorites", `{"user_id":`)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("bad JSON code = %d", w.Code)
+	}
+
+	expectMessage(t, expectStatus(t, e, "POST", "/api/download/download_favorites", `{}`, 200, "error"), "缺少 fid 参数")
+
+	// fid 以数字到达同样可用；本地未同步且无 SESSDATA 时在线回退被提前拒绝，
+	// 不会发出任何真实请求。
+	w = doRaw(t, e, "POST", "/api/download/download_favorites", `{"fid":9007199254740991}`)
+	if ct := w.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/event-stream") {
+		t.Fatalf("content-type = %q body=%q", ct, w.Body.String())
+	}
+	events := dlSSEPayloads(t, w.Body.String())
+	texts := dlSSEText(events)
+	if !strings.Contains(texts, "正在获取收藏夹视频列表...") {
+		t.Fatalf("missing stage log: %q", texts)
+	}
+	if got := dlSSELastDone(t, events); got["event"] != "error" ||
+		!strings.Contains(got["text"].(string), "未同步到本地") {
+		t.Fatalf("done = %v", got)
 	}
 }
 
@@ -384,18 +487,22 @@ func TestDLCollectionRoutes(t *testing.T) {
 	e := newAPI(t, RegisterDownloadRoutes)
 
 	expectMessage(t, expectStatus(t, e, "GET", "/api/collection/check_collection", "", 400, "error"), "缺少 url 参数")
-	expectMessage(t, expectStatus(t, e, "GET", "/api/collection/check_collection?url=https%3A%2F%2Fwww.bilibili.com%2Fvideo%2FDLYY0003", "", 200, "error"), "无法从 URL 提取 BV 号")
+	expectMessageContains(t, expectStatus(t, e, "GET", "/api/collection/check_collection?url=https%3A%2F%2Fwww.bilibili.com%2Fvideo%2FDLYY0003", "", 200, "error"), "无法解析链接")
 
 	w := doRaw(t, e, "POST", "/api/collection/download_collection", "{oops")
 	if w.Code != http.StatusBadRequest || !strings.Contains(w.Body.String(), "参数错误") {
 		t.Fatalf("bad JSON: code=%d body=%q", w.Code, w.Body.String())
 	}
 
-	w = doRaw(t, e, "POST", "/api/collection/download_collection", `{"url":"https://b23.tv/DLYY0003"}`)
-	body := w.Body.String()
-	for _, want := range []string{"data: 正在获取合集信息...", "data: 下载失败: 无法从 URL 提取 BV 号: https://b23.tv/DLYY0003", "data: close"} {
-		if !strings.Contains(body, want) {
-			t.Fatalf("collection SSE %q missing %q", body, want)
-		}
+	expectMessage(t, expectStatus(t, e, "POST", "/api/collection/download_collection", `{}`, 200, "error"), "缺少 url 参数")
+
+	w = doRaw(t, e, "POST", "/api/collection/download_collection", `{"url":"https://www.bilibili.com/video/DLYY0003"}`)
+	events := dlSSEPayloads(t, w.Body.String())
+	texts := dlSSEText(events)
+	if !strings.Contains(texts, "解析 https://www.bilibili.com/video/DLYY0003 失败") {
+		t.Fatalf("collection SSE missing resolve log: %q", texts)
+	}
+	if got := dlSSELastDone(t, events); got["text"] != "没有可下载的内容" {
+		t.Fatalf("done = %v", got)
 	}
 }

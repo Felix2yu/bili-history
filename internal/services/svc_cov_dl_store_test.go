@@ -3,7 +3,6 @@ package services
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -15,8 +14,7 @@ import (
 //   - loadBVMetadata：年份表选择、TableExists=false 跳过、查询失败跳过、
 //     空 cover / 空 bvid 过滤、Scan 失败跳过
 //   - ListDownloadedVideos：不可读子目录、.m4a、缺失 "]" 的文件名、分页越界
-//   - DeleteDownloadedVideo：deleteDir 与按 cid 删除、不可读目录
-//   - remuxToContainer：ffmpeg 参数构造（MOV/MKV）、成功、失败
+//   - DeleteDownloadedVideo：deleteDir 与按 BV 删除、不可读目录
 //   - resolutionLabel 的 360p 档位
 //
 // 命名空间：年份表 2035/2036、bvid 前缀 BVsvcDL、文件名前缀 svcDl。
@@ -215,10 +213,8 @@ func TestSVCDLListDownloadedVideosMetadataJoin(t *testing.T) {
 
 	// 无 [作者] 前缀，作者信息必须来自 2036 行。
 	svcWrite(t, filepath.Join(dir, "svcDl联合作用视频 "+bvid+".mp4"), []byte("0123456789ABCD"))
-	// PRODUCTION BUG: services/download.go:557-560 —— 扩展名白名单
-	// (.mp4/.flv/.mkv/.webm/.avi) 不含 .m4a，所以下面 download.go:589 的
-	// `strings.HasSuffix(name, ".m4a")` 纯音频判定永远不可能命中（.m4a 早在
-	// 白名单处就被 return nil 跳过）。这里固化“音频文件不出现在列表中”的现状。
+	// 回归历史缺陷：.m4a 过去不在扩展名白名单里，纯音频成品从来不会出现在列表中。
+	// 现在音频文件必须被列出并标记 IsAudioOnly。
 	m4aPath := svcWrite(t, filepath.Join(dir, "svcDl纯音频 "+bvid+".m4a"), []byte("AUDIO"))
 	// 以 "[" 开头但缺少 "]"：作者名保持为空，标题保留原始文件名。
 	svcWrite(t, filepath.Join(dir, "[svcDl残缺前缀标题.mp4"), []byte("X"))
@@ -249,7 +245,7 @@ func TestSVCDLListDownloadedVideosMetadataJoin(t *testing.T) {
 	if !pathSet[m4aPath] {
 		t.Errorf(".m4a file %s should be listed", m4aPath)
 	}
-	m4a, ok := byTitle["svcDl纯音频 "+bvid]
+	m4a, ok := byTitle["svcDl纯音频"]
 	if !ok {
 		t.Fatalf(".m4a entry missing, titles=%v", svcDlVideoTitles(videos))
 	}
@@ -257,7 +253,7 @@ func TestSVCDLListDownloadedVideosMetadataJoin(t *testing.T) {
 		t.Errorf(".m4a must be flagged audio only: %+v", m4a.Files[0])
 	}
 
-	mp4, ok := byTitle["svcDl联合作用视频 "+bvid]
+	mp4, ok := byTitle["svcDl联合作用视频"]
 	if !ok {
 		t.Fatalf("mp4 entry missing, titles=%v", svcDlVideoTitles(videos))
 	}
@@ -293,7 +289,7 @@ func TestSVCDLListDownloadedVideosMetadataJoin(t *testing.T) {
 		t.Errorf("download date = %q, want YYYY-MM-DD", mp4.DownloadDate)
 	}
 
-	audio, ok := byTitle["svcDl纯音频 "+bvid+"_audio"]
+	audio, ok := byTitle["svcDl纯音频 _audio"]
 	if !ok {
 		t.Fatalf("_audio entry missing, titles=%v", svcDlVideoTitles(videos))
 	}
@@ -499,154 +495,21 @@ func TestSVCDLDeleteDownloadedVideoRejectsUnresolvableDirectory(t *testing.T) {
 	}
 }
 
-// svcDlFakeFFmpeg 把一个假 ffmpeg 放进 PATH（其余路径清空，确保绝不会调用到
-// 真实二进制），脚本内容自行决定参数记录与产物。
-func svcDlFakeFFmpeg(t *testing.T, script string) string {
-	t.Helper()
-	if _, err := exec.LookPath("sh"); err != nil {
-		t.Skip("no /bin/sh available for the fake ffmpeg stub")
-	}
-	bin := t.TempDir()
-	wrapped := "#!/bin/sh\n" + script + "\n"
-	path := filepath.Join(bin, "ffmpeg")
-	if err := os.WriteFile(path, []byte(wrapped), 0755); err != nil {
-		t.Fatalf("write fake ffmpeg: %v", err)
-	}
-	t.Setenv("PATH", bin)
-	return bin
-}
-
-func svcDlReadArgsLog(t *testing.T, logPath string) []string {
-	t.Helper()
-	data, err := os.ReadFile(logPath)
-	if err != nil {
-		t.Fatalf("read ffmpeg args log: %v", err)
-	}
-	lines := strings.Split(strings.TrimRight(string(data), "\n"), "\n")
-	for i := range lines {
-		lines[i] = strings.Trim(lines[i], "\"")
-	}
-	return lines
-}
-
-func TestSVCDLRemuxToContainerMOVSuccess(t *testing.T) {
-	dir := t.TempDir()
-	title := "svcDlRemuxMOV"
-	input := filepath.Join(dir, title+".mp4")
-	output := filepath.Join(dir, title+".mov")
-	logPath := filepath.Join(dir, "ffmpeg-args.txt")
-	svcWrite(t, input, []byte("MP4BYTES"))
-
-	svcDlFakeFFmpeg(t, fmt.Sprintf(`printf '%%s\n' "$@" > %q
-printf 'MOVBYTES' > %q`, logPath, output))
-
-	if err := remuxToContainer(dir, title, "BVsvcDL0200", "MOV"); err != nil {
-		t.Fatalf("remuxToContainer: %v", err)
-	}
-
-	args := svcDlReadArgsLog(t, logPath)
-	want := []string{"-i", input, "-c", "copy", "-y", "-tag:v", "hvc1", output}
-	if strings.Join(args, "\x00") != strings.Join(want, "\x00") {
-		t.Errorf("ffmpeg args =\n%q\nwant\n%q", args, want)
-	}
-	if _, err := os.Stat(input); !os.IsNotExist(err) {
-		t.Errorf("source mp4 should be removed, stat = %v", err)
-	}
-	got, err := os.ReadFile(output)
-	if err != nil {
-		t.Fatalf("output file missing: %v", err)
-	}
-	if string(got) != "MOVBYTES" {
-		t.Errorf("output content = %q", got)
-	}
-}
-
-func TestSVCDLRemuxToContainerMKVSuccess(t *testing.T) {
-	dir := t.TempDir()
-	title := "svcDlRemuxMKV"
-	input := filepath.Join(dir, title+".mp4")
-	output := filepath.Join(dir, title+".mkv")
-	logPath := filepath.Join(dir, "ffmpeg-args.txt")
-	svcWrite(t, input, []byte("MP4BYTES"))
-
-	svcDlFakeFFmpeg(t, fmt.Sprintf(`printf '%%s\n' "$@" > %q
-printf 'MKVBYTES' > %q`, logPath, output))
-
-	if err := remuxToContainer(dir, title, "BVsvcDL0201", "MKV"); err != nil {
-		t.Fatalf("remuxToContainer: %v", err)
-	}
-	args := svcDlReadArgsLog(t, logPath)
-	want := []string{"-i", input, "-c", "copy", "-y", output}
-	if strings.Join(args, "\x00") != strings.Join(want, "\x00") {
-		t.Errorf("ffmpeg args = %q, want %q", args, want)
-	}
-	for _, a := range args {
-		if a == "-tag:v" {
-			t.Errorf("MKV must not carry the hvc1 tag arg")
-		}
-	}
-	if _, err := os.Stat(output); err != nil {
-		t.Errorf("mkv output missing: %v", err)
-	}
-	if _, err := os.Stat(input); !os.IsNotExist(err) {
-		t.Errorf("source mp4 should be removed")
-	}
-}
-
-func TestSVCDLRemuxToContainerFFmpegFailure(t *testing.T) {
-	dir := t.TempDir()
-	title := "svcDlRemuxFail"
-	input := svcWrite(t, filepath.Join(dir, title+".mp4"), []byte("MP4BYTES"))
-	output := filepath.Join(dir, title+".mkv")
-	logPath := filepath.Join(dir, "ffmpeg-args.txt")
-
-	svcDlFakeFFmpeg(t, fmt.Sprintf(`printf '%%s\n' "$@" > %q
-echo 'svcDl ffmpeg exploded' 1>&2
-exit 3`, logPath))
-
-	err := remuxToContainer(dir, title, "BVsvcDL0202", "MKV")
-	if err == nil || !strings.Contains(err.Error(), "ffmpeg remux failed") {
-		t.Fatalf("err = %v, want ffmpeg remux failed", err)
-	}
-	if !strings.Contains(err.Error(), "svcDl ffmpeg exploded") {
-		t.Errorf("error should carry combined output: %v", err)
-	}
-	if _, err := os.Stat(input); err != nil {
-		t.Errorf("source file must be kept on failure: %v", err)
-	}
-	if _, err := os.Stat(output); !os.IsNotExist(err) {
-		t.Errorf("no output file should exist on failure")
-	}
-}
-
-func TestSVCDLRemuxToContainerFFmpegMissing(t *testing.T) {
-	dir := t.TempDir()
-	title := "svcDlRemuxNoBin"
-	input := svcWrite(t, filepath.Join(dir, title+".mp4"), []byte("MP4BYTES"))
-
-	// PATH 指向一个空目录：exec 找不到 ffmpeg，走 cmd.CombinedOutput 错误分支。
-	t.Setenv("PATH", t.TempDir())
-
-	err := remuxToContainer(dir, title, "BVsvcDL0203", "MKV")
-	if err == nil || !strings.Contains(err.Error(), "ffmpeg remux failed") {
-		t.Fatalf("err = %v, want remux failure when ffmpeg is absent", err)
-	}
-	if _, err := os.Stat(input); err != nil {
-		t.Errorf("source file must be kept when ffmpeg is missing: %v", err)
-	}
-}
-
 func TestSVCDLResolutionLabel360pBucket(t *testing.T) {
-	// 现有用例缺 360 <= max(w,h) < 480 这一档（download.go:151）。
+	// 档位取短边（B 站语义）：1920x1080 是 1080p，而不是按长边误判成 2K。
 	cases := []struct {
 		w, h int
 		want string
 	}{
-		{380, 216, "360p"},
-		{640, 360, "480p"}, // 长边 640 -> 480 档（沿用长边语义）
-		{479, 270, "360p"}, // 长边 479 落在 360 <= h < 480
-		{853, 480, "720p"},
-		{1279, 720, "1080p"},
+		{380, 216, "216p"},
+		{640, 360, "360p"}, // 短边 360 落在 360 <= h < 480
+		{479, 270, "270p"},
+		{853, 480, "480p"},
+		{1279, 720, "720p"},
+		{1920, 1080, "1080p"},
+		{2560, 1440, "2K"},
+		{3840, 2160, "4K"},
+		{1080, 1920, "1080p"}, // 竖屏同样按短边
 	}
 	for _, c := range cases {
 		if got := resolutionLabel(c.w, c.h); got != c.want {

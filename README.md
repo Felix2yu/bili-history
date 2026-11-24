@@ -45,6 +45,10 @@ Bilibili 观看历史记录管理与分析工具
 - MCP Streamable HTTP 协议，AI 客户端可读取本地历史记录
 - Bearer Token 认证
 
+### 外部播放器同步（满屏）
+- `POST /api/watch-progress/query` 批量查询观看状态与进度，`POST /api/watch-progress/report` 上报播放进度，`POST /api/watch-progress/ping` 检查连接
+- 可选鉴权：在 `config.yaml` 配置 `api_token` 或设置环境变量 `BILI_HISTORY_API_TOKEN`，调用时带 `Authorization: Bearer <token>`（也接受 `X-API-Token`）；留空时这三个接口无需鉴权，不影响网页端
+
 ### 其他
 - PWA 支持（离线缓存）
 - 深色模式（跟随系统 / 浅色 / 深色）

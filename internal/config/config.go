@@ -67,6 +67,7 @@ type McpConfig struct {
 
 type Config struct {
 	SESSDATA        string           `yaml:"SESSDATA" json:"SESSDATA"`
+	APIToken        string           `yaml:"api_token" json:"api_token"`
 	OutputFolder    string           `yaml:"output_folder" json:"output_folder"`
 	DBFile          string           `yaml:"db_file" json:"db_file"`
 	LogFile         string           `yaml:"log_file" json:"log_file"`
@@ -265,6 +266,8 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 		switch keyNode.Value {
 		case "SESSDATA":
 			valueNode.Value = cfg.SESSDATA
+		case "api_token":
+			valueNode.Value = cfg.APIToken
 		case "output_folder":
 			valueNode.Value = cfg.OutputFolder
 		case "db_file":
@@ -302,6 +305,12 @@ func updateYamlNode(root *yaml.Node, cfg *Config) {
 		}
 	}
 
+	if _, ok := existingKeys["api_token"]; !ok {
+		node := getOrAddNode("api_token")
+		node.Kind = yaml.ScalarNode
+		node.Tag = "!!str"
+		node.Value = cfg.APIToken
+	}
 	if _, ok := existingKeys["notify"]; !ok {
 		node := getOrAddNode("notify")
 		updateNotifyNode(node, &cfg.Notify)
@@ -624,6 +633,9 @@ func updateMcpNode(node *yaml.Node, mcp *McpConfig) {
 func applyEnvOverrides(cfg *Config) {
 	if v := os.Getenv("SESSDATA"); v != "" {
 		cfg.SESSDATA = v
+	}
+	if v := os.Getenv("BILI_HISTORY_API_TOKEN"); v != "" {
+		cfg.APIToken = v
 	}
 	if v := os.Getenv("BILI_JCT"); v != "" {
 		cfg.BiliJct = v

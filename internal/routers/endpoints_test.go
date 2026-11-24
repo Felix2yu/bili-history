@@ -58,7 +58,7 @@ func TestRegisterEndpointMetaOverwrites(t *testing.T) {
 // fullAPIRoutes returns every "METHOD /path" the production router exposes.
 func fullAPIRoutes() []string {
 	e := newAPI(t0,
-		RegisterHistoryRoutes, RegisterCategoryRoutes, RegisterLoginRoutes,
+		RegisterHistoryRoutes, RegisterWatchProgressRoutes, RegisterCategoryRoutes, RegisterLoginRoutes,
 		RegisterAnalysisRoutes, RegisterViewingRoutes, RegisterFavoriteRoutes,
 		RegisterConfigRoutes, RegisterSchedulerRoutes, RegisterDataSyncRoutes,
 		RegisterExportRoutes, RegisterImportRoutes, RegisterCleanRoutes,

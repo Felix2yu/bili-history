@@ -102,6 +102,7 @@ func main() {
 	api := r.Group("/api")
 	{
 		routers.RegisterHistoryRoutes(api)
+		routers.RegisterWatchProgressRoutes(api)
 		routers.RegisterCategoryRoutes(api)
 		routers.RegisterLoginRoutes(api)
 		routers.RegisterAnalysisRoutes(api)
@@ -284,7 +285,7 @@ func registerFrontendRoutes(r *gin.Engine, distFS fs.FS) {
 		"/data_sync/", "/scheduler/", "/config/", "/export/",
 		"/login/", "/like/", "/delete/", "/bilibili/", "/interactions/",
 		"/report/", "/images/", "/download/", "/favorite/",
-		"/history/", "/categories/", "/video_details/", "/title_analytics/",
+		"/history/", "/watch-progress/", "/categories/", "/video_details/", "/title_analytics/",
 		"/mcp",
 	}
 

@@ -98,6 +98,21 @@ func init() {
 		Tags:        tagHistory,
 		OperationID: "get_video_by_cid",
 	})
+	RegisterEndpointMeta("POST", "/watch-progress/query", EndpointMeta{
+		Summary:     "批量查询视频观看状态与进度（外部客户端）",
+		Tags:        tagHistory,
+		OperationID: "query_watch_progress",
+	})
+	RegisterEndpointMeta("POST", "/watch-progress/report", EndpointMeta{
+		Summary:     "上报视频观看进度（外部客户端）",
+		Tags:        tagHistory,
+		OperationID: "report_watch_progress",
+	})
+	RegisterEndpointMeta("POST", "/watch-progress/ping", EndpointMeta{
+		Summary:     "检查外部客户端访问令牌是否有效",
+		Tags:        tagHistory,
+		OperationID: "ping_watch_progress",
+	})
 	RegisterEndpointMeta("POST", "/history/batch-remarks", EndpointMeta{
 		Summary:     "批量获取用户备注",
 		Tags:        tagHistory,

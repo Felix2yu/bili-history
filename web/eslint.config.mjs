@@ -24,6 +24,12 @@ export default withNuxt(
     // 大面积无收益改名；layouts/pages/app 已被 Nuxt 配置自动豁免。
     rules: {
       'vue/multi-word-component-names': 'off',
+      // 解构排除字段（const { a, b, ...rest } = params）里 a/b 只是为了从 rest
+      // 中剔除、并不单独使用，是常见写法（如 downloadCollection 剔除 cid，
+      // 避免它经 downloadPayload 的 ...rest 透传给后端）；默认
+      // ignoreRestSiblings: false 会把这种刻意排除误报为未使用。
+      // 真正未使用的普通变量不受影响，仍会照常报错。
+      'no-unused-vars': ['error', { ignoreRestSiblings: true }],
       // 与 prettier 的 Vue 输出对齐：void 元素（img/input/br）同样自闭合
       // （<img />）。该规则默认 void: 'never'，与 prettier 互改对方产出，
       // 两者永远无法同时满足；对齐后 eslint --fix 与 prettier --write 幂等共存。

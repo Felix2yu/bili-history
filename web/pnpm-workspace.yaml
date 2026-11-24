@@ -3,6 +3,12 @@
 # （pnpm-lock.yaml 里没有 overrides: 段），而 lock 里已有的 2.1.4 / 5.0.9 都不在受影响版本内，
 # 所以这里没有补 override —— 补上会把 minimatch 依赖的 2.1.4 顶到 5.x，是一次无收益的大版本跳转。
 # 以后确实需要时写在本文件，别写回 package.json。
+# minimatch：GHSA-g3hv-75wg-m249（moderate DoS），修复需 >=11.0.1，但
+# nitropack>archiver>readdir-glob 锁死 ^10.2.2，update 不会升，只能强制覆盖。
+# minimatch@11 仍是 ESM/CJS 双格式，readdir-glob 的 require 不受影响。
+overrides:
+  minimatch: ^11.0.1
+
 packages:
   - '.'
 

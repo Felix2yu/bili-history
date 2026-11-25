@@ -33,7 +33,7 @@ Bilibili 观看历史记录管理与分析工具
 
 ### 视频播放与下载
 - ArtPlayer 播放器 + 弹幕系统
-- bili-dl 视频下载集成：批量下载、UP 主投稿下载、合集与番剧整季展开、分 P 下载、
+- liuying-engine 视频下载集成：批量下载、UP 主投稿下载、合集与番剧整季展开、分 P 下载、
   画质/音质选择、弹幕/字幕/封面附加内容、字节级进度与取消
 
 ### 计划任务与通知
@@ -254,7 +254,7 @@ docker compose up -d bili-history
 - **图片与下载物**（`output/images/`、`output/downloads/`、`output/dynamic/<mid>/images/`）
   当前**不**备份，请注意这里有一处真实的取舍：
   - `output/images/` 是历史封面 / 头像的本地缓存，库里存的是远端 URL，丢了能重新拉；
-  - `output/downloads/` 是 bili-dl 主动下载的视频，体积大且可按 BVID 重新下载；
+  - `output/downloads/` 是 liuying-engine 主动下载的视频，体积大且可按 BVID 重新下载；
   - **但 `output/dynamic/<mid>/images/` 不完全是缓存**：动态抓取成功后，库里的
     `cover` / `media_locals` 会被改写成指向本地的相对路径，只有 `raw_json` 里还留着原始远端地址。
     B 站原帖一旦删除，这些图就取不回来了。

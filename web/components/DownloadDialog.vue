@@ -29,7 +29,7 @@
           </svg>
         </button>
 
-        <!-- 页眉区域：包含bili-dl致谢和FFmpeg状态 -->
+        <!-- 页眉区域：包含liuying-engine致谢和FFmpeg状态 -->
         <div
           class="flex items-center justify-between space-x-2 border-b border-gray-200 bg-gray-50 px-3 py-2 md:px-6 dark:border-gray-700 dark:bg-gray-800"
         >
@@ -43,10 +43,10 @@
               <p class="text-[0.625rem] text-gray-700 md:text-xs dark:text-gray-300">
                 下载功能基于
                 <a
-                  href="https://github.com/Felix2yu/bili-dl"
+                  href="https://github.com/Felix2yu/liuying-engine"
                   target="_blank"
                   class="font-medium text-accent hover:text-accent/80"
-                  >bili-dl</a
+                  >liuying-engine</a
                 >
               </p>
             </div>

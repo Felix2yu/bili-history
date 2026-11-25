@@ -30,8 +30,8 @@ jobs:
       go-dir: .
       # database 包内有纯 Go 驱动守卫测试，必须纳入；
       # backup 包是 `bili-history backup` 的产物契约测试（zip / db / 缺库行为），同样不碰网络
-      # services/routers 覆盖 bili-dl 库调用（选流、限速、ctx 透传、并发拒绝）与 SSE 链路。
-      # 重构 bili-dl 期间这里是唯一的回归防线：不加进来，改坏下载链路 CI 仍然全绿。
+      # services/routers 覆盖 liuying-engine 库调用（选流、限速、ctx 透传、并发拒绝）与 SSE 链路。
+      # 重构 liuying-engine 期间这里是唯一的回归防线：不加进来，改坏下载链路 CI 仍然全绿。
       test-packages: ./internal/config/... ./internal/utils/... ./internal/models/... ./internal/database/... ./internal/backup/... ./internal/services/... ./internal/routers/...
       web-dir: web
       # lint 纳入 CI：本仓 lint = eslint .，实测 exit=0（0 problems）。

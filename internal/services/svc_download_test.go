@@ -10,11 +10,11 @@ import (
 
 	"bilibili-history-go/internal/config"
 
-	"github.com/Felix2yu/bili-dl/api"
-	"github.com/Felix2yu/bili-dl/c"
+	"github.com/Felix2yu/liuying-engine/api"
+	"github.com/Felix2yu/liuying-engine/c"
 )
 
-// 本文件覆盖 download.go 在改用 bili-dl 新接口之后仍然属于本包的逻辑：
+// 本文件覆盖 download.go 在改用 liuying-engine 新接口之后仍然属于本包的逻辑：
 // 标签渲染、码流排序、进度事件映射、全局参数装配，以及按新命名契约
 // （UP 主子目录 + 标题_BV + 分 P 标签）扫描/判定/删除磁盘产物。
 // 命名空间：目录 svcDL2*、bvid BVsvcMain0001/0002（关联 2031 主数据集）
@@ -224,19 +224,19 @@ func TestSVCApplyGlobalsMapsOptions(t *testing.T) {
 		t.Errorf("模板 = %q, want %q", c.SubpathTemplate, subpathTemplate)
 	}
 	if !c.AudioOnly || c.VideoQuality != 116 || c.Codec != "av1" || c.AudioQuality != 30280 {
-		t.Errorf("选流参数未装配（codec 需归一成 bili-dl 的短名）: %+v %d %q %d",
+		t.Errorf("选流参数未装配（codec 需归一成 liuying-engine 的短名）: %+v %d %q %d",
 			c.AudioOnly, c.VideoQuality, c.Codec, c.AudioQuality)
 	}
 	if !c.DownloadDanmaku || !c.SaveCover || c.DownloadSubtitle {
 		t.Errorf("附加内容开关未装配: danmaku=%v cover=%v subtitle=%v",
 			c.DownloadDanmaku, c.SaveCover, c.DownloadSubtitle)
 	}
-	// 限速字符串由 bili-dl 解析成每秒字节数。
+	// 限速字符串由 liuying-engine 解析成每秒字节数。
 	if c.RateBytes <= 0 {
 		t.Errorf("RateBytes = %d, want > 0", c.RateBytes)
 	}
 	if c.Ctx != ctx {
-		t.Errorf("Ctx 未透传给 bili-dl")
+		t.Errorf("Ctx 未透传给 liuying-engine")
 	}
 	// 合并只在 ffmpeg 可用时开启，否则保留分离流。
 	if c.Merge != ffmpegAvailable() {
@@ -585,7 +585,7 @@ func TestSVCDownloadGuardsStayOffline(t *testing.T) {
 }
 
 func TestSVCDownloadRejectsWhenBusy(t *testing.T) {
-	// bili-dl 靠包级变量传参，两个下载同时跑会互相踩参数，后来者必须被拒绝。
+	// liuying-engine 靠包级变量传参，两个下载同时跑会互相踩参数，后来者必须被拒绝。
 	biliMu.Lock()
 	t.Cleanup(biliMu.Unlock)
 
@@ -638,7 +638,7 @@ func TestSVCDanmakuFile(t *testing.T) {
 	ass := filepath.Join(dir, "svc弹幕标题_BVsvcDL2dm01.danmaku.ass")
 	svcWrite(t, ass, []byte("[Script Info]\nDialogue: 0,0:00:01.00,0:00:05.00,Default,,0,0,0,,测试弹幕\n"))
 
-	// 视频成品路径推导出 bili-dl 的 sidecar 命名
+	// 视频成品路径推导出 liuying-engine 的 sidecar 命名
 	body, name, err := DanmakuFile(video, "")
 	if err != nil {
 		t.Fatalf("DanmakuFile(video path): %v", err)

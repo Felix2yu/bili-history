@@ -320,7 +320,7 @@ func (r *downloadRequest) links() []string {
 }
 
 // sseEmitter 把下载事件写成 SSE 帧；客户端断开时取消底层 context，
-// 让 bili-dl 的请求与 ffmpeg 子进程一起收尾。
+// 让 liuying-engine 的请求与 ffmpeg 子进程一起收尾。
 type sseEmitter struct {
 	mu     sync.Mutex
 	w      http.ResponseWriter

@@ -18,7 +18,7 @@ import (
 // the BVDLLIST metadata join, and every file/dir created lives under
 // <cwd>/output/downloads (the TestMain temp dir) with a "dl" marker in the
 // name. The success flows of ExtractVideoInfo / CheckCollection / Download
-// are not exercised: they route through the bili-dl library and then fetch
+// are not exercised: they route through the liuying-engine library and then fetch
 // bytes from bilibili's CDN, which the offline guard below refuses on purpose.
 
 // dlTransportStub makes every api.bilibili.com request answered by h instead
@@ -73,7 +73,7 @@ func TestDLExtractVideoInfoValidation(t *testing.T) {
 	expectMessage(t, expectStatus(t, e, "GET", "/api/download/video_info", "", 400, "error"), "缺少 url 或 bvid 参数")
 
 	// bvid 先拼成标准观看链接；"DLYY0001" 不含 BV 号，
-	// 服务层会在 bili-dl 发起任何请求之前失败。
+	// 服务层会在 liuying-engine 发起任何请求之前失败。
 	noBv := expectStatus(t, e, "GET", "/api/download/video_info?bvid=DLYY0001", "", 200, "error")
 	expectMessageContains(t, noBv, "无法解析链接")
 	expectMessageContains(t, noBv, "https://www.bilibili.com/video/DLYY0001")

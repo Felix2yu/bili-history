@@ -38,7 +38,7 @@ type svcDlRecorder struct {
 // （Transport 为 nil），因此会走这份全局 transport —— 可以在完全离线的情况下
 // 断言 URL、Header 与解析结果。原始 transport 在 t.Cleanup 中恢复，
 // 包内测试串行执行，互不影响。
-// 其余取信息的路径已交给 bili-dl，不再由本包直接发请求。
+// 其余取信息的路径已交给 liuying-engine，不再由本包直接发请求。
 func svcDlStubTransport(t *testing.T, fn func(*http.Request) (*http.Response, error)) *svcDlRecorder {
 	t.Helper()
 	rec := &svcDlRecorder{}

@@ -21,7 +21,7 @@ build:
 dev:
 	go run $(MAIN)
 
-## services/routers 覆盖 bili-dl 库调用与 SSE 链路，是重构 bili-dl 时唯一的回归防线；
+## services/routers 覆盖 liuying-engine 库调用与 SSE 链路，是重构 liuying-engine 时唯一的回归防线；
 ## database 包带纯 Go 驱动的守卫测试，backup 包是 `bili-history backup` 的产物契约测试
 test:
 	go test ./internal/config/... ./internal/utils/... ./internal/models/... ./internal/database/... ./internal/backup/... ./internal/services/... ./internal/routers/...

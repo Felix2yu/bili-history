@@ -954,11 +954,11 @@
                     <li class="flex items-start gap-2">
                       <span class="mt-0.5 text-accent">•</span>
                       <a
-                        href="https://github.com/Felix2yu/bili-dl"
+                        href="https://github.com/Felix2yu/liuying-engine"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="text-accent hover:underline"
-                        >bili-dl</a
+                        >liuying-engine</a
                       >
                       <span class="text-gray-500 dark:text-gray-400">- B站视频下载库</span>
                     </li>

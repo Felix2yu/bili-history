@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 - 附加内容开关：封面（沿用原有开关）、弹幕、字幕，默认只下封面
 - 下载可取消：断开 SSE 即中止底层请求与 ffmpeg 子进程；并发下载请求被明确拒绝
 - 字节级下载进度（百分比、实时速度、当前资源类型）替代原先的纯文本阶段提示
-- 限速选项（透传 bili-dl 的 `-rate` 语义）
+- 限速选项（透传 liuying-engine 的 `-rate` 语义）
 - 收藏夹整夹下载接口 `/download/download_favorites`：前端早已在调用但后端没有注册，
   现在补上，本地收藏库优先、未同步时在线拉取
 - 弹幕读取接口 `/download/stream_danmaku`：同样是前端一直在调却没有实现，
@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 
 ### 变更
 
-- 下载全流程交给 bili-dl 的新接口：不再由本仓库自行请求 playurl（此前缺少 WBI 签名）、
+- 下载全流程交给 liuying-engine 的新接口：不再由本仓库自行请求 playurl（此前缺少 WBI 签名）、
   自行选流、自行二次转封装；容器由实际编码决定（AV1→MKV、HEVC→MOV、其余→MP4）
 - 产物命名改为 `下载目录/UP主/标题_BV号[ - 01 - 分P名].扩展名`，库列表、已下载判定、
   删除均按 BV 号关联；历史扁平 `[UP主]标题` 命名继续兼容解析
@@ -78,7 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/
 ### 视频播放与下载
 
 - ArtPlayer 播放器 + 弹幕系统
-- bili-dl 视频下载（支持批量下载、UP 主视频下载）
+- liuying-engine 视频下载（支持批量下载、UP 主视频下载）
 - 动态下载
 
 ### 计划任务与通知

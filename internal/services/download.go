@@ -22,11 +22,11 @@ import (
 	"bilibili-history-go/internal/database"
 	"bilibili-history-go/internal/utils"
 
-	"github.com/Felix2yu/bili-dl/api"
-	"github.com/Felix2yu/bili-dl/c"
+	"github.com/Felix2yu/liuying-engine/api"
+	"github.com/Felix2yu/liuying-engine/c"
 )
 
-// 产物命名交给 bili-dl 的路径模板：UP 主子目录 + 标题带 BV 号。
+// 产物命名交给 liuying-engine 的路径模板：UP 主子目录 + 标题带 BV 号。
 // BV 留在文件名里，库列表才能按 BV 关联本地历史中的封面与作者。
 const subpathTemplate = "{owner_uname}/{title}_{bv}"
 
@@ -46,7 +46,7 @@ type VideoInfo struct {
 	Pages        []PageInfo   `json:"pages"`
 }
 
-// StreamInfo 是一条可选视频码流，ID 即 DASH 画质 id（对应 bili-dl 的 -q）。
+// StreamInfo 是一条可选视频码流，ID 即 DASH 画质 id（对应 liuying-engine 的 -q）。
 type StreamInfo struct {
 	ID        int    `json:"id"`
 	Codec     string `json:"codec"`
@@ -142,7 +142,7 @@ type CollectionInfo struct {
 	Videos       []CollectionVideo `json:"videos"`
 }
 
-// bili-dl 通过包级变量接收配置，任何两次并发调用都会互相踩参数，
+// liuying-engine 通过包级变量接收配置，任何两次并发调用都会互相踩参数，
 // 因此所有对它的调用共用这一把锁，且全局变量只在持锁时写入。
 var biliMu sync.Mutex
 
@@ -162,7 +162,7 @@ func init() {
 	})
 }
 
-// useProgressSink 把 bili-dl 的进度事件接到当前任务的 emit 上。
+// useProgressSink 把 liuying-engine 的进度事件接到当前任务的 emit 上。
 func useProgressSink(emit func(DownloadEvent)) func() {
 	hookMu.Lock()
 	hookSink = func(ev api.ProgressEvent) { emit(progressEvent(ev)) }
@@ -241,7 +241,7 @@ func ffmpegAvailable() bool {
 	return ffmpegPathOK
 }
 
-// shortCodecName 把 DASH 的完整 codec 串归一成 bili-dl 认识的 av1/hevc/avc。
+// shortCodecName 把 DASH 的完整 codec 串归一成 liuying-engine 认识的 av1/hevc/avc。
 // 传原样串会被 matchCodec 当成「不过滤」，选到用户没选的那条流。
 func shortCodecName(codec string) string {
 	switch {
@@ -258,7 +258,7 @@ func shortCodecName(codec string) string {
 	}
 }
 
-// applyGlobals 写入 bili-dl 全局参数，调用方必须持有 biliMu。
+// applyGlobals 写入 liuying-engine 全局参数，调用方必须持有 biliMu。
 func applyGlobals(outputDir string, opts DownloadOptions, ctx context.Context) {
 	c.Defaults()
 	cookie := opts.Sessdata
@@ -510,7 +510,7 @@ func logEvent(emit func(DownloadEvent), format string, args ...any) {
 }
 
 // Download 依次下载给定链接，链接可以是投稿、番剧或多条 BV。
-// ctx 取消会传导到 bili-dl 的请求与 ffmpeg 子进程。
+// ctx 取消会传导到 liuying-engine 的请求与 ffmpeg 子进程。
 func Download(ctx context.Context, links []string, outputDir string, opts DownloadOptions, emit func(DownloadEvent)) error {
 	if len(links) == 0 {
 		return fmt.Errorf("没有待下载的链接")
@@ -1093,7 +1093,7 @@ var (
 )
 
 // DanmakuFile 返回与视频成品同源的弹幕文本。入参可以是视频路径、弹幕文件路径，
-// 或 BV 号；优先 bili-dl 产出的 `标题_BV.danmaku.ass`，其次是同名的任意 .ass。
+// 或 BV 号；优先 liuying-engine 产出的 `标题_BV.danmaku.ass`，其次是同名的任意 .ass。
 // 命名规则由下载侧决定，所以推断交给这里而不是前端。
 func DanmakuFile(path, bvid string) ([]byte, string, error) {
 	outputDir := GetDownloadOutputPath()
@@ -1151,7 +1151,7 @@ func findDanmakuByBV(outputDir, bv string) string {
 	return hit
 }
 
-// GetUserVideos 拉取 UP 主投稿列表；bili-dl 的 AllVideo 不带分页，这里保留自己的实现。
+// GetUserVideos 拉取 UP 主投稿列表；liuying-engine 的 AllVideo 不带分页，这里保留自己的实现。
 func GetUserVideos(mid string, pn, ps int) ([]map[string]string, int, error) {
 	apiURL := fmt.Sprintf("https://api.bilibili.com/x/space/wbi/arc/search?mid=%s&pn=%d&ps=%d&order=pubdate", mid, pn, ps)
 

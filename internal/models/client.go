@@ -15,17 +15,20 @@ type ClientVideo struct {
 	Duration  int    `json:"duration"`
 	// Progress is seconds watched; a completed play is normalized to Duration so
 	// the client never has to know that -1 means finished.
-	Progress int    `json:"progress"`
-	ViewAt   int64  `json:"view_at"`
-	Finished bool   `json:"finished"`
-	Business string `json:"business,omitempty"`
+	Progress     int    `json:"progress"`
+	ViewAt       int64  `json:"view_at"`
+	Finished     bool   `json:"finished"`
+	Business     string `json:"business,omitempty"`
+	MainCategory string `json:"main_category"`
+	SubCategory  string `json:"sub_category"`
 }
 
 // ClientHistoryPage is one cursor page of the archive. Next is 0 when the last
 // page has been reached, so a client stops without an extra request.
 type ClientHistoryPage struct {
-	Records []ClientVideo `json:"records"`
-	Next    int64         `json:"next"`
+	Records           []ClientVideo `json:"records"`
+	Next              int64         `json:"next"`
+	SupportsFiltering bool          `json:"supports_filtering"`
 }
 
 // ClientSummary is the compact "what did I watch" strip. Every number uses the
@@ -45,13 +48,23 @@ type ClientSummary struct {
 
 // ClientWatchLaterItem mirrors one archived 稍后再看 entry.
 type ClientWatchLaterItem struct {
-	Bvid     string `json:"bvid"`
-	Title    string `json:"title"`
-	Cover    string `json:"cover"`
-	Author   string `json:"author"`
-	Duration int    `json:"duration"`
-	AddAt    int64  `json:"add_at"`
-	View     int    `json:"view"`
+	Bvid         string `json:"bvid"`
+	Title        string `json:"title"`
+	Cover        string `json:"cover"`
+	Author       string `json:"author"`
+	Duration     int    `json:"duration"`
+	AddAt        int64  `json:"add_at"`
+	View         int    `json:"view"`
+	MainCategory string `json:"main_category"`
+	SubCategory  string `json:"sub_category"`
+}
+
+type ClientWatchLaterPage struct {
+	Records           []ClientWatchLaterItem `json:"records"`
+	Total             int                    `json:"total"`
+	Page              int                    `json:"page"`
+	Size              int                    `json:"size"`
+	SupportsFiltering bool                   `json:"supports_filtering"`
 }
 
 // ClientFavoriteFolder mirrors one archived 收藏夹.

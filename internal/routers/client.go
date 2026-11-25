@@ -27,6 +27,7 @@ func RegisterClientRoutes(r *gin.RouterGroup) {
 	group.POST("/recent", clientRecent)
 	group.POST("/history", clientHistory)
 	group.POST("/video-status", clientVideoStatus)
+	group.GET("/categories", clientCategories)
 	group.GET("/summary", clientSummary)
 	group.GET("/watchlater", clientWatchLater)
 	group.GET("/favorites", clientFavorites)
@@ -58,11 +59,15 @@ func clientRecent(c *gin.Context) {
 // shift the page boundary.
 func clientHistory(c *gin.Context) {
 	var body struct {
-		Cursor   int64  `json:"cursor"`
-		Limit    int    `json:"limit"`
-		Keyword  string `json:"keyword"`
-		Business string `json:"business"`
-		Year     int    `json:"year"`
+		Cursor       int64  `json:"cursor"`
+		Limit        int    `json:"limit"`
+		Keyword      string `json:"keyword"`
+		Business     string `json:"business"`
+		Year         int    `json:"year"`
+		MainCategory string `json:"main_category"`
+		SubCategory  string `json:"sub_category"`
+		MinDuration  int    `json:"min_duration"`
+		MaxDuration  int    `json:"max_duration"`
 	}
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&body); err != nil {
@@ -78,15 +83,34 @@ func clientHistory(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse("year 超出范围"))
 		return
 	}
+	if body.MinDuration < 0 || body.MaxDuration < 0 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("时长不能为负"))
+		return
+	}
+	if body.MinDuration > 0 && body.MaxDuration > 0 && body.MinDuration > body.MaxDuration {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("最小时长不能超过最大时长"))
+		return
+	}
 	page, err := database.ArchiveHistory(database.ArchiveHistoryParams{
 		Cursor: body.Cursor, Limit: body.Limit, Keyword: body.Keyword,
 		Business: strings.TrimSpace(body.Business), Year: body.Year,
+		MainCategory: strings.TrimSpace(body.MainCategory), SubCategory: strings.TrimSpace(body.SubCategory),
+		MinDuration: body.MinDuration, MaxDuration: body.MaxDuration,
 	})
 	if err != nil {
 		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, models.SuccessResponse(page))
+}
+
+func clientCategories(c *gin.Context) {
+	categories, err := database.GetCategories()
+	if err != nil {
+		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, models.SuccessResponse(gin.H{"categories": categories}))
 }
 
 // clientVideoStatus answers from the cached delete markers only. It never calls
@@ -151,14 +175,27 @@ func clientSummary(c *gin.Context) {
 func clientWatchLater(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "40"))
-	items, total, err := database.WatchLaterPage(page, size)
+	minDuration, _ := strconv.Atoi(c.DefaultQuery("min_duration", "0"))
+	maxDuration, _ := strconv.Atoi(c.DefaultQuery("max_duration", "0"))
+	if minDuration < 0 || maxDuration < 0 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("时长不能为负"))
+		return
+	}
+	if minDuration > 0 && maxDuration > 0 && minDuration > maxDuration {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse("最小时长不能超过最大时长"))
+		return
+	}
+	result, err := database.WatchLaterPage(database.WatchLaterParams{
+		Page: page, Size: size,
+		MainCategory: strings.TrimSpace(c.Query("main_category")),
+		SubCategory:  strings.TrimSpace(c.Query("sub_category")),
+		MinDuration:  minDuration, MaxDuration: maxDuration,
+	})
 	if err != nil {
 		c.JSON(http.StatusOK, models.ErrorResponse(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, models.SuccessResponse(gin.H{
-		"records": items, "total": total, "page": maxInt(page, 1), "size": clampedSize(size),
-	}))
+	c.JSON(http.StatusOK, models.SuccessResponse(result))
 }
 
 func clientFavorites(c *gin.Context) {

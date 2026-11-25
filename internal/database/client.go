@@ -17,7 +17,8 @@ import (
 // clientVideoColumns is the projection every client list uses, in scan order.
 const clientVideoColumns = `bvid, COALESCE(NULLIF(title, ''), long_title, ''), COALESCE(cover, ''),
 	COALESCE(author_name, ''), COALESCE(author_mid, 0), COALESCE(duration, 0),
-	COALESCE(progress, 0), view_at, COALESCE(business, '')`
+	COALESCE(progress, 0), view_at, COALESCE(business, ''),
+	COALESCE(main_category, ''), COALESCE(tag_name, '')`
 
 // excludedBusinesses never carry a playable position: a live room has no fixed
 // duration and an article has no player, so a 继续观看 queue must skip them.
@@ -38,7 +39,8 @@ func scanClientVideos(rows *sql.Rows) ([]models.ClientVideo, error) {
 	for rows.Next() {
 		var item models.ClientVideo
 		if err := rows.Scan(&item.Bvid, &item.Title, &item.Cover, &item.Author, &item.AuthorMid,
-			&item.Duration, &item.Progress, &item.ViewAt, &item.Business); err != nil {
+			&item.Duration, &item.Progress, &item.ViewAt, &item.Business,
+			&item.MainCategory, &item.SubCategory); err != nil {
 			continue
 		}
 		if item.Bvid == "" {
@@ -143,6 +145,12 @@ type ArchiveHistoryParams struct {
 	Business string
 	// Year limits the query to one history table; 0 scans every year.
 	Year int
+	// MainCategory and SubCategory match the web archive's partition fields.
+	MainCategory string
+	SubCategory  string
+	// Duration bounds are inclusive seconds; zero means no bound.
+	MinDuration int
+	MaxDuration int
 }
 
 // ArchiveHistory returns one page of the permanent history. The cursor is
@@ -160,7 +168,7 @@ func ArchiveHistory(params ArchiveHistoryParams) (*models.ClientHistoryPage, err
 	if params.Year > 0 {
 		name := fmt.Sprintf("bilibili_history_%d", params.Year)
 		if exists, _ := GetSQLiteDB().TableExists(name); !exists {
-			return &models.ClientHistoryPage{Records: []models.ClientVideo{}}, nil
+			return &models.ClientHistoryPage{Records: []models.ClientVideo{}, SupportsFiltering: true}, nil
 		}
 		tables = []string{name}
 	} else {
@@ -172,6 +180,8 @@ func ArchiveHistory(params ArchiveHistoryParams) (*models.ClientHistoryPage, err
 
 	conn := GetSQLiteDB().GetDB()
 	keyword := strings.TrimSpace(params.Keyword)
+	mainCategory := strings.TrimSpace(params.MainCategory)
+	subCategory := strings.TrimSpace(params.SubCategory)
 	var merged []models.ClientVideo
 	for _, table := range tables {
 		where := []string{"bvid != ''"}
@@ -189,6 +199,22 @@ func ArchiveHistory(params ArchiveHistoryParams) (*models.ClientHistoryPage, err
 			where = append(where, "COALESCE(business, '') = ?")
 			args = append(args, params.Business)
 		}
+		if mainCategory != "" {
+			where = append(where, "COALESCE(main_category, '') = ?")
+			args = append(args, mainCategory)
+		}
+		if subCategory != "" {
+			where = append(where, "COALESCE(tag_name, '') = ?")
+			args = append(args, subCategory)
+		}
+		if params.MinDuration > 0 {
+			where = append(where, "COALESCE(duration, 0) >= ?")
+			args = append(args, params.MinDuration)
+		}
+		if params.MaxDuration > 0 {
+			where = append(where, "COALESCE(duration, 0) <= ?")
+			args = append(args, params.MaxDuration)
+		}
 		query := fmt.Sprintf("SELECT %s FROM %s WHERE %s ORDER BY view_at DESC LIMIT ?",
 			clientVideoColumns, table, strings.Join(where, " AND "))
 		args = append(args, params.Limit)
@@ -204,7 +230,7 @@ func ArchiveHistory(params ArchiveHistoryParams) (*models.ClientHistoryPage, err
 	}
 
 	sort.SliceStable(merged, func(i, j int) bool { return merged[i].ViewAt > merged[j].ViewAt })
-	page := &models.ClientHistoryPage{Records: []models.ClientVideo{}}
+	page := &models.ClientHistoryPage{Records: []models.ClientVideo{}, SupportsFiltering: true}
 	if len(merged) == 0 {
 		return page, nil
 	}
@@ -263,41 +289,96 @@ func WatchSummary(year, month int) (*models.ClientSummary, error) {
 	return result, nil
 }
 
+// WatchLaterParams describes one page of the archived 稍后再看 mirror.
+type WatchLaterParams struct {
+	Page         int
+	Size         int
+	MainCategory string
+	SubCategory  string
+	MinDuration  int
+	MaxDuration  int
+}
+
 // WatchLaterPage reads the archived 稍后再看 mirror. A deployment that never
 // synced it has no database file, which is an empty list rather than an error.
-func WatchLaterPage(page, size int) ([]models.ClientWatchLaterItem, int, error) {
-	if page <= 0 {
-		page = 1
+func WatchLaterPage(params WatchLaterParams) (*models.ClientWatchLaterPage, error) {
+	if params.Page <= 0 {
+		params.Page = 1
 	}
-	if size <= 0 {
-		size = 40
+	if params.Size <= 0 {
+		params.Size = 40
 	}
-	if size > 100 {
-		size = 100
+	if params.Size > 100 {
+		params.Size = 100
+	}
+	result := &models.ClientWatchLaterPage{
+		Records: []models.ClientWatchLaterItem{}, Page: params.Page, Size: params.Size,
+		SupportsFiltering: true,
 	}
 	conn := GetWatchLaterDB()
-	items := []models.ClientWatchLaterItem{}
 	if conn == nil {
-		return items, 0, nil
+		return result, nil
 	}
-	var total int
-	if err := conn.QueryRow("SELECT COUNT(*) FROM watchlater_videos").Scan(&total); err != nil {
-		return items, 0, err
-	}
-	rows, err := conn.Query(`SELECT bvid, COALESCE(title, ''), COALESCE(pic, ''), COALESCE(owner_name, ''),
-			COALESCE(duration, 0), COALESCE(add_at, 0), COALESCE(view, 0)
-		FROM watchlater_videos ORDER BY add_at DESC LIMIT ? OFFSET ?`, size, (page-1)*size)
-	if err != nil {
-		return items, 0, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var item models.ClientWatchLaterItem
-		if rows.Scan(&item.Bvid, &item.Title, &item.Cover, &item.Author, &item.Duration, &item.AddAt, &item.View) == nil {
-			items = append(items, item)
+
+	where := []string{"bvid != ''"}
+	args := []interface{}{}
+	mainCategory := strings.TrimSpace(params.MainCategory)
+	subCategory := strings.TrimSpace(params.SubCategory)
+	if mainCategory != "" {
+		mapping, err := GetCategoryMainMapping()
+		if err != nil {
+			return nil, err
+		}
+		subcategories := make([]string, 0)
+		for name, parent := range mapping {
+			if parent == mainCategory {
+				subcategories = append(subcategories, name)
+			}
+		}
+		if len(subcategories) == 0 {
+			return result, nil
+		}
+		sort.Strings(subcategories)
+		placeholders := strings.TrimSuffix(strings.Repeat("?,", len(subcategories)), ",")
+		where = append(where, "COALESCE(tname, '') IN ("+placeholders+")")
+		for _, name := range subcategories {
+			args = append(args, name)
 		}
 	}
-	return items, total, nil
+	if subCategory != "" {
+		where = append(where, "COALESCE(tname, '') = ?")
+		args = append(args, subCategory)
+	}
+	if params.MinDuration > 0 {
+		where = append(where, "COALESCE(duration, 0) >= ?")
+		args = append(args, params.MinDuration)
+	}
+	if params.MaxDuration > 0 {
+		where = append(where, "COALESCE(duration, 0) <= ?")
+		args = append(args, params.MaxDuration)
+	}
+	condition := strings.Join(where, " AND ")
+	if err := conn.QueryRow("SELECT COUNT(*) FROM watchlater_videos WHERE "+condition, args...).Scan(&result.Total); err != nil {
+		return nil, err
+	}
+	queryArgs := append(append([]interface{}{}, args...), params.Size, (params.Page-1)*params.Size)
+	rows, err := conn.Query(`SELECT bvid, COALESCE(title, ''), COALESCE(pic, ''), COALESCE(owner_name, ''),
+			COALESCE(duration, 0), COALESCE(add_at, 0), COALESCE(view, 0), COALESCE(tname, '')
+		FROM watchlater_videos WHERE `+condition+` ORDER BY add_at DESC LIMIT ? OFFSET ?`, queryArgs...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	mapping, _ := GetCategoryMainMapping()
+	for rows.Next() {
+		var item models.ClientWatchLaterItem
+		if rows.Scan(&item.Bvid, &item.Title, &item.Cover, &item.Author, &item.Duration,
+			&item.AddAt, &item.View, &item.SubCategory) == nil {
+			item.MainCategory = mapping[item.SubCategory]
+			result.Records = append(result.Records, item)
+		}
+	}
+	return result, nil
 }
 
 // FavoriteFolders reads the archived 收藏夹 list.

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"bilibili-history-go/internal/database"
+	"bilibili-history-go/internal/models"
 )
 
 // yearClient is this file's private history namespace, so the archive and
@@ -149,6 +150,205 @@ func TestClientHistoryKeywordAndValidation(t *testing.T) {
 	expectCode(t, e, "POST", "/api/client/history", `{"cursor":-1}`, 400)
 	expectCode(t, e, "POST", "/api/client/history", `{"year":1600}`, 400)
 	expectCode(t, e, "POST", "/api/client/history", `{bad`, 400)
+}
+
+func TestClientHistoryPartitionAndDurationFilters(t *testing.T) {
+	newHistoryFixture(t)
+	e := newAPI(t, RegisterClientRoutes)
+	base := time.Date(2009, time.September, 1, 12, 0, 0, 0, time.Local).Unix()
+	for i, duration := range []int{0, 1, 300, 301, 1200, 1201, 3600, 3601} {
+		insertHistory(t, yearClient, map[string]interface{}{
+			"bvid": clientBvid(fmt.Sprintf("F%d", i)), "title": "客户端样本 " + clientBvid(fmt.Sprintf("F%d", i)), "view_at": base - int64(i*10),
+			"duration": duration, "main_category": "知识", "tag_name": "科普",
+		})
+	}
+	insertHistory(t, yearClient, map[string]interface{}{
+		"bvid": clientBvid("Fother"), "view_at": base - 100,
+		"duration": 600, "main_category": "知识", "tag_name": "人文历史",
+	})
+	insertHistory(t, yearClient, map[string]interface{}{
+		"bvid": clientBvid("Fmusic"), "view_at": base - 110,
+		"duration": 600, "main_category": "音乐", "tag_name": "科普",
+	})
+
+	query := func(body string) []map[string]interface{} {
+		t.Helper()
+		resp := expectStatus(t, e, "POST", "/api/client/history", body, 200, "success")
+		data := resp.dataMap(t)
+		if data["supports_filtering"] != true {
+			t.Fatalf("supports_filtering = %v, want true: %s", data["supports_filtering"], resp.Data)
+		}
+		records := dataArray(t, data["records"])
+		result := make([]map[string]interface{}, 0, len(records))
+		for _, raw := range records {
+			result = append(result, raw.(map[string]interface{}))
+		}
+		return result
+	}
+	bvids := func(records []map[string]interface{}) []string {
+		result := make([]string, 0, len(records))
+		for _, item := range records {
+			result = append(result, item["bvid"].(string))
+		}
+		return result
+	}
+
+	all := query(`{"year":2009,"main_category":"知识","sub_category":"科普"}`)
+	if len(all) != 8 || all[0]["main_category"] != "知识" || all[0]["sub_category"] != "科普" {
+		t.Fatalf("combined partition query = %v", bvids(all))
+	}
+	for _, tc := range []struct {
+		name string
+		body string
+		want []string
+	}{
+		{"up to five minutes", `{"year":2009,"main_category":"知识","sub_category":"科普","min_duration":1,"max_duration":300}`, []string{clientBvid("F1"), clientBvid("F2")}},
+		{"five to twenty minutes", `{"year":2009,"main_category":"知识","sub_category":"科普","min_duration":301,"max_duration":1200}`, []string{clientBvid("F3"), clientBvid("F4")}},
+		{"twenty to sixty minutes", `{"year":2009,"main_category":"知识","sub_category":"科普","min_duration":1201,"max_duration":3600}`, []string{clientBvid("F5"), clientBvid("F6")}},
+		{"over sixty minutes", `{"year":2009,"main_category":"知识","sub_category":"科普","min_duration":3601}`, []string{clientBvid("F7")}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := bvids(query(tc.body))
+			if strings.Join(got, ",") != strings.Join(tc.want, ",") {
+				t.Fatalf("bvids = %v, want %v", got, tc.want)
+			}
+		})
+	}
+
+	first := query(`{"year":2009,"limit":2,"keyword":"BVclientF","main_category":"知识","sub_category":"科普","min_duration":301}`)
+	if len(first) != 2 || first[0]["bvid"] != clientBvid("F3") || first[1]["bvid"] != clientBvid("F4") {
+		t.Fatalf("first filtered page = %v", bvids(first))
+	}
+	secondResp := expectStatus(t, e, "POST", "/api/client/history",
+		fmt.Sprintf(`{"year":2009,"limit":2,"keyword":"BVclientF","main_category":"知识","sub_category":"科普","min_duration":301,"cursor":%d}`, int64(first[1]["view_at"].(float64))), 200, "success")
+	second := secondResp.dataMap(t)
+	secondRecords := dataArray(t, second["records"])
+	if len(secondRecords) != 2 || secondRecords[0].(map[string]interface{})["bvid"] != clientBvid("F5") || secondRecords[1].(map[string]interface{})["bvid"] != clientBvid("F6") {
+		t.Fatalf("second filtered page = %s", secondResp.Data)
+	}
+	if second["next"].(float64) == 0 {
+		t.Fatal("next = 0 while a filtered row remains")
+	}
+	thirdResp := expectStatus(t, e, "POST", "/api/client/history",
+		fmt.Sprintf(`{"year":2009,"limit":2,"keyword":"BVclientF","main_category":"知识","sub_category":"科普","min_duration":301,"cursor":%d}`, int64(secondRecords[1].(map[string]interface{})["view_at"].(float64))), 200, "success")
+	third := thirdResp.dataMap(t)
+	thirdRecords := dataArray(t, third["records"])
+	if len(thirdRecords) != 1 || thirdRecords[0].(map[string]interface{})["bvid"] != clientBvid("F7") || third["next"].(float64) != 0 {
+		t.Fatalf("final filtered page = %s", thirdResp.Data)
+	}
+
+	expectCode(t, e, "POST", "/api/client/history", `{"min_duration":-1}`, 400)
+	expectCode(t, e, "POST", "/api/client/history", `{"max_duration":-1}`, 400)
+	expectCode(t, e, "POST", "/api/client/history", `{"min_duration":301,"max_duration":300}`, 400)
+}
+
+func TestClientCategoriesExposesMainAndSubCategories(t *testing.T) {
+	newHistoryFixture(t)
+	e := newAPI(t, RegisterClientRoutes)
+	resp := expectStatus(t, e, "GET", "/api/client/categories", "", 200, "success")
+	categories := dataArray(t, resp.dataMap(t)["categories"])
+	found := false
+	for _, raw := range categories {
+		category := raw.(map[string]interface{})
+		if category["name"] != "动画" {
+			continue
+		}
+		subs := dataArray(t, category["sub_categories"])
+		for _, sub := range subs {
+			item := sub.(map[string]interface{})
+			if item["name"] == "MAD·AMV" && item["tid"].(float64) == 24 {
+				found = true
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("动画/MAD·AMV missing from category directory: %s", resp.Data)
+	}
+}
+
+func TestClientWatchLaterPartitionAndDurationFilters(t *testing.T) {
+	newHistoryFixture(t)
+	e := newAPI(t, RegisterClientRoutes)
+	wl := database.GetWatchLaterDB()
+	if wl == nil {
+		t.Skip("watch later database unavailable in this environment")
+	}
+	for i, tc := range []struct {
+		bvid, tname string
+		duration    int
+	}{
+		{clientBvid("WLF0"), "科学科普", 300}, {clientBvid("WLF1"), "科学科普", 301},
+		{clientBvid("WLF2"), "科学科普", 1200}, {clientBvid("WLF3"), "科学科普", 1201},
+		{clientBvid("WLF4"), "科学科普", 3600}, {clientBvid("WLF5"), "科学科普", 3601},
+		{clientBvid("WLO0"), "人文历史", 600}, {clientBvid("WLM0"), "翻唱", 600},
+	} {
+		if _, err := wl.Exec(`INSERT OR REPLACE INTO watchlater_videos
+			(bvid, aid, title, pic, duration, tid, tname, owner_name, add_at, view, fetch_time)
+			VALUES (?, ?, ?, '', ?, 0, ?, '样本UP', ?, 0, 1)`,
+			tc.bvid, i+1, "稍后再看筛选 "+tc.bvid, tc.duration, tc.tname, 9000000000+int64(i)); err != nil {
+			t.Fatalf("seed watch later: %v", err)
+		}
+	}
+
+	query := func(query string) (*models.ClientWatchLaterPage, string) {
+		t.Helper()
+		resp := expectStatus(t, e, "GET", "/api/client/watchlater?size=100&"+query, "", 200, "success")
+		var page models.ClientWatchLaterPage
+		raw, _ := json.Marshal(resp.dataMap(t))
+		if err := json.Unmarshal(raw, &page); err != nil {
+			t.Fatalf("decode page: %v", err)
+		}
+		if !page.SupportsFiltering {
+			t.Fatalf("supports_filtering = false: %s", resp.Data)
+		}
+		return &page, string(resp.Data)
+	}
+
+	page, _ := query("main_category=知识&sub_category=科学科普")
+	got := map[string]bool{}
+	for _, item := range page.Records {
+		got[item.Bvid] = true
+		if item.MainCategory != "知识" || item.SubCategory != "科学科普" {
+			t.Fatalf("record partitions = %s/%s", item.MainCategory, item.SubCategory)
+		}
+	}
+	for _, bvid := range []string{clientBvid("WLF0"), clientBvid("WLF1"), clientBvid("WLF2"), clientBvid("WLF3"), clientBvid("WLF4"), clientBvid("WLF5")} {
+		if !got[bvid] {
+			t.Fatalf("%s missing from combined partition result", bvid)
+		}
+	}
+	if got[clientBvid("WLO0")] || got[clientBvid("WLM0")] {
+		t.Fatal("a different partition leaked into the result")
+	}
+
+	for _, tc := range []struct {
+		name  string
+		query string
+		want  []string
+	}{
+		{"up to five minutes", "min_duration=1&max_duration=300", []string{clientBvid("WLF0")}},
+		{"five to twenty minutes", "min_duration=301&max_duration=1200", []string{clientBvid("WLF2"), clientBvid("WLF1")}},
+		{"twenty to sixty minutes", "min_duration=1201&max_duration=3600", []string{clientBvid("WLF4"), clientBvid("WLF3")}},
+		{"over sixty minutes", "min_duration=3601", []string{clientBvid("WLF5")}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			page, raw := query("main_category=知识&sub_category=科学科普&" + tc.query)
+			if strings.Join(bvidList(page.Records), ",") != strings.Join(tc.want, ",") {
+				t.Fatalf("bvids = %v, want %v: %s", bvidList(page.Records), tc.want, raw)
+			}
+		})
+	}
+
+	expectCode(t, e, "GET", "/api/client/watchlater?min_duration=-1", "", 400)
+	expectCode(t, e, "GET", "/api/client/watchlater?min_duration=301&max_duration=300", "", 400)
+}
+
+func bvidList(items []models.ClientWatchLaterItem) []string {
+	result := make([]string, 0, len(items))
+	for _, item := range items {
+		result = append(result, item.Bvid)
+	}
+	return result
 }
 
 func TestClientVideoStatusReadsCacheOnly(t *testing.T) {

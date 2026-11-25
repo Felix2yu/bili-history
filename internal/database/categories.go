@@ -279,6 +279,36 @@ func GetCategories() ([]models.CategoryNode, error) {
 	return result, nil
 }
 
+// GetCategoryMainMapping maps a subcategory name to its main category. The
+// watch-later mirror stores only Bilibili's tname/tid, so this is the bridge
+// that lets both surfaces filter by the same one-level partition names.
+func GetCategoryMainMapping() (map[string]string, error) {
+	if err := EnsureCategoriesTable(); err != nil {
+		return nil, err
+	}
+	conn := GetSQLiteDB().GetDB()
+	if conn == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+	rows, err := conn.Query(`SELECT sub_category, main_category FROM video_categories ORDER BY id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	mapping := make(map[string]string)
+	for rows.Next() {
+		var subCategory, mainCategory string
+		if rows.Scan(&subCategory, &mainCategory) != nil || subCategory == "" {
+			continue
+		}
+		if _, exists := mapping[subCategory]; !exists {
+			mapping[subCategory] = mainCategory
+		}
+	}
+	return mapping, nil
+}
+
 func GetMainCategories() ([]map[string]string, error) {
 	if err := EnsureCategoriesTable(); err != nil {
 		return nil, err

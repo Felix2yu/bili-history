@@ -131,6 +131,11 @@ func init() {
 		Tags:        tagClient,
 		OperationID: "client_video_status",
 	})
+	RegisterEndpointMeta("GET", "/client/categories", EndpointMeta{
+		Summary:     "归档筛选用的一级、二级视频分区（只读）",
+		Tags:        tagClient,
+		OperationID: "client_categories",
+	})
 	RegisterEndpointMeta("GET", "/client/summary", EndpointMeta{
 		Summary:     "观看统计摘要（与月报口径一致）",
 		Tags:        tagClient,

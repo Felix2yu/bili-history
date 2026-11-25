@@ -3,6 +3,7 @@ package routers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"bilibili-history-go/internal/biliapi"
 	"bilibili-history-go/internal/config"
@@ -249,22 +250,36 @@ func checkDeletedVideos(c *gin.Context) {
 
 	client := biliapi.NewClient(cfg.SESSDATA)
 	deleted := []string{}
+	unchecked := 0
 
+	seen := make(map[string]bool, len(body.Bvids))
 	for _, bvid := range body.Bvids {
+		bvid = strings.TrimSpace(bvid)
+		if bvid == "" || seen[bvid] {
+			continue
+		}
+		seen[bvid] = true
 		_, err := client.GetVideoInfo(bvid)
-		if err != nil {
-			// Video not found or deleted
+		switch {
+		case err == nil:
+			// Still available.
+		case biliapi.IsVideoGone(err):
 			if err := database.MarkVideoDeleted(bvid); err != nil {
 				utils.LogError("标记视频删除失败 bvid=%s: %v", bvid, err)
 			}
 			deleted = append(deleted, bvid)
+		default:
+			// Network, rate limit, 权限不足, 审核中: conclusions we must not write
+			// into the archive as "deleted". The next check will ask again.
+			unchecked++
 		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"deleted": deleted,
-		"checked": len(body.Bvids),
+		"success":   true,
+		"deleted":   deleted,
+		"checked":   len(seen),
+		"unchecked": unchecked,
 	})
 }
 

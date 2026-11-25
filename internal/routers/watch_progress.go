@@ -23,13 +23,16 @@ import (
 const maxWatchProgressIDs = 500
 
 func RegisterWatchProgressRoutes(r *gin.RouterGroup) {
-	group := r.Group("/watch-progress", requireWatchProgressToken())
+	group := r.Group("/watch-progress", requireClientToken())
 	group.POST("/ping", pingWatchProgress)
 	group.POST("/query", queryWatchProgress)
 	group.POST("/report", reportWatchProgress)
 }
 
-func requireWatchProgressToken() gin.HandlerFunc {
+// requireClientToken guards every endpoint the 满屏 client may call. The token is
+// optional and separate from the web UI's own session, so enabling it never locks
+// the browser out; the client group in client.go shares this one check.
+func requireClientToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cfg := config.GetConfig()
 		expected := ""

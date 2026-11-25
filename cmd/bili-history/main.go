@@ -103,6 +103,7 @@ func main() {
 	{
 		routers.RegisterHistoryRoutes(api)
 		routers.RegisterWatchProgressRoutes(api)
+		routers.RegisterClientRoutes(api)
 		routers.RegisterCategoryRoutes(api)
 		routers.RegisterLoginRoutes(api)
 		routers.RegisterAnalysisRoutes(api)

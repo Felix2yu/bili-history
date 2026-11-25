@@ -17,6 +17,10 @@ dist/
 build/
 *.egg-info/
 output/
+# go:embed all:dist 不接受空目录；这个占位文件必须随仓库分发，否则新克隆里 go test ./... 会在 setup 阶段失败
+!/internal/web/dist/
+/internal/web/dist/*
+!/internal/web/dist/.gitkeep
 
 # IDE
 .vscode/

@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"crypto/md5"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -480,6 +481,24 @@ func (c *Client) GetHistory(max int64, viewAt int64, ps int) (*HistoryCursorData
 	return &data, nil
 }
 
+// Codes Bilibili returns for a video that no longer exists for this viewer.
+// 62003/62004 (审核中) are deliberately absent: those videos usually come back.
+const (
+	codeNothingFound   = -404  // 啥都木有
+	codeArchiveUnavail = 62002 // 稿件不可见（已删除、私密或仅 UP 主可见）
+)
+
+// IsVideoGone reports whether err is a definitive "this video is not available",
+// as opposed to a network, signing, rate-limit or permission error. The delete
+// detector must never mark a video deleted because the network was down.
+func IsVideoGone(err error) bool {
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		return false
+	}
+	return apiErr.Code == codeNothingFound || apiErr.Code == codeArchiveUnavail
+}
+
 func (c *Client) GetVideoInfo(bvid string) (*VideoInfo, error) {
 	params := map[string]string{
 		"bvid": bvid,
@@ -496,7 +515,7 @@ func (c *Client) GetVideoInfo(bvid string) (*VideoInfo, error) {
 	}
 
 	if resp.Code != 0 {
-		return nil, fmt.Errorf("api error: code=%d, message=%s", resp.Code, resp.Message)
+		return nil, &APIError{Code: resp.Code, Message: resp.Message}
 	}
 
 	var data VideoInfo

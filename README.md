@@ -47,7 +47,15 @@ Bilibili 观看历史记录管理与分析工具
 
 ### 外部播放器同步（满屏）
 - `POST /api/watch-progress/query` 批量查询观看状态与进度，`POST /api/watch-progress/report` 上报播放进度，`POST /api/watch-progress/ping` 检查连接
-- 可选鉴权：在 `config.yaml` 配置 `api_token` 或设置环境变量 `BILI_HISTORY_API_TOKEN`，调用时带 `Authorization: Bearer <token>`（也接受 `X-API-Token`）；留空时这三个接口无需鉴权，不影响网页端
+- 只读客户端通道，供满屏的历史页读取归档：
+  - `POST /api/client/recent` 继续观看：已开始但未看完的视频，同一视频只出现一次，取最新进度
+  - `POST /api/client/history` 归档历史分页，游标是上一页最后一条的 `view_at`；支持 `keyword`、`business`、`year`
+  - `POST /api/client/video-status` 批量查询失效视频，**只读本地缓存**，不请求 B 站
+  - `GET /api/client/summary?year=&month=` 观看摘要，口径与月报一致（`seconds` 是视频总长，深夜为 22:00–06:00）
+  - `GET /api/client/watchlater`、`GET /api/client/favorites`、`GET /api/client/favorites/contents` 稍后再看与收藏的归档副本
+- 这一组接口只有读操作，不提供删除、改名、重新抓取：这些决定仍然留在网页端和计划任务里
+- 可选鉴权：在 `config.yaml` 配置 `api_token` 或设置环境变量 `BILI_HISTORY_API_TOKEN`，调用时带 `Authorization: Bearer <token>`（也接受 `X-API-Token`）；留空时上述接口无需鉴权，不影响网页端
+- 失效检测（`/api/history/check-deleted`）只在 B 站明确返回“视频不存在”（`-404` / `62002`）时标记；网络错误、风控 `412`、权限不足与审核中都只计入 `unchecked`，不会写成“已删除”
 
 ### 其他
 - PWA 支持（离线缓存）

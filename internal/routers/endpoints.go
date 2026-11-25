@@ -46,6 +46,7 @@ func GetEndpointMeta(method, path string) EndpointMeta {
 
 func init() {
 	tagHistory := []string{"历史记录"}
+	tagClient := []string{"外部客户端"}
 	tagCategory := []string{"分类管理"}
 	tagLogin := []string{"登录认证"}
 	tagAnalysis := []string{"数据分析"}
@@ -112,6 +113,43 @@ func init() {
 		Summary:     "检查外部客户端访问令牌是否有效",
 		Tags:        tagHistory,
 		OperationID: "ping_watch_progress",
+	})
+
+	// ========== 外部客户端（满屏）只读通道 ==========
+	RegisterEndpointMeta("POST", "/client/recent", EndpointMeta{
+		Summary:     "继续观看：已开始但未看完的视频，按最新观看排序",
+		Tags:        tagClient,
+		OperationID: "client_recent",
+	})
+	RegisterEndpointMeta("POST", "/client/history", EndpointMeta{
+		Summary:     "永久归档历史分页（按 view_at 游标）",
+		Tags:        tagClient,
+		OperationID: "client_history",
+	})
+	RegisterEndpointMeta("POST", "/client/video-status", EndpointMeta{
+		Summary:     "批量查询失效视频（只读缓存，不请求B站）",
+		Tags:        tagClient,
+		OperationID: "client_video_status",
+	})
+	RegisterEndpointMeta("GET", "/client/summary", EndpointMeta{
+		Summary:     "观看统计摘要（与月报口径一致）",
+		Tags:        tagClient,
+		OperationID: "client_summary",
+	})
+	RegisterEndpointMeta("GET", "/client/watchlater", EndpointMeta{
+		Summary:     "稍后再看归档副本（只读）",
+		Tags:        tagClient,
+		OperationID: "client_watchlater",
+	})
+	RegisterEndpointMeta("GET", "/client/favorites", EndpointMeta{
+		Summary:     "收藏夹归档列表（只读）",
+		Tags:        tagClient,
+		OperationID: "client_favorites",
+	})
+	RegisterEndpointMeta("GET", "/client/favorites/contents", EndpointMeta{
+		Summary:     "收藏夹内容归档副本（只读）",
+		Tags:        tagClient,
+		OperationID: "client_favorite_contents",
 	})
 	RegisterEndpointMeta("POST", "/history/batch-remarks", EndpointMeta{
 		Summary:     "批量获取用户备注",

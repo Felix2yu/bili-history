@@ -6,11 +6,11 @@ require (
 	github.com/Felix2yu/liuying-engine v1.2.0
 	github.com/gin-contrib/cors v1.7.11
 	github.com/gin-gonic/gin v1.12.0
-	github.com/mark3labs/mcp-go v1.5.0
+	github.com/mark3labs/mcp-go v1.6.0
 	github.com/unraid/apprise-go v0.4.0
 	github.com/xuri/excelize/v2 v2.11.1
 	gopkg.in/yaml.v3 v3.0.1
-	modernc.org/sqlite v1.62.0
+	modernc.org/sqlite v1.63.0
 )
 
 require (
